@@ -1387,7 +1387,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   }
 }
 .main-menu > ul > li > a {
-  color: #fff;
+  color: #f4ff00;
   display: block;
   font-family: "Montserrat", sans-serif;
   line-height: 24px;
@@ -3175,4 +3175,5 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 .copyright p a:hover {
   color: #e03927;
 }
+
 
