@@ -1246,7 +1246,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 
 /*-- Header Bottom --*/
 .header-bottom {
-  background-color: #043f3b;
+  background-color: #FFFFFF;
   position: relative;
 }
 
@@ -3175,3 +3175,4 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 .copyright p a:hover {
   color: #e03927;
 }
+
