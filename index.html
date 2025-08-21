@@ -339,20 +339,23 @@
         </div>
 
         <style>
-            .card-header{
+            .card-header {
                 position: relative;
                 width: 100%;
                 min-height: 180px;
                 background-color: #0a5334;
+                overflow: hidden; /* Ensure image stays within bounds */
             }
-            .card-header img{
+            .card-header img {
                 position: absolute;
-                max-width: 230px;
-                height: auto;
+                width: 100%; /* Make image fill the card-header width */
+                height: auto; /* Maintain aspect ratio */
                 top: -60px;
                 left: 0;
                 right: 0;
                 margin: 0 auto;
+                object-fit: contain; /* Prevents cropping, scales image to fit within container */
+                max-height: 240px; /* Adjust based on your design preference to fit within card */
             }
         </style>
 
@@ -912,5 +915,6 @@
 
 
 </html>
+
 
 
