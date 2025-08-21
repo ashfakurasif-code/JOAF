@@ -3178,6 +3178,32 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 .role-text {
   color: #FFFFFF !important;
 }
+/* Ensure images and iframes are fully responsive */
+.img-fluid {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Fix layout for small screens */
+@media (max-width: 576px) {
+    .about-area .row {
+        display: flex;
+        flex-direction: column; /* Stack items vertically on mobile */
+    }
+    .about-area .col-12 {
+        margin-bottom: 20px; /* Add space between stacked elements */
+    }
+    iframe {
+        height: 50vh; /* Reduce iframe height on mobile to avoid overflow */
+        width: 100%;
+    }
+}
+
+/* Remove unnecessary padding or margins causing empty space */
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
 
 
 
