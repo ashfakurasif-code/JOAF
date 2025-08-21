@@ -3175,6 +3175,9 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 .copyright p a:hover {
   color: #e03927;
 }
+.role-text {
+  color: #000 !important;
+}
 
 
 
