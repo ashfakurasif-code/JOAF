@@ -1,79 +1,233 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-16">
-  <title>Donate | JOAF</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Bootstrap CSS (CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: #f8f9fa;
-    }
-    .donate-section {
-      background: #fff;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-      max-width: 500px;
-      margin: 2rem auto;
-    }
-    .bkash-number {
-      font-size: 1.4rem;
-      color: #d8006c;
-      font-weight: bold;
-      letter-spacing: 1px;
-      margin-bottom: 1rem;
-    }
-    .qr-img {
-      width: 160px;
-      display: block;
-      margin: 0 auto 1rem auto;
-    }
-  </style>
+    <meta charset="UTF-16">
+    <title>Donate | JOAF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="pluginsc7c3.css?v=2.6.25">
+    <link rel="stylesheet" href="stylec7c3.css?v=2.6.25">
+    <style>
+        body {
+            background: #f8f9fa;
+        }
+        .donate-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            max-width: 500px;
+            margin: 2rem auto;
+        }
+        .bkash-number {
+            font-size: 1.4rem;
+            color: #d8006c;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+        .qr-img {
+            width: 160px;
+            display: block;
+            margin: 0 auto 1rem auto;
+        }
+    </style>
+    <!-- Modernizr -->
+    <script src="modernizr-2.8.3.min.js"></script>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-G16GVEBVG0"></script>
+    <link rel="manifest" href="site.webmanifest">
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-G16GVEBVG0');
+    </script>
 </head>
 <body>
-  <!-- Main Navbar (optional, follow your site style) -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container">
-      <a class="navbar-brand" href="/">JOAF</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="/about.html">About</a></li>
-          <li class="nav-item"><a class="nav-link" href="/projects.html">Projects</a></li>
-          <li class="nav-item"><a class="nav-link active" aria-current="page" href="/donate.html">Donate</a></li>
-          <!-- Add more links if needed -->
-        </ul>
-      </div>
-    </div>
-  </nav>
+    <!-- Preloader -->
+    <!-- <div id="loading" class="preloader">
+        <div class="loading-center">
+            <div class="loading-center-absolute">
+                <div class="object object_one"></div>
+                <div class="object object_two"></div>
+                <div class="object object_three"></div>
+                <div class="object object_four"></div>
+            </div>
+        </div>
+    </div> -->
 
-  <div class="donate-section">
-    <h2 class="mb-3 text-center">Support JOAF: Donate Now</h2>
-    <p class="text-center">
-      আপনার ছোট্ট অনুদানও আমাদের বড় স্বপ্ন পূরণে সহায়ক হবে। নিচের bKash নম্বরে যেকোনো এমাউন্ট পাঠিয়ে আমাদের পাশে থাকুন।
-    </p>
-    <div class="text-center mb-3">
-      <div class="bkash-number">bKash Personal: 01924643110</div>
-      <!-- Optional: Add a QR code image of your bKash number here -->
-      <!-- <img src="bkash_qr.png" alt="bKash QR Code" class="qr-img" /> -->
+    <!-- Main Wrapper -->
+    <div class="wrapper fix">
+        <header class="header-area">
+            <!-- Header Top -->
+            <div class="header-top">
+                <div class="container">
+                    <div class="row">
+                        <!-- Social Links -->
+                        <div class="header-social text-left col-sm-5 col-xs-12">
+                            <a href="https://facebook.com/julyforum" aria-label="Follow us on Facebook"><i class="zmdi zmdi-facebook"></i></a>
+                            <a href="https://x.com/julyforum" aria-label="Follow us on Twitter"><i class="zmdi zmdi-twitter"></i></a>
+                            <a href="https://instagram.com/julyforum" aria-label="Follow us on Instagram"><i class="zmdi zmdi-instagram"></i></a>
+                        </div>
+                        <!-- Contact Info -->
+                        <div class="header-info text-right col-sm-7 col-xs-12">
+                            <p>Email: <a href="cdn-cgi/l/email-protection.html#e3b6b3a1a2ada4afa2a7a7b1aae0e6a3a4aea2aaaecf82a6a4"><span class="__cf_email__" data-cfemail="c7b2b7a5a6a9a0aba6a3a3b5aee4e287a0aaa6aea9eba6aaa8">[email&#160;protected]</span></a></p>
+                            <p><strong>Under Maintenance</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Header Bottom -->
+            <div class="header-bottom">
+                <div class="container">
+                    <div class="row justify-content-between flex-column flex-lg-row position-relative">
+                        <div class="col-auto">
+                            <!-- Logo -->
+                            <div class="navbar-header d-flex justify-content-between">
+                                <a href="index.html" class="logo navbar-brand"><img style="max-width:140px" src="logoc7c3.png?v=2.6.25" alt="JOAF Logo"></a>
+                                <button class="navbar-toggle collapsed d-block d-md-none" data-bs-toggle="collapse" data-bs-target="#main-menu" aria-label="Toggle navigation">
+                                    <i class="zmdi zmdi-menu menu-open"></i>
+                                    <i class="zmdi zmdi-close menu-close"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex flex-md-row flex-lg-row-reverse">                            
+                            <!-- Main Menu -->
+                            <nav class="main-menu collapse" id="main-menu">
+                                <ul>
+                                    <li><a href="index.html">Home</a></li>
+                                    <li><a href="events.html">Events</a></li>
+                                    <li><a href="media-news.html">Media</a></li>
+                                    <li><a href="about.html">About</a></li>
+                                    <li><a href="contact.html">Contact Us</a></li>
+                                    <li><a href="membership.html">Join Form</a></li>
+                                    <li class="active"><a href="donate.html">Donate</a></li>
+                                </ul>
+                            </nav>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </header>
+
+        <div class="donate-section">
+            <h2 class="mb-3 text-center">Support JOAF: Donate Now</h2>
+            <p class="text-center">
+                আপনার ছোট্ট অনুদানও আমাদের বড় স্বপ্ন পূরণে সহায়ক হবে। নিচের bKash নম্বরে যেকোনো এমাউন্ট পাঠিয়ে আমাদের পাশে থাকুন।
+            </p>
+            <div class="text-center mb-3">
+                <div class="bkash-number">bKash Personal: 01924643110</div>
+                <!-- Optional: Add a QR code image of your bKash number here -->
+                <!-- <img src="bkash_qr.png" alt="bKash QR Code" class="qr-img" /> -->
+            </div>
+            <div class="alert alert-info text-center">
+                <b>নির্দেশনা:</b> বিকাশে টাকা পাঠানোর পর নিচের ফর্মটি পূরণ করুন, যেন আমরা আপনার অনুদান কনফার্ম করতে পারি।
+            </div>
+            <!-- Google Form embed here -->
+            <div class="mb-3">
+                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdXXXXXXXXXXXXXXX/viewform?embedded=true" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+            </div>
+            <p class="text-center text-muted" style="font-size: 0.98rem;">
+                <i>আপনার দেয়া তথ্য কেবল অনুদান যাচাই এবং ধন্যবাদ জানানোর জন্য ব্যবহার করা হবে।</i>
+            </p>
+        </div>
+
+        <!-- Footer Area -->
+        <footer id="footer-area" class="footer-area section" aria-labelledby="footer-title">
+            <div class="footer-top pb-80 pt-120">
+                <div class="container">
+                    <div class="row">
+                        <!-- Contact Info -->
+                        <div class="footer-widget col-lg-3 col-md-6 col-12 mb-40">
+                            <h4>Contact Us</h4>
+                            <div class="contact-info fix">
+                                <p>Address: Road - 9, South Banasree, Dhaka-1219.</p>
+                                <ul>
+                                    <li><span>Email:</span> <a href="cdn-cgi/l/email-protection.html#51846173707f767d7075746279232551767c70787d3f727e7c" target="_blank"><span class="__cf_email__" data-cfemail="24515446454a4348454041574c1610644349454d480a474b49">[email&#160;protected]</span></a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- Instagram -->
+                        <div class="footer-widget col-lg-4 col-md-6 col-12 mb-40">
+                            
+                        </div>
+                        <!-- Contact Form -->
+                        <div class="footer-widget col-lg-5 col-12 mb-40">
+                            <h4>Get in Touch</h4>
+                            <form id="contact-form">
+                                <div class="input-box-2">
+                                    <div class="input-box">
+                                        <input name="entry.1850028484" type="text" placeholder="Your name" required aria-label="Your name">
+                                    </div>
+                                    <div class="input-box">
+                                        <input name="entry.450628556" type="email" placeholder="Your email" required aria-label="Your email">
+                                    </div>
+                                </div>
+                                <div class="input-box">
+                                    <textarea name="entry.455914715" placeholder="Your message" required aria-label="Your message"></textarea>
+                                </div>
+                                <div class="input-box">
+                                    <input type="submit" value="Submit" aria-label="Submit contact form">
+                                </div>
+                            </form>
+                            <p class="form-messege"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer Copyright -->
+            <div class="footer-copyright">
+                <div class="container">
+                    <div class="row">
+                        <div class="copyright text-center col-xs-12">
+                            <p>Copyright © 2025 <a href="index.html">JOAF</a>. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
-    <div class="alert alert-info text-center">
-      <b>নির্দেশনা:</b> বিকাশে টাকা পাঠানোর পর নিচের ফর্মটি পূরণ করুন, যেন আমরা আপনার অনুদান কনফার্ম করতে পারি।
-    </div>
-    <!-- Google Form embed here -->
-    <div class="mb-3">
-      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdXXXXXXXXXXXXXXX/viewform?embedded=true" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-    </div>
-    <p class="text-center text-muted" style="font-size: 0.98rem;">
-      <i>আপনার দেয়া তথ্য কেবল অনুদান যাচাই এবং ধন্যবাদ জানানোর জন্য ব্যবহার করা হবে।</i>
-    </p>
-  </div>
-  <!-- Bootstrap JS (Optional) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript Dependencies -->
+    <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="plugins.js"></script>
+    <script src="main.js"></script>
+    <script>
+        const form = document.getElementById('contact-form');
+        const successMessage = $('.form-messege');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            successMessage.html('');
+            const formData = new FormData(form);
+            console.log([...formData.entries()]);
+
+            fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSczAxkgcYluNmmMJ_66nf6aPu40IS6crPAuysIA2Krg6bPJrA/formResponse', {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData,
+            })
+            .then((feedback) => {
+                successMessage.html('Form submitted successfully!');
+                successMessage.css("color", 'green');
+                console.log(feedback);
+                form.reset();
+            })
+            .catch((error) => {
+                successMessage.html('Error submitting form. Please try again.');
+                successMessage.css("color", 'red');
+                console.error('Error:', error.message);
+            });
+        });
+    </script>
 </body>
 </html>
