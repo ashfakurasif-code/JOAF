@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -34,6 +33,35 @@
             width: 160px;
             display: block;
             margin: 0 auto 1rem auto;
+        }
+        .custom-form-container {
+            background: #f0f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #075e55;
+            overflow: hidden;
+        }
+        .custom-form-container iframe {
+            border: none;
+            width: 100%;
+            height: 600px;
+            background: transparent;
+        }
+        .custom-form-container .form-header {
+            background: #075e55;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        .custom-form-container .form-footer {
+            background: #d8006c;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+            margin: 20px -20px -20px -20px;
         }
     </style>
     <!-- Modernizr -->
@@ -114,7 +142,6 @@
                     </div>
                 </div>
             </div>
-
         </header>
 
         <div class="donate-section">
@@ -130,9 +157,15 @@
             <div class="alert alert-info text-center">
                 <b>নির্দেশনা:</b> বিকাশে টাকা পাঠানোর পর নিচের ফর্মটি পূরণ করুন, যেন আমরা আপনার অনুদান কনফার্ম করতে পারি।
             </div>
-            <!-- Google Form embed here -->
-            <div class="mb-3">
-                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfKQpJOpQVdrgvt4nMF4SPFP61DMyw0WDUiEq4WCKGW80VDcA/viewform?embedded=true" width="640" height="1496" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+            <!-- Custom Styled Google Form -->
+            <div class="custom-form-container mb-3">
+                <div class="form-header">
+                    <h3>Donate Form</h3>
+                </div>
+                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfKQpJOpQVdrgvt4nMF4SPFP61DMyw0WDUiEq4WCKGW80VDcA/viewform?embedded=true" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+                <div class="form-footer">
+                    <p>Thank you for your support!</p>
+                </div>
             </div>
             <p class="text-center text-muted" style="font-size: 0.98rem;">
                 <i>আপনার দেয়া তথ্য কেবল অনুদান যাচাই এবং ধন্যবাদ জানানোর জন্য ব্যবহার করা হবে।</i>
