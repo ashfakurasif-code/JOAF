@@ -1,150 +1,133 @@
-/* JOAF কালার স্কিম */
-:root {
-  --primary-red: #90161f;
-  --primary-green: #0a5334;
-  --secondary-green: #075e55;
-  --dark-green: #043f3b;
-  --light-bg: #f8f9fa;
-  --text-dark: #333333;
+/* Reset some defaults */
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #F6E8CB; /* Light Cream Background */
+    color: #1A1A1A; /* Dark Text */
 }
 
-/* হেডার স্টাইল */
-.header-area {
-  background: linear-gradient(to right, var(--primary-green), var(--dark-green));
+/* Header Section */
+header {
+    background-color: #5C1C0E; /* Dark Brown */
+    color: #F6E8CB; /* Light text */
+    padding: 15px 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
 }
 
-.header-top {
-  background-color: var(--primary-red);
+/* Navigation */
+nav {
+    background-color: #8A4B3A; /* Medium Brown */
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+nav a {
+    color: #F6E8CB;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 18px;
+    transition: 0.3s;
+}
+nav a:hover {
+    color: #B5431E; /* Orange Red on hover */
 }
 
-/* হিরো সেকশন */
-.hero-area.section {
-  background: linear-gradient(rgba(10, 83, 52, 0.9), rgba(144, 22, 31, 0.8)), 
-              url('img/hero-1.jpg') center/cover no-repeat;
+/* Buttons */
+.button {
+    background-color: #B5431E; /* Orange Red */
+    color: #F6E8CB;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.button:hover {
+    background-color: #8A4B3A; /* Medium Brown */
 }
 
-.hs-item::before {
-  background: linear-gradient(to right, var(--primary-green), var(--primary-red));
-  opacity: 0.85;
+/* Sections */
+section {
+    padding: 40px 20px;
+    text-align: center;
+    background-color: #F6E8CB;
+    color: #1A1A1A;
 }
 
-/* বাটন স্টাইল */
-.btn {
-  background-color: var(--primary-red);
-  border-color: var(--primary-red);
+/* Headings */
+h1, h2, h3 {
+    color: #5C1C0E; /* Dark Brown */
+}
+h1 {
+    font-size: 36px;
+}
+h2 {
+    font-size: 28px;
+}
+h3 {
+    font-size: 22px;
 }
 
-.btn:hover {
-  background-color: var(--primary-green);
-  border-color: var(--primary-green);
+/* Footer */
+footer {
+    background-color: #5C1C0E; /* Dark Brown */
+    color: #F6E8CB;
+    text-align: center;
+    padding: 15px;
+    font-size: 14px;
 }
 
-/* সেকশন টাইটেল */
-.section-title h1,
-.section-title h2 {
-  color: var(--primary-red);
-  border-bottom: 2px solid var(--primary-green);
-  padding-bottom: 10px;
-  display: inline-block;
+/* Links inside footer */
+footer a {
+    color: #F6E8CB;
+    text-decoration: none;
+}
+footer a:hover {
+    color: #B5431E;
 }
 
-/* ভিশন-মিশন সেকশন */
-.vision-mission-area {
-  background-color: rgba(10, 83, 52, 0.1);
-  padding: 60px 0;
-}
-
-/* গ্যালারি সেকশন */
-.gallery-item .gallery-content h4 {
-  color: white;
-}
-
-.gallery-item .gallery-content a {
-  background-color: var(--primary-red);
-  border: 1px solid var(--primary-red);
-}
-
-.gallery-item .gallery-content a:hover {
-  background-color: var(--primary-green);
-  border-color: var(--primary-green);
-}
-
-/* কার্ড স্টাইল */
+/* Cards or Boxes */
 .card {
-  border: 1px solid var(--primary-green);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: #FFFFFF;
+    border: 2px solid #8A4B3A;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px;
+    color: #1A1A1A;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.card h3 {
+    color: #B5431E;
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(144, 22, 31, 0.15);
+/* Ticker Section */
+.ticker {
+    background-color: #5C1C0E;
+    color: #F6E8CB;
+    font-size: 18px;
+    padding: 10px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.ticker span {
+    display: inline-block;
+    padding-left: 100%;
+    animation: scroll 15s linear infinite;
+}
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
 }
 
-.card-header {
-  background-color: var(--primary-green);
-}
-
-.card-title {
-  color: var(--primary-red);
-  font-weight: 600;
-}
-
-/* ফুটার স্টাইল */
-.footer-area {
-  background: linear-gradient(to right, var(--primary-green), var(--dark-green));
-  color: white;
-}
-
-.footer-widget h4 {
-  color: white;
-  border-bottom: 2px solid var(--primary-red);
-  padding-bottom: 10px;
-}
-
-/* মেনু স্টাইল */
-.main-menu > ul > li > a {
-  color: var(--primary-green);
-  font-weight: 600;
-}
-
-.main-menu > ul > li > a:hover,
-.main-menu > ul > li.active > a {
-  color: var(--primary-red);
-}
-
-/* বিশেষ এলাকা */
-.important-news-area {
-  background-color: rgba(10, 83, 52, 0.1);
-  padding: 40px 0;
-}
-
-/* রেস্পন্সিভ ডিজাইন */
-@media (max-width: 767px) {
-  .hs-item .hs-content h1 {
-    font-size: 24px;
-  }
-  
-  .section-title h1 {
-    font-size: 24px;
-  }
-  
-  .header-social a {
-    margin: 0 10px;
-  }
-}
-
-/* অ্যানিমেশন */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in-up {
-  animation: fadeInUp 0.8s ease forwards;
+/* Clock */
+.clock {
+    color: #F6E8CB;
+    font-weight: bold;
+    float: right;
+    padding-right: 20px;
 }
