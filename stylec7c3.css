@@ -3205,18 +3205,24 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
     padding-right: 0;
 }
 /* === Colorful Smokey Cursor (overlay canvas) === */
-#smoke-cursor {
+/*  Rainbow Swirl Cursor – AdvancedTeam Style */
+#swirlCursor {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
   pointer-events: none;
-  z-index: 10000;          /* everything er upore */
-  filter: blur(1px) saturate(1.3);
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  mix-blend-mode: screen;
 }
 
-/* যারা motion কম রাখতে চান তাদের জন্য */
+/* motion reduced user convenience */
 @media (prefers-reduced-motion: reduce) {
-  #smoke-cursor { display: none !important; }
+  #swirlCursor { display: none !important; }
 }
+
+
 
 
 
