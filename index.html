@@ -831,54 +831,13 @@
             });
         });
     </script>
-<canvas id="swirlCursor"></canvas>
-<script>
-(() => {
-  const canvas = document.getElementById("swirlCursor"), ctx = canvas.getContext("2d");
-  const dpr = window.devicePixelRatio || 1;
-  let w = canvas.width = innerWidth * dpr, h = canvas.height = innerHeight * dpr;
-  ctx.scale(dpr, dpr);
 
-  window.addEventListener("resize", () => {
-    w = canvas.width = innerWidth * dpr;
-    h = canvas.height = innerHeight * dpr;
-    ctx.scale(dpr, dpr);
-  });
-
-  let hue = 0;
-  const maxLen = 60;
-  const points = [];
-
-  document.addEventListener("mousemove", (e) => {
-    points.push({ x: e.clientX, y: e.clientY, alpha: 1, size: 30 + Math.random() * 20, hue });
-    if (points.length > maxLen) points.shift();
-  });
-
-  function animate() {
-    ctx.clearRect(0, 0, w, h);
-    points.forEach((p, i) => {
-      p.alpha *= 0.94;
-      p.size *= 0.96;
-      const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-      gradient.addColorStop(0, `hsla(${p.hue},80%,70%,${p.alpha})`);
-      gradient.addColorStop(1, `hsla(${p.hue},80%,50%,0)`);
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-      ctx.fill();
-    });
-    hue = (hue + 1) % 360;
-    requestAnimationFrame(animate);
-  }
-
-  animate();
-})();
-</script>
 
 
 
 </body>
 </html>
+
 
 
 
