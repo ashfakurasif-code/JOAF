@@ -31,8 +31,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
     <link rel="stylesheet" href="pluginsc7c3.css?v=2.6.25">
     <link rel="stylesheet" href="stylec7c3.css?v=2.6.25">
-    <!-- Animation CSS (using Animate.css for simple animations) -->
+    <!-- Animation CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Smokey Cursor CSS -->
+    <style>
+        body {
+            cursor: none;
+        }
+        .smokey-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: rgba(7, 94, 85, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.2s ease-out;
+        }
+    </style>
     <!-- Modernizr -->
     <script src="modernizr-2.8.3.min.js"></script>
     <!-- Google Analytics -->
@@ -46,17 +63,15 @@
     </script>
 </head>
 <body>
-    <!-- Preloader -->
-   <!--  <div id="loading" class="preloader">
-        <div class="loading-center">
-            <div class="loading-center-absolute">
-                <div class="object object_one"></div>
-                <div class="object object_two"></div>
-                <div class="object object_three"></div>
-                <div class="object object_four"></div>
-            </div>
-        </div>
-    </div> -->
+    <!-- Smokey Cursor -->
+    <div class="smokey-cursor"></div>
+    <script>
+        const cursor = document.querySelector('.smokey-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.pageX - 10 + 'px';
+            cursor.style.top = e.pageY - 10 + 'px';
+        });
+    </script>
 
     <!-- Main Wrapper -->
     <div class="wrapper fix">
@@ -106,69 +121,66 @@
                                     <li><a href="donate.html">Donate</a></li>
                                 </ul>
                             </nav>
-                            
                         </div>
                     </div>
                 </div>
             </div>
+        </header>
 
-        </header>    <!-- Hero Area -->
-<section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
-    <div class="hero-slider">
-        <!-- Hero Slide Item -->
-        <div class="hs-item" style="background-image: url(img/hero-1.jpg);">
-            <div class="hs-item-wrapper fix">
-                <div class="hs-image float-left">
-                    <img src="img/profile.jpg" style="border-top-left-radius: 50px; border-top-right-radius: 50px; margin: 50px auto;" alt="JOAF Profile">
-                </div>
-                <div class="hs-content fix">
-                    <h2>We are...</h2>
-                    <h1 id="hero-title">July Online Activists’ Forum</h1>
-                    <p>দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
-                    <a href="membership.html" class="btn btn-xlg"> JOIN NOW <i class="zmdi zmdi-long-arrow-right"></i></a>
+        <!-- Hero Area -->
+        <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
+            <div class="hero-slider">
+                <div class="hs-item" style="background-image: url(img/hero-1.jpg);">
+                    <div class="hs-item-wrapper fix">
+                        <div class="hs-image float-left">
+                            <img src="img/profile.jpg" style="border-top-left-radius: 50px; border-top-right-radius: 50px; margin: 50px auto;" alt="JOAF Profile">
+                        </div>
+                        <div class="hs-content fix">
+                            <h2>We are...</h2>
+                            <h1 id="hero-title">July Online Activists’ Forum</h1>
+                            <p>দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
+                            <a href="membership.html" class="btn btn-xlg"> JOIN NOW <i class="zmdi zmdi-long-arrow-right"></i></a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
+        </section>
 
-<!-- Special Area -->
-    <section id="special-area" class="about-area section pb-120 pt-120" aria-labelledby="special-title">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 mx-auto text-center" style="color:#075e55">
-                  <h1 class="display-1 pt-40 pb-40"> Press Release </h1>
-                  <a href="https://www.prothomalo.com/politics/87ksqqgz9c" target="_blank" class="animate__animated animate__fadeInUp">
-                    <img class="img-fluid img-responsive img-thumbnail" src="media/prothomalo-27-4-25.jpg" />
-                  </a>
+        <!-- Special Area -->
+        <section id="special-area" class="about-area section pb-120 pt-120" aria-labelledby="special-title">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 mx-auto text-center" style="color:#075e55">
+                        <h1 class="display-1 pt-40 pb-40 animate__animated animate__fadeInDown">Press Release</h1>
+                    </div>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-md-8 text-center">
+                        <div class="card mb-4 animate__animated animate__zoomIn">
+                            <div class="card-body">
+                                <h5 class="card-title">New Initiative Announcement</h5>
+                                <p class="card-text">JOAF launches a nationwide campaign to support education for underprivileged children, starting September 2025.</p>
+                                <a href="press-release-1.html" class="btn btn-primary">Read More</a>
+                            </div>
+                        </div>
+                        <div class="card mb-4 animate__animated animate__zoomIn" style="animation-delay: 0.2s">
+                            <div class="card-body">
+                                <h5 class="card-title">Community Support Program</h5>
+                                <p class="card-text">JOAF organizes relief efforts in flood-affected areas of Bangladesh, details to be released soon.</p>
+                                <a href="press-release-2.html" class="btn btn-primary">Read More</a>
+                            </div>
+                        </div>
+                        <div class="card mb-4 animate__animated animate__zoomIn" style="animation-delay: 0.4s">
+                            <div class="card-body">
+                                <h5 class="card-title">Youth Leadership Summit</h5>
+                                <p class="card-text">JOAF to host a summit on October 15, 2025, to empower young leaders across the country.</p>
+                                <a href="press-release-3.html" class="btn btn-primary">Read More</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-12 mx-auto text-center" style="color:#075e55">
-                  <h2 class="display-5 pt-20 pb-20"> শহীদ পরিবারের ওপর হামলার ঘটনায় নোয়াখালীতে জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম (জোয়াফ) এর মানববন্ধন </p>
-                </div>
-                <div class="col-md-4 animate__animated animate__fadeInLeft">
-                  <p class="pt-20 pb-20"> শহীদ পরিবারের ওপর হামলার ঘটনায় নোয়াখালীতে জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম (জোয়াফ) এর মানববন্ধন </p>
-                    <a href="https://www.somoynews.tv/news/2025-04-29/wDW96wTA" target="_blank">
-                       <img class="img-fluid img-responsive img-thumbnail" src="media/somoi-noakhali-28-4-25.jpg" />
-                    </a>
-                </div>
-                <div class="col-md-4 animate__animated animate__fadeInUp">
-                  <p class="pt-20 pb-20"> নোয়াখালীতে জুলাই বিপ্লবে শহীদের ভাইয়ের উপর হামলা ও ধর্ষকদের শাস্তির দাবিতে মানববন্ধন </p>
-                    <a href="#" target="_self">
-                       <img class="img-fluid img-responsive img-thumbnail" src="media/bdtimes-noakhali-29-4-25.jpg" />
-                    </a>
-                </div>
-                <div class="col-md-4 animate__animated animate__fadeInRight">
-                  <p class="pt-20 pb-20"> নোয়াখালীতে শহীদ পরিবারের সদস্যের উপর সন্ত্রাসী হামলার প্রতিবাদ ও ধর্ষকের শাস্তির দাবিতে মানব বন্ধন করেছে জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম (জোয়াফ) </p>
-                    <a href="#" target="_self">
-                       <img class="img-fluid img-responsive img-thumbnail" src="media/central-noakhali-29-4-25.jpg" />
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
+        </section>
 
         <!-- Footer Area -->
         <footer id="footer-area" class="footer-area section" aria-labelledby="footer-title">
@@ -187,7 +199,6 @@
                         </div>
                         <!-- Instagram -->
                         <div class="footer-widget col-lg-4 col-md-6 col-12 mb-40">
-                            
                         </div>
                         <!-- Contact Form -->
                         <div class="footer-widget col-lg-5 col-12 mb-40">
@@ -227,7 +238,8 @@
     </div>
 
     <!-- JavaScript Dependencies -->
-    <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="plugins.js"></script>
     <script src="main.js"></script>
@@ -260,6 +272,4 @@
         });
     </script>
 </body>
-
-
 </html>
