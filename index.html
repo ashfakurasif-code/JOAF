@@ -831,5 +831,24 @@
             });
         });
     </script>
+<!-- Smokey Cursor Effect -->
+<div class="cursor"></div>
+<div class="cursor-trail"></div>
+<script>
+  const cursor = document.querySelector('.cursor');
+  const trail = document.querySelector('.cursor-trail');
+
+  document.addEventListener('mousemove', (e) => {
+    cursor.style.top = e.clientY + 'px';
+    cursor.style.left = e.clientX + 'px';
+
+    setTimeout(() => {
+      trail.style.top = e.clientY + 'px';
+      trail.style.left = e.clientX + 'px';
+    }, 100);
+  });
+</script>
+
 </body>
 </html>
+
