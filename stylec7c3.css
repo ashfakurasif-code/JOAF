@@ -3204,23 +3204,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
     padding-left: 0;
     padding-right: 0;
 }
-/* === Colorful Smokey Cursor (overlay canvas) === */
-/*  Rainbow Swirl Cursor – AdvancedTeam Style */
-#swirlCursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-  mix-blend-mode: screen;
-}
 
-/* motion reduced user convenience */
-@media (prefers-reduced-motion: reduce) {
-  #swirlCursor { display: none !important; }
-}
 
 
 
