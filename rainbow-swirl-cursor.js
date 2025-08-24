@@ -1,6 +1,5 @@
-// Oily Rainbow Cursor - robust and error-free!
+// Clean, crisp oily rainbow cursor (no fog on page!)
 (function() {
-  // Create the canvas overlay
   const canvas = document.createElement('canvas');
   canvas.style.position = 'fixed';
   canvas.style.top = '0';
@@ -11,7 +10,6 @@
   canvas.style.zIndex = '999999';
   document.body.appendChild(canvas);
 
-  // Hide the native cursor
   document.body.style.cursor = 'none';
 
   let dpr = window.devicePixelRatio || 1;
@@ -40,26 +38,19 @@
   }
 
   function animate() {
-    // Ensure correct scaling every frame!
+    // Always clear the canvas fully, no overlay or fog!
     ctx.setTransform(1,0,0,1,0,0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr,0,0,dpr,0,0);
 
-    // Oily fade
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.18;
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-
-    // Smoothed mouse movement
     last.x = lerp(last.x, mouse.x, 0.28);
     last.y = lerp(last.y, mouse.y, 0.28);
 
-    // Trail update
     trail.push({x: last.x, y: last.y, time: performance.now()});
     if(trail.length > maxTrail) trail.shift();
 
-    // Draw rainbow trail
+    // Rainbow trail
+    ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = 0.72;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -87,6 +78,10 @@
       ctx.fillStyle = `hsl(${(performance.now()/16)%360},100%,82%)`;
       ctx.fill();
     }
+
+    // Reset composite and alpha for next frame
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1.0;
 
     requestAnimationFrame(animate);
   }
