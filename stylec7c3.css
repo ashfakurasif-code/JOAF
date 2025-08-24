@@ -1556,7 +1556,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   content: "";
   left: 0;
   right: 0;
-  top: -15px;
+  top: 0;
   bottom: 0;
   z-index: 2;
   opacity:0.9;
@@ -3208,6 +3208,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 body {
   cursor: none;
 }
+
 
 
 
