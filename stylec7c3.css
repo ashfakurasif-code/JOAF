@@ -1551,12 +1551,12 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   position: relative;
 }
 .hs-item::before {
-  background-color: #0a492e;
+  background-color: #ff00007a;
   position: absolute;
   content: "";
   left: 0;
   right: 0;
-  top: 0;
+  top: -15;
   bottom: 0;
   z-index: 2;
   opacity:0.9;
@@ -3208,6 +3208,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 body {
   cursor: none;
 }
+
 
 
 
