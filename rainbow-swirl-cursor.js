@@ -1,28 +1,85 @@
-// Rainbow Swirl Cursor with Glow & Spread Effect
-const swirl = document.createElement('div');
-swirl.style.position = 'fixed';
-swirl.style.pointerEvents = 'none';
-swirl.style.zIndex = '99999';
-swirl.style.width = '42px';
-swirl.style.height = '42px';
-swirl.style.borderRadius = '50%';
-swirl.style.background = 'conic-gradient(red, orange, yellow, green, blue, indigo, violet, red)';
-swirl.style.boxShadow = '0 0 32px 16px rgba(255,255,255,0.15), 0 0 80px 40px rgba(255,0,255,0.08)';
-swirl.style.mixBlendMode = 'screen';
-swirl.style.transition = 'transform 0.05s linear, box-shadow 0.18s cubic-bezier(0.4,0,0.2,1)';
-swirl.style.opacity = '0.93';
+// Rainbow Swirl Cursor - advanced.team style
+// Place this in public/rainbow-swirl-cursor.js and include it in your HTML
 
-document.body.appendChild(swirl);
+(function() {
+  // Create a canvas overlay
+  const canvas = document.createElement('canvas');
+  canvas.style.position = 'fixed';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.pointerEvents = 'none';
+  canvas.style.zIndex = '999999';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
 
-let angle = 0;
-document.addEventListener('mousemove', (e) => {
-  swirl.style.left = (e.clientX - 21) + 'px';
-  swirl.style.top = (e.clientY - 21) + 'px';
-  angle += 4;
-  swirl.style.transform = `rotate(${angle}deg) scale(1.08)`;
-  swirl.style.boxShadow = `
-    0 0 44px 22px rgba(255,255,255,0.21),
-    0 0 160px 60px rgba(255,0,255,0.12),
-    0 0 60px 22px rgba(0,255,255,0.09)
-  `;
-});
+  // Hide the native cursor
+  document.body.style.cursor = 'none';
+
+  const ctx = canvas.getContext('2d');
+
+  let mouse = {x: window.innerWidth / 2, y: window.innerHeight / 2};
+  let last = {x: mouse.x, y: mouse.y};
+  let trail = [];
+  const maxTrail = 35;
+  const swirlRadius = 24;
+
+  window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  function lerp(a, b, n) {
+    return (1 - n) * a + n * b;
+  }
+
+  function drawSwirl(x, y, t) {
+    const step = 10;
+    for (let i = 0; i < 360; i += step) {
+      const rad = (i + t * 2) * Math.PI / 180;
+      const cx = x + Math.cos(rad) * swirlRadius;
+      const cy = y + Math.sin(rad) * swirlRadius;
+      ctx.save();
+      ctx.globalAlpha = 0.36;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 9, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fillStyle = `hsl(${i + t * 4}, 98%, 60%)`;
+      ctx.shadowColor = `hsl(${i + t * 4}, 98%, 70%)`;
+      ctx.shadowBlur = 18;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Move last position towards mouse for smooth trailing
+    last.x = lerp(last.x, mouse.x, 0.32);
+    last.y = lerp(last.y, mouse.y, 0.32);
+
+    // Add to trail
+    trail.push({x: last.x, y: last.y, t: performance.now()/13});
+    if (trail.length > maxTrail) trail.shift();
+
+    // Draw trailing swirls
+    trail.forEach((pos, i) => {
+      ctx.save();
+      ctx.globalAlpha = (i + 1) / trail.length * 0.9;
+      drawSwirl(pos.x, pos.y, pos.t);
+      ctx.restore();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+})();
