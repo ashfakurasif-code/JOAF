@@ -254,7 +254,7 @@
                         <!-- Press Release Section -->
                         <div class="row mb-50">
                             <div class="col-12">
-                                <h2 class="mb-30">প্রেস রিলিজ</h2>
+                                <h2 class="mb-30">প্রেস বিজ্ঞপ্তি</h2>
                             </div>
                             
                             <!-- Press Release 1 -->
@@ -263,7 +263,7 @@
                                     <img src="img/press-release-1.jpg" alt="প্রেস রিলিজ ১" class="news-image">
                                     <div class="p-3">
                                         <h4>বিএনপি উপদেষ্টার বিভ্রান্তিকর বক্তব্যের নিন্দা</h4>
-                                        <p class="text-muted">তারিখ: ১০ আগস্ট, ২০২৫</p>
+                                        <p class="text-muted">তারিখ: ২৫ আগস্ট, ২০২৫</p>
                                         <p>আমরা গভীর দুঃখের সঙ্গে লক্ষ্য করছি যে, বিএনপির চেয়ারপারসন বেগম খালেদা জিয়ার বর্তমান রাজনৈতিক উপদেষ্টা জনাব ফজলুর রহমান দীর্ঘদিন ধরেই বিভ্রান্তিকর বিবৃতি প্রদান করে আসছেন...</p>
                                         <a href="press-release-1.html" class="btn btn-read-more">বিস্তারিত পড়ুন</a>
                                     </div>
@@ -473,35 +473,47 @@
     <!-- Dynamic News Loading Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Function to fetch news from an API
+            async function fetchNews() {
+                try {
+                    // Using a news API (you'll need to replace with a real API endpoint)
+                    // For demonstration, we'll use a placeholder API
+                    const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=10');
+                    const newsData = await response.json();
+                    
+                    // Format the news data for our use
+                    const latestNews = newsData.map(item => item.title);
+                    
+                    // For popular news, we'll simulate by using a different set
+                    const popularNews = newsData.map(item => `জনপ্রিয়: ${item.title}`);
+                    
+                    return { latestNews, popularNews };
+                } catch (error) {
+                    console.error('Error fetching news:', error);
+                    
+                    // Fallback news data if API fails
+                    return {
+                        latestNews: [
+                            "জবির সিন্ডিকেটে জকসু সংবিধির প্রস্তাব গৃহীত, থাকছে না বয়সের বাধা",
+                            "ফরিদপুরে তিন মাসে গ্রেপ্তার ১৩২ মাদক ব্যবসায়ী",
+                            "বাকৃবির আশরাফুল হক হলে একাধিক চুরির ঘটনা, ক্ষুব্ধ শিক্ষার্থীরা",
+                            "শেখ বশিরউদ্দিনকে বিমান বাংলাদেশ এয়ারলাইন্সের চেয়ারম্যান পদে নিয়োগ দিলো সরকার",
+                            "রয়টার্স ছাড়লেন আলোকচিত্রী ভ্যালেরি জিঙ্ক, গাজায় সাংবাদিক হত্যায় 'বৈধতা' দেয়ার অভিযোগ"
+                        ],
+                        popularNews: [
+                            "বান্দরবানে স্কুলছাত্রীকে সংঘবদ্ধ ধর্ষণ, আটক ৩",
+                            "ফ্রিতে ২ লাখ টাকার আইটি প্রশিক্ষণ, কোর্স শেষে চাকরির সুযোগ, আবেদন করেছেন কি",
+                            "বিশ্ববাজারে কমেছে স্বর্ণের দাম, জানুন আজকের হালনাগাদ দর",
+                            "ঢাবিতে ভর্তি পরীক্ষার সিট বরাদ্দ নিয়ে বিতর্ক, শিক্ষার্থীদের的不满",
+                            "করোনা পরিস্থিতি নিয়ে নতুন সতর্কতা জারি"
+                        ]
+                    };
+                }
+            }
+            
             // Function to load news dynamically
-            function loadNews() {
-                // Latest News Data (would normally come from an API)
-                const latestNews = [
-                    "জবির সিন্ডিকেটে জকসু সংবিধির প্রস্তাব গৃহীত, থাকছে না বয়সের বাধা",
-                    "ফরিদপুরে তিন মাসে গ্রেপ্তার ১৩২ মাদক ব্যবসায়ী",
-                    "বাকৃবির আশরাফুল হক হলে একাধিক চুরির ঘটনা, ক্ষুব্ধ শিক্ষার্থীরা",
-                    "শেখ বশিরউদ্দিনকে বিমান বাংলাদেশ এয়ারলাইন্সের চেয়ারম্যান পদে নিয়োগ দিলো সরকার",
-                    "রয়টার্স ছাড়লেন আলোকচিত্রী ভ্যালেরি জিঙ্ক, গাজায় সাংবাদিক হত্যায় ‘বৈধতা’ দেয়ার অভিযোগ",
-                    "রুমিন ফারহানার মিথ্যাচারের প্রতিবাদে এনসিপির সংবাদ সম্মেলন",
-                    "রণবীর-আলিয়ার ২৫০ কটি রুপির নতুন বাংলো ঘিরে বিতর্ক, গোপনীয়তার প্রশ্ন তুললেন অভিনেত্রী",
-                    "স্বর্ণের নতুন দাম নির্ধারণ",
-                    "সিসিটিভি ক্যামেরার সামনে হবে ঢাকসুর ভোট গণনা",
-                    "রাকসু নির্বাচন: ৩ দিনে মনোনয়নপত্র সংগ্রহ করেছেন ১৬৮ জন"
-                ];
-                
-                // Popular News Data (would normally come from an API)
-                const popularNews = [
-                    "বান্দরবানে স্কুলছাত্রীকে সংঘবদ্ধ ধর্ষণ, আটক ৩",
-                    "ফ্রিতে ২ লাখ টাকার আইটি প্রশিক্ষণ, কোর্স শেষে চাকরির সুযোগ, আবেদন করেছেন কি",
-                    "বিশ্ববাজারে কমেছে স্বর্ণের দাম, জানুন আজকের হালনাগাদ দর",
-                    "ঢাবিতে ভর্তি পরীক্ষার সিট বরাদ্দ নিয়ে বিতর্ক, শিক্ষার্থীদের的不満",
-                    "করোনা পরিস্থিতি নিয়ে নতুন সতর্কতা জারি",
-                    "বাংলাদেশী ক্রিকেট দলের জন্য নতুন কোচ নিয়োগ",
-                    "শেয়ারবাজারে লভ্যাংশ ঘোষণা করেছে ১৫ কোম্পানি",
-                    "নতুন অর্থবছরে বাজেট ঘোষণা করলেন অর্থমন্ত্রী",
-                    "মেট্রোরেলের দ্বিতীয় ধাপের কাজ শুরু হচ্ছে আগামী মাসে",
-                    "বাংলাদেশে প্রথমবারের মতো আয়োজিত হচ্ছে আন্তর্জাতিক ফিল্ম ফেস্টিভাল"
-                ];
+            async function loadNews() {
+                const { latestNews, popularNews } = await fetchNews();
                 
                 // Function to create news items
                 function createNewsItems(newsArray, containerId) {
@@ -524,24 +536,13 @@
                 // Load news into containers
                 createNewsItems(latestNews, 'latest-news-container');
                 createNewsItems(popularNews, 'popular-news-container');
-                
-                // Simulate dynamic updates every 30 seconds
-                setInterval(() => {
-                    // Rotate news items to simulate updates
-                    const firstLatest = latestNews.shift();
-                    latestNews.push(firstLatest);
-                    
-                    const firstPopular = popularNews.shift();
-                    popularNews.push(firstPopular);
-                    
-                    // Update the news containers
-                    createNewsItems(latestNews, 'latest-news-container');
-                    createNewsItems(popularNews, 'popular-news-container');
-                }, 30000);
             }
             
             // Initialize news loading
             loadNews();
+            
+            // Set interval to refresh news every 3 seconds
+            setInterval(loadNews, 3000);
             
             // Contact form handling
             const form = document.getElementById('contact-form');
