@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Press Release | July Online Activists’ Forum - JOAF</title>
-    <meta name="description" content="Press releases from July Online Activists’ Forum (JOAF), highlighting our activities and initiatives for a better Bangladesh.">
-    <meta name="keywords" content="JOAF, July Online Activists’ Forum, press release, media, Bangladesh, youth movement, social justice">
+    <title>Press Release | July Online Activists' Forum - JOAF</title>
+    <meta name="description" content="Press releases from July Online Activists' Forum (JOAF), highlighting our activities and initiatives for a better Bangladesh.">
+    <meta name="keywords" content="JOAF, July Online Activists' Forum, press release, media, Bangladesh, youth movement, social justice">
     <meta name="author" content="JOAF Team">
     <meta name="robots" content="index, follow">    
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Press Release | July Online Activists’ Forum - JOAF">
+    <meta property="og:title" content="Press Release | July Online Activists' Forum - JOAF">
     <meta property="og:description" content="Latest press releases from JOAF, committed to transparency and building a prosperous Bangladesh through united efforts.">
     <meta property="og:image" content="logoc7c3.png?v=1.1">
     <meta property="og:url" content="press-release.html">
@@ -19,7 +19,7 @@
     <meta property="fb:app_id" content="1849982302524358">
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Press Release | July Online Activists’ Forum - JOAF">
+    <meta name="twitter:title" content="Press Release | July Online Activists' Forum - JOAF">
     <meta name="twitter:description" content="Check out the latest press releases from JOAF, dedicated to social justice and democracy in Bangladesh.">
     <meta name="twitter:image" content="logoc7c3.png?v=1.1">
     <!-- Canonical URL -->
@@ -29,15 +29,15 @@
     <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
-    <link rel="stylesheet" href="pluginsc7c3.css?v=2.6.25">
-    <link rel="stylesheet" href="stylec7c3.css?v=2.6.25">
-    <!-- Animation CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <!-- Smokey Cursor CSS -->
     <style>
+        /* Custom styles for the press release page */
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             cursor: none;
+            background-color: #f8f9fa;
         }
+        
         .smokey-cursor {
             position: fixed;
             width: 20px;
@@ -49,19 +49,241 @@
             mix-blend-mode: difference;
             transition: transform 0.2s ease-out;
         }
+        
+        .header-area {
+            background: linear-gradient(to right, #075e55, #128c7e);
+            color: white;
+        }
+        
+        .header-top {
+            padding: 8px 0;
+            background-color: #054a43;
+        }
+        
+        .header-social a {
+            color: white;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        
+        .header-info p {
+            margin: 0;
+            color: #eee;
+        }
+        
+        .navbar-brand img {
+            transition: transform 0.3s;
+        }
+        
+        .navbar-brand img:hover {
+            transform: scale(1.05);
+        }
+        
+        .main-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+        
+        .main-menu li {
+            margin: 0 5px;
+        }
+        
+        .main-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .main-menu a:hover, .main-menu .active a {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .hero-area {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1516633630673-67bbad747022?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
+        
+        .hero-area h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .hero-area p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+        
+        .btn-primary {
+            background-color: #075e55;
+            border-color: #054a43;
+        }
+        
+        .btn-primary:hover {
+            background-color: #054a43;
+            border-color: #033c36;
+        }
+        
+        .section-title {
+            color: #075e55;
+            font-weight: 700;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: #075e55;
+        }
+        
+        .press-card {
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 30px;
+        }
+        
+        .press-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .press-image {
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .press-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .press-card:hover .press-image img {
+            transform: scale(1.05);
+        }
+        
+        .press-content {
+            padding: 20px;
+        }
+        
+        .press-date {
+            color: #075e55;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .press-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .press-excerpt {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .footer-area {
+            background-color: #075e55;
+            color: white;
+            padding: 60px 0 0;
+        }
+        
+        .footer-widget h4 {
+            color: white;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .footer-widget h4:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: white;
+        }
+        
+        .footer-widget p, .footer-widget li {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .input-box input, .input-box textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .input-box input[type="submit"] {
+            background-color: #054a43;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .input-box input[type="submit"]:hover {
+            background-color: #033c36;
+        }
+        
+        .footer-copyright {
+            background-color: #054a43;
+            padding: 20px 0;
+            text-align: center;
+        }
+        
+        .footer-copyright p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .footer-copyright a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-area h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-area p {
+                font-size: 1.2rem;
+            }
+            
+            .main-menu ul {
+                flex-direction: column;
+            }
+        }
     </style>
-    <!-- Modernizr -->
-    <script src="modernizr-2.8.3.min.js"></script>
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-G16GVEBVG0"></script>
-    <link rel="manifest" href="site.webmanifest">
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-G16GVEBVG0');
-    </script>
 </head>
+
 <body>
     <!-- Smokey Cursor -->
     <div class="smokey-cursor"></div>
@@ -129,51 +351,67 @@
 
         <!-- Hero Area -->
         <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
-            <div class="hero-slider">
-                <div class="hs-item" style="background-image: url(img/hero-1.jpg);">
-                    <div class="hs-item-wrapper fix">
-                        <div class="hs-image float-left">
-                            <img src="img/profile.jpg" style="border-top-left-radius: 50px; border-top-right-radius: 50px; margin: 50px auto;" alt="JOAF Profile">
-                        </div>
-                        <div class="hs-content fix">
-                            <h2>We are...</h2>
-                            <h1 id="hero-title">July Online Activists’ Forum</h1>
-                            <p>দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
-                            <a href="membership.html" class="btn btn-xlg"> JOIN NOW <i class="zmdi zmdi-long-arrow-right"></i></a>
-                        </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <h1 id="hero-title">July Online Activists' Forum</h1>
+                        <p>দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
+                        <a href="membership.html" class="btn btn-primary btn-lg"> JOIN NOW <i class="zmdi zmdi-long-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Special Area -->
-        <section id="special-area" class="about-area section pb-120 pt-120" aria-labelledby="special-title">
+        <!-- Press Release Area -->
+        <section class="section py-5">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-12 mx-auto text-center" style="color:#075e55">
-                        <h1 class="display-1 pt-40 pb-40 animate__animated animate__fadeInDown">Press Release</h1>
+                    <div class="col-md-12 text-center mb-5">
+                        <h2 class="section-title">Press Releases</h2>
+                        <p class="lead">Latest statements and announcements from JOAF</p>
                     </div>
                 </div>
-                <div class="row justify-content-center">
-                    <div class="col-md-8 text-center">
-                        <div class="card mb-4 animate__animated animate__zoomIn">
-                            <div class="card-body">
-                                <h5 class="card-title">New Initiative Announcement</h5>
-                                <p class="card-text">JOAF launches a nationwide campaign to support education for underprivileged children, starting September 2025.</p>
-                                <a href="press-release-1.html" class="btn btn-primary">Read More</a>
+                <div class="row">
+                    <!-- First Press Release -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="press-card animate__animated animate__zoomIn">
+                            <div class="press-image">
+                                <img src="https://images.unsplash.com/photo-1588690154757-badf464cef5e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Political Analysis">
+                            </div>
+                            <div class="press-content">
+                                <div class="press-date">August 28, 2025</div>
+                                <h3 class="press-title">JOAF Condemns Misleading Statements by BNP Advisor</h3>
+                                <p class="press-excerpt">JOAF expresses deep concern over divisive remarks made by Fazlur Rahman, political advisor to BNP Chairperson Khaleda Zia...</p>
+                                <a href="press-release-1.html" class="btn btn-primary">Read Full Statement</a>
                             </div>
                         </div>
-                        <div class="card mb-4 animate__animated animate__zoomIn" style="animation-delay: 0.2s">
-                            <div class="card-body">
-                                <h5 class="card-title">Community Support Program</h5>
-                                <p class="card-text">JOAF organizes relief efforts in flood-affected areas of Bangladesh, details to be released soon.</p>
+                    </div>
+                    
+                    <!-- Second Press Release -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="press-card animate__animated animate__zoomIn" style="animation-delay: 0.2s">
+                            <div class="press-image">
+                                <img src="https://images.unsplash.com/photo-1516633630673-67bbad747022?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Community Support">
+                            </div>
+                            <div class="press-content">
+                                <div class="press-date">August 20, 2025</div>
+                                <h3 class="press-title">Community Support Program</h3>
+                                <p class="press-excerpt">JOAF organizes relief efforts in flood-affected areas of Bangladesh, details to be released soon.</p>
                                 <a href="press-release-2.html" class="btn btn-primary">Read More</a>
                             </div>
                         </div>
-                        <div class="card mb-4 animate__animated animate__zoomIn" style="animation-delay: 0.4s">
-                            <div class="card-body">
-                                <h5 class="card-title">Youth Leadership Summit</h5>
-                                <p class="card-text">JOAF to host a summit on October 15, 2025, to empower young leaders across the country.</p>
+                    </div>
+                    
+                    <!-- Third Press Release -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="press-card animate__animated animate__zoomIn" style="animation-delay: 0.4s">
+                            <div class="press-image">
+                                <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Youth Leadership">
+                            </div>
+                            <div class="press-content">
+                                <div class="press-date">August 15, 2025</div>
+                                <h3 class="press-title">Youth Leadership Summit</h3>
+                                <p class="press-excerpt">JOAF to host a summit on October 15, 2025, to empower young leaders across the country.</p>
                                 <a href="press-release-3.html" class="btn btn-primary">Read More</a>
                             </div>
                         </div>
@@ -182,8 +420,42 @@
             </div>
         </section>
 
+        <!-- Full Statement Section -->
+        <section class="section py-5 bg-light">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="card shadow">
+                            <div class="card-body p-5">
+                                <h2 class="card-title text-center mb-4">JOAF Condemns Misleading Statements by BNP Advisor</h2>
+                                <p class="text-muted text-center">August 28, 2025</p>
+                                
+                                <div class="content mt-5">
+                                    <p>আমরা গভীর দুঃখের সঙ্গে লক্ষ্য করছি যে, বিএনপির চেয়ারপারসন বেগম খালেদা জিয়ার বর্তমান রাজনৈতিক উপদেষ্টা জনাব ফজলুর রহমান দীর্ঘদিন ধরেই বিভ্রান্তিকর বিবৃতি প্রদান করে আসছেন। ৫ আগস্টের পর থেকে তিনি অহেতুক অপবাদ ছড়িয়ে চলেছেন, যা জুলাইয়ের মহান আন্দোলনের প্রতি অবমাননা এবং শহীদ ছাত্র-জনতার আত্মত্যাগকে হেয় প্রতিপন্ন করার শামিল। তিনি বাংলাদেশের ইতিহাসের সবচেয়ে বড় গণঅভ্যুত্থানের অর্জনকে প্রশ্নবিদ্ধ করে আওয়ামী লীগের পুনর্বাসনের পথ সুগম করছেন।</p>
+
+                                    <p>আমরা ফজলুর রহমানকে সতর্ক করে বলতে চাই- যদি ফজলুর রহমান নিজেকে অবিলম্বে বিরত না করেন এবং প্রকাশ্যে ক্ষমা না চান, তবে আমরা ধরে নিতে বাধ্য হবো তিনি শেখ হাসিনার সাথে প্রত্যক্ষ যোগাযোগ রাখছেন এবং ফ্যাসিস্টদের নির্দেশনায় এরকম উষ্কানি ও অপ্রীতিকর বাক্য ব্যবহার করছেন।</p>
+
+                                    <p>আমরা স্পষ্টভাবে জানাতে চাই— জুলাই অনলাইন এক্টিভিস্ট ফোরাম এ ধরণের অপপ্রচার ও ষড়যন্ত্রের বিরুদ্ধে সর্বাত্মক প্রতিরোধ গড়ে তুলবে। আমরা চাই বিএনপি দল তার সর্বোচ্চ করণীয় প্রদর্শন করুক, যেন এ ধরণের ষড়যন্ত্রকারীদের চক্রান্ত ব্যর্থ হয়। দেশ-বিদেশের প্রবাসী ভাই-বোনদের আমরা ঐক্যবদ্ধভাবে এই আন্দোলনের পক্ষে সহযোগিতার আহ্বান জানাই।</p>
+
+                                    <p>এছাড়াও সকল কে আমরা বিনীত ভাবে অনুরোধ করবো "জুলাই আন্দোলন" ও "জুলাই যোদ্ধা" দের নিয়ে কেউ বিরূপ মন্তব্য করলে সবাই ঐ ব্যক্তির প্রতি সতর্কবাণী উচ্চারন করুন ও সাবধান করে দিন।</p>
+
+                                    <p>জুলাই অনলাইন এক্টিভিস্ট ফোরাম এই ক্ষেত্রে অটল, অবিচল ও সংগ্রামী হিসেবে সবসময় প্রতিবাদ করবে।</p>
+
+                                    <div class="signature mt-5 pt-4 border-top">
+                                        <p class="mb-0">~ তারান্নুম বিনতে জাকির</p>
+                                        <p class="mb-0">যুগ্ম মুখ্য সংগঠক</p>
+                                        <p>জুলাই অনলাইন এক্টিভিস্ট ফোরাম (জোয়াফ)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Footer Area -->
-        <footer id="footer-area" class="footer-area section" aria-labelledby="footer-title">
+        <footer id="footer-area" class="footer-area section">
             <div class="footer-top pb-80 pt-120">
                 <div class="container">
                     <div class="row">
@@ -241,8 +513,6 @@
     <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="plugins.js"></script>
-    <script src="main.js"></script>
     <script>
         const form = document.getElementById('contact-form');
         const successMessage = $('.form-messege');
