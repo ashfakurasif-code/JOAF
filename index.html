@@ -839,41 +839,43 @@
     </script>
 
 <script src="/rainbow-swirl-cursor.js"></script>
-<script>
-// সংখ্যা ইংরেজি থেকে বাংলায় কনভার্ট করার ফাংশন
+// ইংরেজি সংখ্যা → বাংলা সংখ্যা কনভার্ট ফাংশন
 function toBanglaNumber(num) {
     const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
     return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
 }
-// ইংরেজি টেক্সটকে বাংলায় ট্রান্সক্রাইব করার ফাংশন (simple letter mapping)
-function toBanglaText(text) {
-    const map = {
-        'A':'এ', 'B':'বি','C':'সি','D':'ডি','E':'ই','F':'এফ','G':'জি','H':'এইচ','I':'আই','J':'জে',
-        'K':'কে','L':'এল','M':'এম','N':'এন','O':'ও','P':'পি','Q':'কিউ','R':'আর','S':'এস','T':'টি',
-        'U':'ইউ','V':'ভি','W':'ডাবলিউ','X':'এক্স','Y':'ওয়াই','Z':'জি',
-        'a':'এ','b':'বি','c':'সি','d':'ডি','e':'ই','f':'এফ','g':'জি','h':'এইচ','i':'আই','j':'জে',
-        'k':'কে','l':'এল','m':'এম','n':'এন','o':'ও','p':'পি','q':'কিউ','r':'আর','s':'এস','t':'টি',
-        'u':'ইউ','v':'ভি','w':'ডাবলিউ','x':'এক্স','y':'ওয়াই','z':'জি'
+
+// ইংরেজি শহরের নাম → বাংলা কনভার্ট
+function toBanglaCity(city) {
+    const cityMap = {
+        "Dhaka": "ঢাকা",
+        "Chattogram": "চট্টগ্রাম",
+        "Sylhet": "সিলেট",
+        "Khulna": "খুলনা",
+        "Barishal": "বরিশাল",
+        "Rajshahi": "রাজশাহী",
+        "Rangpur": "রংপুর",
+        "Mymensingh": "ময়মনসিংহ"
     };
-    return text.split('').map(c => map[c] || c).join('');
+    return cityMap[city] ? cityMap[city] : city; // যদি না মেলে ইংরেজি নাম রাখবে
 }
 
-// Location fetch
+// লোকেশন API থেকে আনছে
 fetch('https://ipapi.co/json/')
   .then(response => response.json())
   .then(data => {
-    let city = data.city ? toBanglaText(data.city) : 'ঢাকা';
+    let city = data.city ? toBanglaCity(data.city) : 'ঢাকা';
     document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${city}`;
   })
   .catch(() => {
     document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ঢাকা`;
   });
 
-// 2. বাংলা তারিখ এবং সময়
+// তারিখ ও সময় ফাংশন
 function updateDateTime() {
     const now = new Date();
 
-    // বাংলা মাসের পূর্ণ নাম
+    // বাংলা মাস
     const banglaMonths = [
         "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
         "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
@@ -885,10 +887,12 @@ function updateDateTime() {
     const year = toBanglaNumber(now.getFullYear());
     const dateStr = `${day} ${month}, ${year}`;
 
-    // সময় বাংলা ফরম্যাটে
+    // সময়
     let hours = now.getHours();
     let minutes = now.getMinutes();
+    let seconds = now.getSeconds();
     if (minutes < 10) minutes = '0' + minutes;
+    if (seconds < 10) seconds = '0' + seconds;
 
     let period = '';
     if (hours >= 4 && hours < 12) {
@@ -899,21 +903,21 @@ function updateDateTime() {
         period = 'রাত';
     }
 
-    // 12-hour format এ কনভার্ট
+    // 12-hour ফরম্যাট
     let displayHour = hours % 12;
     if (displayHour === 0) displayHour = 12;
 
-    const timeStr = `${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}`;
+    const timeStr = `${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}:${toBanglaNumber(seconds)}`;
 
-    // DOM এ সেট করা
+    // DOM এ বসানো
     document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
     document.getElementById('time').innerHTML = `<i class="zmdi zmdi-time"></i> ${timeStr}`;
 }
 
-// প্রথমে কল করো
+// প্রথমবার কল
 updateDateTime();
-// প্রতি ১ মিনিটে আপডেট
-setInterval(updateDateTime, 60000);
+// প্রতি সেকেন্ডে আপডেট
+setInterval(updateDateTime, 1000);
 </script>
 </body>
 </html>
@@ -928,6 +932,7 @@ setInterval(updateDateTime, 60000);
 <meta name="twitter:title" content="July Online Activists’ Forum - JOAF" />
 <meta name="twitter:description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর অফিসিয়াল ওয়েবসাইটে স্বাগতম।" />
 <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png?v=1.1" />
+
 
 
 
