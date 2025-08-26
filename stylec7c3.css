@@ -1082,7 +1082,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
     transition: all 0.4s ease 0s;
 }
 .header-button > a:hover {
-    background-color: #333;
+    background-color: #000000;
 }
 .header-button.floatright {
     margin-left: 45px;
@@ -1171,8 +1171,8 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 }
 /*-- Header Top --*/
 .header-top {
-  background-color: #eb1f28;
-  padding: 15px 0;
+  background-color: #f5a468;
+  padding: 15px 15;
 }
 @media only screen and (max-width: 479px) {
   .header-top {
@@ -3208,6 +3208,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 body {
   cursor: none;
 }
+
 
 
 
