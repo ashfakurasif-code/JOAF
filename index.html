@@ -48,6 +48,12 @@
     <div class="wrapper fix">
         <header class="header-area">
             <!-- Header Top -->
+<!-- Location, Date, Time Info -->
+<div class="header-meta text-center col-sm-12 col-xs-12" id="header-meta-info" style="margin-top:10px; font-size:14px; display:flex; justify-content:center; gap:20px; color:#333;">
+    <span id="location"><i class="zmdi zmdi-pin"></i> Loading...</span>
+    <span id="date"><i class="zmdi zmdi-calendar"></i> Loading...</span>
+    <span id="time"><i class="zmdi zmdi-time"></i> Loading...</span>
+</div>
             <div class="header-top">
                 <div class="container">
                     <div class="row">
@@ -832,7 +838,42 @@
     </script>
 
 <script src="/rainbow-swirl-cursor.js"></script>
+<script>
+// 1. Location fetch
+fetch('https://ipapi.co/json/')
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${data.city}`;
+  })
+  .catch(() => {
+    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> Dhaka`;
+  });
 
+// 2. Date and Time
+function updateDateTime() {
+    const now = new Date();
+    
+    // বাংলা মাস ও সপ্তাহ সেট
+    const banglaMonths = ["জানু", "ফেব", "মার্চ", "এপ্রি", "মে", "জুন", "জুল", "আগ", "সেপ্ট", "অক্ট", "নভে", "ডিসে"];
+    const dateStr = `${now.getDate()} ${banglaMonths[now.getMonth()]}, ${now.getFullYear()} খ্রিঃ`;
+    
+    // Time
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+    let ampm = hours >= 12 ? 'বিকেল' : 'সকাল';
+    if(hours > 12) hours -= 12;
+    if(hours === 0) hours = 12;
+    if(minutes < 10) minutes = '0' + minutes;
+
+    const timeStr = `${ampm} ${hours}:${minutes}`;
+    
+    document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
+    document.getElementById('time').innerHTML = `<i class="zmdi zmdi-time"></i> ${timeStr}`;
+}
+
+updateDateTime();
+setInterval(updateDateTime, 60000); // প্রতি ১ মিনিটে আপডেট
+</script>
 
 </body>
 </html>
@@ -847,6 +888,7 @@
 <meta name="twitter:title" content="July Online Activists’ Forum - JOAF" />
 <meta name="twitter:description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর অফিসিয়াল ওয়েবসাইটে স্বাগতম।" />
 <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png?v=1.1" />
+
 
 
 
