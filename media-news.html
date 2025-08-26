@@ -455,101 +455,33 @@
     <script src="/rainbow-swirl-cursor.js"></script>
     
     <!-- Dynamic News Loading Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Function to load news dynamically
-            function loadNews() {
-                // Latest News Data (would normally come from an API)
-                const latestNews = [
-                    "জবির সিন্ডিকেটে জকসু সংবিধির প্রস্তাব গৃহীত, থাকছে না বয়সের বাধা",
-                    "ফরিদপুরে তিন মাসে গ্রেপ্তার ১৩২ মাদক ব্যবসায়ী",
-                    "বাকৃবির আশরাফুল হক হলে একাধিক চুরির ঘটনা, ক্ষুব্ধ শিক্ষার্থীরা",
-                    "শেখ বশিরউদ্দিনকে বিমান বাংলাদেশ এয়ারলাইন্সের চেয়ারম্যান পদে নিয়োগ দিলো সরকার",
-                    "রয়টার্স ছাড়লেন আলোকচিত্রী ভ্যালেরি জিঙ্ক, গাজায় সাংবাদিক হত্যায় ‘বৈধতা’ দেয়ার অভিযোগ",
-                    "রুমিন ফারহানার মিথ্যাচারের প্রতিবাদে এনসিপির সংবাদ সম্মেলন",
-                    "রণবীর-আলিয়ার ২৫০ কটি রুপির নতুন বাংলো ঘিরে বিতর্ক, গোপনীয়তার প্রশ্ন তুললেন অভিনেত্রী",
-                    "স্বর্ণের নতুন দাম নির্ধারণ",
-                    "সিসিটিভি ক্যামেরার সামনে হবে ঢাকসুর ভোট গণনা",
-                    "রাকসু নির্বাচন: ৩ দিনে মনোনয়নপত্র সংগ্রহ করেছেন ১৬৮ জন"
-                ];
-                
-                // Popular News Data (would normally come from an API)
-                const popularNews = [
-                    "বান্দরবানে স্কুলছাত্রীকে সংঘবদ্ধ ধর্ষণ, আটক ৩",
-                    "ফ্রিতে ২ লাখ টাকার আইটি প্রশিক্ষণ, কোর্স শেষে চাকরির সুযোগ, আবেদন করেছেন কি",
-                    "বিশ্ববাজারে কমেছে স্বর্ণের দাম, জানুন আজকের হালনাগাদ দর",
-                    "ঢাবিতে ভর্তি পরীক্ষার সিট বরাদ্দ নিয়ে বিতর্ক, শিক্ষার্থীদের的不満",
-                    "করোনা পরিস্থিতি নিয়ে নতুন সতর্কতা জারি",
-                    "বাংলাদেশী ক্রিকেট দলের জন্য নতুন কোচ নিয়োগ",
-                    "শেয়ারবাজারে লভ্যাংশ ঘোষণা করেছে ১৫ কোম্পানি",
-                    "নতুন অর্থবছরে বাজেট ঘোষণা করলেন অর্থমন্ত্রী",
-                    "মেট্রোরেলের দ্বিতীয় ধাপের কাজ শুরু হচ্ছে আগামী মাসে",
-                    "বাংলাদেশে প্রথমবারের মতো আয়োজিত হচ্ছে আন্তর্জাতিক ফিল্ম ফেস্টিভাল"
-                ];
-                
-                // Function to create news items
-                function createNewsItems(newsArray, containerId) {
-                    const container = document.getElementById(containerId);
-                    container.innerHTML = ''; // Clear container
-                    
-                    newsArray.forEach((news, index) => {
-                        const newsItem = document.createElement('div');
-                        newsItem.className = 'news-item unclickable';
-                        
-                        newsItem.innerHTML = `
-                            <div class="news-number">${index + 1}</div>
-                            <div class="news-text">${news}</div>
-                        `;
-                        
-                        container.appendChild(newsItem);
-                    });
-                }
-                
-                // Load news into containers
-                createNewsItems(latestNews, 'latest-news-container');
-                createNewsItems(popularNews, 'popular-news-container');
-                
-                // Simulate dynamic updates every 3 seconds
-                setInterval(() => {
-                    // Rotate news items to simulate updates
-                    const firstLatest = latestNews.shift();
-                    latestNews.push(firstLatest);
-                    
-                    const firstPopular = popularNews.shift();
-                    popularNews.push(firstPopular);
-                    
-                    // Update the news containers
-                    createNewsItems(latestNews, 'latest-news-container');
-                    createNewsItems(popularNews, 'popular-news-container');
-                }, 3000);
-            }
-            
-            // Initialize news loading
-            loadNews();
-            
-            // Contact form handling
-            const form = document.getElementById('contact-form');
-            const successMessage = document.querySelector('.form-messege');
+   <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Contact form handling
+        const form = document.getElementById('contact-form');
+        const successMessage = document.querySelector('.form-messege');
 
-            if (form) {
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (successMessage) {
+                    successMessage.innerHTML = 'Form submitted successfully!';
+                    successMessage.style.color = 'green';
+                }
+                console.log('Form submitted');
+                form.reset();
+                
+                // Clear message after 3 seconds
+                setTimeout(() => {
                     if (successMessage) {
-                        successMessage.innerHTML = 'Form submitted successfully!';
-                        successMessage.style.color = 'green';
+                        successMessage.innerHTML = '';
                     }
-                    console.log('Form submitted');
-                    form.reset();
-                    
-                    // Clear message after 3 seconds
-                    setTimeout(() => {
-                        if (successMessage) {
-                            successMessage.innerHTML = '';
-                        }
-                    }, 3000);
-                });
-            }
-        });
-    </script>
+                }, 3000);
+            });
+        }
+    });
+</script>
+    <script src="news-api.js"></script>
+
 </body>
 </html>
