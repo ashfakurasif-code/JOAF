@@ -845,12 +845,24 @@ function toBanglaNumber(num) {
     const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
     return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
 }
+// ইংরেজি টেক্সটকে বাংলায় ট্রান্সক্রাইব করার ফাংশন (simple letter mapping)
+function toBanglaText(text) {
+    const map = {
+        'A':'এ', 'B':'বি','C':'সি','D':'ডি','E':'ই','F':'এফ','G':'জি','H':'এইচ','I':'আই','J':'জে',
+        'K':'কে','L':'এল','M':'এম','N':'এন','O':'ও','P':'পি','Q':'কিউ','R':'আর','S':'এস','T':'টি',
+        'U':'ইউ','V':'ভি','W':'ডাবলিউ','X':'এক্স','Y':'ওয়াই','Z':'জি',
+        'a':'এ','b':'বি','c':'সি','d':'ডি','e':'ই','f':'এফ','g':'জি','h':'এইচ','i':'আই','j':'জে',
+        'k':'কে','l':'এল','m':'এম','n':'এন','o':'ও','p':'পি','q':'কিউ','r':'আর','s':'এস','t':'টি',
+        'u':'ইউ','v':'ভি','w':'ডাবলিউ','x':'এক্স','y':'ওয়াই','z':'জি'
+    };
+    return text.split('').map(c => map[c] || c).join('');
+}
 
-// 1. Location fetch (বাংলাদেশ না আসলে fallback হিসেবে ঢাকা দেখাবে)
+// Location fetch
 fetch('https://ipapi.co/json/')
   .then(response => response.json())
   .then(data => {
-    let city = data.city ? data.city : 'ঢাকা';
+    let city = data.city ? toBanglaText(data.city) : 'ঢাকা';
     document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${city}`;
   })
   .catch(() => {
@@ -916,6 +928,7 @@ setInterval(updateDateTime, 60000);
 <meta name="twitter:title" content="July Online Activists’ Forum - JOAF" />
 <meta name="twitter:description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর অফিসিয়াল ওয়েবসাইটে স্বাগতম।" />
 <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png?v=1.1" />
+
 
 
 
