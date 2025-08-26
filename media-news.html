@@ -25,276 +25,168 @@
     <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="pluginsc7c3.css?v=2.6.25">
+    <link rel="stylesheet" href="stylec7c3.css?v=2.6.25">
+    <!-- Modernizr -->
+    <script src="modernizr-2.8.3.min.js"></script>
     <style>
-        /* Base Styles */
-        body {
-            font-family: 'SolaimanLipi', 'Siyam Rupali', Arial, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
-            line-height: 1.6;
-        }
-        
         .news-content {
             font-family: 'SolaimanLipi', 'Siyam Rupali', Arial, sans-serif;
             line-height: 1.8;
             text-align: justify;
         }
-        
         .news-title {
             color: #90161f;
             border-bottom: 2px solid #90161f;
             padding-bottom: 10px;
             margin-bottom: 20px;
-            font-weight: 700;
         }
-        
         .press-release-card {
             transition: all 0.3s ease;
             border: 1px solid #ddd;
             border-radius: 8px;
             overflow: hidden;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        
         .press-release-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        
         .news-image {
             width: 100%;
             height: 200px;
             object-fit: cover;
         }
-        
         .btn-read-more {
             background-color: #90161f;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            transition: all 0.3s;
         }
-        
         .btn-read-more:hover {
             background-color: #7a1219;
             color: white;
         }
         
-        /* Header Styles */
-        .header-top {
-            background-color: #90161f;
+        /* Dynamic News Section Styles */
+        .dynamic-news-section {
+            background: linear-gradient(135deg, #90161f 0%, #7a1219 100%);
+            border-radius: 10px;
+            padding: 20px;
             color: white;
-            padding: 8px 0;
-            font-size: 14px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
         }
         
-        .header-top a {
+        .dynamic-news-section h3 {
             color: white;
-            text-decoration: none;
-        }
-        
-        .header-social a {
-            margin-right: 15px;
-            font-size: 18px;
-        }
-        
-        .header-bottom {
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 15px 0;
-        }
-        
-        .logo img {
-            max-width: 140px;
-        }
-        
-        .main-menu ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        
-        .main-menu li {
-            margin: 0 15px;
-        }
-        
-        .main-menu a {
-            color: #333;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        .main-menu a:hover, .main-menu .active a {
-            color: #90161f;
-        }
-        
-        /* News Section Styles */
-        .DLatestNewsList .d-flex {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            transition: background-color 0.2s;
-        }
-        
-        .DLatestNewsList .d-flex:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .DLatestNewsList span {
-            background: #90161f;
-            color: white;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            margin-right: 10px;
-            flex-shrink: 0;
-            font-weight: bold;
-        }
-        
-        .DLatestNewsList p {
-            margin: 0;
-            font-family: 'SolaimanLipi', 'Siyam Rupali', Arial, sans-serif;
-            line-height: 1.4;
-        }
-        
-        .DLPSTab2 .nav-tabs {
-            border-bottom: 2px solid #dee2e6;
-        }
-        
-        .DLPSTab2 .nav-tabs .nav-link {
-            color: #555;
-            font-weight: 600;
-            border: none;
-            padding: 10px 20px;
-        }
-        
-        .DLPSTab2 .nav-tabs .nav-link.active {
-            color: #90161f;
-            border-bottom: 2px solid #90161f;
-            background: transparent;
-        }
-        
-        .PanelHeight {
-            height: 450px;
-            overflow-y: auto;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            padding: 15px;
-        }
-        
-        .DAdd {
-            margin-bottom: 20px;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            text-align: center;
-            border: 1px dashed #ddd;
-        }
-        
-        /* Footer Styles */
-        #footer-area {
-            background-color: #2c3e50;
-            color: white;
-            margin-top: 50px;
-        }
-        
-        .footer-widget h4 {
-            color: #fff;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        
-        .footer-widget p, .footer-widget li {
-            color: #ecf0f1;
-        }
-        
-        .footer-widget a {
-            color: #ecf0f1;
-        }
-        
-        .input-box input, .input-box textarea {
-            width: 100%;
-            padding: 10px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
             margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            font-weight: 700;
         }
         
-        .input-box input[type="submit"] {
-            background: #90161f;
-            color: white;
+        .news-tabs .nav-tabs {
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .news-tabs .nav-link {
+            color: rgba(255,255,255,0.7);
             border: none;
-            cursor: pointer;
-            padding: 12px 20px;
+            padding: 10px 15px;
+            font-weight: 600;
         }
         
-        .footer-copyright {
-            background-color: #1a252f;
-            padding: 20px 0;
-            text-align: center;
+        .news-tabs .nav-link.active {
+            color: #90161f;
+            background-color: white;
+            border: none;
+            border-radius: 5px 5px 0 0;
         }
         
-        /* Responsive Adjustments */
-        @media (max-width: 992px) {
-            .rowresize {
-                flex: 0 0 100% !important;
-                max-width: 100% !important;
-                margin-top: 30px;
-            }
-            
-            .main-menu ul {
-                flex-direction: column;
-            }
-            
-            .main-menu li {
-                margin: 5px 0;
-            }
+        .news-tabs .nav-item {
+            margin-bottom: -2px;
         }
         
-        /* Custom Scrollbar */
-        .mCustomScrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: #90161f #f1f1f1;
+        .news-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
         }
         
-        .mCustomScrollbar::-webkit-scrollbar {
+        .news-list::-webkit-scrollbar {
             width: 8px;
         }
         
-        .mCustomScrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
+        .news-list::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
         }
         
-        .mCustomScrollbar::-webkit-scrollbar-thumb {
-            background: #90161f;
-            border-radius: 4px;
+        .news-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
         }
         
-        /* Unclickable News Items */
-        .unclickable-news {
-            pointer-events: none;
+        .news-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        
+        .news-item {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        
+        .news-number {
+            background: white;
+            color: #90161f;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .news-text {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .news-item.unclickable {
             cursor: default;
+            pointer-events: none;
         }
         
-        .unclickable-news a {
+        .news-item.unclickable a {
             color: inherit;
             text-decoration: none;
+        }
+        
+        .news-loading {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        @media (max-width: 992px) {
+            .dynamic-news-section {
+                margin-top: 30px;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Main Wrapper -->
     <div class="wrapper fix">
-        <!-- Header Area -->
+        <!-- Header Area (Same as index.html) -->
         <header class="header-area">
             <!-- Header Top -->
             <div class="header-top">
@@ -321,7 +213,7 @@
                         <div class="col-auto">
                             <!-- Logo -->
                             <div class="navbar-header d-flex justify-content-between">
-                                <a href="index.html" class="logo navbar-brand"><img style="max-width:140px" src="https://via.placeholder.com/140x60?text=JOAF+Logo" alt="JOAF Logo"></a>
+                                <a href="index.html" class="logo navbar-brand"><img style="max-width:140px" src="logoc7c3.png?v=2.6.25" alt="JOAF Logo"></a>
                                 <button class="navbar-toggle collapsed d-block d-md-none" data-bs-toggle="collapse" data-bs-target="#main-menu" aria-label="Toggle navigation">
                                     <i class="zmdi zmdi-menu menu-open"></i>
                                     <i class="zmdi zmdi-close menu-close"></i>
@@ -368,7 +260,7 @@
                             <!-- Press Release 1 -->
                             <div class="col-md-6 col-lg-4 mb-4">
                                 <div class="press-release-card h-100">
-                                    <img src="https://via.placeholder.com/300x200?text=Press+Release+1" alt="প্রেস রিলিজ ১" class="news-image">
+                                    <img src="img/press-release-1.jpg" alt="প্রেস রিলিজ ১" class="news-image">
                                     <div class="p-3">
                                         <h4>বিএনপি উপদেষ্টার বিভ্রান্তিকর বক্তব্যের নিন্দা</h4>
                                         <p class="text-muted">তারিখ: ১০ আগস্ট, ২০২৫</p>
@@ -381,7 +273,7 @@
                             <!-- Press Release 2 -->
                             <div class="col-md-6 col-lg-4 mb-4">
                                 <div class="press-release-card h-100">
-                                    <img src="https://via.placeholder.com/300x200?text=Press+Release+2" alt="প্রেস রিলিজ ২" class="news-image">
+                                    <img src="img/press-release-2.jpg" alt="প্রেস রিলিজ ২" class="news-image">
                                     <div class="p-3">
                                         <h4>সম্প্রদায় সহায়তা কর্মসূচি</h4>
                                         <p class="text-muted">তারিখ: ৫ আগস্ট, ২০২৫</p>
@@ -394,7 +286,7 @@
                             <!-- Press Release 3 -->
                             <div class="col-md-6 col-lg-4 mb-4">
                                 <div class="press-release-card h-100">
-                                    <img src="https://via.placeholder.com/300x200?text=Press+Release+3" alt="প্রেস রিলিজ ৩" class="news-image">
+                                    <img src="img/press-release-3.jpg" alt="প্রেস রিলিজ ৩" class="news-image">
                                     <div class="p-3">
                                         <h4>যুব নেতৃত্ব শীর্ষ সম্মেলন</h4>
                                         <p class="text-muted">তারিখ: ১ আগস্ট, ২০২৫</p>
@@ -414,7 +306,7 @@
                             <!-- News Article 1 -->
                             <div class="col-lg-6 mb-4">
                                 <div class="d-flex news-article">
-                                    <img src="https://via.placeholder.com/120x90?text=News+1" alt="সংবাদ ১" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
+                                    <img src="img/news-1.jpg" alt="সংবাদ ১" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
                                     <div>
                                         <h5>জুলাই আন্দোলনের годовщиন উপলক্ষ্যে বিশেষ আলোচনা সভা</h5>
                                         <p class="text-muted small">তারিখ: ৮ আগস্ট, ২০২৫</p>
@@ -425,7 +317,7 @@
                             <!-- News Article 2 -->
                             <div class="col-lg-6 mb-4">
                                 <div class="d-flex news-article">
-                                    <img src="https://via.placeholder.com/120x90?text=News+2" alt="সংবাদ ২" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
+                                    <img src="img/news-2.jpg" alt="সংবাদ ২" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
                                     <div>
                                         <h5>জোয়াফের নতুন কমিটি গঠন</h5>
                                         <p class="text-muted small">তারিখ: ৩ আগস্ট, ২০২৫</p>
@@ -436,7 +328,7 @@
                             <!-- News Article 3 -->
                             <div class="col-lg-6 mb-4">
                                 <div class="d-flex news-article">
-                                    <img src="https://via.placeholder.com/120x90?text=News+3" alt="সংবাদ ৩" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
+                                    <img src="img/news-3.jpg" alt="সংবাদ ৩" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
                                     <div>
                                         <h5>গুজব রোধে জোয়াফের বিশেষ কর্মসূচি</h5>
                                         <p class="text-muted small">তারিখ: ২৮ জুলাই, ২০২৫</p>
@@ -447,7 +339,7 @@
                             <!-- News Article 4 -->
                             <div class="col-lg-6 mb-4">
                                 <div class="d-flex news-article">
-                                    <img src="https://via.placeholder.com/120x90?text=News+4" alt="সংবাদ ৪" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
+                                    <img src="img/news-4.jpg" alt="সংবাদ ৪" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
                                     <div>
                                         <h5>তরুণদের মধ্যে রাজনৈতিক সচেতনতা বৃদ্ধিতে জোয়াফ</h5>
                                         <p class="text-muted small">তারিখ: ২৫ জুলাই, ২০২৫</p>
@@ -457,39 +349,67 @@
                         </div>
                     </div>
                     
-                    <!-- Right Sidebar with News Articles Section -->
-                    <div class="col-lg-3 col-sm-12 rowresize" style="flex: 0 0 26%; max-width: 26%;">
-                        <div class="DAdd d-flex justify-content-center" id="dynamic-ad2">
-                            <div style="width: 300px; height: 250px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #777; border: 1px dashed #ccc;">
-                                Advertisement Space (300x250)
-                            </div>
-                        </div>
-                        <section class="DLPSTab2 mt-4">
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabs-1">সর্বশেষ</a></li>
-                                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabs-2">সর্বাধিক পঠিত</a></li>
-                            </ul>
-                            <div class="panel-body PanelHeight">
+                    <!-- Right Sidebar with Dynamic News Section -->
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="dynamic-news-section">
+                            <h3>সর্বশেষ সংবাদ</h3>
+                            <div class="news-tabs">
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="latest-tab" data-bs-toggle="tab" href="#latest-news" role="tab">সর্বশেষ</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="popular-tab" data-bs-toggle="tab" href="#popular-news" role="tab">সর্বাধিক পঠিত</a>
+                                    </li>
+                                </ul>
                                 <div class="tab-content">
-                                    <div class="tab-pane active" id="tabs-1" role="tabpanel">
-                                        <div class="DLatestNews longEnough mCustomScrollbar unclickable-news" data-mcs-theme="dark" id="latest-news-container">
-                                            <!-- Latest news will be loaded here by JavaScript -->
+                                    <div class="tab-pane fade show active" id="latest-news" role="tabpanel">
+                                        <div class="news-list" id="latest-news-container">
+                                            <div class="news-loading">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p>সংবাদ লোড হচ্ছে...</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane" id="tabs-2" role="tabpanel">
-                                        <div class="DLatestNews longEnough mCustomScrollbar unclickable-news" data-mcs-theme="dark" id="popular-news-container">
-                                            <!-- Popular news will be loaded here by JavaScript -->
+                                    <div class="tab-pane fade" id="popular-news" role="tabpanel">
+                                        <div class="news-list" id="popular-news-container">
+                                            <div class="news-loading">
+                                                <div class="spinner-border" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p>সংবাদ লোড হচ্ছে...</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </section>
+                        </div>
+                        
+                        <!-- Ad Space -->
+                        <div class="DAdd d-flex justify-content-center" id="dynamic-ad2">
+                            <script data-id="ADL895300250" type="text/javascript">
+                                (function(uniqueid,sizex,sizey,element,document,jslink,adplaceid,siteid) {
+                                var l = document.createElement(element);
+                                l.setAttribute("src",jslink);
+                                l.setAttribute("async",'true');
+                                l.setAttribute("type","text/javascript");
+                                var x=document.getElementById(uniqueid);
+                                x.id =  Math.random().toString(36).substr(2, 9);
+                                x.appendChild(l, x);
+                                l.onload = function () {
+                                    ServeAdvertisement(siteid,adplaceid,x,sizex,sizey);
+                                }
+                                })("ADL895300250",300,250,"script",document,"https://bangladesh-static.adfinix.com/adfinix.js",547,895)
+                            </script>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Footer Area -->
+        <!-- Footer Area (Same as index.html) -->
         <footer id="footer-area" class="footer-area section" aria-labelledby="footer-title">
             <div class="footer-top pb-80 pt-120">
                 <div class="container">
@@ -542,107 +462,109 @@
     </div>
 
     <!-- JavaScript Dependencies -->
+    <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="plugins.js"></script>
+    <script src="main.js"></script>
+    <!-- Cursor Script -->
+    <script src="/rainbow-swirl-cursor.js"></script>
     
+    <!-- Dynamic News Loading Script -->
     <script>
-        // Function to load news dynamically
-        function loadNews() {
-            // Latest News Data (would normally come from an API)
-            const latestNews = [
-                "জবির সিন্ডিকেটে জকসু সংবিধির প্রস্তাব গৃহীত, থাকছে না বয়সের বাধা",
-                "ফরিদপুরে তিন মাসে গ্রেপ্তার ১৩২ মাদক ব্যবসায়ী",
-                "বাকৃবির আশরাফুল হক হলে একাধিক চুরির ঘটনা, ক্ষুব্ধ শিক্ষার্থীরা",
-                "শেখ বশিরউদ্দিনকে বিমান বাংলাদেশ এয়ারলাইন্সের চেয়ারম্যান পদে নিয়োগ দিলো সরকার",
-                "রয়টার্স ছাড়লেন আলোকচিত্রী ভ্যালেরি জিঙ্ক, গাজায় সাংবাদিক হত্যায় ‘বৈধতা’ দেয়ার অভিযোগ",
-                "রুমিন ফারহানার মিথ্যাচারের প্রতিবাদে এনসিপির সংবাদ সম্মেলন",
-                "রণবীর-আলিয়ার ২৫০ কটি রুপির নতুন বাংলো ঘিরে বিতর্ক, গোপনীয়তার প্রশ্ন তুললেন অভিনেত্রী",
-                "স্বর্ণের নতুন দাম নির্ধারণ",
-                "সিসিটিভি ক্যামেরার সামনে হবে ঢাকসুর ভোট গণনা",
-                "রাকসু নির্বাচন: ৩ দিনে মনোনয়নপত্র সংগ্রহ করেছেন ১৬৮ জন"
-            ];
-            
-            // Popular News Data (would normally come from an API)
-            const popularNews = [
-                "বান্দরবানে স্কুলছাত্রীকে সংঘবদ্ধ ধর্ষণ, আটক ৩",
-                "ফ্রিতে ২ লাখ টাকার আইটি প্রশিক্ষণ, কোর্স শেষে চাকরির সুযোগ, আবেদন করেছেন কি",
-                "বিশ্ববাজারে কমেছে স্বর্ণের দাম, জানুন আজকের হালনাগাদ দর",
-                "ঢাবিতে ভর্তি পরীক্ষার সিট বরাদ্দ নিয়ে বিতর্ক, শিক্ষার্থীদের的不満",
-                "করোনা পরিস্থিতি নিয়ে নতুন সতর্কতা জারি",
-                "বাংলাদেশী ক্রিকেট দলের জন্য নতুন কোচ নিয়োগ",
-                "শেয়ারবাজারে লভ্যাংশ ঘোষণা করেছে ১৫ কোম্পানি",
-                "নতুন অর্থবছরে বাজেট ঘোষণা করলেন অর্থমন্ত্রী",
-                "মেট্রোরেলের দ্বিতীয় ধাপের কাজ শুরু হচ্ছে আগামী মাসে",
-                "বাংলাদেশে প্রথমবারের মতো আয়োজিত হচ্ছে আন্তর্জাতিক ফিল্ম ফেস্টিভাল"
-            ];
-            
-            // Function to create news items
-            function createNewsItems(newsArray, containerId) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = ''; // Clear container
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to load news dynamically
+            function loadNews() {
+                // Latest News Data (would normally come from an API)
+                const latestNews = [
+                    "জবির সিন্ডিকেটে জকসু সংবিধির প্রস্তাব গৃহীত, থাকছে না বয়সের বাধা",
+                    "ফরিদপুরে তিন মাসে গ্রেপ্তার ১৩২ মাদক ব্যবসায়ী",
+                    "বাকৃবির আশরাফুল হক হলে একাধিক চুরির ঘটনা, ক্ষুব্ধ শিক্ষার্থীরা",
+                    "শেখ বশিরউদ্দিনকে বিমান বাংলাদেশ এয়ারলাইন্সের চেয়ারম্যান পদে নিয়োগ দিলো সরকার",
+                    "রয়টার্স ছাড়লেন আলোকচিত্রী ভ্যালেরি জিঙ্ক, গাজায় সাংবাদিক হত্যায় ‘বৈধতা’ দেয়ার অভিযোগ",
+                    "রুমিন ফারহানার মিথ্যাচারের প্রতিবাদে এনসিপির সংবাদ সম্মেলন",
+                    "রণবীর-আলিয়ার ২৫০ কটি রুপির নতুন বাংলো ঘিরে বিতর্ক, গোপনীয়তার প্রশ্ন তুললেন অভিনেত্রী",
+                    "স্বর্ণের নতুন দাম নির্ধারণ",
+                    "সিসিটিভি ক্যামেরার সামনে হবে ঢাকসুর ভোট গণনা",
+                    "রাকসু নির্বাচন: ৩ দিনে মনোনয়নপত্র সংগ্রহ করেছেন ১৬৮ জন"
+                ];
                 
-                newsArray.forEach((news, index) => {
-                    const newsItem = document.createElement('div');
-                    newsItem.className = 'DLatestNewsList';
+                // Popular News Data (would normally come from an API)
+                const popularNews = [
+                    "বান্দরবানে স্কুলছাত্রীকে সংঘবদ্ধ ধর্ষণ, আটক ৩",
+                    "ফ্রিতে ২ লাখ টাকার আইটি প্রশিক্ষণ, কোর্স শেষে চাকরির সুযোগ, আবেদন করেছেন কি",
+                    "বিশ্ববাজারে কমেছে স্বর্ণের দাম, জানুন আজকের হালনাগাদ দর",
+                    "ঢাবিতে ভর্তি পরীক্ষার সিট বরাদ্দ নিয়ে বিতর্ক, শিক্ষার্থীদের的不満",
+                    "করোনা পরিস্থিতি নিয়ে নতুন সতর্কতা জারি",
+                    "বাংলাদেশী ক্রিকেট দলের জন্য নতুন কোচ নিয়োগ",
+                    "শেয়ারবাজারে লভ্যাংশ ঘোষণা করেছে ১৫ কোম্পানি",
+                    "নতুন অর্থবছরে বাজেট ঘোষণা করলেন অর্থমন্ত্রী",
+                    "মেট্রোরেলের দ্বিতীয় ধাপের কাজ শুরু হচ্ছে আগামী মাসে",
+                    "বাংলাদেশে প্রথমবারের মতো আয়োজিত হচ্ছে আন্তর্জাতিক ফিল্ম ফেস্টিভাল"
+                ];
+                
+                // Function to create news items
+                function createNewsItems(newsArray, containerId) {
+                    const container = document.getElementById(containerId);
+                    container.innerHTML = ''; // Clear container
                     
-                    newsItem.innerHTML = `
-                        <div class="d-flex flex-row">
-                            <span class="h-100 align-items-center">${index + 1}</span>
-                            <p>${news}</p>
-                        </div>
-                    `;
-                    
-                    container.appendChild(newsItem);
-                });
-            }
-            
-            // Load news into containers
-            createNewsItems(latestNews, 'latest-news-container');
-            createNewsItems(popularNews, 'popular-news-container');
-            
-            // Simulate dynamic updates every 30 seconds
-            setInterval(() => {
-                // Rotate news items to simulate updates
-                const firstLatest = latestNews.shift();
-                latestNews.push(firstLatest);
+                    newsArray.forEach((news, index) => {
+                        const newsItem = document.createElement('div');
+                        newsItem.className = 'news-item unclickable';
+                        
+                        newsItem.innerHTML = `
+                            <div class="news-number">${index + 1}</div>
+                            <div class="news-text">${news}</div>
+                        `;
+                        
+                        container.appendChild(newsItem);
+                    });
+                }
                 
-                const firstPopular = popularNews.shift();
-                popularNews.push(firstPopular);
-                
-                // Update the news containers
+                // Load news into containers
                 createNewsItems(latestNews, 'latest-news-container');
                 createNewsItems(popularNews, 'popular-news-container');
                 
-                console.log('News updated dynamically');
-            }, 30000);
-        }
-        
-        // Contact form handling
-        const form = document.getElementById('contact-form');
-        const successMessage = document.querySelector('.form-messege');
-        
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (successMessage) {
-                    successMessage.innerHTML = 'Form submitted successfully!';
-                    successMessage.style.color = 'green';
-                }
-                console.log('Form submitted');
-                form.reset();
-                
-                // Clear message after 3 seconds
-                setTimeout(() => {
-                    if (successMessage) {
-                        successMessage.innerHTML = '';
-                    }
-                }, 3000);
-            });
-        }
-        
-        // Initialize when document is ready
-        document.addEventListener('DOMContentLoaded', function() {
+                // Simulate dynamic updates every 30 seconds
+                setInterval(() => {
+                    // Rotate news items to simulate updates
+                    const firstLatest = latestNews.shift();
+                    latestNews.push(firstLatest);
+                    
+                    const firstPopular = popularNews.shift();
+                    popularNews.push(firstPopular);
+                    
+                    // Update the news containers
+                    createNewsItems(latestNews, 'latest-news-container');
+                    createNewsItems(popularNews, 'popular-news-container');
+                }, 30000);
+            }
+            
+            // Initialize news loading
             loadNews();
+            
+            // Contact form handling
+            const form = document.getElementById('contact-form');
+            const successMessage = document.querySelector('.form-messege');
+
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (successMessage) {
+                        successMessage.innerHTML = 'Form submitted successfully!';
+                        successMessage.style.color = 'green';
+                    }
+                    console.log('Form submitted');
+                    form.reset();
+                    
+                    // Clear message after 3 seconds
+                    setTimeout(() => {
+                        if (successMessage) {
+                            successMessage.innerHTML = '';
+                        }
+                    }, 3000);
+                });
+            }
         });
     </script>
 </body>
