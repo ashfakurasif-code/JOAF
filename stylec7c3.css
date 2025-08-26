@@ -1232,7 +1232,8 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   font-family: "Montserrat", sans-serif;
   font-weight: 300;
   margin-bottom: 0;
-  margin-left: 20px;
+  margin-left: 20px
+  font-weight: bold;
 }
 .header-info p:last-child {
   margin-left: 0;
@@ -3209,6 +3210,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 body {
   cursor: none;
 }
+
 
 
 
