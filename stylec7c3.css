@@ -648,7 +648,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 }
 @media only screen and (max-width: 479px) {
   #scrollUp {
-    display: none !important;
+  display: none !important;
   }
 }
 #scrollUp i {
@@ -1173,6 +1173,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 .header-top {
   background-color: #f5a468;
   padding: 15px 15;
+  font-weight: 550 !important;
 }
 @media only screen and (max-width: 479px) {
   .header-top {
@@ -1190,6 +1191,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   float: left;
   color: #000000;
   margin-left: 25px;
+  font-weight: 550 !important;
 }
 .header-social a:first-child {
   margin-left: 0;
@@ -1206,7 +1208,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   font-size: 16px;
   line-height: 20px;
   text-align: center;
-  font-weight: bold;
+  font-weight: 550 !important;
 }
 .header-social a:hover {
   color: #e03927;
@@ -1230,7 +1232,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   color: #000000;
   font-size: 13px;
   font-family: "Montserrat", sans-serif;
-  font-weight: 800;
+  font-weight: 550 !important;
   margin-bottom: 0;
   margin-left: 20px;
 }
@@ -3209,6 +3211,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 body {
   cursor: none;
 }
+
 
 
 
