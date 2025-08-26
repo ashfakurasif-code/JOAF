@@ -5,76 +5,58 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>মিডিয়া ও সংবাদ | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF</title>
-    <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর প্রেস রিলিজ, মিডিয়া কভারেজ এবং সাম্প্রতিক সংবাদ।">
-    <meta name="keywords" content="JOAF, জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম, প্রেস রিলিজ, মিডিয়া, বাংলাদেশ, যুব আন্দোলন, সামাজিক ন্যায়বিচার">
+    <title>মিডিয়া ও সংবাদ | July Online Activists’ Forum - JOAF</title>
+    <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর মিডিয়া ও সংবাদ সম্পর্কিত তথ্য">
+    <meta name="keywords" content="JOAF, জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম, মিডিয়া, সংবাদ, প্রেস রিলিজ">
     <meta name="author" content="JOAF Team">
     <meta name="robots" content="index, follow">
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="মিডিয়া ও সংবাদ | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF">
-    <meta property="og:description" content="JOAF এর সর্বশেষ প্রেস রিলিজ এবং মিডিয়া কভারেজ, স্বচ্ছতা এবং ঐক্যবদ্ধ প্রচেষ্টার মাধ্যমে একটি সমৃদ্ধ বাংলাদেশ গড়ার জন্য প্রতিশ্রুতিবদ্ধ।">
+    <meta property="og:title" content="মিডিয়া ও সংবাদ | July Online Activists’ Forum - JOAF">
+    <meta property="og:description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর মিডিয়া ও সংবাদ সম্পর্কিত তথ্য">
     <meta property="og:image" content="logoc7c3.png?v=1.1">
     <meta property="og:url" content="media-news.html">
     <meta property="og:type" content="website">
-    <meta property="fb:app_id" content="1849982302524358">
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="মিডিয়া ও সংবাদ | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF">
-    <meta name="twitter:description" content="বাংলাদেশে সামাজিক ন্যায়বিচার ও গণতন্ত্রের জন্য নিবেদিত JOAF এর সর্বশেষ প্রেস রিলিজ দেখুন।">
-    <meta name="twitter:image" content="logoc7c3.png?v=1.1">
-    <!-- Canonical URL -->
-    <link rel="canonical" href="media-news.html">
-    <!-- Favicon -->
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
     <link rel="stylesheet" href="pluginsc7c3.css?v=2.6.25">
     <link rel="stylesheet" href="stylec7c3.css?v=2.6.25">
-    <!-- Animation CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <!-- Modernizr -->
     <script src="modernizr-2.8.3.min.js"></script>
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-G16GVEBVG0"></script>
-    <link rel="manifest" href="site.webmanifest">
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-G16GVEBVG0');
-    </script>
     <style>
-        .news-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
+        .news-content {
+            font-family: 'SolaimanLipi', 'Siyam Rupali', Arial, sans-serif;
+            line-height: 1.8;
+            text-align: justify;
+        }
+        .news-title {
+            color: #90161f;
+            border-bottom: 2px solid #90161f;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .press-release-card {
+            transition: all 0.3s ease;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             overflow: hidden;
         }
-        .news-card:hover {
+        .press-release-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(7, 94, 85, 0.2);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        .news-date {
-            color: #e03927;
-            font-weight: 600;
-        }
-        .press-release-img {
+        .news-image {
             width: 100%;
             height: 200px;
             object-fit: cover;
-            border-bottom: 3px solid #075e55;
         }
-        .read-more-btn {
-            background-color: #075e55;
-            border: none;
-            padding: 10px 20px;
+        .btn-read-more {
+            background-color: #90161f;
             color: white;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
+            border: none;
         }
-        .read-more-btn:hover {
-            background-color: #e03927;
+        .btn-read-more:hover {
+            background-color: #7a1219;
             color: white;
         }
     </style>
@@ -82,6 +64,7 @@
 <body>
     <!-- Main Wrapper -->
     <div class="wrapper fix">
+        <!-- Header Area (Same as index.html) -->
         <header class="header-area">
             <!-- Header Top -->
             <div class="header-top">
@@ -121,7 +104,7 @@
                                 <ul>
                                     <li><a href="index.html">Home</a></li>
                                     <li><a href="events.html">Events</a></li>
-                                    <li class="active"><a href="media-news.html">Media & News</a></li>
+                                    <li class="active"><a href="media-news.html">Media</a></li>
                                     <li><a href="about.html">About</a></li>
                                     <li><a href="contact.html">Contact Us</a></li>
                                     <li><a href="membership.html">Join Form</a></li>
@@ -134,80 +117,107 @@
             </div>
         </header>
 
-        <!-- Page Banner Area -->
-        <section class="page-banner-area section pb-100 pt-270" aria-labelledby="page-banner-title">
-            <div class="container">
-                <div class="row">
-                    <div class="page-banner-wrapper text-center col-12">
-                        <h1 id="page-banner-title">মিডিয়া ও সংবাদ</h1>
-                        <ul class="page-breadcrumb">
-                            <li><a href="index.html">হোম</a></li>
-                            <li>মিডিয়া ও সংবাদ</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Media News Area -->
+        <!-- Media News Content -->
         <section class="media-news-area section pb-100 pt-100" aria-labelledby="media-news-title">
             <div class="container">
                 <div class="row">
-                    <div class="col-12 text-center mb-60">
-                        <h2 id="media-news-title" style="color:#075e55;font-size:xx-large;">প্রেস রিলিজ</h2>
-                        <p>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর সর্বশেষ প্রেস রিলিজ এবং বিবৃতি</p>
+                    <div class="col-12">
+                        <h1 id="media-news-title" class="text-center news-title">মিডিয়া ও সংবাদ</h1>
                     </div>
                 </div>
                 
-                <div class="row">
+                <!-- Press Release Section -->
+                <div class="row mb-50">
+                    <div class="col-12">
+                        <h2 class="mb-30">প্রেস রিলিজ</h2>
+                    </div>
+                    
                     <!-- Press Release 1 -->
-                    <div class="col-md-6 mb-40">
-                        <div class="news-card">
-                            <img src="img/press-release-1.jpg" alt="প্রেস রিলিজ ১" class="press-release-img">
-                            <div class="p-30">
-                                <span class="news-date">আগস্ট ১০, ২০২৫</span>
-                                <h3 class="mt-2 mb-3">বিএনপি উপদেষ্টার বিভ্রান্তিকর বক্তব্যের নিন্দা</h3>
-                                <p class="mb-4">আমরা গভীর দুঃখের সঙ্গে লক্ষ্য করছি যে, বিএনপির চেয়ারপারসন বেগম খালেদা জিয়ার বর্তমান রাজনৈতিক উপদেষ্টা জনাব ফজলুর রহমান দীর্ঘদিন ধরেই বিভ্রান্তিকর বিবৃতি প্রদান করে আসছেন...</p>
-                                <a href="press-release-1.html" class="read-more-btn">বিস্তারিত পড়ুন</a>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="press-release-card h-100">
+                            <img src="img/press-release-1.jpg" alt="প্রেস রিলিজ ১" class="news-image">
+                            <div class="p-3">
+                                <h4>বিএনপি উপদেষ্টার বিভ্রান্তিকর বক্তব্যের নিন্দা</h4>
+                                <p class="text-muted">তারিখ: ১০ আগস্ট, ২০২৫</p>
+                                <p>আমরা গভীর দুঃখের সঙ্গে লক্ষ্য করছি যে, বিএনপির চেয়ারপারসন বেগম খালেদা জিয়ার বর্তমান রাজনৈতিক উপদেষ্টা জনাব ফজলুর রহমান দীর্ঘদিন ধরেই বিভ্রান্তিকর বিবৃতি প্রদান করে আসছেন...</p>
+                                <a href="press-release-1.html" class="btn btn-read-more">বিস্তারিত পড়ুন</a>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Press Release 2 -->
-                    <div class="col-md-6 mb-40">
-                        <div class="news-card">
-                            <img src="img/press-release-2.jpg" alt="প্রেস রিলিজ ২" class="press-release-img">
-                            <div class="p-30">
-                                <span class="news-date">সেপ্টেম্বর ৫, ২০২৫</span>
-                                <h3 class="mt-2 mb-3">সম্প্রদায় সহায়তা কর্মসূচি</h3>
-                                <p class="mb-4">JOAF বাংলাদেশের বন্যা কবলিত অঞ্চলে ত্রাণ কার্যক্রম সংগঠিত করছে, বিস্তারিত শীঘ্রই প্রকাশ করা হবে...</p>
-                                <a href="press-release-2.html" class="read-more-btn">বিস্তারিত পড়ুন</a>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="press-release-card h-100">
+                            <img src="img/press-release-2.jpg" alt="প্রেস রিলিজ ২" class="news-image">
+                            <div class="p-3">
+                                <h4>সম্প্রদায় সহায়তা কর্মসূচি</h4>
+                                <p class="text-muted">তারিখ: ৫ আগস্ট, ২০২৫</p>
+                                <p>জোয়াফ বাংলাদেশের বন্যা কবলিত অঞ্চলে ত্রাণ কার্যক্রমের আয়োজন করেছে, বিস্তারিত তথ্য শীঘ্রই প্রকাশ করা হবে...</p>
+                                <a href="press-release-2.html" class="btn btn-read-more">বিস্তারিত পড়ুন</a>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Press Release 3 -->
-                    <div class="col-md-6 mb-40">
-                        <div class="news-card">
-                            <img src="img/press-release-3.jpg" alt="প্রেস রিলিজ ৩" class="press-release-img">
-                            <div class="p-30">
-                                <span class="news-date">অক্টোবর ১৫, ২০২৫</span>
-                                <h3 class="mt-2 mb-3">যুব নেতৃত্ব শীর্ষ সম্মেলন</h3>
-                                <p class="mb-4">JOAF সারা দেশের তরুণ নেতাদের ক্ষমতায়নের জন্য ১৫ অক্টোবর, ২০২৫ তারিখে একটি শীর্ষ সম্মেলনের আয়োজন করতে যাচ্ছে...</p>
-                                <a href="press-release-3.html" class="read-more-btn">বিস্তারিত পড়ুন</a>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="press-release-card h-100">
+                            <img src="img/press-release-3.jpg" alt="প্রেস রিলিজ ৩" class="news-image">
+                            <div class="p-3">
+                                <h4>যুব নেতৃত্ব শীর্ষ সম্মেলন</h4>
+                                <p class="text-muted">তারিখ: ১ আগস্ট, ২০২৫</p>
+                                <p>জোয়াফ সারাদেশে তরুণ নেতাদের ক্ষমতায়নের জন্য ১৫ অক্টোবর, ২০২৫ তারিখে একটি শীর্ষ সম্মেলনের আয়োজন করতে যাচ্ছে...</p>
+                                <a href="press-release-3.html" class="btn btn-read-more">বিস্তারিত পড়ুন</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- News Articles Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <h2 class="mb-30">সাম্প্রতিক সংবাদ</h2>
+                    </div>
+                    
+                    <!-- News Article 1 -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="d-flex news-article">
+                            <img src="img/news-1.jpg" alt="সংবাদ ১" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
+                            <div>
+                                <h5>জুলাই আন্দোলনের годовщиন উপলক্ষ্যে বিশেষ আলোচনা সভা</h5>
+                                <p class="text-muted small">তারিখ: ৮ আগস্ট, ২০২৫</p>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Press Release 4 -->
-                    <div class="col-md-6 mb-40">
-                        <div class="news-card">
-                            <img src="img/press-release-4.jpg" alt="প্রেস রিলিজ ৪" class="press-release-img">
-                            <div class="p-30">
-                                <span class="news-date">নভেম্বর ১, ২০২৫</span>
-                                <h3 class="mt-2 mb-3">গণতন্ত্র রক্ষায় যুবশক্তির ভূমিকা</h3>
-                                <p class="mb-4">জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম দেশে গণতন্ত্র রক্ষায় তরুণদের ভূমিকা নিয়ে একটি বিশেষ আলোচনার আয়োজন করতে যাচ্ছে...</p>
-                                <a href="press-release-4.html" class="read-more-btn">বিস্তারিত পড়ুন</a>
+                    <!-- News Article 2 -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="d-flex news-article">
+                            <img src="img/news-2.jpg" alt="সংবাদ ২" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
+                            <div>
+                                <h5>জোয়াফের নতুন কমিটি গঠন</h5>
+                                <p class="text-muted small">তারিখ: ৩ আগস্ট, ২০২৫</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- News Article 3 -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="d-flex news-article">
+                            <img src="img/news-3.jpg" alt="সংবাদ ৩" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
+                            <div>
+                                <h5>গুজব রোধে জোয়াফের বিশেষ কর্মসূচি</h5>
+                                <p class="text-muted small">তারিখ: ২৮ জুলাই, ২০২৫</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- News Article 4 -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="d-flex news-article">
+                            <img src="img/news-4.jpg" alt="সংবাদ ৪" class="me-3" style="width: 120px; height: 90px; object-fit: cover;">
+                            <div>
+                                <h5>তরুণদের মধ্যে রাজনৈতিক সচেতনতা বৃদ্ধিতে জোয়াফ</h5>
+                                <p class="text-muted small">তারিখ: ২৫ জুলাই, ২০২৫</p>
                             </div>
                         </div>
                     </div>
@@ -215,7 +225,7 @@
             </div>
         </section>
 
-        <!-- Footer Area -->
+        <!-- Footer Area (Same as index.html) -->
         <footer id="footer-area" class="footer-area section" aria-labelledby="footer-title">
             <div class="footer-top pb-80 pt-120">
                 <div class="container">
@@ -229,9 +239,6 @@
                                     <li><span>Email:</span> <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></li>
                                 </ul>
                             </div>
-                        </div>
-                        <!-- Instagram -->
-                        <div class="footer-widget col-lg-4 col-md-6 col-12 mb-40">
                         </div>
                         <!-- Contact Form -->
                         <div class="footer-widget col-lg-5 col-12 mb-40">
@@ -276,6 +283,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="plugins.js"></script>
     <script src="main.js"></script>
+    <!-- Cursor Script -->
+    <script src="/rainbow-swirl-cursor.js"></script>
     <script>
         const form = document.getElementById('contact-form');
         const successMessage = $('.form-messege');
