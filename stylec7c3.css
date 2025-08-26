@@ -1188,7 +1188,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 .header-social a {
   display: block;
   float: left;
-  color: #fff;
+  color: #000000;
   margin-left: 25px;
 }
 .header-social a:first-child {
@@ -1226,7 +1226,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   display: block;
   float: right;
   line-height: 20px;
-  color: #fff;
+  color: #000000;
   font-size: 13px;
   font-family: "Montserrat", sans-serif;
   font-weight: 300;
@@ -3208,6 +3208,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 body {
   cursor: none;
 }
+
 
 
 
