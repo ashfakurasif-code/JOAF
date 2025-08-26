@@ -840,7 +840,13 @@
 
 <script src="/rainbow-swirl-cursor.js"></script>
 <script>
-// 1. Location fetch (বাংলাদেশ না আসলে fallback হিসেবে Dhaka দেখাবে)
+// সংখ্যা ইংরেজি থেকে বাংলায় কনভার্ট করার ফাংশন
+function toBanglaNumber(num) {
+    const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
+}
+
+// 1. Location fetch (বাংলাদেশ না আসলে fallback হিসেবে ঢাকা দেখাবে)
 fetch('https://ipapi.co/json/')
   .then(response => response.json())
   .then(data => {
@@ -862,9 +868,9 @@ function updateDateTime() {
     ];
 
     // তারিখ
-    const day = now.getDate();
+    const day = toBanglaNumber(now.getDate());
     const month = banglaMonths[now.getMonth()];
-    const year = now.getFullYear();
+    const year = toBanglaNumber(now.getFullYear());
     const dateStr = `${day} ${month}, ${year}`;
 
     // সময় বাংলা ফরম্যাটে
@@ -885,7 +891,7 @@ function updateDateTime() {
     let displayHour = hours % 12;
     if (displayHour === 0) displayHour = 12;
 
-    const timeStr = `${period} ${displayHour}:${minutes}`;
+    const timeStr = `${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}`;
 
     // DOM এ সেট করা
     document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
@@ -897,7 +903,6 @@ updateDateTime();
 // প্রতি ১ মিনিটে আপডেট
 setInterval(updateDateTime, 60000);
 </script>
-
 </body>
 </html>
 <!-- Social Media Meta Tags for Home Page -->
@@ -911,6 +916,7 @@ setInterval(updateDateTime, 60000);
 <meta name="twitter:title" content="July Online Activists’ Forum - JOAF" />
 <meta name="twitter:description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর অফিসিয়াল ওয়েবসাইটে স্বাগতম।" />
 <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png?v=1.1" />
+
 
 
 
