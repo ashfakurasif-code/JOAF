@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>JOAF Community Network | July Online Activists’ Forum</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="JOAF কমিউনিটির সকল আঞ্চলিক, আন্তর্জাতিক ও বিশেষায়িত গ্রুপ—এক জায়গায়। সার্চ করুন, ফিল্টার করুন, আর প্রয়োজনমতো লিংক যুক্ত করুন।">
+  <!-- Favicon (ইচ্ছা হলে বদলাও) -->
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+  <!-- Optional: Google Font (Bengali) -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Icon Pack (zmdi – তোমার সাইটে আগে থেকেই আছে বলেই রাখলাম) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+
+  <style>
+    :root{
+      --bg:#f9fafb;
+      --ink:#1f2937;
+      --muted:#6b7280;
+      --brand:#90161f;           /* JOAF tone */
+      --chip:#ffe9ec;
+      --card:#ffffff;
+      --ring:rgba(144,22,31,.18);
+      --grad1:linear-gradient(135deg,#ff7a7a 0%, #ffc371 100%);
+      --grad2:linear-gradient(135deg,#6dd5fa 0%, #2980b9 100%);
+      --grad3:linear-gradient(135deg,#a8ff78 0%, #78ffd6 100%);
+      --grad4:linear-gradient(135deg,#fbd3e9 0%, #bb377d 100%);
+      --grad5:linear-gradient(135deg,#f6d365 0%, #fda085 100%);
+      --shadow:0 10px 24px rgba(0,0,0,.08);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; padding:0; background:var(--bg); color:var(--ink);
+      font-family:"Noto Sans Bengali", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans Bengali", "SolaimanLipi", sans-serif;
+    }
+
+    /* Hero */
+    .hero{
+      position:relative; overflow:hidden; padding:70px 20px 60px;
+      background:
+        radial-gradient(60rem 60rem at -10% -10%, #ffe0e4 0%, transparent 50%),
+        radial-gradient(60rem 60rem at 110% 20%, #e0f2ff 0%, transparent 50%),
+        radial-gradient(50rem 50rem at 10% 120%, #e6ffe7 0%, transparent 50%),
+        #fff;
+      border-bottom:1px solid #f1f5f9;
+    }
+    .container{max-width:1100px; margin:0 auto; padding:0 16px}
+    .hero h1{
+      margin:0 0 10px; font-size:clamp(28px,4vw,42px); color:var(--brand); letter-spacing:.2px
+    }
+    .hero p{margin:0; color:var(--muted); font-size:clamp(14px,2vw,18px)}
+    .stats{
+      margin-top:22px; display:flex; gap:14px; flex-wrap:wrap
+    }
+    .stat-chip{
+      display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--chip);
+      border-radius:999px; font-weight:600; color:#b4232c; border:1px solid #ffd0d6
+    }
+    .stat-chip i{font-size:18px}
+
+    /* Toolbar */
+    .toolbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      margin-top:26px
+    }
+    .search{
+      flex:1 1 340px; position:relative
+    }
+    .search input{
+      width:100%; padding:14px 44px 14px 44px; border-radius:999px; border:1px solid #e5e7eb; outline:none;
+      background:#fff; box-shadow:var(--shadow)
+    }
+    .search i{
+      position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#ef4444; font-size:20px
+    }
+    .clear-btn{
+      position:absolute; right:8px; top:50%; transform:translateY(-50%); border:0; background:transparent; cursor:pointer;
+      font-size:20px; color:#9ca3af
+    }
+    .filters{display:flex; gap:10px; flex-wrap:wrap}
+    .filter-btn{
+      border:1px solid #e5e7eb; background:#fff; padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:600;
+      transition:.2s transform ease, .2s background ease, .2s border-color ease; box-shadow:var(--shadow)
+    }
+    .filter-btn:hover{transform:translateY(-2px)}
+    .filter-btn.active{border-color:#fecaca; background:#fff5f5; color:#b4232c}
+
+    /* Grid */
+    .grid{display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); margin:28px 0 60px}
+    .card{
+      position:relative; overflow:hidden; border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow);
+      transform:translateY(0); transition:.25s transform ease, .25s box-shadow ease, .25s filter ease;
+      border:1px solid #f1f5f9;
+    }
+    .card:hover{transform:translateY(-6px); box-shadow:0 18px 40px rgba(0,0,0,.12)}
+    .ribbon{
+      position:absolute; inset:auto auto 12px 12px; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.3px;
+      color:#222; background:#ffffffd9; backdrop-filter:blur(6px); border:1px solid #e5e7eb
+    }
+    .cover{
+      height:110px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; letter-spacing:.4px;
+    }
+      .cat-main      { background:var(--grad1) }
+      .cat-regional  { background:var(--grad5) }
+      .cat-intl      { background:var(--grad2) }
+      .cat-special   { background:var(--grad4) }
+      .cat-expand    { background:var(--grad3) }
+
+    .body{padding:16px}
+    .title{margin:0 0 4px; font-size:18px}
+    .meta{margin:0 0 12px; color:var(--muted); font-size:13px}
+    .actions{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{
+      display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px; border:1px solid #e5e7eb; background:#fff;
+      cursor:pointer; font-weight:600; text-decoration:none; color:#111827; transition:.2s transform ease, .2s border-color ease;
+    }
+    .btn:hover{transform:translateY(-2px); border-color:#fecaca}
+    .btn .zmdi{font-size:18px}
+
+    /* Subtle appear animation */
+    .fade-in{opacity:0; transform:translateY(16px); animation:fade .6s ease forwards}
+    @keyframes fade{to{opacity:1; transform:none}}
+
+    /* Footer hint */
+    .helper{
+      margin:18px 0 50px; font-size:13px; color:#6b7280; text-align:center
+    }
+
+    /* Small badge numbers */
+    .count-badge{
+      display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:6px 10px; border-radius:999px; background:#fff;
+      border:1px solid #ffe1e5; color:#b4232c; box-shadow:var(--shadow)
+    }
+
+    /* Responsive tweak */
+    @media (max-width:480px){
+      .hero{padding:50px 16px 46px}
+      .actions .btn{flex:1 1 auto; justify-content:center}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <h1>JOAF Community Network</h1>
+      <p>বাংলাদেশের আঞ্চলিক টিম থেকে আন্তর্জাতিক অধ্যায়—সব গ্রুপ এক পেজে। সার্চ করুন, ফিল্টার করুন, আর প্রয়োজনমতো লিংক যুক্ত করুন।</p>
+
+      <div class="stats">
+        <span class="stat-chip"><i class="zmdi zmdi-accounts-alt"></i> মোট গ্রুপ: <span id="totalCount">—</span></span>
+        <span class="count-badge"><i class="zmdi zmdi-case"></i> Main Hub: <span id="cMain">—</span></span>
+        <span class="count-badge"><i class="zmdi zmdi-pin"></i> Regional: <span id="cReg">—</span></span>
+        <span class="count-badge"><i class="zmdi zmdi-globe"></i> International: <span id="cIntl">—</span></span>
+        <span class="count-badge"><i class="zmdi zmdi-star"></i> Specialized: <span id="cSpec">—</span></span>
+        <span class="count-badge"><i class="zmdi zmdi-plus-circle-o"></i> Expansion: <span id="cExp">—</span></span>
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <i class="zmdi zmdi-search"></i>
+          <input id="searchBox" type="text" placeholder="খুঁজুন… যেমন: Rangpur / Australia / Premium / Viral">
+          <button class="clear-btn" title="Clear" id="clearBtn"><i class="zmdi zmdi-close-circle"></i></button>
+        </div>
+        <div class="filters" id="filters">
+          <button class="filter-btn active" data-filter="all">সব</button>
+          <button class="filter-btn" data-filter="main">Main Hub</button>
+          <button class="filter-btn" data-filter="regional">Regional</button>
+          <button class="filter-btn" data-filter="intl">International</button>
+          <button class="filter-btn" data-filter="special">Specialized</button>
+          <button class="filter-btn" data-filter="expand">Expansion</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRID -->
+  <section>
+    <div class="container">
+      <div id="grid" class="grid">
+
+        <!-- ===== Main Hub ===== -->
+        <div class="card fade-in" data-cat="main" data-name="Announcements">
+          <div class="cover cat-main">ANNOUNCEMENTS</div>
+          <span class="ribbon">Main Hub</span>
+          <div class="body">
+            <h3 class="title">Announcements</h3>
+            <p class="meta">Welcome to the community!</p>
+            <div class="actions">
+              <a class="btn" href="#" target="_blank"><i class="zmdi zmdi-link"></i> Add Link</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="main" data-name="July Online Activists Forum Main Group">
+          <div class="cover cat-main">MAIN GROUP</div>
+          <span class="ribbon">Main Hub</span>
+          <div class="body">
+            <h3 class="title">July Online Activists Forum</h3>
+            <p class="meta">বাংলাদেশ—মেইন ডিসকাশন গ্রুপ</p>
+            <div class="actions">
+              <a class="btn" href="#" target="_blank"><i class="zmdi zmdi-link"></i> Add Link</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="main" data-name="JOAF Administration">
+          <div class="cover cat-main">ADMINISTRATION</div>
+          <span class="ribbon">Main Hub</span>
+          <div class="body">
+            <h3 class="title">JOAF Administration</h3>
+            <p class="meta">অ্যাডমিন/কোর টিম</p>
+            <div class="actions">
+              <a class="btn" href="#" target="_blank"><i class="zmdi zmdi-link"></i> Add Link</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Regional (Bangladesh) ===== -->
+        <div class="card fade-in" data-cat="regional" data-name="Rangpur">
+          <div class="cover cat-regional">RANGPUR</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Rangpur</h3>
+            <p class="meta">রংপুর বিভাগ</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="special" data-name="JO Rumour Stopper Team">
+          <div class="cover cat-special">RUMOUR STOPPER</div>
+          <span class="ribbon">Specialized</span>
+          <div class="body">
+            <h3 class="title">🔥 JO Rumour Stopper Team</h3>
+            <p class="meta">ফ্যাক্ট-চেকিং / গুজব প্রতিরোধ</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Rajshahi">
+          <div class="cover cat-regional">RAJSHAHI</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Rajshahi</h3>
+            <p class="meta">রাজশাহী বিভাগ</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="special" data-name="Viral Group">
+          <div class="cover cat-special">VIRAL GROUP</div>
+          <span class="ribbon">Specialized</span>
+          <div class="body">
+            <h3 class="title">‼ Viral Group ‼</h3>
+            <p class="meta">মিডিয়া বুস্ট/ডিস্ট্রিবিউশন</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Bogura">
+          <div class="cover cat-regional">BOGURA</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Bogura</h3>
+            <p class="meta">বগুড়া জেলা</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Faridpur">
+          <div class="cover cat-regional">FARIDPUR</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Faridpur</h3>
+            <p class="meta">ফরিদপুর জেলা</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Barishal">
+          <div class="cover cat-regional">BARISHAL</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Barishal</h3>
+            <p class="meta">বরিশাল বিভাগ</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="intl" data-name="Australia">
+          <div class="cover cat-intl">AUSTRALIA</div>
+          <span class="ribbon">International</span>
+          <div class="body">
+            <h3 class="title">JOAF Australia</h3>
+            <p class="meta">অস্ট্রেলিয়া অধ্যায়</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="intl" data-name="Canada">
+          <div class="cover cat-intl">CANADA</div>
+          <span class="ribbon">International</span>
+          <div class="body">
+            <h3 class="title">JOAF Canada</h3>
+            <p class="meta">কানাডা অধ্যায়</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Dohar Nawabganj">
+          <div class="cover cat-regional">DOHAR–NAWABGANJ</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Dohar Nawabganj</h3>
+            <p class="meta">ঢাকা (দোহার–নবাবগঞ্জ)</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Gazipur">
+          <div class="cover cat-regional">GAZIPUR</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Gazipur</h3>
+            <p class="meta">গাজীপুর জেলা</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Jamalpur">
+          <div class="cover cat-regional">JAMALPUR</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Jamalpur</h3>
+            <p class="meta">জামালপুর জেলা</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Madaripur">
+          <div class="cover cat-regional">MADARIPUR</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Madaripur</h3>
+            <p class="meta">মাদারীপুর জেলা</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Cumilla">
+          <div class="cover cat-regional">CUMILLA</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Cumilla</h3>
+            <p class="meta">কুমিল্লা জেলা</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Chattogram">
+          <div class="cover cat-regional">CHATTOGRAM</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Chattogram</h3>
+            <p class="meta">চট্টগ্রাম বিভাগ</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Khulna">
+          <div class="cover cat-regional">KHULNA</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Khulna</h3>
+            <p class="meta">খুলনা বিভাগ</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="regional" data-name="Mymensingh">
+          <div class="cover cat-regional">MYMENSINGH</div>
+          <span class="ribbon">Regional</span>
+          <div class="body">
+            <h3 class="title">JOAF Mymensingh</h3>
+            <p class="meta">ময়মনসিংহ বিভাগ</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="intl" data-name="USA">
+          <div class="cover cat-intl">USA</div>
+          <span class="ribbon">International</span>
+          <div class="body">
+            <h3 class="title">JOAF USA</h3>
+            <p class="meta">যুক্তরাষ্ট্র অধ্যায়</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="intl" data-name="Europe">
+          <div class="cover cat-intl">EUROPE</div>
+          <span class="ribbon">International</span>
+          <div class="body">
+            <h3 class="title">JOAF Europe</h3>
+            <p class="meta">ইউরোপ অধ্যায়</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="intl" data-name="Asia">
+          <div class="cover cat-intl">ASIA</div>
+          <span class="ribbon">International</span>
+          <div class="body">
+            <h3 class="title">JOAF Asia</h3>
+            <p class="meta">এশিয়া রিজিওন</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="intl" data-name="Middle East">
+          <div class="cover cat-intl">MIDDLE EAST</div>
+          <span class="ribbon">International</span>
+          <div class="body">
+            <h3 class="title">JOAF Middle East</h3>
+            <p class="meta">মধ্যপ্রাচ্য অধ্যায়</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <!-- ===== Specialized Teams ===== -->
+        <div class="card fade-in" data-cat="special" data-name="Content Creators Team">
+          <div class="cover cat-special">CONTENT CREATORS</div>
+          <span class="ribbon">Specialized</span>
+          <div class="body">
+            <h3 class="title">JOAF Content Creators Team</h3>
+            <p class="meta">ডিজাইন/ভিডিও/কপিরাইটিং</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="special" data-name="Premium Members">
+          <div class="cover cat-special">PREMIUM</div>
+          <span class="ribbon">Specialized</span>
+          <div class="body">
+            <h3 class="title">JOAF Premium Members</h3>
+            <p class="meta">প্রিমিয়াম/সাপোর্টার সার্কেল</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="special" data-name="Media Team">
+          <div class="cover cat-special">MEDIA TEAM</div>
+          <span class="ribbon">Specialized</span>
+          <div class="body">
+            <h3 class="title">JOAF Media Team</h3>
+            <p class="meta">মিডিয়া/প্রেস রিলেশনস</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="special" data-name="Coalition">
+          <div class="cover cat-special">COALITION</div>
+          <span class="ribbon">Specialized</span>
+          <div class="body">
+            <h3 class="title">JOAF Coalition – সম্মিলিত বৈপ্লবিক জোট</h3>
+            <p class="meta">সংযুক্ত রাজনৈতিক/সামাজিক প্ল্যাটফর্ম</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <!-- ===== Expansion / Pending ===== -->
+        <div class="card fade-in" data-cat="expand" data-name="Advisory Board">
+          <div class="cover cat-expand">ADVISORY BOARD</div>
+          <span class="ribbon">Expansion</span>
+          <div class="body">
+            <h3 class="title">JOAF Advisory Board</h3>
+            <p class="meta">Request to join (Pending)</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+        <div class="card fade-in" data-cat="expand" data-name="Keraniganj">
+          <div class="cover cat-expand">KERANIGANJ</div>
+          <span class="ribbon">Expansion</span>
+          <div class="body">
+            <h3 class="title">July Online Activists Forum – Keraniganj</h3>
+            <p class="meta">Request pending</p>
+            <div class="actions"><a class="btn" href="#"><i class="zmdi zmdi-link"></i> Add Link</a></div>
+          </div>
+        </div>
+
+      </div>
+
+      <p class="helper">🔧 যেকোনো কার্ডে <strong>“Add Link”</strong> বাটনের <code>href="#"</code> জায়গায় তোমার গ্রুপ লিংক বসিয়ে দাও। নাম/বর্ণনা বদলাতে চাইলে কার্ডের <code>title/meta</code> টেক্সট এডিট করলেই হবে।</p>
+    </div>
+  </section>
+
+  <script>
+    // Bengali/English search friendly
+    const grid = document.getElementById('grid');
+    const cards = Array.from(grid.querySelectorAll('.card'));
+    const searchBox = document.getElementById('searchBox');
+    const clearBtn = document.getElementById('clearBtn');
+    const filterBar = document.getElementById('filters');
+
+    // Counters
+    const counters = {
+      total: document.getElementById('totalCount'),
+      main : document.getElementById('cMain'),
+      reg  : document.getElementById('cReg'),
+      intl : document.getElementById('cIntl'),
+      spec : document.getElementById('cSpec'),
+      exp  : document.getElementById('cExp')
+    };
+
+    function updateCounts(){
+      const by = (cat)=> cards.filter(c => c.dataset.cat===cat).length;
+      counters.total.textContent = cards.length;
+      counters.main.textContent  = by('main');
+      counters.reg.textContent   = by('regional');
+      counters.intl.textContent  = by('intl');
+      counters.spec.textContent  = by('special');
+      counters.exp.textContent   = by('expand');
+    }
+    updateCounts();
+
+    let activeFilter = 'all';
+
+    function applyFilter(){
+      const q = searchBox.value.trim().toLowerCase();
+      cards.forEach(card=>{
+        const name = (card.dataset.name || '').toLowerCase();
+        const cat  = card.dataset.cat;
+        const hit  = !q || name.includes(q);
+        const okCat = activeFilter==='all' || cat===activeFilter;
+        card.style.display = (hit && okCat) ? '' : 'none';
+      });
+    }
+
+    // Search
+    searchBox.addEventListener('input', applyFilter);
+    clearBtn.addEventListener('click', ()=>{ searchBox.value=''; applyFilter(); searchBox.focus(); });
+
+    // Filters
+    filterBar.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-filter]');
+      if(!btn) return;
+      filterBar.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      applyFilter();
+    });
+
+    // Soft stagger
+    cards.forEach((c,i)=> c.style.animationDelay = (i*35)+'ms');
+  </script>
+</body>
+</html>
