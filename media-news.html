@@ -92,17 +92,24 @@
 <body>
     <!-- Main Wrapper -->
     <div class="wrapper fix">
-        <!-- Header Area -->
-        <header class="header-area">
-            <!-- Header Top -->
+         <!-- Header Top -->
+
             <div class="header-top">
                 <div class="container">
                     <div class="row">
+<!-- Location, Date, Time Info -->
+<div class="header-meta text-center col-sm-12 col-xs-12" id="header-meta-info" style="margin-top:10px; font-size:14px; display:flex; justify-content:center; gap:20px; color:#333;">
+    <span id="location"><i class="zmdi zmdi-pin"></i> Loading...</span>
+    <span id="date"><i class="zmdi zmdi-calendar"></i> Loading...</span>
+    <span id="time"><i class="zmdi zmdi-time"></i> Loading...</span>
+</div>
+                        <!-- Social Links -->
                         <div class="header-social text-left col-sm-5 col-xs-12">
                             <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Facebook"><i class="zmdi zmdi-facebook"></i></a>
                             <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Twitter"><i class="zmdi zmdi-twitter"></i></a>
                             <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Instagram"><i class="zmdi zmdi-instagram"></i></a>
                         </div>
+                        <!-- Contact Info -->
                         <div class="header-info text-right col-sm-7 col-xs-12">
                             <p>Email: <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></p>
                             <p><strong>Under Maintenance</strong></p>
@@ -115,6 +122,7 @@
                 <div class="container">
                     <div class="row justify-content-between flex-column flex-lg-row position-relative">
                         <div class="col-auto">
+                            <!-- Logo -->
                             <div class="navbar-header d-flex justify-content-between">
                                 <a href="index.html" class="logo navbar-brand"><img style="max-width:140px" src="logoc7c3.png?v=2.6.25" alt="JOAF Logo"></a>
                                 <button class="navbar-toggle collapsed d-block d-md-none" data-bs-toggle="collapse" data-bs-target="#main-menu" aria-label="Toggle navigation">
@@ -124,15 +132,16 @@
                             </div>
                         </div>
                         <div class="col-auto d-flex flex-md-row flex-lg-row-reverse">
+                            <!-- Main Menu -->
                             <nav class="main-menu collapse" id="main-menu">
                                 <ul>
-                                    <li><a href="index.html">Home</a></li>
+                                    <li class="active"><a href="#hero-area" aria-current="page">Home</a></li>
                                     <li><a href="events.html">Events</a></li>
-                                    <li class="active"><a href="media-news.html">Media</a></li>
-                                    <li><a href="about.html">About</a></li>
-                                    <li><a href="contact.html">Contact Us</a></li>
+                                    <li><a href="media-news.html">Media</a></li>
+                                    <li><a href="#about-area">About</a></li>
+                                    <li><a href="#footer-area">Contact Us</a></li>
                                     <li><a href="membership.html">Join Form</a></li>
-                                    <li><a href="donate.html">Donate</a></li>
+                                    <li><a href="donate.html/">Donate</a></li>
                                 </ul>
                             </nav>
                         </div>
@@ -300,5 +309,88 @@
         items.forEach(item => container.appendChild(item));
     });
     </script>
+<script>
+// ইংরেজি সংখ্যা → বাংলা সংখ্যা কনভার্ট ফাংশন
+function toBanglaNumber(num) {
+    const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
+}
+
+// ইংরেজি শহরের নাম → বাংলা কনভার্ট
+function toBanglaCity(city) {
+    const cityMap = {
+        "Dhaka": "ঢাকা",
+        "Chattogram": "চট্টগ্রাম",
+        "Sylhet": "সিলেট",
+        "Khulna": "খুলনা",
+        "Barishal": "বরিশাল",
+        "Rajshahi": "রাজশাহী",
+        "Rangpur": "রংপুর",
+        "Mymensingh": "ময়মনসিংহ"
+    };
+    return cityMap[city] ? cityMap[city] : city; // যদি না মেলে ইংরেজি নাম রাখবে
+}
+
+// লোকেশন API থেকে আনছে
+fetch('https://ipapi.co/json/')
+  .then(response => response.json())
+  .then(data => {
+    let city = data.city ? toBanglaCity(data.city) : 'ঢাকা';
+    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${city}`;
+  })
+  .catch(() => {
+    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ঢাকা`;
+  });
+
+// তারিখ ও সময় ফাংশন
+function updateDateTime() {
+    const now = new Date();
+
+    // বাংলা মাস
+    const banglaMonths = [
+        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    ];
+
+    // তারিখ
+    const day = toBanglaNumber(now.getDate());
+    const month = banglaMonths[now.getMonth()];
+    const year = toBanglaNumber(now.getFullYear());
+    const dateStr = `${day} ${month}, ${year}`;
+
+    // সময়
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+    let seconds = now.getSeconds();
+    if (minutes < 10) minutes = '0' + minutes;
+    if (seconds < 10) seconds = '0' + seconds;
+
+    let period = '';
+    if (hours >= 4 && hours < 12) {
+        period = 'সকাল';
+    } else if (hours >= 12 && hours < 18) {
+        period = 'বিকেল';
+    } else {
+        period = 'রাত';
+    }
+
+    // 12-hour ফরম্যাট
+    let displayHour = hours % 12;
+    if (displayHour === 0) displayHour = 12;
+
+    const timeStr = `${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}:${toBanglaNumber(seconds)}`;
+
+    // DOM এ বসানো
+    document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
+    document.getElementById('time').innerHTML = `<i class="zmdi zmdi-time"></i> ${timeStr}`;
+}
+
+// প্রথমবার কল
+updateDateTime();
+// প্রতি সেকেন্ডে আপডেট
+setInterval(updateDateTime, 1000);
+</script>
+    
+<script src="/rainbow-swirl-cursor.js"></script>
 </body>
 </html>
