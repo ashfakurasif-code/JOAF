@@ -850,97 +850,140 @@
         </footer>
     </div>
 <!-- JavaScript Dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="https://julyforum.com/pluginsc7c3.js?v=2.6.25"></script>
-    <script src="https://julyforum.com/mainc7c3.js?v=2.6.25"></script>
-    <script>
-        // Gallery Filter Script
-        $(document).ready(function() {
-            $('.gallery-filter button').on('click', function() {
-                $('.gallery-filter button').removeClass('active');
-                $(this).addClass('active');
-                var filterValue = $(this).attr('data-filter');
-                if (filterValue === '*') {
-                    $('.gallery-item').show();
-                } else {
-                    $('.gallery-item').hide();
-                    $(filterValue).show();
-                }
-            });
-        });
-       // Dynamic Date, Time, and Location
-function updateHeaderInfo() {
-    const now = new Date();
-    const dateOptions = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        timeZone: 'Asia/Dhaka'
-    };
-    const timeOptions = {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        timeZone: 'Asia/Dhaka',
-        hour12: false // Use 24-hour format to avoid AM/PM
-    };
-    const dateString = now.toLocaleDateString('bn-BD', dateOptions);
-    const timeString = now.toLocaleTimeString('bn-BD', timeOptions);
-    
-    // Determine time of day in Bengali
-    const hour = now.getHours();
-    let timeOfDay;
-    if (hour >= 5 && hour < 12) {
-        timeOfDay = 'সকাল';
-    } else if (hour >= 12 && hour < 18) {
-        timeOfDay = 'বিকেল';
-    } else if (hour >= 18 || hour < 5) {
-        timeOfDay = 'রাত';
-    }
-    
-    $('#date').html(`<i class="zmdi zmdi-calendar"></i> ${dateString}`);
-    $('#time').html(`<i class="zmdi zmdi-time"></i> ${timeOfDay} ${timeString}`);
-
-    // Fetch user's location using ipapi.co
-    $.getJSON('https://ipapi.co/json/', function(data) {
-        const city = data.city;
-        const country = data.country_name;
-        const countryCode = data.country_code;
-
-        // List of major cities in Bangladesh (in Bengali)
-        const bangladeshCities = {
-            'Dhaka': 'ঢাকা',
-            'Chittagong': 'চট্টগ্রাম',
-            'Khulna': 'খুলনা',
-            'Rajshahi': 'রাজশাহী',
-            'Sylhet': 'সিলেট',
-            'Barisal': 'বরিশাল',
-            'Rangpur': 'রংপুর',
-            'Mymensingh': 'ময়মনসিংহ'
-            // Add more cities as needed
-        };
-
-        let locationString;
-        if (countryCode === 'BD' && bangladeshCities[city]) {
-            // If the user is in Bangladesh, display city and country in Bengali
-            locationString = `${bangladeshCities[city]}, বাংলাদেশ`;
+<script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://julyforum.com/pluginsc7c3.js?v=2.6.25"></script>
+<script src="https://julyforum.com/mainc7c3.js?v=2.6.25"></script>
+<script>
+// Gallery Filter Script
+$(document).ready(function() {
+    $('.gallery-filter button').on('click', function() {
+        $('.gallery-filter button').removeClass('active');
+        $(this).addClass('active');
+        var filterValue = $(this).attr('data-filter');
+        if (filterValue === '*') {
+            $('.gallery-item').show();
         } else {
-            // If the user is outside Bangladesh, display city and country in English
-            locationString = `${city}, ${country}`;
+            $('.gallery-item').hide();
+            $(filterValue).show();
         }
-
-        $('#location').html(`<i class="zmdi zmdi-pin"></i> ${locationString}`);
-    }).fail(function() {
-        // Fallback if the API fails
-        $('#location').html(`<i class="zmdi zmdi-pin"></i> অবস্থান পাওয়া যায়নি`);
     });
+});
+
+// Contact Form Submission
+const form = document.getElementById('contact-form');
+const successMessage = $('.form-messege');
+
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    successMessage.html('');
+    const formData = new FormData(form);
+    console.log([...formData.entries()]);
+
+    fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSczAxkgcYluNmmMJ_66nf6aPu40IS6crPAuysIA2Krg6bPJrA/formResponse', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData,
+    })
+    .then((feedback) => {
+        successMessage.html('Form submitted successfully!');
+        successMessage.css("color", 'green');
+        console.log(feedback);
+        form.reset();
+    })
+    .catch((error) => {
+        successMessage.html('Error submitting form. Please try again.');
+        successMessage.css("color", 'red');
+        console.error('Error:', error.message);
+    });
+});
+
+// Custom Cursor
+<script src="/rainbow-swirl-cursor.js"></script>
+
+// ইংরেজি সংখ্যা → বাংলা সংখ্যা কনভার্ট ফাংশন
+function toBanglaNumber(num) {
+    const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
 }
-updateHeaderInfo();
-setInterval(updateHeaderInfo, 1000); // Update every second for time with seconds
-    </script>
+
+// ইংরেজি শহরের নাম → বাংলা কনভার্ট
+function toBanglaCity(city) {
+    const cityMap = {
+        "Dhaka": "ঢাকা",
+        "Chattogram": "চট্টগ্রাম",
+        "Sylhet": "সিলেট",
+        "Khulna": "খুলনা",
+        "Barishal": "বরিশাল",
+        "Rajshahi": "রাজশাহী",
+        "Rangpur": "রংপুর",
+        "Mymensingh": "ময়মনসিংহ"
+    };
+    return cityMap[city] ? cityMap[city] : city; // যদি না মেলে ইংরেজি নাম রাখবে
+}
+
+// লোকেশন API থেকে আনছে
+fetch('https://ipapi.co/json/')
+  .then(response => response.json())
+  .then(data => {
+    let city = data.city ? toBanglaCity(data.city) : 'ঢাকা';
+    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${city}`;
+  })
+  .catch(() => {
+    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ঢাকা`;
+  });
+
+// তারিখ ও সময় ফাংশন
+function updateDateTime() {
+    const now = new Date();
+
+    // বাংলা মাস
+    const banglaMonths = [
+        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    ];
+
+    // তারিখ
+    const day = toBanglaNumber(now.getDate());
+    const month = banglaMonths[now.getMonth()];
+    const year = toBanglaNumber(now.getFullYear());
+    const dateStr = `${day} ${month}, ${year}`;
+
+    // সময়
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+    let seconds = now.getSeconds();
+    if (minutes < 10) minutes = '0' + minutes;
+    if (seconds < 10) seconds = '0' + seconds;
+
+    let period = '';
+    if (hours >= 4 && hours < 12) {
+        period = 'সকাল';
+    } else if (hours >= 12 && hours < 18) {
+        period = 'বিকেল';
+    } else {
+        period = 'রাত';
+    }
+
+    // 12-hour ফরম্যাট
+    let displayHour = hours % 12;
+    if (displayHour === 0) displayHour = 12;
+
+    const timeStr = `${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}:${toBanglaNumber(seconds)}`;
+
+    // DOM এ বসানো
+    document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
+    document.getElementById('time').innerHTML = `<i class="zmdi zmdi-time"></i> ${timeStr}`;
+}
+
+// প্রথমবার কল
+updateDateTime();
+// প্রতি সেকেন্ডে আপডেট
+setInterval(updateDateTime, 1000);
+</script>
 </body>
 </html>
+
 
 
