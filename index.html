@@ -1,72 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="bn">
 <head>
-    <meta charset="UTF-16">
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> July Online Activists’ Forum - JOAF </title>
+    <title>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF</title>
     <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) বাংলাদেশকে এগিয়ে নেওয়া…">
     <meta name="keywords" content="JOAF, July Online Activists’ Forum, জুলাই অভ্যুত্থান, অনলাইন অ্যাক্টিভিস্ট, বাংলাদেশ, গণতন্ত্র">
     <meta name="author" content="JOAF Team">
     <meta name="robots" content="index, follow">
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="July Online Activists’ Forum - JOAF">
+    <meta property="og:title" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF">
     <meta property="og:description" content="দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।">
-    <meta property="og:image" content="logoc7c3.png?v=1.1">
-    <meta property="og:url" content="index.html">
+    <meta property="og:image" content="https://julyforum.com/logoc7c3.png?v=2.6.25">
+    <meta property="og:url" content="https://julyforum.com/index.html">
     <meta property="og:type" content="website">
     <meta property="fb:app_id" content="1849982302524358">
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="July Online Activists’ Forum - JOAF">
+    <meta name="twitter:title" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF">
     <meta name="twitter:description" content="দেশের পক্ষে, গুজবের বিরুদ্ধে। আমরা — গণতন্ত্রে, সংহতিতে বিশ্বাসী।">
-    <meta name="twitter:image" content="logoc7c3.png?v=1.1">
+    <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png?v=2.6.25">
     <!-- Canonical URL -->
-    <link rel="canonical" href="index.html">
+    <link rel="canonical" href="https://julyforum.com/index.html">
     <!-- Favicon -->
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="https://julyforum.com/favicon.ico" type="image/x-icon">
     <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
-    <link rel="stylesheet" href="pluginsc7c3.css?v=2.6.25">
-    <link rel="stylesheet" href="stylec7c3.css?v=2.6.25">
+    <link rel="stylesheet" href="https://julyforum.com/pluginsc7c3.css?v=2.6.25">
+    <link rel="stylesheet" href="https://julyforum.com/stylec7c3.css?v=2.6.25">
     <!-- Modernizr -->
-    <script src="modernizr-2.8.3.min.js"></script>
+    <script src="https://julyforum.com/modernizr-2.8.3.min.js"></script>
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-G16GVEBVG0"></script>
-    <link rel="manifest" href="site.webmanifest">
+    <link rel="manifest" href="https://julyforum.com/site.webmanifest">
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-G16GVEBVG0');
     </script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-QV3CFV7R98');
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-QV3CFV7R98');
+    </script>
+    <style>
+        .gallery-image {
+            max-width: 300px;
+            max-height: 300px;
+            overflow: hidden;
+            aspect-ratio: 1/1;
+            margin: 0 auto;
+        }
+        .gallery-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .card-header {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #90161f 0%, #075e55 100%);
+            overflow: hidden;
+        }
+        .card-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(1.2);
+            transition: transform 0.3s ease;
+        }
+        .card:hover .card-header img {
+            transform: scale(1.1);
+        }
+        .card-body {
+            padding: 20px;
+            background: #fff;
+            text-align: center;
+        }
+        .card-footer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+        .card-footer a {
+            transition: color 0.3s ease;
+        }
+        .card-footer a.details {
+            color: #6c757d;
+        }
+        .card-footer a.details:hover {
+            color: #495057;
+        }
+        @media (max-width: 767px) {
+            .gallery-image {
+                max-width: 100%;
+                max-height: 200px;
+            }
+            .gallery-image img {
+                width: 100%;
+                height: auto;
+                object-fit: cover;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Main Wrapper -->
     <div class="wrapper fix">
         <header class="header-area">
             <!-- Header Top -->
-
             <div class="header-top">
                 <div class="container">
                     <div class="row">
-<!-- Location, Date, Time Info -->
-<div class="header-meta text-center col-sm-12 col-xs-12" id="header-meta-info" style="margin-top:10px; font-size:14px; display:flex; justify-content:center; gap:20px; color:#333;">
-    <span id="location"><i class="zmdi zmdi-pin"></i> Loading...</span>
-    <span id="date"><i class="zmdi zmdi-calendar"></i> Loading...</span>
-    <span id="time"><i class="zmdi zmdi-time"></i> Loading...</span>
-</div>
+                        <!-- Location, Date, Time Info -->
+                        <div class="header-meta text-center col-sm-12 col-xs-12" id="header-meta-info" style="margin-top:10px; font-size:14px; display:flex; justify-content:center; gap:20px; color:#333;">
+                            <span id="location"><i class="zmdi zmdi-pin"></i> Loading...</span>
+                            <span id="date"><i class="zmdi zmdi-calendar"></i> Loading...</span>
+                            <span id="time"><i class="zmdi zmdi-time"></i> Loading...</span>
+                        </div>
                         <!-- Social Links -->
                         <div class="header-social text-left col-sm-5 col-xs-12">
                             <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Facebook"><i class="zmdi zmdi-facebook"></i></a>
@@ -88,7 +159,7 @@
                         <div class="col-auto">
                             <!-- Logo -->
                             <div class="navbar-header d-flex justify-content-between">
-                                <a href="index.html" class="logo navbar-brand"><img style="max-width:140px" src="logoc7c3.png?v=2.6.25" alt="JOAF Logo"></a>
+                                <a href="https://julyforum.com/index.html" class="logo navbar-brand"><img style="max-width:140px" src="https://julyforum.com/logoc7c3.png?v=2.6.25" alt="JOAF Logo"></a>
                                 <button class="navbar-toggle collapsed d-block d-md-none" data-bs-toggle="collapse" data-bs-target="#main-menu" aria-label="Toggle navigation">
                                     <i class="zmdi zmdi-menu menu-open"></i>
                                     <i class="zmdi zmdi-close menu-close"></i>
@@ -100,12 +171,12 @@
                             <nav class="main-menu collapse" id="main-menu">
                                 <ul>
                                     <li class="active"><a href="#hero-area" aria-current="page">Home</a></li>
-                                    <li><a href="events.html">Events</a></li>
-                                    <li><a href="media-news.html">Media</a></li>
+                                    <li><a href="https://julyforum.com/events.html">Events</a></li>
+                                    <li><a href="https://julyforum.com/media-news.html">Media</a></li>
                                     <li><a href="#about-area">About</a></li>
                                     <li><a href="#footer-area">Contact Us</a></li>
-                                    <li><a href="membership.html">Join Form</a></li>
-                                    <li><a href="donate.html/">Donate</a></li>
+                                    <li><a href="https://julyforum.com/membership.html">Join Form</a></li>
+                                    <li><a href="https://julyforum.com/donate.html">Donate</a></li>
                                 </ul>
                             </nav>
                         </div>
@@ -117,16 +188,16 @@
         <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
             <div class="hero-slider">
                 <!-- Hero Slide Item -->
-                <div class="hs-item" style="background-image: url(img/hero-1.jpg);">
+                <div class="hs-item" style="background-image: url(https://julyforum.com/img/hero-1.jpg);">
                     <div class="hs-item-wrapper fix">
                         <div class="hs-image float-left">
-                            <img src="img/profile.jpg" style="border-top-left-radius: 50px; border-top-right-radius: 50px; margin: 50px auto;" alt="JOAF Profile">
+                            <img src="https://julyforum.com/img/profile.jpg" style="border-top-left-radius: 50px; border-top-right-radius: 50px; margin: 50px auto;" alt="JOAF Profile">
                         </div>
                         <div class="hs-content fix">
                             <h2>We are...</h2>
                             <h1 id="hero-title">July Online Activists’ Forum</h1>
                             <p>দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
-                            <a href="membership.html" class="btn btn-xlg"> JOIN NOW <i class="zmdi zmdi-long-arrow-right"></i></a>
+                            <a href="https://julyforum.com/membership.html" class="btn btn-xlg"> JOIN NOW <i class="zmdi zmdi-long-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -136,13 +207,13 @@
             <div class="container">
                 <div class="row text-center">
                     <div class="col-md-4 mb-40">
-                        <a href="financial-report.html" style="width: 100%;"> <button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block" > Financial Statement </button></a>
+                        <a href="https://julyforum.com/financial-report.html" style="width: 100%;"> <button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block" > Financial Statement </button></a>
                     </div>
                     <div class="col-md-4 mb-40">
-                        <a href="membership.html" style="width: 100%;"> <button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block" > JOIN Form </button></a>
+                        <a href="https://julyforum.com/membership.html" style="width: 100%;"> <button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block" > JOIN Form </button></a>
                     </div>
                     <div class="col-md-4 mb-40">
-                        <a href="financial-policy.html" style="width: 100%;"> <button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block" >  Financial Policy 1st Draft </button></a>
+                        <a href="https://julyforum.com/financial-policy.html" style="width: 100%;"> <button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block" >  Financial Policy 1st Draft </button></a>
                     </div>
                 </div>
             </div>
@@ -160,7 +231,7 @@
                 <div class="row mb-40">
                     <div class="col-md-8 mx-auto">
                         <div class="mb-20">
-                               <p> আমরা জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF), যারা নিরপেক্ষ দৃষ্টিভঙ্গিতে দেশের জন্য কাজ করতে প্রতিশ্রুতিবদ্ধ।
+                            <p> আমরা জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF), যারা নিরপেক্ষ দৃষ্টিভঙ্গিতে দেশের জন্য কাজ করতে প্রতিশ্রুতিবদ্ধ।
                             </p>
                             <p>
                                 "দেশ আগে, দল পরে" — আর তা মেনে নিয়ে হাজারো তরুণ এগিয়ে এসেছিলো… সেনাবাহিনী ও জনগণের সংহতিতে।
@@ -236,7 +307,7 @@
                             </li>
                         </ol>
                         <p>
-                            বাংলাদেশের ভবিষ্যৎ নিয়ে ভাবুন, আপনার নাগরিক অধিকার নিশ্চিত করুন! আমাদের আন্দোলনে যুক্ত হোন।
+                            বাংলাদেশের ভবিষৎ নিয়ে ভাবুন, আপনার নাগরিক অধিকার নিশ্চিত করুন! আমাদের আন্দোলনে যুক্ত হোন।
                         </p>
                     </div>
                 </div>
@@ -248,7 +319,7 @@
                 <!--Section Title Start-->
                 <div class="row">
                     <div class="section-title text-center col-12 mb-60">
-                        <img src="logoc7c3.png" alt="JOAF Logo" style="height: auto; margin-bottom: 20px; max-width:60%;">
+                        <img src="https://julyforum.com/logoc7c3.png" alt="JOAF Logo" style="height: auto; margin-bottom: 20px; max-width:60%;">
                     </div>
                 </div>
                 <!--Section Title End-->
@@ -262,40 +333,40 @@
                     <button data-filter=".coordinator">যুগ্ম মূখ্য সংগঠক</button>
                     <button data-filter=".chief-organizer">মূখ্য সংগঠক</button>
                 </div>
-               <!-- Gallery Grid -->
-<div class="gallery-grid">
-    <!-- সভাপতি: ফারহানা শারমিন শুচি -->
-    <div class="gallery-item president col-md-3 col-6">
-        <div class="gallery-image"><img src="img/farhana-sharmin-shuchi.jpg" alt="ফারহানা শারমিন শুচি" style="width: 300px; height: 300px; object-fit: contain;" /></div>
-        <div class="gallery-content">
-            <h4>ফারহানা শারমিন শুচি</h4>
-            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
-            <div class="role-text">সভাপতি</div>
-        </div>
-    </div>
+                <!-- Gallery Grid -->
+                <div class="gallery-grid">
+                    <!-- সভাপতি: ফারহানা শারমিন শুচি -->
+                    <div class="gallery-item president col-md-3 col-6">
+                        <div class="gallery-image"><img src="https://julyforum.com/img/farhana-sharmin-shuchi.jpg" alt="ফারহানা শারমিন শুচি" /></div>
+                        <div class="gallery-content">
+                            <h4>ফারহানা শারমিন শুচি</h4>
+                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
+                            <div class="role-text">সভাপতি</div>
+                        </div>
+                    </div>
                     <div class="gallery-item secretary col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/shirin-chowdhury.jpg" alt="শিরিন চৌধুরী" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/shirin-chowdhury.jpg" alt="শিরিন চৌধুরী" /></div>
                         <div class="gallery-content">
                             <h4>শিরিন চৌধুরী</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
                         </div>
                     </div>
                     <div class="gallery-item spokesperson col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/muhtashimur-rahman-shihab.jpg" alt="মো. মুহতাশিমুর রহমান শিহাব" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/muhtashimur-rahman-shihab.jpg" alt="মো. মুহতাশিমুর রহমান শিহাব" /></div>
                         <div class="gallery-content">
                             <h4>মো. মুহতাশিমুর রহমান শিহাব</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
                         </div>
                     </div>
                     <div class="gallery-item senior-coordinator col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/munsi-mokhles-uddin-ashik.jpg" alt="মুন্সী মোখলেস উদ্দীন আশিক" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/munsi-mokhles-uddin-ashik.jpg" alt="মুন্সী মোখলেস উদ্দীন আশিক" /></div>
                         <div class="gallery-content">
                             <h4>মুন্সী মোখলেস উদ্দীন আশিক</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
                         </div>
                     </div>
                     <div class="gallery-item coordinator col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/tarannum-binte-zakir.jpg" alt="তারান্নুম বিনতে জাকির" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/tarannum-binte-zakir.jpg" alt="তারান্নুম বিনতে জাকির" /></div>
                         <div class="gallery-content">
                             <h4>তারান্নুম বিনতে জাকির</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
@@ -303,7 +374,7 @@
                     </div>
                     <!-- মুখ্য সংগঠক (Last 4, with roles) -->
                     <div class="gallery-item chief-organizer col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/ashfakur-rahman-himu.png" alt="আশফাকুর রহমান হিমু" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/ashfakur-rahman-himu.png" alt="আশফাকুর রহমান হিমু" /></div>
                         <div class="gallery-content">
                             <h4>আশফাকুর রহমান হিমু</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
@@ -311,7 +382,7 @@
                         </div>
                     </div>
                     <div class="gallery-item chief-organizer col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/engineer-ayman-andalib.png" alt="ইঞ্জিনিয়ার আয়মান আন্দালীব" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/engineer-ayman-andalib.png" alt="ইঞ্জিনিয়ার আয়মান আন্দালীব" /></div>
                         <div class="gallery-content">
                             <h4>ইঞ্জিনিয়ার আয়মান আন্দালীব</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
@@ -319,7 +390,7 @@
                         </div>
                     </div>
                     <div class="gallery-item chief-organizer col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/md-asifur-rahman.png" alt="মো. আসিফুর রহমান" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/md-asifur-rahman.png" alt="মো. আসিফুর রহমান" /></div>
                         <div class="gallery-content">
                             <h4>মো. আসিফুর রহমান</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
@@ -327,7 +398,7 @@
                         </div>
                     </div>
                     <div class="gallery-item senior-coordinator col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/asif-mahmud-khan.png" alt="আসিফ মাহমুদ খান" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/asif-mahmud-khan.png" alt="আসিফ মাহমুদ খান" /></div>
                         <div class="gallery-content">
                             <h4>আসিফ মাহমুদ খান</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
@@ -335,7 +406,7 @@
                         </div>
                     </div>
                     <div class="gallery-item chief-organizer col-md-3 col-6">
-                        <div class="gallery-image"><img src="img/sm-shahiduzzaman-limon.png" alt="এস. এম. শহিদুজ্জামান লিমন" style="width: 300px; height: 300px; object-fit: contain;" /></div>
+                        <div class="gallery-image"><img src="https://julyforum.com/img/sm-shahiduzzaman-limon.png" alt="এস. এম. শহিদুজ্জামান লিমন" /></div>
                         <div class="gallery-content">
                             <h4>এস. এম. শহিদুজ্জামান লিমন</h4>
                             <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/">Social Profile</a>
@@ -355,153 +426,141 @@
                         </h2>
                     </div>
                 </div>
-                <style>
-                    .card-header {
-                        position: relative;
-                        width: 100%;
-                        min-height: 180px;
-                        background-color: #0a5334;
-                        overflow: hidden;
-                    }
-                    .card-header img {
-                        position: absolute;
-                        width: 100%;
-                        height: auto;
-                        top: 0px;
-                        left: 0;
-                        right: 0;
-                        margin: 0 auto;
-                        object-fit: scale-down;
-                        max-height: 100%;
-                    }
-                </style>
                 <div class="row">
                     <!-- উপদেষ্টা বলয় থেকে ৩ জন বাদ, শুরু হচ্ছে ৪ থেকে -->
                     <div class="col-md-3 mb-20 mt-50" data-number="4">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/rafe-salman.png" alt="রাফে সালমান" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/rafe-salman.png" alt="রাফে সালমান" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">রাফে সালমান</h3>
                                 <h4 class="card-text" style="font-size:14px;">ফ্যাকাল্টি, ইউনাইটেড ইন্টারন্যাশনাল ইউনিভার্সিটি</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow রাফে সালমান on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow রাফে সালমান on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow রাফে সালমান on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View রাফে সালমান's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="5">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/tushar-mohammad-abdul-hannan.png" alt="তুষার মোহাম্মদ আব্দুল হান্নান" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/tushar-mohammad-abdul-hannan.png" alt="তুষার মোহাম্মদ আব্দুল হান্নান" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">তুষার মোহাম্মদ আব্দুল হান্নান</h3>
                                 <h4 class="card-text" style="font-size:14px;">কবি ও লেখক</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow তুষার মোহাম্মদ আব্দুল হান্নান on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow তুষার মোহাম্মদ আব্দুল হান্নান on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow তুষার মোহাম্মদ আব্দুল হান্নান on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View তুষার মোহাম্মদ আব্দুল হান্নান's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="6">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/engineer-ahsanul-muzakkir.png" alt="ইঞ্জিনিয়ার আহসানুল মুযাক্কির" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/engineer-ahsanul-muzakkir.png" alt="ইঞ্জিনিয়ার আহসানুল মুযাক্কির" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">ইঞ্জিনিয়ার আহসানুল মুযাক্কির</h3>
                                 <h4 class="card-text" style="font-size:14px;">শিল্প উদ্যোক্তা</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার আহসানুল মুযাক্কির on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার আহসানুল মুযাক্কির on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার আহসানুল মুযাক্কির on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View ইঞ্জিনিয়ার আহসানুল মুযাক্কির's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="7">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/mohammad-tahazzat-hossain.png" alt="মোহাম্মদ তাহাজ্জত হোসেন" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/mohammad-tahazzat-hossain.png" alt="মোহাম্মদ তাহাজ্জত হোসেন" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">মোহাম্মদ তাহাজ্জত হোসেন</h3>
                                 <h4 class="card-text" style="font-size:14px;">জাগ্রত ব্যবসায়ী ও সমাজসেবক</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ তাহাজ্জত হোসেন on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ তাহাজ্জত হোসেন on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ তাহাজ্জত হোসেন on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View মোহাম্মদ তাহাজ্জত হোসেন's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="8">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/mohammad-nurul-huda-duke.png" alt="মোহাম্মদ নুরুল হুদা ডিউক" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/mohammad-nurul-huda-duke.png" alt="মোহাম্মদ নুরুল হুদা ডিউক" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">মোহাম্মদ নুরুল হুদা ডিউক</h3>
                                 <h4 class="card-text" style="font-size:14px;">কবি ও এক্টিভিস্ট</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ নুরুল হুদা ডিউক on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ নুরুল হুদা ডিউক on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ নুরুল হুদা ডিউক on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View মোহাম্মদ নুরুল হুদা ডিউক's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="9">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/mozammel-hossain-mohan.png" alt="মোজাম্মেল হোসেন মোহন" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/mozammel-hossain-mohan.png" alt="মোজাম্মেল হোসেন মোহন" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">মোজাম্মেল হোসেন মোহন</h3>
                                 <h4 class="card-text" style="font-size:14px;">আইনজীবী ও সমাজচিন্তক</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোজাম্মেল হোসেন মোহন on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোজাম্মেল হোসেন মোহন on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোজাম্মেল হোসেন মোহন on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View মোজাম্মেল হোসেন মোহন's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="10">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/saifuddin-jahid.png" alt="সাইফ উদ্দীন জাহিদ" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/saifuddin-jahid.png" alt="সাইফ উদ্দীন জাহিদ" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">সাইফ উদ্দীন জাহিদ</h3>
                                 <h4 class="card-text" style="font-size:14px;">লেখক ও ব্যবসায়ী</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাইফ উদ্দীন জাহিদ on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাইফ উদ্দীন জাহিদ on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাইফ উদ্দীন জাহিদ on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View সাইফ উদ্দীন জাহিদ's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="11">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/captain-jahan.png" alt="ক্যাপ্টেন জাহান" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/captain-jahan.png" alt="ক্যাপ্টেন জাহান" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">ক্যাপ্টেন জাহান</h3>
                                 <h4 class="card-text" style="font-size:14px;">অ্যাক্টিভিস্ট (বিডিআর বিদ্রোহ সংশ্লিষ্ট)</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ক্যাপ্টেন জাহান on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ক্যাপ্টেন জাহান on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ক্যাপ্টেন জাহান on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View ক্যাপ্টেন জাহান's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
@@ -517,454 +576,238 @@
                         </h2>
                     </div>
                 </div>
-                <style>
-                    .card-header {
-                        position: relative;
-                        width: 100%;
-                        min-height: 180px;
-                        background-color: #0a5334;
-                        overflow: hidden;
-                    }
-                    .card-header img {
-                        position: absolute;
-                        width: 100%;
-                        height: auto;
-                        top: 0px;
-                        left: 0;
-                        right: 0;
-                        margin: 0 auto;
-                        object-fit: scale-down;
-                        max-height: 100%;
-                    }
-                </style>
                 <div class="row">
                     <div class="col-md-3 mb-20 mt-50" data-number="1">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/engineer-ayman-andalib.png" alt="ইঞ্জিনিয়ার আয়মান আন্দালীব" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/engineer-ayman-andalib.png" alt="ইঞ্জিনিয়ার আয়মান আন্দালীব" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">ইঞ্জিনিয়ার আয়মান আন্দালীব</h3>
                                 <h4 class="card-text" style="font-size:14px;">ইনকিলাব মঞ্চ</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার আয়মান আন্দালীব on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার আয়মান আন্দালীব on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার আয়মান আন্দালীব on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View ইঞ্জিনিয়ার আয়মান আন্দালীব's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="2">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/engineer-shak.png" alt="ইঞ্জিনিয়ার শাক" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/engineer-shak.png" alt="ইঞ্জিনিয়ার শাক" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">ইঞ্জিনিয়ার শাক</h3>
                                 <h4 class="card-text" style="font-size:14px;">জুলাই মঞ্চ</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার শাক on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার শাক on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইঞ্জিনিয়ার শাক on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View ইঞ্জিনিয়ার শাক's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="3">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/ananta-majumdar.png" alt="অনন্ত মজুমদার" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/ananta-majumdar.png" alt="অনন্ত মজুমদার" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">অনন্ত মজুমদার</h3>
                                 <h4 class="card-text" style="font-size:14px;">গণপরিষদ</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow অনন্ত মজুমদার on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow অনন্ত মজুমদার on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow অনন্ত মজুমদার on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View অনন্ত মজুমদার's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="4">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/azad-khan-bhasani.png" alt="আজাদ খান ভাসানী" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/azad-khan-bhasani.png" alt="আজাদ খান ভাসানী" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">আজাদ খান ভাসানী</h3>
                                 <h4 class="card-text" style="font-size:14px;">আহ্বায়ক, ভাষানী পরিষদ</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow আজাদ খান ভাসানী on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow আজাদ খান ভাসানী on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow আজাদ খান ভাসানী on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View আজাদ খান ভাসানী's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="5">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/barrister-asaduzzaman-fuad.png" alt="ব্যারিস্টার আসাদুজ্জামান ফুয়াদ" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/barrister-asaduzzaman-fuad.png" alt="ব্যারিস্টার আসাদুজ্জামান ফুয়াদ" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">ব্যারিস্টার আসাদুজ্জামান ফুয়াদ</h3>
                                 <h4 class="card-text" style="font-size:14px;">এবি পার্টি</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ব্যারিস্টার আসাদুজ্জামান ফুয়াদ on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ব্যারিস্টার আসাদুজ্জামান ফুয়াদ on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ব্যারিস্টার আসাদুজ্জামান ফুয়াদ on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View ব্যারিস্টার আসাদুজ্জামান ফুয়াদ's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="6">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/imran-naim.png" alt="ইমরান নাঈম" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/imran-naim.png" alt="ইমরান নাঈম" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">ইমরান নাঈম</h3>
                                 <h4 class="card-text" style="font-size:14px;">এনসিপি</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইমরান নাঈম on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইমরান নাঈম on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইমরান নাঈম on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View ইমরান নাঈম's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="7">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/bayezid-bostami.png" alt="বায়েজিদ বোস্তামী" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/bayezid-bostami.png" alt="বায়েজিদ বোস্তামী" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">বায়েজিদ বোস্তামী</h3>
                                 <h4 class="card-text" style="font-size:14px;">বাংলাদেশ ইসলামী ছাত্রশিবির</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow বায়েজিদ বোস্তামী on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow বায়েজিদ বোস্তামী on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow বায়েজিদ বোস্তামী on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View বায়েজিদ বোস্তামী's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="8">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/Syead-Rakibul-Hossain.png" alt="সৈয়দ রাকিবুল হোসেন" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/Syead-Rakibul-Hossain.png" alt="সৈয়দ রাকিবুল হোসেন" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">সৈয়দ রাকিবুল হোসেন</h3>
                                 <h4 class="card-text" style="font-size:14px;">বাংলাদেশ জাতীয় পার্টি (বিজেপি)</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সৈয়দ রাকিবুল হোসেন on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সৈয়দ রাকিবুল হোসেন on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সৈয়দ রাকিবুল হোসেন on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View সৈয়দ রাকিবুল হোসেন's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="9">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/sadik.png" alt="সাদিক" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/sadik.png" alt="সাদিক" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">সাদিক</h3>
                                 <h4 class="card-text" style="font-size:14px;">সমাজতান্ত্রিক ছাত্র ফ্রন্ট</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাদিক on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাদিক on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাদিক on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View সাদিক's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="10">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/yusuf-patwary.png" alt="ইউসুফ পাটোয়ারী" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/yusuf-patwary.png" alt="ইউসুফ পাটোয়ারী" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">ইউসুফ পাটোয়ারী</h3>
                                 <h4 class="card-text" style="font-size:14px;">বৈষম্য বিরোধী ছাত্র আন্দোলন</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইউসুফ পাটোয়ারী on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইউসুফ পাটোয়ারী on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow ইউসুফ পাটোয়ারী on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View ইউসুফ পাটোয়ারী's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="11">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/sadekul-islam-sadik.png" alt="সাদেকুল ইসলাম সাদিক" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/sadekul-islam-sadik.png" alt="সাদেকুল ইসলাম সাদিক" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">সাদেকুল ইসলাম সাদিক</h3>
                                 <h4 class="card-text" style="font-size:14px;">সমাজতান্ত্রিক ছাত্র ফ্রন্ট</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাদেকুল ইসলাম সাদিক on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাদেকুল ইসলাম সাদিক on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow সাদেকুল ইসলাম সাদিক on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View সাদেকুল ইসলাম সাদিক's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="12">
                         <div class="card">
                             <div class="card-header">
-                                <img src="members/mohammad-arif.png" alt="মোহাম্মদ আরিফ" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/members/mohammad-arif.png" alt="মোহাম্মদ আরিফ" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">মোহাম্মদ আরিফ</h3>
                                 <h4 class="card-text" style="font-size:14px;">গণতান্ত্রিক ছাত্র সংসদ</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ আরিফ on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ আরিফ on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মোহাম্মদ আরিফ on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View মোহাম্মদ আরিফ's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-20 mt-50" data-number="13">
                         <div class="card">
                             <div class="card-header">
-                                <img src="img/md-asifur-rahman.png" alt="মো. আসিফুর রহমান" class="img-fluid card-img-top" />
+                                <img src="https://julyforum.com/img/md-asifur-rahman.png" alt="মো. আসিফুর রহমান" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">মো. আসিফুর রহমান</h3>
                                 <h4 class="card-text" style="font-size:14px;">ঢাকা পোস্ট</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মো. আসিফুর রহমান on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মো. আসিফুর রহমান on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow মো. আসিফুর রহমান on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
+                                <a class="me-3 details" href="#" target="_blank" aria-label="View মো. আসিফুর রহমান's Details"><i class="zmdi fs-2 zmdi-account"></i></a>
                             </div>
                         </div>
                     </div>
-<div class="col-md-3 mb-20 mt-50" data-number="14">
+                    <div class="col-md-3 mb-20 mt-50" data-number="14">
                         <div class="card">
-                             <div class="card-header">
-                                <img src="img/asif-mahmud-khan.png" alt="আসিফ মাহমুদ খান" class="img-fluid card-img-top" />
+                            <div class="card-header">
+                                <img src="https://julyforum.com/img/asif-mahmud-khan.png" alt="আসিফ মাহমুদ খান" class="img-fluid card-img-top" />
                             </div>
                             <div class="member-details card-body">
                                 <h3 class="card-title" style="font-size: 18px;">আসিফ মাহমুদ খান</h3>
                                 <h4 class="card-text" style="font-size:14px;">সমকাল</h4>
                             </div>
                             <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on X"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank" aria-label="Follow us on Instagram"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                            </div>
-                        </div>
-                </div>
-        <!-- Footer Area -->
-        <footer id="footer-area" class="footer-area section" aria-labelledby="footer-title">
-            <div class="footer-top pb-80 pt-120">
-                <div class="container">
-                    <div class="row">
-                        <!-- Contact Info -->
-                        <div class="footer-widget col-lg-3 col-md-6 col-12 mb-40">
-                            <h4>Contact Us</h4>
-                            <div class="contact-info fix">
-                                <p>Address: Road - 9, South Banasree, Dhaka-1219</p>
-                                <ul>
-                                    <li><span>Email:</span> <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- Instagram -->
-                        <div class="footer-widget col-lg-4 col-md-6 col-12 mb-40">
-
-                        </div>
-                        <!-- Contact Form -->
-                        <div class="footer-widget col-lg-5 col-12 mb-40">
-                            <h4>Get in Touch</h4>
-                            <form id="contact-form">
-                                <div class="input-box-2">
-                                    <div class="input-box">
-                                        <input name="entry.1850028484" type="text" placeholder="Your name" required aria-label="Your name">
-                                    </div>
-                                    <div class="input-box">
-                                        <input name="entry.450628556" type="email" placeholder="Your email" required aria-label="Your email">
-                                    </div>
-                                </div>
-                                <div class="input-box">
-                                    <textarea name="entry.455914715" placeholder="Your message" required aria-label="Your message"></textarea>
-                                </div>
-                                <div class="input-box">
-                                    <input type="submit" value="Submit" aria-label="Submit contact form">
-                                </div>
-                            </form>
-                            <p class="form-messege"></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Footer Copyright -->
-            <div class="footer-copyright">
-                <div class="container">
-                    <div class="row">
-                        <div class="copyright text-center col-xs-12">
-                            <p>Copyright © 2025 <a href="index.html">JOAF</a>. All rights reserved.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </footer>
-    </div>
-    <!-- JavaScript Dependencies -->
-    <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="plugins.js"></script>
-    <script src="main.js"></script>
-    <script>
-        const form = document.getElementById('contact-form');
-        const successMessage = $('.form-messege');
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            successMessage.html('');
-            const formData = new FormData(form);
-            console.log([...formData.entries()]);
-
-            fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSczAxkgcYluNmmMJ_66nf6aPu40IS6crPAuysIA2Krg6bPJrA/formResponse', {
-                method: 'POST',
-                mode: 'no-cors',
-                body: formData,
-            })
-            .then((feedback) => {
-                successMessage.html('Form submitted successfully!');
-                successMessage.css("color", 'green');
-                console.log(feedback);
-                form.reset();
-            })
-            .catch((error) => {
-                successMessage.html('Error submitting form. Please try again.');
-                successMessage.css("color", 'red');
-                console.error('Error:', error.message);
-            });
-        });
-    </script>
-
-<script src="/rainbow-swirl-cursor.js"></script>
-<script>
-// ইংরেজি সংখ্যা → বাংলা সংখ্যা কনভার্ট ফাংশন
-function toBanglaNumber(num) {
-    const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-    return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
-}
-
-// ইংরেজি শহরের নাম → বাংলা কনভার্ট
-function toBanglaCity(city) {
-    const cityMap = {
-        "Dhaka": "ঢাকা",
-        "Chattogram": "চট্টগ্রাম",
-        "Sylhet": "সিলেট",
-        "Khulna": "খুলনা",
-        "Barishal": "বরিশাল",
-        "Rajshahi": "রাজশাহী",
-        "Rangpur": "রংপুর",
-        "Mymensingh": "ময়মনসিংহ"
-    };
-    return cityMap[city] ? cityMap[city] : city; // যদি না মেলে ইংরেজি নাম রাখবে
-}
-
-// লোকেশন API থেকে আনছে
-fetch('https://ipapi.co/json/')
-  .then(response => response.json())
-  .then(data => {
-    let city = data.city ? toBanglaCity(data.city) : 'ঢাকা';
-    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${city}`;
-  })
-  .catch(() => {
-    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ঢাকা`;
-  });
-
-// তারিখ ও সময় ফাংশন
-function updateDateTime() {
-    const now = new Date();
-
-    // বাংলা মাস
-    const banglaMonths = [
-        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
-        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
-    ];
-
-    // তারিখ
-    const day = toBanglaNumber(now.getDate());
-    const month = banglaMonths[now.getMonth()];
-    const year = toBanglaNumber(now.getFullYear());
-    const dateStr = `${day} ${month}, ${year}`;
-
-    // সময়
-    let hours = now.getHours();
-    let minutes = now.getMinutes();
-    let seconds = now.getSeconds();
-    if (minutes < 10) minutes = '0' + minutes;
-    if (seconds < 10) seconds = '0' + seconds;
-
-    let period = '';
-    if (hours >= 4 && hours < 12) {
-        period = 'সকাল';
-    } else if (hours >= 12 && hours < 18) {
-        period = 'বিকেল';
-    } else {
-        period = 'রাত';
-    }
-
-    // 12-hour ফরম্যাট
-    let displayHour = hours % 12;
-    if (displayHour === 0) displayHour = 12;
-
-    const timeStr = `${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}:${toBanglaNumber(seconds)}`;
-
-    // DOM এ বসানো
-    document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
-    document.getElementById('time').innerHTML = `<i class="zmdi zmdi-time"></i> ${timeStr}`;
-}
-
-// প্রথমবার কল
-updateDateTime();
-// প্রতি সেকেন্ডে আপডেট
-setInterval(updateDateTime, 1000);
-</script>
-</body>
-</html>
-<!-- Social Media Meta Tags for Home Page -->
-<meta property="og:title" content="July Online Activists’ Forum - JOAF" />
-<meta property="og:description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর অফিসিয়াল ওয়েবসাইটে স্বাগতম।" />
-<meta property="og:image" content="https://julyforum.com/logoc7c3.png?v=1.1" />
-<meta property="og:url" content="https://julyforum.com/" />
-<meta property="og:type" content="website" />
-
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="July Online Activists’ Forum - JOAF" />
-<meta name="twitter:description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর অফিসিয়াল ওয়েবসাইটে স্বাগতম।" />
-<meta name="twitter:image" content="https://julyforum.com/logoc7c3.png?v=1.1" />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow আসিফ মাহমুদ খান on Facebook"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow আসিফ মাহমুদ খান on Twitter"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
+                                <a class="me-3" href="#" target="_blank" aria-label="Follow আসিফ মাহমুদ খান on Instagram"><
