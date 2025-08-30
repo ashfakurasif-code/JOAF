@@ -213,11 +213,11 @@
             background: #111;
             padding: 20px 0;
             text-align: center;
+            padding-bottom: 50px; /* Added padding at the bottom */
         }
-        .footer-bottom p {
-            margin: 0;
-            color: #ccc;
-            font-size: 0.8rem;
+        /* Cursor Styling */
+        body {
+            cursor: none; /* Hide default cursor */
         }
     </style>
 </head>
@@ -284,7 +284,7 @@
         <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
             <div class="hero-slider">
                 <!-- Hero Slide Item -->
-                <div class="hs-item" style="background-image: url(https://julyforum.com/img/hero-1.jpg);">
+                <div class="hs-item" style="background-image: ur[](https://julyforum.com/img/hero-1.jpg);">
                     <div class="hs-item-wrapper fix">
                         <div class="hs-image float-left">
                             <img src="https://julyforum.com/img/profile.jpg" style="border-top-left-radius: 50px; border-top-right-radius: 50px; margin: 50px auto;" alt="JOAF Profile">
@@ -819,169 +819,67 @@
                     <div class="col-md-4 col-12 mb-40">
                         <h4>দ্রুত লিঙ্ক</h4>
                         <ul>
-                            <li><a href="https://julyforum.com/index.html">হোম</a></li>
-                            <li><a href="https://julyforum.com/events.html">ইভেন্ট</a></li>
-                            <li><a href="https://julyforum.com/media-news.html">মিডিয়া</a></li>
-                            <li><a href="#about-area">আমাদের সম্পর্কে</a></li>
-                            <li><a href="#footer-area">যোগাযোগ</a></li>
-                            <li><a href="https://julyforum.com/membership.html">সদস্যতা ফর্ম</a></li>
-                            <li><a href="https://julyforum.com/donate.html">ডোনেট</a></li>
-                        </ul>
-                    </div>
-                    <!-- Footer Contact -->
-                    <div class="col-md-4 col-12 mb-40">
-                        <h4>যোগাযোগ</h4>
-                        <p>Email: <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></p>
-                        <p>ফেসবুক: <a href="https://www.facebook.com/share/15yL2rq5XL/" target="_blank">JOAF ফেসবুক পেজ</a></p>
-                        <div class="footer-social">
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Facebook"><i class="zmdi zmdi-facebook"></i></a>
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Twitter"><i class="zmdi zmdi-twitter"></i></a>
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Instagram"><i class="zmdi zmdi-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Footer Bottom -->
-            <div class="footer-bottom">
-                <div class="container">
-                    <p>&copy; 2025 জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম। সর্বস্বত্ব সংরক্ষিত।</p>
-                </div>
-            </div>
-        </footer>
+    <li><a href="https://julyforum.com/index.html">হোম</a></li>
+    <li><a href="https://julyforum.com/events.html">ইভেন্ট</a></li>
+    <li><a href="https://julyforum.com/media-news.html">মিডিয়া</a></li>
+    <li><a href="#about-area">আমাদের সম্পর্কে</a></li>
+    <li><a href="#footer-area">যোগাযোগ</a></li>
+    <li><a href="https://julyforum.com/membership.html">সদস্যতা ফর্ম</a></li>
+    <li><a href="https://julyforum.com/donate.html">অর্থদান</a></li>
+</ul>
+</div>
+<!-- Footer Contact -->
+<div class="col-md-4 col-12 mb-40">
+    <h4>যোগাযোগ</h4>
+    <p><i class="zmdi zmdi-email"></i> <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></p>
+    <p><i class="zmdi zmdi-phone"></i> +880 1234-567890</p>
+    <div class="footer-social">
+        <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Facebook"><i class="zmdi zmdi-facebook"></i></a>
+        <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Twitter"><i class="zmdi zmdi-twitter"></i></a>
+        <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Instagram"><i class="zmdi zmdi-instagram"></i></a>
     </div>
-<!-- JavaScript Dependencies -->
-<script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://julyforum.com/pluginsc7c3.js?v=2.6.25"></script>
-<script src="https://julyforum.com/mainc7c3.js?v=2.6.25"></script>
+</div>
+</div>
+</div>
+<div class="footer-bottom">
+    <p>© 2025 জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম। সর্বস্বত্ব সংরক্ষিত।</p>
+</div>
+</footer>
+<!-- JS Dependencies -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://julyforum.com/plugins.js"></script>
+<script src="https://julyforum.com/rainbow-swirl-cursor.js"></script>
+<script src="https://julyforum.com/main.js?v=2.6.25"></script>
 <script>
-// Gallery Filter Script
-$(document).ready(function() {
-    $('.gallery-filter button').on('click', function() {
-        $('.gallery-filter button').removeClass('active');
-        $(this).addClass('active');
-        var filterValue = $(this).attr('data-filter');
-        if (filterValue === '*') {
-            $('.gallery-item').show();
-        } else {
-            $('.gallery-item').hide();
-            $(filterValue).show();
-        }
-    });
-});
-
-// Contact Form Submission
-const form = document.getElementById('contact-form');
-const successMessage = $('.form-messege');
-
-form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    successMessage.html('');
-    const formData = new FormData(form);
-    console.log([...formData.entries()]);
-
-    fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSczAxkgcYluNmmMJ_66nf6aPu40IS6crPAuysIA2Krg6bPJrA/formResponse', {
-        method: 'POST',
-        mode: 'no-cors',
-        body: formData,
-    })
-    .then((feedback) => {
-        successMessage.html('Form submitted successfully!');
-        successMessage.css("color", 'green');
-        console.log(feedback);
-        form.reset();
-    })
-    .catch((error) => {
-        successMessage.html('Error submitting form. Please try again.');
-        successMessage.css("color", 'red');
-        console.error('Error:', error.message);
-    });
-});
-
-// Custom Cursor
-<script src="/rainbow-swirl-cursor.js"></script>
-<script>
-    
-// ইংরেজি সংখ্যা → বাংলা সংখ্যা কনভার্ট ফাংশন
-function toBanglaNumber(num) {
-    const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-    return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
-}
-
-// ইংরেজি শহরের নাম → বাংলা কনভার্ট
-function toBanglaCity(city) {
-    const cityMap = {
-        "Dhaka": "ঢাকা",
-        "Chattogram": "চট্টগ্রাম",
-        "Sylhet": "সিলেট",
-        "Khulna": "খুলনা",
-        "Barishal": "বরিশাল",
-        "Rajshahi": "রাজশাহী",
-        "Rangpur": "রংপুর",
-        "Mymensingh": "ময়মনসিংহ"
-    };
-    return cityMap[city] ? cityMap[city] : city; // যদি না মেলে ইংরেজি নাম রাখবে
-}
-
-// লোকেশন API থেকে আনছে
-fetch('https://ipapi.co/json/')
-  .then(response => response.json())
-  .then(data => {
-    let city = data.city ? toBanglaCity(data.city) : 'ঢাকা';
-    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${city}`;
-  })
-  .catch(() => {
-    document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ঢাকা`;
-  });
-
-// তারিখ ও সময় ফাংশন
-function updateDateTime() {
-    const now = new Date();
-
-    // বাংলা মাস
-    const banglaMonths = [
-        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
-        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
-    ];
-
-    // তারিখ
-    const day = toBanglaNumber(now.getDate());
-    const month = banglaMonths[now.getMonth()];
-    const year = toBanglaNumber(now.getFullYear());
-    const dateStr = `${day} ${month}, ${year}`;
-
-    // সময়
-    let hours = now.getHours();
-    let minutes = now.getMinutes();
-    let seconds = now.getSeconds();
-    if (minutes < 10) minutes = '0' + minutes;
-    if (seconds < 10) seconds = '0' + seconds;
-
-    let period = '';
-    if (hours >= 4 && hours < 12) {
-        period = 'সকাল';
-    } else if (hours >= 12 && hours < 18) {
-        period = 'বিকেল';
-    } else {
-        period = 'রাত';
+    // Date and Time Update
+    function updateDateTime() {
+        const now = new Date();
+        const options = { timeZone: 'Asia/Dhaka', hour12: true, hour: '2-digit', minute: '2-digit' };
+        const timeStr = now.toLocaleTimeString('bn-BD', options).replace('AM', 'সকাল').replace('PM', 'বিকাল');
+        const dateStr = now.toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Dhaka' });
+        document.getElementById('date').textContent = dateStr;
+        document.getElementById('time').textContent = timeStr;
     }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
 
-    // 12-hour ফরম্যাট
-    let displayHour = hours % 12;
-    if (displayHour === 0) displayHour = 12;
-
-    const timeStr = `${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}:${toBanglaNumber(seconds)}`;
-
-    // DOM এ বসানো
-    document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
-    document.getElementById('time').innerHTML = `<i class="zmdi zmdi-time"></i> ${timeStr}`;
-}
-
-// প্রথমবার কল
-updateDateTime();
-// প্রতি সেকেন্ডে আপডেট
-setInterval(updateDateTime, 1000);
+    // Gallery Filter Functionality
+    $(document).ready(function() {
+        $('.gallery-filter button').on('click', function() {
+            $('.gallery-filter button').removeClass('active');
+            $(this).addClass('active');
+            const filterValue = $(this).data('filter');
+            if (filterValue === '*') {
+                $('.gallery-item').show();
+            } else {
+                $('.gallery-item').hide();
+                $(filterValue).show();
+            }
+        });
+    });
 </script>
+                            </div>
+
 </body>
 </html>
