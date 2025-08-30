@@ -869,7 +869,7 @@
                 }
             });
         });
-        // Dynamic Date, Time, and Location
+       // Dynamic Date, Time, and Location
 function updateHeaderInfo() {
     const now = new Date();
     const dateOptions = { 
@@ -883,12 +883,25 @@ function updateHeaderInfo() {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        timeZone: 'Asia/Dhaka'
+        timeZone: 'Asia/Dhaka',
+        hour12: false // Use 24-hour format to avoid AM/PM
     };
     const dateString = now.toLocaleDateString('bn-BD', dateOptions);
     const timeString = now.toLocaleTimeString('bn-BD', timeOptions);
+    
+    // Determine time of day in Bengali
+    const hour = now.getHours();
+    let timeOfDay;
+    if (hour >= 5 && hour < 12) {
+        timeOfDay = 'সকাল';
+    } else if (hour >= 12 && hour < 18) {
+        timeOfDay = 'বিকেল';
+    } else if (hour >= 18 || hour < 5) {
+        timeOfDay = 'রাত';
+    }
+    
     $('#date').html(`<i class="zmdi zmdi-calendar"></i> ${dateString}`);
-    $('#time').html(`<i class="zmdi zmdi-time"></i> ${timeString}`);
+    $('#time').html(`<i class="zmdi zmdi-time"></i> ${timeOfDay} ${timeString}`);
 
     // Fetch user's location using ipapi.co
     $.getJSON('https://ipapi.co/json/', function(data) {
@@ -929,4 +942,5 @@ setInterval(updateHeaderInfo, 1000); // Update every second for time with second
     </script>
 </body>
 </html>
+
 
