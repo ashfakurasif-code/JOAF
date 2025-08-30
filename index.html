@@ -870,26 +870,63 @@
             });
         });
         // Dynamic Date, Time, and Location
-        function updateHeaderInfo() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'Asia/Dhaka'
-            };
-            const dateString = now.toLocaleDateString('bn-BD', options);
-            const timeString = now.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' });
-            $('#date').html(`<i class="zmdi zmdi-calendar"></i> ${dateString}`);
-            $('#time').html(`<i class="zmdi zmdi-time"></i> ${timeString}`);
-            // Static location for now
-            $('#location').html(`<i class="zmdi zmdi-pin"></i> ঢাকা, বাংলাদেশ`);
+function updateHeaderInfo() {
+    const now = new Date();
+    const dateOptions = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        timeZone: 'Asia/Dhaka'
+    };
+    const timeOptions = {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZone: 'Asia/Dhaka'
+    };
+    const dateString = now.toLocaleDateString('bn-BD', dateOptions);
+    const timeString = now.toLocaleTimeString('bn-BD', timeOptions);
+    $('#date').html(`<i class="zmdi zmdi-calendar"></i> ${dateString}`);
+    $('#time').html(`<i class="zmdi zmdi-time"></i> ${timeString}`);
+
+    // Fetch user's location using ipapi.co
+    $.getJSON('https://ipapi.co/json/', function(data) {
+        const city = data.city;
+        const country = data.country_name;
+        const countryCode = data.country_code;
+
+        // List of major cities in Bangladesh (in Bengali)
+        const bangladeshCities = {
+            'Dhaka': 'ঢাকা',
+            'Chittagong': 'চট্টগ্রাম',
+            'Khulna': 'খুলনা',
+            'Rajshahi': 'রাজশাহী',
+            'Sylhet': 'সিলেট',
+            'Barisal': 'বরিশাল',
+            'Rangpur': 'রংপুর',
+            'Mymensingh': 'ময়মনসিংহ'
+            // Add more cities as needed
+        };
+
+        let locationString;
+        if (countryCode === 'BD' && bangladeshCities[city]) {
+            // If the user is in Bangladesh, display city and country in Bengali
+            locationString = `${bangladeshCities[city]}, বাংলাদেশ`;
+        } else {
+            // If the user is outside Bangladesh, display city and country in English
+            locationString = `${city}, ${country}`;
         }
-        updateHeaderInfo();
-        setInterval(updateHeaderInfo, 60000); // Update every minute
+
+        $('#location').html(`<i class="zmdi zmdi-pin"></i> ${locationString}`);
+    }).fail(function() {
+        // Fallback if the API fails
+        $('#location').html(`<i class="zmdi zmdi-pin"></i> অবস্থান পাওয়া যায়নি`);
+    });
+}
+updateHeaderInfo();
+setInterval(updateHeaderInfo, 1000); // Update every second for time with seconds
     </script>
 </body>
 </html>
+
