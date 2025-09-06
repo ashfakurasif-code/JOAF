@@ -1,0 +1,32 @@
+headers = []
+redirects = []
+
+[functions]
+
+  [functions."*"]
+
+[[plugins]]
+origin = "ui"
+package = "@netlify/plugin-lighthouse"
+pinned_version = "6"
+
+  [plugins.inputs]
+
+[build]
+publish = "/Users/ashfakurrahaman/Desktop/JOAF-main"
+publishOrigin = "default"
+base = "/Users/ashfakurrahaman/Desktop/JOAF-main"
+
+  [build.environment]
+
+  [build.processing]
+
+    [build.processing.css]
+
+    [build.processing.html]
+
+    [build.processing.images]
+
+    [build.processing.js]
+
+  [build.services]
