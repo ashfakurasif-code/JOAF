@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অনুদান | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF</title>
+    <meta name="description" content="JOAF-কে সমর্থন করুন। আপনার অনুদান দিয়ে বাংলাদেশের উন্নয়নে পাশে থাকুন।">
+    <meta name="keywords" content="JOAF, অনুদান, জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম, বাংলাদেশ, সমাজ সংস্কার">
+    <meta name="author" content="JOAF টিম">
+    <meta name="robots" content="index, follow">
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="অনুদান | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF">
+    <meta property="og:description" content="JOAF-কে সমর্থন করুন। আপনার অনুদান দিয়ে বাংলাদেশের উন্নয়নে পাশে থাকুন।">
+    <meta property="og:image" content="https://julyforum.com/logoc7c3.png?v=2.6.25">
+    <meta property="og:url" content="https://julyforum.com/donate.html">
+    <meta property="og:type" content="website">
+    <meta property="fb:app_id" content="1114707634145642">
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="অনুদান | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF">
+    <meta property="twitter:description" content="JOAF-কে সমর্থন করুন। আপনার অনুদান দিয়ে বাংলাদেশের উন্নয়নে পাশে থাকুন।">
+    <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png?v=2.6.25">
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://julyforum.com/donate.html">
+    <!-- Favicon -->
+    <link rel="icon" href="https://julyforum.com/favicon.ico" type="image/x-icon">
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="https://julyforum.com/pluginsc7c3.css?v=2.6.25">
+    <link rel="stylesheet" href="https://julyforum.com/stylec7c3.css?v=2.6.25">
+    <!-- Google Font (Bengali) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f6f5;
+            --ink: #1a202c;
+            --muted: #4b5563;
+            --brand: #b91c1c;
+            --accent: #15803d;
+            --highlight: #facc15;
+            --chip: #fef2f2;
+            --card: #ffffff;
+            --shadow: 0 8px 16px rgba(0,0,0,0.1);
+            --radius: 16px;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Noto Sans Bengali', sans-serif;
+            line-height: 1.6;
+        }
+        /* Header Styles */
+        .header-area {
+            background: #fff;
+            border-bottom: 2px solid var(--accent);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        .header-top {
+            background: #f9fafb;
+            padding: 10px 0;
+        }
+        .header-meta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--muted);
+        }
+        .header-social {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-start;
+        }
+        .header-social a {
+            color: var(--brand);
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+        .header-social a:hover {
+            color: var(--highlight);
+        }
+        .header-info {
+            text-align: right;
+            font-size: 14px;
+            color: var(--muted);
+        }
+        .header-info p {
+            margin: 0;
+        }
+        .header-info .under-maintenance {
+            color: var(--brand);
+            font-weight: 600;
+        }
+        .header-bottom {
+            padding: 12px 0;
+        }
+        .navbar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo img {
+            max-width: 120px;
+            border-radius: 8px;
+        }
+        .navbar-toggle {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            color: var(--brand);
+        }
+        .main-menu {
+            background: var(--accent);
+            border-radius: var(--radius);
+            padding: 12px;
+        }
+        .main-menu ul {
+            list-style: none;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .main-menu a {
+            text-decoration: none;
+            color: #fff;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .main-menu a:hover, .main-menu a.active {
+            background: var(--highlight);
+            color: var(--ink);
+        }
+        /* Donate Section */
+        #date-field {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+.date-placeholder {
+  position: absolute;
+  left: 14px;
+  top: 12px;
+  color: #888;
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+#date-field:focus + .date-placeholder,
+#date-field:not(:placeholder-shown) + .date-placeholder {
+  top: -10px;
+  left: 10px;
+  font-size: 12px;
+  color: #555;
+}
+
+        .custom-form-container {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 600px;
+    margin: 2rem auto;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    font-family: 'Noto Sans Bengali', sans-serif;
+}
+.form-header {
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+}
+#donation-form .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+#donation-form input,
+#donation-form textarea {
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-size: 16px;
+    outline: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+#donation-form input:focus,
+#donation-form textarea:focus {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: scale(1.02);
+}
+#donation-form textarea {
+    resize: none;
+    min-height: 100px;
+}
+.submit-btn {
+    background: #ff6a00;
+    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    border-radius: 12px;
+    border: none;
+    padding: 12px;
+}
+.submit-btn:hover {
+    background: #ff3d00;
+    transform: scale(1.05);
+}
+.form-messege {
+    text-align: center;
+    margin-top: 12px;
+    font-weight: 600;
+    color: #004d40;
+}
+.form-messege.error {
+    color: #b71c1c;
+}
+
+        .donate-section {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            max-width: 600px;
+            margin: 2rem auto;
+            text-align: center;
+        }
+        .donate-section h2 {
+            font-size: 28px;
+            color: var(--brand);
+            margin-bottom: 16px;
+        }
+        .donate-section p {
+            font-size: 16px;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+        .bkash-number {
+            font-size: 1.5rem;
+            color: #15803d;
+            font-weight: bold;
+            background: #fff0f5;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .qr-img {
+            width: 180px;
+            border-radius: 8px;
+            margin: 0 auto 16px;
+        }
+        .alert-info {
+            background: var(--chip);
+            border: 1px solid var(--brand);
+            color: var(--brand);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .custom-form-container {
+            background: #f0f4f8;
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 2px solid var(--accent);
+        }
+        .custom-form-container .form-header {
+            background: var(--accent);
+            color: #fff;
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+            font-size: 20px;
+        }
+        .custom-form-container iframe {
+            border: none;
+            width: 100%;
+            height: 600px;
+        }
+        .custom-form-container .form-footer {
+            background: var(--accent);
+            color: #fff;
+            padding: 12px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+            margin: 20px -20px -20px -20px;
+        }
+        /* Footer */
+        .footer-area {
+            background: var(--accent);
+            color: #fff;
+            padding: 40px 0;
+        }
+        .footer-widget h4 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: var(--highlight);
+        }
+        .contact-info p, .contact-info a {
+            color: #fff;
+            font-size: 14px;
+        }
+        .contact-info ul {
+            list-style: none;
+            padding: 0;
+        }
+        #contact-form {
+            background: #fff;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .input-box-2 {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .input-box input, .input-box textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .input-box textarea {
+            height: 100px;
+        }
+        .input-box input[type="submit"] {
+            background: var(--brand);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .input-box input[type="submit"]:hover {
+            background: var(--highlight);
+            color: var(--ink);
+        }
+        .form-messege {
+            color: green;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .form-messege.error {
+            color: red;
+        }
+        .footer-copyright {
+            background: rgba(0,0,0,0.1);
+            padding: 16px 0;
+            text-align: center;
+        }
+        .footer-copyright p, .footer-copyright a {
+            color: #fff;
+            font-size: 14px;
+        }
+        .social-links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 16px 0;
+        }
+        .social-links a {
+            color: #fff;
+            font-size: 24px;
+            transition: color 0.3s;
+        }
+        .social-links a:hover {
+            color: var(--highlight);
+        }
+        .join-btn {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: var(--highlight);
+            color: var(--ink);
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+        .join-btn:hover {
+            transform: scale(1.05);
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-meta { flex-direction: column; gap: 8px; }
+            .header-social { justify-content: center; }
+            .header-info { text-align: center; margin-top: 8px; }
+            .main-menu ul { flex-direction: column; align-items: center; }
+            .donate-section { padding: 1.5rem; }
+            .input-box-2 { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Wrapper -->
+    <div class="wrapper fix">
+        <!-- Header -->
+        <header class="header-area">
+            <div class="header-top">
+                <div class="container">
+                    <div class="row">
+                        <div class="header-meta text-center col-sm-12 col-xs-12" id="header-meta-info">
+                            <span id="location"><i class="zmdi zmdi-pin"></i> Loading...</span>
+                            <span id="date"><i class="zmdi zmdi-calendar"></i> Loading...</span>
+                            <span id="time"><i class="zmdi zmdi-time"></i> Loading...</span>
+                        </div>
+                        <div class="header-social text-left col-sm-5 col-xs-12">
+                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="ফেসবুকে ফলো করুন"><i class="zmdi zmdi-facebook"></i></a>
+                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="টুইটারে ফলো করুন"><i class="zmdi zmdi-twitter"></i></a>
+                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="ইনস্টাগ্রামে ফলো করুন"><i class="zmdi zmdi-instagram"></i></a>
+                        </div>
+                        <div class="header-info text-right col-sm-7 col-xs-12">
+                            <p>ইমেইল: <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></p>
+                            <p class="under-maintenance">ওয়েবসাইট আপডেট চলছে</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-bottom">
+                <div class="container">
+                    <div class="row justify-content-between flex-column flex-lg-row position-relative">
+                        <div class="col-auto">
+                            <div class="navbar-header d-flex justify-content-between">
+                                <a href="https://julyforum.com/index.html" class="logo navbar-brand"><img style="max-width:140px" src="https://julyforum.com/logoc7c3.png?v=2.6.25" alt="JOAF লোগো"></a>
+                                <button class="navbar-toggle collapsed d-block d-md-none" data-bs-toggle="collapse" data-bs-target="#main-menu" aria-label="নেভিগেশন টগল করুন">
+                                    <i class="zmdi zmdi-menu menu-open"></i>
+                                    <i class="zmdi zmdi-close menu-close"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex flex-md-row flex-lg-row-reverse">
+                            <nav class="main-menu collapse" id="main-menu">
+                                <ul>
+                                    <li><a href="https://julyforum.com/index.html"><i class="zmdi zmdi-home"></i> হোম</a></li>
+                                    <li><a href="https://julyforum.com/events.html"><i class="zmdi zmdi-calendar"></i> ইভেন্ট</a></li>
+                                    <li><a href="https://julyforum.com/media-news.html"><i class="zmdi zmdi-camera"></i> মিডিয়া</a></li>
+                                    <li><a href="https://julyforum.com/index.html#about-area"><i class="zmdi zmdi-info"></i> আমাদের সম্পর্কে</a></li>
+                                    <li><a href="#footer-area"><i class="zmdi zmdi-phone"></i> যোগাযোগ</a></li>
+                                    <li><a href="https://julyforum.com/membership.html"><i class="zmdi zmdi-account-add"></i> সদস্য হোন</a></li>
+                                    <li><a href="https://julyforum.com/donate.html" class="active" aria-current="page"><i class="zmdi zmdi-money"></i> অনুদান</a></li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Donate Section -->
+        <div class="donate-section">
+            <h2>JOAF-কে অনুদান দিন</h2>
+            <p>আপনার সমর্থন আমাদের বাংলাদেশের উন্নয়নে সহায়তা করবে। বিকাশে অনুদান পাঠান।</p>
+            <div class="bkash-number">বিকাশ নম্বর: ০১৯২৪৬৪৩১১০</div>
+            <img src="https://julyforum.com/bkash_qr.png" alt="বিকাশ QR কোড" class="qr-img" />
+            <div class="alert alert-info">
+                <b>নির্দেশনা:</b> বিকাশে টাকা পাঠানোর পর নিচের ফর্মটি পূরণ করুন।
+            </div>
+            <div class="custom-form-container">
+  <div class="form-header">JOAF অনুদান ফর্ম</div>
+  <form id="donation-form">
+    <div class="form-row">
+      <input name="name" placeholder="আপনার নাম" required>
+      <input name="email" type="email" placeholder="আপনার ইমেইল" required>
+      <input name="mobile" placeholder="মোবাইল নাম্বার" required>
+      <input name="amount" type="number" placeholder="কত টাকা পাঠালেন" required>
+      <input name="transaction" placeholder="ট্রানজাকশন আইডি" required>
+      <input type="text"name="entry.1908185776"placeholder="কখন পাঠালেন"onfocus="(this.type='date')"required>
+      <textarea name="message" placeholder="ফিডব্যাক / মেসেজ (Optional)"></textarea>
+    </div>
+    <input type="submit" value="জমা দিন" class="submit-btn">
+    <div class="form-messege"></div>
+  </form>
+<div class="form-footer">আপনার সমর্থনের জন্য ধন্যবাদ!</div>
+</div>
+            <p class="text-muted">আপনার তথ্য শুধুমাত্র অনুদান যাচাইয়ের জন্য ব্যবহৃত হবে।</p>
+        </div>
+
+        <!-- Footer -->
+        <footer id="footer-area" class="footer-area section" aria-labelledby="footer-title">
+            <div class="footer-top pb-80 pt-120">
+                <div class="container">
+                    <div class="row">
+                        <div class="footer-widget col-lg-12 col-md-12 col-12 mb-40 text-center">
+    <h4>যোগাযোগ করুন</h4>
+    <div class="contact-info fix">
+        <p>ঠিকানা: রোড - ৯, সাউথ বনশ্রী, ঢাকা-১২১৯</p>
+        <ul>
+            <li><span>ইমেইল:</span> <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></li>
+        </ul>
+    </div>
+</div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <div class="container">
+                    <div class="row">
+                        <div class="copyright text-center col-xs-12">
+                            <div class="social-links">
+                                <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="ফেসবুকে ফলো করুন"><i class="zmdi zmdi-facebook"></i></a>
+                                <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="টুইটারে ফলো করুন"><i class="zmdi zmdi-twitter"></i></a>
+                                <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="ইনস্টাগ্রামে ফলো করুন"><i class="zmdi zmdi-instagram"></i></a>
+                            </div>
+                            <a href="membership.html" class="join-btn">এখনই যোগ দিন</a>
+                            <p>কপিরাইট © ২০২৫ <a href="https://julyforum.com/index.html">JOAF</a>। সর্বস্বত্ব সংরক্ষিত।</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript Dependencies -->
+    <script data-cfasync="false" src="https://julyforum.com/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://julyforum.com/plugins.js"></script>
+    <script src="https://julyforum.com/main.js"></script>
+    <script>
+        const form = document.getElementById('donation-form');
+const msg = document.querySelector('.form-messege');
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const formData = new FormData(form);
+  fetch("https://script.google.com/macros/s/AKfycbyrrjh2YxqDWUNimEENZ-a9PTfemKPTCCTQfPKLLFMG9_nsmq8PLIJtpgXrtPHe4Y2HVA/exec", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.text())
+  .then(data => {
+    if(data === "success") {
+      msg.textContent = "ফর্ম সফলভাবে জমা হয়েছে! ধন্যবাদ।";
+      msg.classList.remove('error');
+      form.reset();
+    } else {
+      msg.textContent = "ত্রুটি ঘটেছে, আবার চেষ্টা করুন।";
+      msg.classList.add('error');
+    }
+  })
+  .catch(() => {
+    msg.textContent = "ত্রুটি ঘটেছে, আবার চেষ্টা করুন।";
+    msg.classList.add('error');
+  });
+});
+
+</script>
+    <script>
+        function toBanglaNumber(num) {
+            const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+            return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
+        }
+        function toBanglaCity(city) {
+            const cityMap = {
+                "Dhaka": "ঢাকা",
+                "Chattogram": "চট্টগ্রাম",
+                "Sylhet": "সিলেট",
+                "Khulna": "খুলনা",
+                "Barishal": "বরিশাল",
+                "Rajshahi": "রাজশাহী",
+                "Rangpur": "রংপুর",
+                "Mymensingh": "ময়মনসিংহ"
+            };
+            return cityMap[city] ? cityMap[city] : city;
+        }
+        fetch('https://ipapi.co/json/')
+          .then(response => response.json())
+          .then(data => {
+            let city = data.city ? toBanglaCity(data.city) : 'ঢাকা';
+            document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${city}`;
+          })
+          .catch(() => {
+            document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ঢাকা`;
+          });
+        function updateDateTime() {
+            const now = new Date();
+            const banglaMonths = [
+                "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+                "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+            ];
+            const day = toBanglaNumber(now.getDate());
+            const month = banglaMonths[now.getMonth()];
+            const year = toBanglaNumber(now.getFullYear());
+            const dateStr = `${day} ${month}, ${year}`;
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            if (minutes < 10) minutes = '0' + minutes;
+            if (seconds < 10) seconds = '0' + seconds;
+            let period = '';
+            if (hours >= 4 && hours < 12) {
+                period = 'সকাল';
+            } else if (hours >= 12 && hours < 18) {
+                period = 'বিকেল';
+            } else {
+                period = 'রাত';
+            }
+            let displayHour = hours % 12;
+            if (displayHour === 0) displayHour = 12;
+            const timeStr = `${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}:${toBanglaNumber(seconds)}`;
+            document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
+            document.getElementById('time').innerHTML = `<i class="zmdi zmdi-time"></i> ${timeStr}`;
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+    </script>
+    <script src="https://julyforum.com/rainbow-swirl-cursor.js"></script>
+</body>
+</html>
