@@ -1,1020 +1,436 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF</title>
-    <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) বাংলাদেশকে এগিয়ে নেওয়ার জন্য প্রতিশ্রুতিবদ্ধ। দেশ আগে, দল পরে।">
-    <meta name="keywords" content="JOAF, জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম, জুলাই অভ্যুত্থান, অনলাইন অ্যাক্টিভিস্ট, বাংলাদেশ, গণতন্ত্র">
-    <meta name="author" content="JOAF Team">
-    <meta name="robots" content="index, follow">
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF">
-    <meta property="og:description" content="দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।">
-    <meta property="og:image" content="https://julyforum.com/logoc7c3.png?v=2.6.25">
-    <meta property="og:image:width" content="1600">
-    <meta property="og:image:height" content="630">
-    <meta property="og:url" content="https://julyforum.com/index.html">
-    <meta property="og:type" content="website">
-    <meta property="fb:app_id" content="1114707634145642">
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম - JOAF">
-    <meta name="twitter:description" content="দেশের পক্ষে, গুজবের বিরুদ্ধে। আমরা — গণতন্ত্রে, সংহতিতে বিশ্বাসী।">
-    <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png?v=2.6.25">
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://julyforum.com/index.html">
-    <!-- Favicon -->
-    <link rel="icon" href="https://julyforum.com/favicon.ico" type="image/x-icon">
-    <!-- CSS Dependencies -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
-    <link rel="stylesheet" href="https://julyforum.com/pluginsc7c3.css?v=2.6.25">
-    <link rel="stylesheet" href="https://julyforum.com/stylec7c3.css?v=2.6.25">
-    <!-- Modernizr -->
-    <script src="https://julyforum.com/modernizr-2.8.3.min.js"></script>
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
-    <link rel="manifest" href="https://julyforum.com/site.webmanifest">
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-G16GVEBVG0');
-    </script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-QV3CFV7R98');
-    </script>
-    <style>
-        /* Gallery Grid Styling */
-        .gallery-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            width: 100%;
-            margin: 0 auto;
-            padding: 0;
-        }
-        .gallery-item {
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            width: 300px;
-        }
-        .gallery-item:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-        }
-        .gallery-image {
-            position: relative;
-            width: 100%;
-            height: 300px;
-        }
-        .gallery-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: top;
-            filter: brightness(1.1);
-        }
-        .gallery-content {
-            padding: 15px;
-            background: linear-gradient(135deg, #90161f 0%, #075e55 100%);
-            color: white;
-            text-align: center;
-        }
-        .gallery-content h4 {
-            font-family: 'SolaimanLipi', 'Siyam Rupali', Arial, sans-serif;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-        .gallery-content .role-text {
-            font-size: 0.9rem;
-            opacity: 0.9;
-        }
-        .gallery-content a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 6px 12px;
-            border-radius: 5px;
-            margin: 5px;
-            display: inline-block;
-        }
-        .gallery-content a.social-profile {
-            background-color: #3b5998;
-        }
-        .gallery-content a.social-profile:hover {
-            background-color: #2f477a;
-        }
-        .gallery-content a.details {
-            background-color: #075e55;
-        }
-        .gallery-content a.details:hover {
-            background-color: #05433a;
-        }
-        /* Member Cards Styling */
-        .card {
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-        }
-        .card-header {
-            position: relative;
-            width: 100%;
-            height: 300px;
-            background: linear-gradient(135deg, #90161f 0%, #075e55 100%);
-            overflow: hidden;
-        }
-        .card-header img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: top;
-            filter: brightness(1.1);
-        }
-        .member-details {
-            padding: 20px;
-            text-align: center;
-        }
-        .member-details h3 {
-            font-family: 'SolaimanLipi', 'Siyam Rupali', Arial, sans-serif;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-        .member-details h4 {
-            font-family: 'SolaimanLipi', 'Siyam Rupali', Arial, sans-serif;
-            font-size: 0.9rem;
-            color: #555;
-        }
-        .card-footer {
-            padding: 10px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-        .card-footer a {
-            font-size: 1.5rem;
-            transition: transform 0.3s ease;
-        }
-        .card-footer a:hover {
-            transform: scale(1.2);
-        }
-        .card-footer a.details {
-            color: #075e55;
-        }
-        /* Mobile View */
-        @media (max-width: 767px) {
-            .gallery-grid {
-                flex-direction: column;
-                align-items: center;
-            }
-            .gallery-item {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
-        /* Footer Styling */
-        .footer-area {
-            background: #1a1a1a;
-            color: #fff;
-            padding: 60px 0;
-        }
-        .footer-area h4 {
-            font-family: 'SolaimanLipi', 'Siyam Rupali', Arial, sans-serif;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-        }
-        .footer-area p, .footer-area a {
-            color: #ccc;
-            font-size: 0.9rem;
-        }
-        .footer-area a:hover {
-            color: #075e55;
-        }
-        .footer-social a {
-            font-size: 1.5rem;
-            margin-right: 10px;
-        }
-        .footer-bottom {
-            background: #111;
-            padding: 20px 0;
-            text-align: center;
-            padding-bottom: 50px;
-        }
-        /* Cursor Styling */
-        body {
-            cursor: none;
-        }
-        /* Hero video styling */
-        .hs-item.video-hero {
-            position: relative;
-            overflow: hidden;
-            width: 100%;
-            height: 100vh;
-            min-height: 420px;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-        .hero-video {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 0;
-            pointer-events: none;
-        }
-        .hs-item.video-hero::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.25);
-            z-index: 1;
-        }
-        .hs-item .hs-content {
-            position: relative;
-            z-index: 2;
-            padding: 40px 20px;
-            color: #fff;
-        }
-        @media (max-width: 767px) {
-            .hs-item.video-hero {
-                background-image: url('https://julyforum.com/img/hero-1.jpg');
-            }
-        }
-        .mute-toggle {
-            background: #d8752e;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 22px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .mute-toggle:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        .hero-slider::after,
-        .hero-slider .number,
-        .hero-slider .slick-dots,
-        .hero-slider .owl-dots {
-            display: none !important;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম — JOAF</title>
+  <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) — দেশ আগে, দল পরে। বাংলাদেশকে এগিয়ে নেওয়ার জন্য প্রতিশ্রুতিবদ্ধ।">
+  <meta name="keywords" content="JOAF, জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম, জুলাই অভ্যুত্থান, বাংলাদেশ, গণতন্ত্র">
+  <meta name="author" content="JOAF Team">
+  <meta name="robots" content="index, follow">
+  <!-- OG -->
+  <meta property="og:title" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম — JOAF">
+  <meta property="og:description" content="দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।">
+  <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
+  <meta property="og:url" content="https://julyforum.com/">
+  <meta property="og:type" content="website">
+  <meta property="fb:app_id" content="1114707634145642">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম — JOAF">
+  <meta name="twitter:description" content="দেশের পক্ষে, গুজবের বিরুদ্ধে।">
+  <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png">
+  <link rel="canonical" href="https://julyforum.com/">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="manifest" href="/site.webmanifest">
+  <!-- CSS: plugins first, then base, then our overrides -->
+  <link rel="preload" href="/css/pluginsc7c3.css" as="style">
+  <link rel="preload" href="/css/stylec7c3.css" as="style">
+  <link rel="preload" href="/css/joaf.css" as="style">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+  <link rel="stylesheet" href="/css/pluginsc7c3.css">
+  <link rel="stylesheet" href="/css/stylec7c3.css">
+  <link rel="stylesheet" href="/css/joaf.css">
+  <!-- Google Analytics (single, deduped) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
+  <!-- Modernizr -->
+  <script src="/js/modernizr-2.8.3.min.js"></script>
 </head>
-<body>
-    <!-- Main Wrapper -->
-    <div class="wrapper fix">
-        <header class="header-area">
-            <!-- Header Top -->
-            <div class="header-top">
-                <div class="container">
-                    <div class="row">
-                        <div class="header-meta text-center col-sm-12 col-xs-12" id="header-meta-info" style="margin-top:10px; font-size:14px; display:flex; justify-content:center; gap:20px; color:#333;">
-                            <span id="location"><i class="zmdi zmdi-pin"></i> Leipzig</span>
-                            <span id="date"><i class="zmdi zmdi-calendar"></i> ৩০ আগস্ট, ২০২৬</span>
-                            <span id="time"><i class="zmdi zmdi-time"></i> রাত ৭:৪০:৩৩</span>
-                        </div>
-                        <!-- Social Links -->
-                        <div class="header-social text-left col-sm-5 col-xs-12">
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Facebook"><i class="zmdi zmdi-facebook"></i></a>
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Twitter"><i class="zmdi zmdi-twitter"></i></a>
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Instagram"><i class="zmdi zmdi-instagram"></i></a>
-                        </div>
-                        <!-- Contact Info -->
-                        <div class="header-info text-right col-sm-7 col-xs-12">
-                            <p>Email: <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></p>
-                            <p><strong>Under Maintenance</strong></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Header Bottom -->
-            <div class="header-bottom">
-                <div class="container">
-                    <div class="row justify-content-between flex-column flex-lg-row position-relative">
-                        <div class="col-auto">
-                            <div class="navbar-header d-flex justify-content-between">
-                                <a href="https://julyforum.com/index.html" class="logo navbar-brand"><img style="max-width:140px" src="https://julyforum.com/logoc7c3.png?v=2.6.25" alt="JOAF Logo"></a>
-                                <button class="navbar-toggle collapsed d-block d-md-none" data-bs-toggle="collapse" data-bs-target="#main-menu" aria-label="Toggle navigation">
-                                    <i class="zmdi zmdi-menu menu-open"></i>
-                                    <i class="zmdi zmdi-close menu-close"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-auto d-flex flex-md-row flex-lg-row-reverse">
-                            <nav class="main-menu collapse" id="main-menu">
-                                <ul>
-                                    <li class="active"><a href="#hero-area" aria-current="page">Home</a></li>
-                                    <li><a href="https://julyforum.com/events.html">Events</a></li>
-                                    <li><a href="https://julyforum.com/media-news.html">Media</a></li>
-                                    <li><a href="joaf-polls.html">Polls</a></li>
-                                    <li><a href="https://julyforum.com/Community.html">Community</a></li>
-                                    <li><a href="#about-area">About</a></li>
-                                    <li><a href="#footer-area">Contact Us</a></li>
-                                    <li><a href="https://julyforum.com/membership.html">Join Form</a></li>
-                                    <li><a href="https://julyforum.com/donate.html">Donate</a></li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
+<body data-page="home">
 
-        <!-- Hero Area -->
-        <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
-            <div class="hero-slider">
-                <div class="hs-item video-hero">
-                    <video id="heroVideo" class="hero-video" autoplay muted loop playsinline preload="auto"
-                           poster="https://julyforum.com/img/hero-1.jpg" aria-hidden="true">
-                        <source src="/video/video-1.mp4" type="video/mp4">
-                        <source src="/video/video-1.webm" type="video/webm">
-                        আপনার ব্রাউজার ভিডিও সাপোর্ট করে না — এখানে একটি ছবি দেখানো হবে।
-                    </video>
-                    <div class="hs-item-wrapper fix"></div>
-                    <div class="hs-content fix">
-                        <h2>We are...</h2>
-                        <h1 id="hero-title">জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</h1>
-                        <p>দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
-                        <button id="muteToggle" class="mute-toggle" aria-pressed="false" title="Unmute">🔈</button>
-                    </div>
-                </div>
-            </div>
-        </section>
+<!-- ── Preloader ─────────────────────────────────────── -->
+<div id="joaf-preloader" role="status" aria-label="লোড হচ্ছে">
+  <img src="/logoc7c3.png" alt="JOAF" class="preloader-logo">
+  <p class="preloader-text">JOAF লোড হচ্ছে...</p>
+  <div class="preloader-bar"></div>
+</div>
 
-        <!-- Important Buttons -->
-        <section id="important-area" class="important-news-area section pb-40 pt-40" aria-labelledby="about-title">
-            <div class="container">
-                <div class="row text-center">
-                    <div class="col-md-4 mb-40">
-                        <a href="https://julyforum.com/financial-report.html" style="width: 100%;"><button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block">Financial Statement</button></a>
-                    </div>
-                    <div class="col-md-4 mb-40">
-                        <a href="https://julyforum.com/membership.html" style="width: 100%;"><button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block">JOIN Form</button></a>
-                    </div>
-                    <div class="col-md-4 mb-40">
-                        <a href="https://julyforum.com/financial-policy.html" style="width: 100%;"><button style="width: 100%;" type="button" class="btn btn-primary btn-xlg btn-block">Financial Policy 1st Draft</button></a>
-                    </div>
-                </div>
-            </div>
-        </section>
+<div class="wrapper fix">
 
-        <!-- About Area -->
-        <section id="about-area" class="about-area section pb-40 pt-20" aria-labelledby="about-title">
-            <div class="container">
-                <div class="row">
-                    <div class="section-title text-center col-12 mb-60">
-                        <h2 id="about-title" style="color:#90161f;font-size:xx-large;">জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF)</h2>
-                    </div>
-                </div>
-                <div class="row mb-40">
-                    <div class="col-md-8 mx-auto">
-                        <div class="mb-20">
-                            <p>আমরা জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF), যারা নিরপেক্ষ দৃষ্টিভঙ্গিতে দেশের জন্য কাজ করতে প্রতিশ্রুতিবদ্ধ।</p>
-                            <p>"দেশ আগে, দল পরে" — আর তা মেনে নিয়ে হাজারো তরুণ এগিয়ে এসেছিলো… সেনাবাহিনী ও জনগণের সংহতিতে।</p>
-                            <p>আজ, আবার সেই জুলাই। আমরা ফিরে এসেছি। শুধু স্মৃতি নিয়ে নয় — এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+  <!-- ── Header (injected by components.js) ─────────── -->
+  <div id="joaf-header"></div>
 
-        <!-- Vision & Mission -->
-        <section id="vision-mission-area" class="vision-mission-area section pb-40 pt-20" aria-labelledby="vision-title">
-            <div class="container">
-                <div class="row">
-                    <div class="section-title text-center col-12 mb-60">
-                        <h1 id="vision-title" style="color:#90161f;font-size:xx-large;">ভিশন ও মিশন</h1>
-                    </div>
-                </div>
-                <div class="row mb-40">
-                    <div class="col-md-6 mx-auto pb-40">
-                        <h2>ভিশনঃ</h2>
-                        <p>দেশের পক্ষে, গুজবের বিরুদ্ধে। আমরা — গণতন্ত্রে, সংহতিতে বিশ্বাসী।</p>
-                    </div>
-                    <div class="col-md-6 mx-auto pb-40">
-                        <h2>মিশনঃ</h2>
-                        <p>অনলাইনে ভুল তথ্য রোধে কাজ করা, সকল রাজনৈতিক দলের প্রতিনিধি, তৃতীয় লিঙ্গ ও সমাজকর্মীদের নিয়ে সমন্বিত উদ্যোগ গড়ে তোলা।</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+  <!-- ── Announcement Ticker ───────────────────────── -->
+  <div class="announcement-ticker" aria-label="সর্বশেষ ঘোষণা">
+    <span class="ticker-label">🔴 সর্বশেষ</span>
+    <div class="ticker-track" id="ticker-track">
+      <span class="ticker-item">🗳️ JOAF Polls — আপনার মতামত দিন →</span>
+      <span class="ticker-item">📄 আর্থিক বিবরণী প্রকাশিত হয়েছে →</span>
+      <span class="ticker-item">🤝 সদস্যতা গ্রহণ চলছে — JOIN FORM পূরণ করুন →</span>
+      <span class="ticker-item">📢 নতুন প্রেস রিলিজ প্রকাশিত হয়েছে →</span>
+      <span class="ticker-item">🌐 এখন যুক্তরাষ্ট্র ও ইউরোপেও আমাদের প্রতিনিধিত্ব →</span>
+      <!-- duplicate for seamless loop -->
+      <span class="ticker-item">🗳️ JOAF Polls — আপনার মতামত দিন →</span>
+      <span class="ticker-item">📄 আর্থিক বিবরণী প্রকাশিত হয়েছে →</span>
+      <span class="ticker-item">🤝 সদস্যতা গ্রহণ চলছে — JOIN FORM পূরণ করুন →</span>
+      <span class="ticker-item">📢 নতুন প্রেস রিলিজ প্রকাশিত হয়েছে →</span>
+      <span class="ticker-item">🌐 এখন যুক্তরাষ্ট্র ও ইউরোপেও আমাদের প্রতিনিধিত্ব →</span>
+    </div>
+  </div>
 
-        <!-- Movement Area -->
-        <section id="movement" class="about-area section pt-60 pb-60" aria-labelledby="movement-title">
-            <div class="container pb-40">
-                <div class="row">
-                    <div class="col-md-10 mx-auto">
-                        <h2 style="color:#90161f;font-size:xx-large;" class="text-center mb-20">জনমত গঠন ও রাজনৈতিক আন্দোলন</h2>
-                        <ol>
-                            <li>জোয়াফ রিউমার স্টপার (JOAF Rumor Stopper) - অনলাইনে ভুল তথ্য রোধে কাজ করবে।</li>
-                            <li>জোয়াফ কোয়ালিশন (JOAF Coalition) - সকল রাজনৈতিক দলের প্রতিনিধি, তৃতীয় লিঙ্গ ও সমাজকর্মীদের নিয়ে একটি প্ল্যাটফর্ম।</li>
-                            <li>জোয়াফ এডভাইজারি টিম (JOAF Advisory Team) - অভিজ্ঞ ও সমাজের বিশিষ্ট ব্যক্তিদের সমন্বয়ে।</li>
-                            <li>ডিভিশনাল টিম (Divisional Teams) - দেশের ৮টি বিভাগে জোয়াফের আলাদা টিম থাকবে।</li>
-                            <li>বরিশাল থেকে খুলনা, চট্টগ্রাম থেকে ময়মনসিংহ, দেশ ছাড়িয়ে এখন যুক্তরাষ্ট্র ও ইউরোপেও আমাদের প্রতিনিধিত্ব রয়েছে।</li>
-                            <li>আমরা — একদল চিন্তাশীল নাগরিক। আমরা — দেশের পক্ষে, গুজবের বিরুদ্ধে।</li>
-                            <li>আসুন, আপনিও যুক্ত হোন — নিজের এলাকার WhatsApp গ্রুপে।</li>
-                            <li>কারণ ইতিহাস একবার ফিরে আসে… যারা প্রস্তুত থাকে, তারাই নেতৃত্ব দেয়।</li>
-                        </ol>
-                        <p>বাংলাদেশের ভবিষ্যৎ নিয়ে ভাবুন, আপনার নাগরিক অধিকার নিশ্চিত করুন! আমাদের আন্দোলনে যুক্ত হোন।</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Gallery Area -->
-        <div id="gallery-area" class="gallery-area section pb-120">
-            <div class="container">
-                <!-- Auto Slider -->
-                <div class="row">
-                    <div class="col-12 mb-60">
-                        <div id="joaf-slider" style="overflow:hidden; max-width:100%; position:relative; border-radius:8px;">
-                            <div id="joaf-slides" style="display:flex; transition:transform 0.8s ease;">
-                                <img src="img/hero-2.png" alt="slide 1" style="min-width:100%; height:auto;">
-                                <img src="img/banner-2.jpg" alt="slide 2" style="min-width:100%; height:auto;">
-                                <img src="img/banner-3.jpg" alt="slide 3" style="min-width:100%; height:auto;">
-                            </div>
-                        </div>
-                        <script>
-                        (function(){
-                            var idx = 0;
-                            var total = document.querySelectorAll('#joaf-slides img').length;
-                            setInterval(function(){
-                                idx = (idx + 1) % total;
-                                document.getElementById('joaf-slides').style.transform = 'translateX(-' + (idx * 100) + '%)';
-                            }, 3000);
-                        })();
-                        </script>
-                    </div>
-                </div>
-
-                <!-- Gallery Filter -->
-                <div class="gallery-filter text-center mb-40">
-                    <button class="active" data-filter="*">নিউক্লিয়াস (কেন্দ্রীয় নেতৃত্ব)</button>
-                    <button data-filter=".president">সভাপতি</button>
-                    <button data-filter=".secretary">সাধারণ সম্পাদক</button>
-                    <button data-filter=".spokesperson">মূখ্য সংগঠক</button>
-                    <button data-filter=".senior-coordinator">সিনিয়র যুগ্ম মূখ্য সংগঠক</button>
-                    <button data-filter=".coordinator">যুগ্ম মূখ্য সংগঠক</button>
-                    <button data-filter=".chief-organizer">মূখ্য সংগঠক</button>
-                </div>
-
-                <!-- Gallery Grid — FIX: no row wrapper, direct gallery-grid -->
-                <div class="gallery-grid">
-                    <div class="gallery-item president">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/farhana-sharmin-shuchi.jpg" alt="ফারহানা শারমিন শুচি" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>ফারহানা শারমিন শুচি</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/farhana-sharmin-shuchi.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">সভাপতি</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item secretary">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/shirin-chowdhury.jpg" alt="শিরিন চৌধুরী" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>শিরিন চৌধুরী</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/shirin-chowdhury.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">সাধারণ সম্পাদক</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item spokesperson">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/muhtashimur-rahman-shihab.jpg" alt="মো. মুহতাশিমুর রহমান শিহাব" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>মো. মুহতাশিমুর রহমান শিহাব</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/muhtashimur-rahman-shihab.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">মূখ্য সংগঠক</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item senior-coordinator">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/munsi-mokhles-uddin-ashik.jpg" alt="মুন্সী মোখলেস উদ্দীন আশিক" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>মুন্সী মোখলেস উদ্দীন আশিক</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/munsi-mokhles-uddin-ashik.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">সিনিয়র যুগ্ম মূখ্য সংগঠক</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item coordinator">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/tarannum-binte-zakir.jpg" alt="তারান্নুম বিনতে জাকির" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>তারান্নুম বিনতে জাকির</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/tarannum-binte-zakir.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">যুগ্ম মূখ্য সংগঠক</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item coordinator">
-                        <div class="gallery-image"><img src="https://julyforum.com/members/mohammad-saiful-howladar.png" alt="মোহাম্মদ সাইফুল হাওলাদার" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>মোহাম্মদ সাইফুল হাওলাদার</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/16yx91kkw4/" class="social-profile">Social Profile</a>
-                            <a href="#" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">যুগ্ম মূখ্য সংগঠক - দক্ষিণাঞ্চল</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item chief-organizer">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/ashfakur-rahman-himu.png" alt="আশফাকুর রহমান হিমু" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>আশফাকুর রহমান হিমু</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/ashfakur-rahman-himu.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">মূখ্য সংগঠক (গুজবরোধী সেল)</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item chief-organizer">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/engineer-ayman-andalib.png" alt="ইঞ্জিনিয়ার আয়মান আন্দালীব" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>ইঞ্জিনিয়ার আয়মান আন্দালীব</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/engineer-ayman-andalib.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">মূখ্য সংগঠক (সম্মিলিত বৈপ্লবিক জোট)</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item chief-organizer">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/md-asifur-rahman.png" alt="মো. আসিফুর রহমান" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>মো. আসিফুর রহমান</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/md-asifur-rahman.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">মূখ্য সংগঠক (মিডিয়া)</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item senior-coordinator">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/asif-mahmud-khan.png" alt="আসিফ মাহমুদ খান" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>আসিফ মাহমুদ খান</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/asif-mahmud-khan.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">সিনিয়র যুগ্ম মূখ্য সংগঠক (মিডিয়া)</div>
-                        </div>
-                    </div>
-                    <div class="gallery-item chief-organizer">
-                        <div class="gallery-image"><img src="https://julyforum.com/img/sm-shahiduzzaman-limon.png" alt="এস. এম. শহিদুজ্জামান লিমন" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                        <div class="gallery-content">
-                            <h4>এস. এম. শহিদুজ্জামান লিমন</h4>
-                            <a target="_blank" href="https://www.facebook.com/share/15yL2rq5XL/" class="social-profile">Social Profile</a>
-                            <a href="https://julyforum.com/members/sm-shahiduzzaman-limon.html" class="details">জীবনবৃত্তান্ত <i class="zmdi zmdi-info"></i></a>
-                            <div class="role-text">মূখ্য সংগঠক (সার্কুলেশন টিম)</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <!-- ── Hero ─────────────────────────────────────────── -->
+  <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
+    <div class="hero-slider">
+      <div class="hs-item video-hero">
+        <video id="heroVideo" class="hero-video" autoplay muted loop playsinline preload="metadata"
+               poster="/img/hero-1.jpg" aria-hidden="true">
+          <source src="/video/video-1.mp4" type="video/mp4">
+        </video>
+        <div class="hs-item-wrapper fix"></div>
+        <div class="hs-content fix">
+          <h2>We are...</h2>
+          <h1 id="hero-title">জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</h1>
+          <p>দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
+          <div class="hero-cta">
+            <a href="/membership.html" class="cta-primary"><i class="zmdi zmdi-account-add"></i> সদস্য হোন</a>
+            <a href="#about-area" class="cta-outline"><i class="zmdi zmdi-info"></i> আমাদের সম্পর্কে</a>
+          </div>
+          <button id="muteToggle" class="mute-toggle" aria-pressed="false" title="Unmute">🔈</button>
         </div>
+        <div class="scroll-hint" onclick="document.getElementById('stats-bar').scrollIntoView({behavior:'smooth'})">
+          <i class="zmdi zmdi-chevron-down"></i>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        <!-- উপদেষ্টা বলয় Section -->
-        <section>
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8 text-center mx-auto mb-40">
-                        <h2 style="font-size: xx-large; color: #90161f;" class="text-center mb-20">উপদেষ্টা বলয় (পরামর্শক প্যানেল)</h2>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/rafe-salman.png" alt="রাফে সালমান" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">রাফে সালমান</h3>
-                                <h4 class="card-text" style="font-size:14px;">ফ্যাকাল্টি, ইউনাইটেড ইন্টারন্যাশনাল ইউনিভার্সিটি</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/rafe-salman.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/tushar-mohammad-abdul-hannan.png" alt="তুষার মোহাম্মদ আব্দুল হান্নান" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">তুষার মোহাম্মদ আব্দুল হান্নান</h3>
-                                <h4 class="card-text" style="font-size:14px;">কবি ও লেখক</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/tushar-mohammad-abdul-hannan.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/engineer-ahsanul-muzakkir.png" alt="ইঞ্জিনিয়ার আহসানুল মুযাক্কির" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">ইঞ্জিনিয়ার আহসানুল মুযাক্কির</h3>
-                                <h4 class="card-text" style="font-size:14px;">শিল্প উদ্যোক্তা</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/engineer-ahsanul-muzakkir.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/mohammad-tahazzat-hossain.png" alt="মোহাম্মদ তাহাজ্জত হোসেন" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">মোহাম্মদ তাহাজ্জত হোসেন</h3>
-                                <h4 class="card-text" style="font-size:14px;">জাগ্রত ব্যবসায়ী ও সমাজসেবক</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/mohammad-tahazzat-hossain.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/mohammad-nurul-huda-duke.png" alt="মোহাম্মদ নুরুল হুদা ডিউক" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">মোহাম্মদ নুরুল হুদা ডিউক</h3>
-                                <h4 class="card-text" style="font-size:14px;">কবি ও এক্টিভিস্ট</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/mohammad-nurul-huda-duke.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/mozammel-hossain-mohan.png" alt="মোজাম্মেল হোসেন মোহন" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">মোজাম্মেল হোসেন মোহন</h3>
-                                <h4 class="card-text" style="font-size:14px;">সমাজ ও রাষ্ট্র চিন্তক</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/mozammel-hossain-mohan.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/saifuddin-jahid.png" alt="সাইফ উদ্দীন জাহিদ" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">সাইফ উদ্দীন জাহিদ</h3>
-                                <h4 class="card-text" style="font-size:14px;">লেখক ও ব্যবসায়ী</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/saifuddin-jahid.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/captain-jahan.png" alt="ক্যাপ্টেন জাহান" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">ক্যাপ্টেন জাহান</h3>
-                                <h4 class="card-text" style="font-size:14px;">অ্যাক্টিভিস্ট (বিডিআর বিদ্রোহ সংশ্লিষ্ট)</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/captain-jahan.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+  <!-- ── Stats Bar ──────────────────────────────────────── -->
+  <section id="stats-bar" class="stats-bar" aria-label="পরিসংখ্যান">
+    <div class="container">
+      <div class="row" id="stats-row">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </section>
 
-        <!-- সম্মিলিত বৈপ্লবিক জোট Section -->
-        <section>
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8 text-center mx-auto mb-40">
-                        <h2 style="font-size: xx-large; color: #90161f;" class="text-center mb-20">সম্মিলিত বৈপ্লবিক জোট (সংযুক্ত রাজনৈতিক ও সামাজিক প্ল্যাটফর্ম)</h2>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/engineer-ayman-andalib.png" alt="ইঞ্জিনিয়ার আয়মান আন্দালীব" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">ইঞ্জিনিয়ার আয়মান আন্দালীব</h3>
-                                <h4 class="card-text" style="font-size:14px;">ইনকিলাব মঞ্চ</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/engineer-ayman-andalib.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/engineer-shak.png" alt="ইঞ্জিনিয়ার শাক" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">ইঞ্জিনিয়ার শাক</h3>
-                                <h4 class="card-text" style="font-size:14px;">জুলাই মঞ্চ</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/engineer-shak.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/ananta-majumdar.png" alt="অনন্ত মজুমদার" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">অনন্ত মজুমদার</h3>
-                                <h4 class="card-text" style="font-size:14px;">গণপরিষদ</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="https://www.facebook.com/ananta.mazumder.2024" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/ananta-majumdar.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/azad-khan-bhasani.png" alt="আজাদ খান ভাসানী" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">আজাদ খান ভাসানী</h3>
-                                <h4 class="card-text" style="font-size:14px;">আহ্বায়ক, ভাষানী পরিষদ</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/azad-khan-bhasani.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/barrister-asaduzzaman-fuad.png" alt="ব্যারিস্টার আসাদুজ্জামান ফুয়াদ" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">ব্যারিস্টার আসাদুজ্জামান ফুয়াদ</h3>
-                                <h4 class="card-text" style="font-size:14px;">এবি পার্টি</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/barrister-asaduzzaman-fuad.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/imran-naim.png" alt="ইমরান নাঈম" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">ইমরান নাঈম</h3>
-                                <h4 class="card-text" style="font-size:14px;">এনসিপি</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/imran-naim.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/bayezid-bostami.png" alt="বায়েজিদ বোস্তামী" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">বায়েজিদ বোস্তামী</h3>
-                                <h4 class="card-text" style="font-size:14px;">বাংলাদেশ ইসলামী ছাত্রশিবির</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/bayezid-bostami.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/syead-rakibul-hossain.png" alt="সৈয়দ রাকিবুল হোসেন" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">সৈয়দ রাকিবুল হোসেন</h3>
-                                <h4 class="card-text" style="font-size:14px;">বাংলাদেশ জাতীয় পার্টি (বিজেপি)</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/syead-rakibul-hossain.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-12 mb-20 mt-50">
-                        <div class="card">
-                            <div class="card-header"><img src="https://julyforum.com/members/sadik.png" alt="সাদিক" class="img-fluid card-img-top" onerror="this.src='https://julyforum.com/logoc7c3.png';"/></div>
-                            <div class="member-details card-body">
-                                <h3 class="card-title" style="font-size: 18px;">সাদিক</h3>
-                                <h4 class="card-text" style="font-size:14px;">সমাজতান্ত্রিক ছাত্র ফ্রন্ট</h4>
-                            </div>
-                            <div class="card-footer text-body-secondary">
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-primary zmdi-facebook"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-twitter"></i></a>
-                                <a class="me-3" href="#" target="_blank"><i class="zmdi fs-2 text-danger zmdi-instagram"></i></a>
-                                <a class="me-3 details" href="https://julyforum.com/members/sadik.html"><i class="zmdi fs-2 zmdi-info"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+  <!-- ── Quick Actions ──────────────────────────────────── -->
+  <section class="quick-actions">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <a href="/financial-report.html" class="qa-btn financial joaf-reveal">
+            <i class="zmdi zmdi-money"></i> আর্থিক বিবরণী
+          </a>
+        </div>
+        <div class="col-md-4">
+          <a href="/membership.html" class="qa-btn join joaf-reveal" style="transition-delay:.1s">
+            <i class="zmdi zmdi-account-add"></i> সদস্যতা ফর্ম (JOIN)
+          </a>
+        </div>
+        <div class="col-md-4">
+          <a href="/financial-policy.html" class="qa-btn policy joaf-reveal" style="transition-delay:.2s">
+            <i class="zmdi zmdi-file-text"></i> আর্থিক নীতিমালা
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        <!-- Footer Area -->
-        <footer id="footer-area" class="footer-area section">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-4 col-12 mb-40">
-                        <h4>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</h4>
-                        <p>আমরা জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF), যারা নিরপেক্ষ দৃষ্টিভঙ্গিতে দেশের জন্য কাজ করতে প্রতিশ্রুতিবদ্ধ। আমাদের লক্ষ্য হলো গণতন্ত্র ও সংহতির মাধ্যমে বাংলাদেশের ভবিষ্যৎ গড়ে তোলা।</p>
-                    </div>
-                    <div class="col-md-4 col-12 mb-40">
-                        <h4>দ্রুত লিঙ্ক</h4>
-                        <ul>
-                            <li><a href="https://julyforum.com/index.html">হোম</a></li>
-                            <li><a href="https://julyforum.com/events.html">ইভেন্ট</a></li>
-                            <li><a href="https://julyforum.com/media-news.html">মিডিয়া</a></li>
-                            <li><a href="joaf-polls.html">Polls</a></li>
-                            <li><a href="#about-area">আমাদের সম্পর্কে</a></li>
-                            <li><a href="#footer-area">যোগাযোগ</a></li>
-                            <li><a href="https://julyforum.com/membership.html">সদস্যতা ফর্ম</a></li>
-                            <li><a href="https://julyforum.com/donate.html">অর্থদান</a></li>
-                        </ul>
-                    </div>
-                    <div class="col-md-4 col-12 mb-40">
-                        <h4>যোগাযোগ</h4>
-                        <p><i class="zmdi zmdi-email"></i> <a href="mailto:joafforum@gmail.com">joafforum@gmail.com</a></p>
-                        <p><i class="zmdi zmdi-phone"></i> +880 1234-567890</p>
-                        <div class="footer-social">
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Facebook"><i class="zmdi zmdi-facebook"></i></a>
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Twitter"><i class="zmdi zmdi-twitter"></i></a>
-                            <a href="https://www.facebook.com/share/15yL2rq5XL/" aria-label="Follow us on Instagram"><i class="zmdi zmdi-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2026 জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম। সর্বস্বত্ব সংরক্ষিত।</p>
-            </div>
-        </footer>
+  <!-- ── About ───────────────────────────────────────────── -->
+  <section id="about-area" class="section bg-subtle" aria-labelledby="about-title">
+    <div class="container">
+      <div class="section-heading joaf-reveal">
+        <h2 id="about-title">জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF)</h2>
+        <p>নিরপেক্ষ দৃষ্টিভঙ্গিতে দেশের জন্য কাজ করতে প্রতিশ্রুতিবদ্ধ</p>
+      </div>
+      <div class="row g-4 mb-5">
+        <div class="col-md-8 mx-auto joaf-reveal">
+          <div class="about-highlight">
+            <p>আমরা জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF), যারা নিরপেক্ষ দৃষ্টিভঙ্গিতে দেশের জন্য কাজ করতে প্রতিশ্রুতিবদ্ধ।</p>
+          </div>
+          <div class="about-highlight">
+            <p>"দেশ আগে, দল পরে" — আর তা মেনে নিয়ে হাজারো তরুণ এগিয়ে এসেছিলো… সেনাবাহিনী ও জনগণের সংহতিতে।</p>
+          </div>
+          <div class="about-highlight">
+            <p>আজ, আবার সেই জুলাই। আমরা ফিরে এসেছি। শুধু স্মৃতি নিয়ে নয় — এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    </div><!-- end .wrapper -->
+  <!-- ── Vision & Mission ────────────────────────────────── -->
+  <section id="vision-mission-area" class="section" aria-labelledby="vision-title">
+    <div class="container">
+      <div class="section-heading joaf-reveal">
+        <h2 id="vision-title">ভিশন ও মিশন</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 joaf-reveal">
+          <div class="vision-box vision">
+            <h2>🎯 ভিশন</h2>
+            <p>দেশের পক্ষে, গুজবের বিরুদ্ধে। আমরা — গণতন্ত্রে, সংহতিতে বিশ্বাসী।</p>
+          </div>
+        </div>
+        <div class="col-md-6 joaf-reveal" style="transition-delay:.15s">
+          <div class="vision-box mission">
+            <h2>🚀 মিশন</h2>
+            <p>অনলাইনে ভুল তথ্য রোধে কাজ করা, সকল রাজনৈতিক দলের প্রতিনিধি, তৃতীয় লিঙ্গ ও সমাজকর্মীদের নিয়ে সমন্বিত উদ্যোগ গড়ে তোলা।</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- JS Dependencies -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="https://julyforum.com/plugins.js"></script>
-    <script src="https://julyforum.com/rainbow-swirl-cursor.js"></script>
-    <script src="https://julyforum.com/main.js?v=2.6.25"></script>
-    <script>
-        function toBanglaNumber(num) {
-            const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-            return num.toString().split('').map(d => (d >= '0' && d <= '9') ? banglaDigits[d] : d).join('');
-        }
-        function toBanglaCity(city) {
-            const cityMap = {
-                "Dhaka": "ঢাকা", "Chattogram": "চট্টগ্রাম", "Sylhet": "সিলেট",
-                "Khulna": "খুলনা", "Barishal": "বরিশাল", "Rajshahi": "রাজশাহী",
-                "Rangpur": "রংপুর", "Mymensingh": "ময়মনসিংহ"
-            };
-            return cityMap[city] ? cityMap[city] : city;
-        }
-        function formatBanglaDate(dateStr) {
-            const date = new Date(dateStr);
-            const banglaMonths = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
-            return `${toBanglaNumber(date.getDate())} ${banglaMonths[date.getMonth()]}, ${toBanglaNumber(date.getFullYear())}`;
-        }
-        fetch('https://ipapi.co/json/')
-          .then(r => r.json())
-          .then(data => {
-            document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ${data.city ? toBanglaCity(data.city) : 'ঢাকা'}`;
-          })
-          .catch(() => {
-            document.getElementById('location').innerHTML = `<i class="zmdi zmdi-pin"></i> ঢাকা`;
-          });
-        function updateDateTime() {
-            const now = new Date();
-            const banglaMonths = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
-            const banglaWeekdays = ["রবিবার","সোমবার","মঙ্গলবার","বুধবার","বৃহস্পতিবার","শুক্রবার","শনিবার"];
-            const dateStr = `${banglaWeekdays[now.getDay()]}, ${toBanglaNumber(now.getDate())} ${banglaMonths[now.getMonth()]}, ${toBanglaNumber(now.getFullYear())}`;
-            let hours = now.getHours(), minutes = now.getMinutes(), seconds = now.getSeconds();
-            if (minutes < 10) minutes = '0' + minutes;
-            if (seconds < 10) seconds = '0' + seconds;
-            let period = hours >= 4 && hours < 12 ? 'সকাল' : hours >= 12 && hours < 18 ? 'বিকেল' : 'রাত';
-            let displayHour = hours % 12 || 12;
-            document.getElementById('date').innerHTML = `<i class="zmdi zmdi-calendar"></i> ${dateStr}`;
-            document.getElementById('time').innerHTML = `<i class="zmdi zmdi-time"></i> ${period} ${toBanglaNumber(displayHour)}:${toBanglaNumber(minutes)}:${toBanglaNumber(seconds)}`;
-        }
-        updateDateTime();
-        setInterval(updateDateTime, 1000);
+  <!-- ── Movement ────────────────────────────────────────── -->
+  <section id="movement" class="section bg-subtle" aria-labelledby="movement-title">
+    <div class="container">
+      <div class="section-heading joaf-reveal">
+        <h2 id="movement-title">জনমত গঠন ও রাজনৈতিক আন্দোলন</h2>
+      </div>
+      <div class="row">
+        <div class="col-md-10 mx-auto joaf-reveal">
+          <ul class="movement-list">
+            <li>জোয়াফ রিউমার স্টপার (JOAF Rumor Stopper) — অনলাইনে ভুল তথ্য রোধে কাজ করবে।</li>
+            <li>জোয়াফ কোয়ালিশন (JOAF Coalition) — সকল রাজনৈতিক দলের প্রতিনিধি, তৃতীয় লিঙ্গ ও সমাজকর্মীদের নিয়ে একটি প্ল্যাটফর্ম।</li>
+            <li>জোয়াফ এডভাইজারি টিম (JOAF Advisory Team) — অভিজ্ঞ ও সমাজের বিশিষ্ট ব্যক্তিদের সমন্বয়ে।</li>
+            <li>ডিভিশনাল টিম (Divisional Teams) — দেশের ৮টি বিভাগে জোয়াফের আলাদা টিম থাকবে।</li>
+            <li>বরিশাল থেকে খুলনা, চট্টগ্রাম থেকে ময়মনসিংহ — দেশ ছাড়িয়ে এখন যুক্তরাষ্ট্র ও ইউরোপেও আমাদের প্রতিনিধিত্ব।</li>
+            <li>আমরা — একদল চিন্তাশীল নাগরিক। আমরা — দেশের পক্ষে, গুজবের বিরুদ্ধে।</li>
+            <li>আসুন, আপনিও যুক্ত হোন — নিজের এলাকার WhatsApp গ্রুপে।</li>
+            <li>কারণ ইতিহাস একবার ফিরে আসে… যারা প্রস্তুত থাকে, তারাই নেতৃত্ব দেয়।</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        // Gallery Filter
-        $(document).ready(function() {
-            $('.gallery-filter button').on('click', function() {
-                $('.gallery-filter button').removeClass('active');
-                $(this).addClass('active');
-                const filterValue = $(this).data('filter');
-                if (filterValue === '*') {
-                    $('.gallery-item').show();
-                } else {
-                    $('.gallery-item').hide();
-                    $(filterValue).show();
-                }
-            });
-        });
-    </script>
-    <script>
-        (function(){
-            const video = document.getElementById('heroVideo');
-            const hsItem = document.querySelector('.hs-item.video-hero');
-            if (!video || !hsItem) return;
-            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            const saveData = conn && conn.saveData;
-            function applyFallbackForMobile() {
-                if (window.innerWidth < 768 || saveData) {
-                    hsItem.style.backgroundImage = `url('${video.getAttribute('poster')}')`;
-                } else {
-                    hsItem.style.backgroundImage = 'none';
-                }
-            }
-            applyFallbackForMobile();
-            window.addEventListener('resize', applyFallbackForMobile);
-            try {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) { video.play().catch(() => {}); }
-                        else { video.pause(); }
-                    });
-                }, { threshold: 0.5 });
-                observer.observe(hsItem);
-            } catch(e) { video.play().catch(()=>{}); }
-            document.addEventListener('click', () => { if (video.paused) video.play().catch(()=>{}); }, { once: true });
-        })();
-    </script>
-    <script>
-        const video = document.getElementById('heroVideo');
-        const muteBtn = document.getElementById('muteToggle');
-        if (video && muteBtn) {
-            muteBtn.addEventListener('click', () => {
-                if (video.muted) {
-                    video.muted = false;
-                    muteBtn.textContent = '🔊';
-                    muteBtn.setAttribute('aria-pressed', 'true');
-                } else {
-                    video.muted = true;
-                    muteBtn.textContent = '🔈';
-                    muteBtn.setAttribute('aria-pressed', 'false');
-                }
-            });
+  <!-- ── Leadership Gallery ──────────────────────────────── -->
+  <section id="gallery-area" class="section" aria-labelledby="gallery-title">
+    <div class="container">
+      <div class="section-heading joaf-reveal">
+        <h2 id="gallery-title">নিউক্লিয়াস — কেন্দ্রীয় নেতৃত্ব</h2>
+        <p>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরামের কেন্দ্রীয় নেতৃবৃন্দ</p>
+      </div>
+      <!-- Filter Buttons -->
+      <div class="gallery-filter" id="gallery-filter" role="group" aria-label="নেতৃত্ব ফিল্টার">
+        <button class="active" data-filter="*">সকলে</button>
+        <button data-filter=".president">সভাপতি</button>
+        <button data-filter=".secretary">সাধারণ সম্পাদক</button>
+        <button data-filter=".spokesperson">মূখ্য সংগঠক</button>
+        <button data-filter=".senior-coordinator">সিনিয়র যুগ্ম</button>
+        <button data-filter=".coordinator">যুগ্ম মূখ্য সংগঠক</button>
+        <button data-filter=".chief-organizer">মূখ্য সংগঠক</button>
+      </div>
+      <!-- Cards injected by JS -->
+      <div class="row g-4" id="nucleus-grid"></div>
+    </div>
+  </section>
+
+  <!-- ── Advisors ────────────────────────────────────────── -->
+  <section class="section bg-subtle" aria-labelledby="advisors-title">
+    <div class="container">
+      <div class="section-heading joaf-reveal">
+        <h2 id="advisors-title">উপদেষ্টা বলয় (পরামর্শক প্যানেল)</h2>
+      </div>
+      <div class="row g-4" id="advisors-grid"></div>
+    </div>
+  </section>
+
+  <!-- ── Coalition ───────────────────────────────────────── -->
+  <section class="section" aria-labelledby="coalition-title">
+    <div class="container">
+      <div class="section-heading joaf-reveal">
+        <h2 id="coalition-title">সম্মিলিত বৈপ্লবিক জোট</h2>
+        <p>সংযুক্ত রাজনৈতিক ও সামাজিক প্ল্যাটফর্ম</p>
+      </div>
+      <div class="row g-4" id="coalition-grid"></div>
+    </div>
+  </section>
+
+  <!-- ── Press Releases Preview ─────────────────────────── -->
+  <section class="section bg-subtle" aria-labelledby="press-title">
+    <div class="container">
+      <div class="section-heading joaf-reveal">
+        <h2 id="press-title">সর্বশেষ প্রেস রিলিজ</h2>
+      </div>
+      <div class="row g-4" id="press-grid"></div>
+      <div class="text-center mt-4 joaf-reveal">
+        <a href="/media-news.html" class="btn btn-primary px-4 py-2" style="background:var(--brand);border:none;border-radius:50px;font-weight:700">
+          সব প্রেস রিলিজ দেখুন <i class="zmdi zmdi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer (injected by components.js) ──────────────── -->
+  <div id="joaf-footer"></div>
+
+</div><!-- .wrapper -->
+
+<!-- ── Scripts ────────────────────────────────────────────── -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/js/plugins.js"></script>
+<!-- JOAF Data & Components -->
+<script src="/js/data.js"></script>
+<script src="/js/components.js"></script>
+<script src="/js/rainbow-swirl-cursor.js"></script>
+
+<script>
+// ── Page-specific JS ──────────────────────────────────────
+
+// Preloader hide
+window.addEventListener('load', () => {
+  const pl = document.getElementById('joaf-preloader');
+  if (pl) { setTimeout(() => pl.classList.add('hidden'), 300); }
+});
+
+// Stats render
+(function renderStats() {
+  const row = document.getElementById('stats-row');
+  if (!row) return;
+  row.innerHTML = JOAF.stats.map((s, i) => `
+    <div class="col-6 col-md-3 joaf-reveal stat-item" style="transition-delay:${i*0.1}s">
+      <div class="stat-number">${s.number}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>
+  `).join('');
+})();
+
+// Nucleus cards render
+(function renderNucleus() {
+  const grid = document.getElementById('nucleus-grid');
+  if (!grid) return;
+  grid.innerHTML = JOAF.nucleus.map((m, i) => `
+    <div class="col-6 col-md-4 col-lg-3 gallery-item ${m.roleClass} joaf-reveal" style="transition-delay:${(i%4)*0.1}s">
+      <div class="member-card">
+        <img class="member-card-img" src="${m.img}" alt="${m.name}"
+             onerror="this.src='/logoc7c3.png'" loading="lazy">
+        <div class="member-card-body">
+          <h4>${m.name}</h4>
+          <p class="role">${m.role}</p>
+          <div class="actions">
+            <a href="${m.facebook}" target="_blank" rel="noopener" class="btn-fb">
+              <i class="zmdi zmdi-facebook"></i> Profile
+            </a>
+            <a href="${m.profilePage}" class="btn-bio">
+              <i class="zmdi zmdi-info"></i> জীবনবৃত্তান্ত
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  initGalleryFilter();
+})();
+
+// Gallery filter
+function initGalleryFilter() {
+  const btns = document.querySelectorAll('#gallery-filter button');
+  const items = document.querySelectorAll('.gallery-item');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      items.forEach(item => {
+        if (filter === '*' || item.classList.contains(filter.replace('.', ''))) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
         }
-        if (video) {
-            document.addEventListener('touchstart', () => {
-                if (video.paused) video.play().catch(()=>{});
-            }, { once: true });
-        }
-    </script>
+      });
+    });
+  });
+}
+
+// Advisors render
+(function renderAdvisors() {
+  const grid = document.getElementById('advisors-grid');
+  if (!grid) return;
+  grid.innerHTML = JOAF.advisors.map((m, i) => `
+    <div class="col-6 col-md-4 col-lg-3 joaf-reveal" style="transition-delay:${(i%4)*0.1}s">
+      <div class="person-card">
+        <div class="card-img-wrap">
+          <img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+        </div>
+        <div class="card-info">
+          <h3>${m.name}</h3>
+          <p>${m.designation}</p>
+        </div>
+        <div class="card-socials">
+          <a href="${m.facebook}" target="_blank" rel="noopener" class="fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
+          <a href="${m.profilePage}" class="info" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+})();
+
+// Coalition render
+(function renderCoalition() {
+  const grid = document.getElementById('coalition-grid');
+  if (!grid) return;
+  grid.innerHTML = JOAF.coalition.map((m, i) => `
+    <div class="col-6 col-md-4 col-lg-3 joaf-reveal" style="transition-delay:${(i%4)*0.1}s">
+      <div class="person-card">
+        <div class="card-img-wrap">
+          <img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+        </div>
+        <div class="card-info">
+          <h3>${m.name}</h3>
+          <p>${m.party}</p>
+        </div>
+        <div class="card-socials">
+          <a href="${m.facebook}" target="_blank" rel="noopener" class="fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
+          <a href="${m.profilePage}" class="info" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+})();
+
+// Press releases (latest 4)
+(function renderPress() {
+  const grid = document.getElementById('press-grid');
+  if (!grid) return;
+  const latest = [...JOAF.pressReleases].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,4);
+  grid.innerHTML = latest.map((p, i) => `
+    <div class="col-md-6 col-lg-3 joaf-reveal" style="transition-delay:${i*0.1}s">
+      <div class="press-card">
+        <div style="overflow:hidden;height:200px;position:relative">
+          <img src="${p.img}" alt="${p.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+          <span class="press-card-badge">${BanglaUtil.formatDate(p.date).split(',')[0]}</span>
+        </div>
+        <div class="press-card-body">
+          <h4>${p.title}</h4>
+          <p>${p.summary}</p>
+          <a href="/${p.slug}.html" class="read-more">পড়ুন <i class="zmdi zmdi-arrow-right"></i></a>
+          <div class="share-row">
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://julyforum.com/'+p.slug+'.html')}" target="_blank" class="s-fb"><i class="zmdi zmdi-facebook"></i></a>
+            <a href="https://wa.me/?text=${encodeURIComponent(p.title+' https://julyforum.com/'+p.slug+'.html')}" target="_blank" class="s-wa"><i class="zmdi zmdi-whatsapp"></i></a>
+            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(p.title)}&url=${encodeURIComponent('https://julyforum.com/'+p.slug+'.html')}" target="_blank" class="s-tw"><i class="zmdi zmdi-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+})();
+
+// Hero video controls
+const heroVideo = document.getElementById('heroVideo');
+const muteBtn = document.getElementById('muteToggle');
+if (heroVideo && muteBtn) {
+  muteBtn.addEventListener('click', () => {
+    heroVideo.muted = !heroVideo.muted;
+    muteBtn.textContent = heroVideo.muted ? '🔈' : '🔊';
+    muteBtn.setAttribute('aria-pressed', !heroVideo.muted);
+  });
+  // Mobile autoplay fix
+  document.addEventListener('touchstart', () => {
+    if (heroVideo.paused) heroVideo.play().catch(()=>{});
+  }, {once:true});
+  // Pause when not visible
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => {
+      entries.forEach(e => e.isIntersecting ? heroVideo.play().catch(()=>{}) : heroVideo.pause());
+    }, {threshold:0.3}).observe(heroVideo);
+  }
+}
+</script>
 </body>
 </html>
