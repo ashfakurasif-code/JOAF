@@ -250,20 +250,9 @@ const JOAFComponents = {
     const hp = document.getElementById('joaf-header');
     if (hp) hp.outerHTML = this.renderHeader(pageId);
 
-    // Inject ticker
+    // Inject ticker — find by id, replace
     const ta = document.getElementById('joaf-ticker');
     if (ta) ta.outerHTML = this.renderTicker();
-    // Fallback: if ticker still not in DOM, insert after header
-    setTimeout(() => {
-      if (!document.querySelector('.announcement-ticker')) {
-        const hdr = document.querySelector('header.header-area');
-        if (hdr) {
-          const div = document.createElement('div');
-          div.innerHTML = this.renderTicker();
-          hdr.insertAdjacentElement('afterend', div.firstElementChild);
-        }
-      }
-    }, 100);
 
     // Inject footer
     const fp = document.getElementById('joaf-footer');
