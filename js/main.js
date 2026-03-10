@@ -164,5 +164,4 @@ $.scrollUp({
  
 
 })(jQuery);	
-// আগে: fetch("/api/polls")
-fetch("/.netlify/functions/polls")
+// polls fetch handled by joaf-polls.html directly

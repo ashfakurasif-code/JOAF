@@ -3,7 +3,7 @@
 [build]
   publish = "."
 
-# ── Performance Headers ──────────────────────────────────────
+# ── Performance & Security Headers ──────────────────────────
 [[headers]]
   for = "/*"
   [headers.values]
@@ -11,6 +11,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    X-XSS-Protection = "1; mode=block"
 
 [[headers]]
   for = "/css/*"
@@ -28,6 +29,26 @@
     Cache-Control = "public, max-age=2592000"
 
 [[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/*.gif"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/*.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
   for = "/members/*"
   [headers.values]
     Cache-Control = "public, max-age=2592000"
@@ -35,7 +56,7 @@
 [[headers]]
   for = "/*.html"
   [headers.values]
-    Cache-Control = "public, max-age=3600"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 # ── Clean URLs — index.html → / ─────────────────────────────
 [[redirects]]
@@ -43,6 +64,52 @@
   to = "/"
   status = 301
   force = true
+
+# ── Clean URLs — remove .html extension ──────────────────────
+[[redirects]]
+  from = "/community.html"
+  to = "/community"
+  status = 301
+
+[[redirects]]
+  from = "/membership.html"
+  to = "/membership"
+  status = 301
+
+[[redirects]]
+  from = "/joaf-polls.html"
+  to = "/joaf-polls"
+  status = 301
+
+[[redirects]]
+  from = "/events.html"
+  to = "/events"
+  status = 301
+
+[[redirects]]
+  from = "/media-news.html"
+  to = "/media-news"
+  status = 301
+
+[[redirects]]
+  from = "/donate.html"
+  to = "/donate"
+  status = 301
+
+[[redirects]]
+  from = "/financial-report.html"
+  to = "/financial-report"
+  status = 301
+
+[[redirects]]
+  from = "/financial-policy.html"
+  to = "/financial-policy"
+  status = 301
+
+[[redirects]]
+  from = "/privacy.html"
+  to = "/privacy"
+  status = 301
 
 # ── Community case fix ───────────────────────────────────────
 [[redirects]]
@@ -90,6 +157,48 @@
   from = "/press-release-8.html"
   to = "/press-releases/press-release-8.html"
   status = 301
+
+
+# ── /pages/ folder — clean aliases for all nav pages ────────
+[[redirects]]
+  from = "/pages/events"
+  to = "/events.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/media-news"
+  to = "/media-news.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/joaf-polls"
+  to = "/joaf-polls.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/community"
+  to = "/community.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/membership"
+  to = "/membership.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/donate"
+  to = "/donate.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/financial-report"
+  to = "/financial-report.html"
+  status = 200
+
+[[redirects]]
+  from = "/pages/privacy"
+  to = "/privacy.html"
+  status = 200
 
 # ── SPA fallback ─────────────────────────────────────────────
 [[redirects]]
