@@ -2,29 +2,11 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>🗳️ জনরায় — জোয়াফ</title>
-  <meta name="description" content="JOAF জনরায় — প্রতিদিন ৩০টি AI-তৈরি প্রশ্ন। ভোট দিন, স্ট্রিক ধরুন, পুরস্কার জিতুন।">
-  <meta property="og:title" content="জোয়াফ জনরায় — আপনার মতামত দিন">
-  <meta property="og:description" content="প্রতিদিন ৩০টি প্রশ্নে ভোট দিন। টানা ৩০ দিন ভোট দিলে ৫০ টাকা পুরস্কার।">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JOAF জনমত: আপনার মতামত গণনা</title>
+  <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর নিরপেক্ষ জনমত জরিপ। দেশের ভবিষ্যৎ নিয়ে আপনার মূল্যবান মতামত দিন।">
+  <meta property="og:title" content="JOAF জনমত: আপনার মতামত গণনা">
   <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
-  <meta property="og:image:width" content="800">
-  <meta property="og:image:height" content="800">
-  <meta property="og:url" content="https://julyforum.com/joaf-polls.html">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম">
-  <meta property="fb:app_id" content="1114707634145642">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="জোয়াফ জনরায় — আপনার মতামত দিন">
-  <meta name="twitter:description" content="প্রতিদিন ৩০টি প্রশ্নে ভোট দিন। টানা ৩০ দিন ভোট দিলে ৫০ টাকা পুরস্কার।">
-  <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png">
-  <link rel="canonical" href="https://julyforum.com/joaf-polls.html">
-    <!-- Resource hints for speed -->
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="preconnect" href="https://code.jquery.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-  <link rel="dns-prefetch" href="https://ipapi.co">
   <link rel="icon" href="/favicon.ico">
   <link rel="manifest" href="/site.webmanifest">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -34,911 +16,117 @@
   <link rel="stylesheet" href="/css/joaf.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
-  <style>
-  /* ══ POLLS PAGE ══════════════════════════════════════════ */
-  .polls-hero{
-    background:linear-gradient(135deg,#0d0d1a 0%,#0f2744 50%,#0a1f1c 100%);
-    padding:52px 0 38px;color:#fff;text-align:center;position:relative;overflow:hidden;
-  }
-  .polls-hero::before{
-    content:'';position:absolute;inset:0;
-    background:radial-gradient(circle at 20% 50%,rgba(15,52,96,.6),transparent 60%),
-               radial-gradient(circle at 80% 30%,rgba(7,94,85,.4),transparent 50%);
-  }
-  .polls-hero-inner{position:relative;z-index:2;}
-  .polls-hero h1{font-size:clamp(1.8rem,4vw,2.7rem);font-weight:900;margin-bottom:8px;}
-  .hero-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px;}
-  .hero-chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:5px 14px;border-radius:50px;font-size:12px;font-weight:700;}
-  .refresh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:7px 16px;border-radius:50px;font-size:13px;font-weight:600;margin-top:10px;}
-  .countdown{font-size:1.2rem;font-weight:900;color:#c9a227;font-variant-numeric:tabular-nums;}
-
-  /* ══ LEFT PANEL ══════════════════════════════════════════ */
-  .panel-card{background:#fff;border-radius:18px;box-shadow:0 6px 28px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;}
-  .panel-card-top{height:5px;background:linear-gradient(90deg,#90161f,#c9a227,#075e55);}
-  .panel-body{padding:22px;}
-
-  /* Login */
-  .login-title{font-size:1.1rem;font-weight:900;color:#1a1a2e;margin-bottom:4px;}
-  .login-sub{font-size:12px;color:#9ca3af;margin-bottom:16px;}
-  .f-inp{width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:11px;font-family:inherit;font-size:14px;margin-bottom:10px;transition:.3s;outline:none;background:#fafafa;}
-  .f-inp:focus{border-color:#90161f;background:#fff;box-shadow:0 0 0 3px rgba(144,22,31,.08);}
-  .login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border:none;border-radius:50px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px;}
-  .login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.2);}
-  .login-note{font-size:11px;color:#9ca3af;text-align:center;margin-top:8px;}
-
-  /* User dashboard */
-  .dash{background:linear-gradient(135deg,#0d0d1a,#0f3460,#075e55);color:#fff;border-radius:16px;padding:20px;margin-bottom:12px;}
-  .dash-avatar{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.3);overflow:hidden;}
-  .dash-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-  .dash-name{font-size:1rem;font-weight:800;line-height:1.2;}
-  .dash-sub{font-size:11px;opacity:.7;margin-top:2px;}
-  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;}
-  .stat-box{background:rgba(255,255,255,.1);border-radius:12px;padding:10px 6px;text-align:center;}
-  .stat-num{font-size:1.4rem;font-weight:900;display:block;line-height:1;}
-  .stat-lbl{font-size:10px;opacity:.75;margin-top:4px;display:block;}
-  .earn-section{background:rgba(255,255,255,.08);border-radius:12px;padding:12px;margin-top:4px;}
-  .earn-label{display:flex;justify-content:space-between;font-size:11px;opacity:.85;margin-bottom:6px;}
-  .earn-bar{background:rgba(255,255,255,.2);border-radius:50px;height:8px;overflow:hidden;}
-  .earn-fill{height:100%;background:linear-gradient(90deg,#c9a227,#f59e0b);border-radius:50px;transition:width .8s cubic-bezier(.16,1,.3,1);}
-  .earn-msg{font-size:11px;opacity:.8;margin-top:6px;text-align:center;}
-
-  /* Today's progress mini card */
-  .today-card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:12px;}
-  .today-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .today-head strong{font-size:13px;color:#1a1a2e;}
-  .today-count{font-weight:900;color:#075e55;font-size:13px;}
-  .today-bar-wrap{height:7px;background:#f0f0f0;border-radius:50px;overflow:hidden;}
-  .today-bar-fill{height:100%;background:linear-gradient(90deg,#90161f,#075e55);border-radius:50px;transition:width .6s ease;}
-  .today-done{margin-top:8px;background:#dcfce7;color:#166534;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;display:none;}
-
-  /* Missed warning */
-  .missed-warn{background:#fee2e2;border:1.5px solid #fca5a5;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#991b1b;display:none;}
-
-  /* Earnings tracker */
-  .earn-tracker{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #c9a227;border-radius:16px;padding:18px;margin-bottom:12px;}
-  .earn-tracker h4{color:#92400e;font-weight:900;font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
-  .earn-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,.7);border-radius:10px;margin-bottom:7px;font-size:13px;}
-  .earn-item .cycle-badge{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:2px 10px;border-radius:50px;font-size:11px;font-weight:800;}
-  .earn-total{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#92400e;color:#fff;border-radius:10px;margin-top:6px;font-weight:800;}
-  .earn-total .amount{font-size:1.2rem;font-weight:900;color:#fde68a;}
-  .earn-claim{width:100%;margin-top:10px;padding:10px;background:linear-gradient(135deg,#92400e,#b45309);color:#fff;border:none;border-radius:50px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;transition:.3s;}
-  .earn-claim:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(146,64,14,.4);}
-
-  /* Reward info */
-  .reward-card{background:linear-gradient(135deg,#f0fffe,#e0f7f4);border:1.5px solid #075e55;border-radius:16px;padding:18px;}
-  .reward-card h4{color:#065f46;font-weight:900;font-size:14px;margin-bottom:12px;}
-  .reward-row{display:flex;gap:10px;margin-bottom:9px;font-size:13px;line-height:1.6;align-items:flex-start;}
-  .reward-row span:first-child{font-size:1.2rem;flex-shrink:0;}
-
-  /* ══ POLLS GRID ══════════════════════════════════════════ */
-  .ptabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
-  .ptab{padding:7px 14px;border-radius:50px;border:2px solid #e5e7eb;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.25s;color:#374151;}
-  .ptab.on{background:linear-gradient(135deg,#90161f,#b91c1c);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(144,22,31,.3);}
-  .ptab:hover:not(.on){border-color:#90161f;color:#90161f;}
-
-  .polls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-  .poll-card{background:#fff;border-radius:16px;box-shadow:0 3px 16px rgba(0,0,0,.08);padding:18px;transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;border-top:4px solid #90161f;overflow:hidden;}
-  .poll-card::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle at 100% 0%,rgba(144,22,31,.06),transparent 70%);pointer-events:none;}
-  .poll-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.12);}
-  .poll-card.voted{border-top-color:#075e55;}
-  .p-num{font-size:10px;font-weight:800;color:#90161f;opacity:.7;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
-  .p-cat-tag{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;padding:3px 10px;border-radius:50px;font-size:10px;font-weight:700;margin-bottom:10px;}
-  .p-question{font-size:14px;font-weight:700;line-height:1.65;margin-bottom:14px;color:#1a202c;}
-  .p-opt{display:block;width:100%;text-align:left;padding:9px 12px;border:2px solid #e5e7eb;background:#fafafa;border-radius:10px;margin-bottom:7px;font-family:inherit;font-size:13px;cursor:pointer;transition:.2s;position:relative;overflow:hidden;color:#374151;}
-  .p-opt:hover:not(:disabled){border-color:#90161f;background:#fff8f8;transform:translateX(3px);}
-  .p-opt.selected{background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border-color:transparent;}
-  .p-opt.other-voted{background:#f8f9fa;cursor:default;}
-  .p-opt:disabled{cursor:default;}
-  .p-bar{position:absolute;left:0;top:0;bottom:0;background:rgba(144,22,31,.08);pointer-events:none;transition:width .7s cubic-bezier(.16,1,.3,1);border-radius:9px;}
-  .p-opt.selected .p-bar{background:rgba(255,255,255,.15);}
-  .p-pct{float:right;font-weight:800;font-size:11px;position:relative;z-index:1;}
-  .p-voted-badge{display:inline-flex;align-items:center;gap:5px;background:#dcfce7;color:#166534;padding:4px 10px;border-radius:50px;font-size:11px;font-weight:700;margin-top:8px;}
-  .p-total{font-size:11px;color:#9ca3af;margin-top:6px;text-align:right;}
-
-  /* AI loading */
-  .ai-load{text-align:center;padding:60px 20px;}
-  .ai-orb{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#90161f,#075e55);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-size:26px;animation:orb-pulse 1.4s ease-in-out infinite;}
-  @keyframes orb-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(144,22,31,.4)}50%{transform:scale(1.08);box-shadow:0 0 0 12px rgba(144,22,31,0)}}
-
-  /* ══ LEADERBOARD ═════════════════════════════════════════ */
-  .lb-wrap{background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,.09);overflow:hidden;}
-  .lb-header{background:linear-gradient(135deg,#0d0d1a,#0f3460);color:#fff;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;}
-  .lb-header h4{margin:0;font-size:1rem;font-weight:900;}
-  .lb-header span{font-size:11px;opacity:.65;}
-  .lb-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #f5f5f5;transition:.2s;position:relative;}
-  .lb-row:last-child{border-bottom:none;}
-  .lb-row:hover{background:#fafafa;}
-  .lb-row.is-me{background:linear-gradient(90deg,rgba(7,94,85,.06),rgba(144,22,31,.04));}
-  .lb-rank{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;}
-  .rank-1{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 3px 8px rgba(245,158,11,.4);}
-  .rank-2{background:linear-gradient(135deg,#9ca3af,#6b7280);color:#fff;}
-  .rank-3{background:linear-gradient(135deg,#b45309,#92400e);color:#fff;}
-  .rank-n{background:#f3f4f6;color:#374151;}
-  .lb-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex-shrink:0;overflow:hidden;border:2px solid #e5e7eb;}
-  .lb-av img{width:100%;height:100%;object-fit:cover;}
-  .lb-info{flex:1;min-width:0;}
-  .lb-name{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .lb-meta{font-size:11px;color:#9ca3af;margin-top:1px;}
-  .lb-right{text-align:right;flex-shrink:0;}
-  .lb-earn{font-weight:900;color:#075e55;font-size:14px;}
-  .lb-streak{font-size:11px;color:#9ca3af;}
-  .me-badge{background:#dcfce7;color:#166534;padding:1px 7px;border-radius:50px;font-size:10px;font-weight:700;margin-left:5px;}
-
-  /* ══ STREAK CALENDAR ═════════════════════════════════════ */
-  .streak-cal{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;}
-  .streak-cal h5{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:12px;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
-  .cal-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
-  .cd-done{background:linear-gradient(135deg,#075e55,#15803d);color:#fff;}
-  .cd-today{background:linear-gradient(135deg,#90161f,#b91c1c);color:#fff;}
-  .cd-miss{background:#fee2e2;color:#f87171;}
-  .cd-empty{background:#f9fafb;color:#d1d5db;}
-
-  @media(max-width:600px){.polls-grid{grid-template-columns:1fr;}}
-  </style>
 </head>
-<body data-page="polls">
+<body data-page="joaf_polls">
 
-<script>
-(function(){
-  var t = setTimeout(function(){
-    var el = document.getElementById('joaf-preloader');
-    if(el) el.classList.add('hidden');
-  }, 6000);
-  window._ppTimer = t;
-})();
-</script>
 <div id="joaf-preloader">
   <img src="/logoc7c3.png" alt="JOAF" class="preloader-logo">
-  <p class="preloader-text">জনরায় লোড হচ্ছে...</p>
+  <p class="preloader-text">JOAF লোড হচ্ছে...</p>
   <div class="preloader-bar"></div>
 </div>
 
 <div class="wrapper fix">
   <div id="joaf-header"></div>
-  <div id="joaf-ticker"></div>
 
-  <!-- Hero -->
-  <section class="polls-hero">
-    <div class="container polls-hero-inner joaf-reveal-zoom">
-      <h1>🗳️ জোয়াফ জনরায়</h1>
-      <p style="opacity:.82;font-size:15px;max-width:520px;margin:0 auto 8px">প্রতিদিন ৩০টি নতুন প্রশ্ন। বাংলাদেশের ভবিষ্যৎ গড়তে আপনার মতামত দিন।</p>
-      <div class="refresh-badge">🔄 পরবর্তী সেশন: <span class="countdown" id="cd">--:--:--</span></div>
-      <div class="hero-chips">
-        <div class="hero-chip">🗳️ দৈনিক জনমত প্রশ্ন</div>
-        <div class="hero-chip">🔥 স্ট্রিক সিস্টেম</div>
-        <div class="hero-chip">🎁 ৫০ টাকা ফোন রিচার্জ পুরস্কার</div>
-        <div class="hero-chip">🏆 লিডারবোর্ড</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="row g-4">
-
-        <!-- ══ LEFT PANEL ══════════════════════════════════ -->
-        <div class="col-lg-4">
-
-          <!-- LOGIN (not logged in) -->
-          <div id="loginSection">
-            <div class="panel-card joaf-reveal">
-              <div class="panel-card-top"></div>
-              <div class="panel-body">
-                <div class="login-title">📱 প্রবেশ করুন</div>
-                <div class="login-sub">ভোট সংরক্ষণ ও পুরস্কারের জন্য নাম ও নম্বর দিন</div>
-                <input type="text" id="lName" class="f-inp" placeholder="আপনার নাম লিখুন">
-                <input type="tel" id="lPhone" class="f-inp" placeholder="মোবাইল নম্বর (01XXXXXXXXX)">
-                <!-- Optional profile photo URL -->
-                <input type="url" id="lPhoto" class="f-inp" placeholder="প্রোফাইল ছবির লিঙ্ক (ঐচ্ছিক)">
-                <button class="login-btn" onclick="doLogin()">
-                  <i class="zmdi zmdi-check-circle"></i> প্রবেশ করুন
-                </button>
-                <p class="login-note">তথ্য শুধু পুরস্কারের জন্য ব্যবহৃত হবে। তৃতীয় পক্ষকে দেওয়া হবে না।</p>
-              </div>
-            </div>
-            <div class="reward-card joaf-reveal">
-              <h4>🎁 কীভাবে ৫০ টাকা পাবেন?</h4>
-              <div class="reward-row"><span>🗓️</span><span>প্রতিদিন সব <strong>৩০টি</strong> প্রশ্নে ভোট দিন</span></div>
-              <div class="reward-row"><span>📅</span><span>টানা <strong>৩০ দিন</strong> ধারাবাহিকভাবে করুন</span></div>
-              <div class="reward-row"><span>💸</span><span>মোবাইলে <strong>৫০ টাকা রিচার্জ</strong> পাবেন</span></div>
-              <div class="reward-row"><span>⚠️</span><span>একদিন মিস করলে আবার শুরু করতে হবে</span></div>
-              <div class="reward-row"><span>♾️</span><span>প্রতি ৩০ দিন পর পুনরায় শুরু করা যাবে</span></div>
-            </div>
-          </div>
-
-          <!-- USER DASHBOARD (logged in) -->
-          <div id="userSection" style="display:none">
-
-            <!-- Missed warning -->
-            <div class="missed-warn" id="missedWarn">
-              ⚠️ <strong>গতকাল ভোট দেননি!</strong> স্ট্রিক রিসেট হয়েছে।
-            </div>
-
-            <!-- Main dashboard card -->
-            <div class="dash mb-3 joaf-reveal">
-              <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="dash-avatar" id="dAvatar">?</div>
-                <div>
-                  <div class="dash-name" id="dName">—</div>
-                  <div class="dash-sub" id="dPhone">—</div>
+  <section id="polls-area" class="section">
+            <div class="container">
+                <div class="row">
+                    <div class="section-title text-center col-12 mb-60">
+                        <h2 style="color:var(--brand);font-size:xx-large; margin-top: 40px;">জনমত জরিপ</h2>
+                        <p class="mt-2" style="color:var(--text-color);">আপনার একটি ভোট, একটি পরিবর্তনের সূচনা।</p>
+                    </div>
                 </div>
-              </div>
-              <div class="stats-row">
-                <div class="stat-box">
-                  <span class="stat-num" id="dStreak">০</span>
-                  <span class="stat-lbl" id="dStreakLbl">🔥 স্ট্রিক</span>
+                
+                <div class="poll-container-wrapper">
+                    <div class="poll-slider-container">
+                        <div class="poll-slider">
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-1"><div class="poll-question">২০২৪-এর জুলাই গণ-অভ্যুত্থানের পর বাংলাদেশের রাজনৈতিক স্থিতিশীলতা কেমন বলে আপনি মনে করেন?</div><div class="poll-options"><div class="poll-option-item" data-option="a">অনেক ভালো <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">মধ্যম মানের <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">খারাপ <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-2"><div class="poll-question">২০২৫ সালের মধ্যে দেশের অর্থনৈতিক পরিস্থিতি কি আরও উন্নত হবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">নিশ্চিত নই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-3"><div class="poll-question">সেপ্টেম্বর ২০২৫-এর মধ্যে কি দেশে একটি নতুন রাজনৈতিক দল বা জোটের উত্থান হবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">সম্ভবত <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">সম্ভব না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">অসম্ভব <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-4"><div class="poll-question">ভবিষ্যতে বাংলাদেশের শিক্ষা ব্যবস্থায় কি বড় ধরনের পরিবর্তন প্রয়োজন?</div><div class="poll-options"><div class="poll-option-item" data-option="a">জরুরি প্রয়োজন <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">কিছু পরিবর্তন যথেষ্ট <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">বর্তমানে যা আছে তাই ভালো <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-5"><div class="poll-question">বাংলাদেশের গণমাধ্যম কি জনগণের আস্থা অর্জনে সক্ষম?</div><div class="poll-options"><div class="poll-option-item" data-option="a">আংশিক সক্ষম <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">সম্পূর্ণ সক্ষম <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">মোটেই সক্ষম নয় <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-6"><div class="poll-question">প্রশাসনিক সংস্কার কি দেশের সুশাসনের জন্য জরুরি?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, খুবই জরুরি <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">কিছুটা প্রয়োজন <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">তেমন প্রয়োজন নেই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-7"><div class="poll-question">সেপ্টেম্বর ২০২৫ নাগাদ দেশের বেকারত্ব কি বৃদ্ধি পাবে নাকি কমবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">কমবে <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">বাড়বে <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">একই থাকবে <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-8"><div class="poll-question">দেশের জ্বালানি সংকট সমাধানে কি দীর্ঘমেয়াদী পরিকল্পনা প্রয়োজন?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, জরুরি <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">তাৎক্ষণিক সমাধান যথেষ্ট <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">নিশ্চিত নই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-9"><div class="poll-question">দেশের আইনশৃঙ্খলা পরিস্থিতি কি আগের চেয়ে উন্নত হয়েছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">একই আছে <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-10"><div class="poll-question">রাজনৈতিক নেতাদের মধ্যে কোন ধরণের পরিবর্তন দেখতে চান?</div><div class="poll-options"><div class="poll-option-item" data-option="a">নতুন মুখের আগমন <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">নীতিগত পরিবর্তন <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">দুর্নীতি দূরীকরণ <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-11"><div class="poll-question">দেশের বৈদেশিক নীতি কি আরও শক্তিশালী হওয়া উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">যেটা আছে, সেটাই ঠিক <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-12"><div class="poll-question">দেশের স্বাস্থ্যসেবার মান নিয়ে আপনি কতটা সন্তুষ্ট?</div><div class="poll-options"><div class="poll-option-item" data-option="a">খুবই সন্তুষ্ট <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">মোটামুটি সন্তুষ্ট <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">মোটেই সন্তুষ্ট নই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-13"><div class="poll-question">আগামী বছর দেশের কৃষি উৎপাদন কি বৃদ্ধি পাবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">নিশ্চিত নই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-14"><div class="poll-question">দেশের অবকাঠামো উন্নয়ন নিয়ে আপনার মূল্যায়ন কী?</div><div class="poll-options"><div class="poll-option-item" data-option="a">খুব ভালো <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">মধ্যম মানের <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">খারাপ <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-15"><div class="poll-question">জাতীয় নির্বাচনে ভোটাধিকার প্রয়োগের পরিবেশ কি নিশ্চিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, নিশ্চিত <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">আংশিক নিশ্চিত <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">নিশ্চিত নয় <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-16"><div class="poll-question">দেশ থেকে দক্ষ জনশক্তি বিদেশে যাওয়ার হার কি কমবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">কমবে <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">বাড়বে <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">একই থাকবে <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-17"><div class="poll-question">ডিজিটাল বাংলাদেশ থেকে স্মার্ট বাংলাদেশে রূপান্তর কতটা সফল হবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">খুবই সফল <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">আংশিক সফল <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">সফল হবে না <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-18"><div class="poll-question">বাংলাদেশের পরিবেশ ও জলবায়ু পরিবর্তনের ঝুঁকি মোকাবেলায় সরকারের পদক্ষেপ যথেষ্ট?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, যথেষ্ট <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">আরো পদক্ষেপ প্রয়োজন <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">তেমন কোনো পদক্ষেপ নেই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-19"><div class="poll-question">দেশের বিচার বিভাগের স্বাধীনতা নিয়ে আপনার মতামত কী?</div><div class="poll-options"><div class="poll-option-item" data-option="a">সম্পূর্ণ স্বাধীন <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">আংশিক স্বাধীন <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">স্বাধীন নয় <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-20"><div class="poll-question">আগামী ৫ বছরে বাংলাদেশের ক্রিকেট দলের পারফর্ম্যান্স কেমন হবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">অনেক ভালো <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">মোটামুটি <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">খারাপ <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-21"><div class="poll-question">দেশের সড়ক ব্যবস্থার মান উন্নত করতে আর কী করা উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">প্রশাসনকে আরও কঠোর হতে হবে <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">নতুন প্রযুক্তি ব্যবহার করা <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">জনগণকে সচেতন করা <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-22"><div class="poll-question">শিক্ষাপ্রতিষ্ঠানে রাজনৈতিক হস্তক্ষেপ কি শিক্ষাব্যবস্থার উন্নতির প্রধান বাধা?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, অবশ্যই <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">আংশিক <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">না <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-23"><div class="poll-question">দেশের শিল্প-কারখানার উন্নয়নে নতুন কোনো নীতির প্রয়োজন আছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, জরুরি <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">আগের নীতিই যথেষ্ট <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">নিশ্চিত নই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-24"><div class="poll-question">সাইবার নিরাপত্তা নিশ্চিত করতে সরকারের উদ্যোগ কতটা কার্যকর?</div><div class="poll-options"><div class="poll-option-item" data-option="a">খুবই কার্যকর <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">মোটামুটি কার্যকর <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">কার্যকর নয় <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-25"><div class="poll-question">গ্রামীণ অর্থনীতিকে উন্নত করতে কোন খাতে বেশি বিনিয়োগ করা উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">কৃষি <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">ক্ষুদ্র ও মাঝারি শিল্প <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">শিক্ষা <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-26"><div class="poll-question">ভবিষ্যতে বাংলাদেশের পর্যটন শিল্প কি অর্থনৈতিক উন্নয়নে বড় ভূমিকা রাখতে পারে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">বলা কঠিন <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-27"><div class="poll-question">দেশ থেকে দুর্নীতি দূর করতে কোন কাজটি সবার আগে করা উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">আইনের কঠোর প্রয়োগ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">জনগণকে সচেতন করা <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">প্রশাসনে পরিবর্তন আনা <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-28"><div class="poll-question">বাংলাদেশের মানুষের মৌলিক অধিকার কি পুরোপুরি সুরক্ষিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">আংশিক <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-29"><div class="poll-question">দেশে পরিবেশ দূষণ কি একটি গুরুতর সমস্যা?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">গুরুত্বপূর্ণ নয় <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-30"><div class="poll-question">দেশের জনগণের মধ্যে দেশপ্রেম কি বৃদ্ধি পেয়েছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">আংশিক <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-31"><div class="poll-question">দেশের নদীগুলো কি দূষণমুক্ত রাখা সম্ভব?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, সম্ভব <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">খুবই কঠিন <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">অসম্ভব <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-32"><div class="poll-question">স্বাস্থ্য খাতে সরকারি বরাদ্দ কি যথেষ্ট?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">নিশ্চিত নই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-33"><div class="poll-question">ভবিষ্যতে বাংলাদেশের জন্য একটি একক অর্থনৈতিক পরিকল্পনা কি উপকারী হবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">বলা কঠিন <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-34"><div class="poll-question">জনগণের মধ্যে ডিজিটাল স্বাক্ষরতা কি বৃদ্ধি পেয়েছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">মোটামুটি <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-35"><div class="poll-question">দেশে নারী অধিকার রক্ষায় কি আরও আইন প্রণয়ন করা উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">বর্তমান আইনই যথেষ্ট <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-36"><div class="poll-question">আগামী ১০ বছরে দেশের খাদ্য নিরাপত্তা কি নিশ্চিত হবে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">নিশ্চিত নই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-37"><div class="poll-question">দেশের শিক্ষা ব্যবস্থায় কি আধুনিক প্রযুক্তির ব্যবহার বৃদ্ধি করা উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, জরুরি <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">তেমন প্রয়োজন নেই <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">বর্তমান প্রযুক্তিই যথেষ্ট <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-38"><div class="poll-question">বাংলাদেশে কি স্থানীয় সরকারের ক্ষমতা বৃদ্ধি করা উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">আংশিক <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-39"><div class="poll-question">দেশের জনগণের মধ্যে কি আইন মানার প্রবণতা বৃদ্ধি পেয়েছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">একই আছে <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-40"><div class="poll-question">দেশের অর্থনৈতিক মন্দা কি আরও বাড়বে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">বলা কঠিন <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-41"><div class="poll-question">দেশের কর্মসংস্থান খাতে কি নতুন সুযোগ তৈরি হচ্ছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">কিছুটা <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-42"><div class="poll-question">দেশের সাংস্কৃতিক অঙ্গন কি নতুন করে প্রাণ ফিরে পাচ্ছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">আংশিক <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-43"><div class="poll-question">দেশের সামরিক বাহিনীর আধুনিকীকরণ কি জরুরি?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">গুরুত্বপূর্ণ নয় <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-44"><div class="poll-question">কৃষি খাতে ভর্তুকি কি আরও বাড়ানো উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">নিশ্চিত নই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-45"><div class="poll-question">দেশের জলবায়ু পরিবর্তন মোকাবেলায় কি আন্তর্জাতিক সহযোগিতা প্রয়োজন?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, জরুরি <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">দেশ একাই যথেষ্ট <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">প্রয়োজন নেই <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-46"><div class="poll-question">ভবিষ্যতে দেশের রাজনৈতিক দলগুলোর মধ্যে কি ঐক্য সম্ভব?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">বলা কঠিন <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-47"><div class="poll-question">দেশের পর্যটন খাত কি বিশ্বমানের হয়ে উঠছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">আংশিক <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-48"><div class="poll-question">দেশের জনগণের মধ্যে কি ধর্মীয় সহনশীলতা বৃদ্ধি পেয়েছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">একই আছে <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                            <div class="poll-card-slide">
+                                <div class="col"><div class="poll-card" id="poll-49"><div class="poll-question">দেশের জনগণের কি আরও বেশি স্বাস্থ্য সচেতন হওয়া উচিত?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ, খুবই জরুরি <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">আংশিক <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                                <div class="col"><div class="poll-card" id="poll-50"><div class="poll-question">আন্তর্জাতিকভাবে বাংলাদেশের মর্যাদা কি বৃদ্ধি পেয়েছে?</div><div class="poll-options"><div class="poll-option-item" data-option="a">হ্যাঁ <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="b">না <span class="vote-count hidden">0</span></div><div class="poll-option-item" data-option="c">একই আছে <span class="vote-count hidden">0</span></div></div><div class="poll-results" style="display:none;"></div></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slider-nav">
+                        <button id="prevBtn">&lt;</button>
+                        <button id="nextBtn">&gt;</button>
+                    </div>
                 </div>
-                <div class="stat-box">
-                  <span class="stat-num" id="dVoted">০</span>
-                  <span class="stat-lbl">🗳️ আজকের</span>
-                </div>
-                <div class="stat-box">
-                  <span class="stat-num" id="dCycles">০</span>
-                  <span class="stat-lbl">🏆 চক্র</span>
-                </div>
-              </div>
-              <div class="earn-section">
-                <div class="earn-label">
-                  <span>পুরস্কার অগ্রগতি</span>
-                  <span id="dProg">০/৩০ দিন</span>
-                </div>
-                <div class="earn-bar"><div class="earn-fill" id="eFill" style="width:0%"></div></div>
-                <div class="earn-msg" id="dEarnMsg">আরও ৩০ দিন বাকি</div>
-              </div>
             </div>
-
-            <!-- Streak Calendar (last 30 days) -->
-            <div class="streak-cal joaf-reveal">
-              <h5>📅 স্ট্রিক ক্যালেন্ডার (শেষ ৩০ দিন)</h5>
-              <div class="cal-grid" id="streakCal"></div>
-            </div>
-
-            <!-- Today's progress -->
-            <div class="today-card joaf-reveal">
-              <div class="today-head">
-                <strong>আজকের ভোট</strong>
-                <span class="today-count" id="todayCount">০/৩০</span>
-              </div>
-              <div class="today-bar-wrap">
-                <div class="today-bar-fill" id="todayBar" style="width:0%"></div>
-              </div>
-              <div class="today-done" id="todayDone">✅ আজকের সব ভোট দেওয়া হয়েছে!</div>
-            </div>
-
-            <!-- Earnings Tracker -->
-            <div class="earn-tracker joaf-reveal" id="earningsTracker">
-              <h4>💰 আয়ের হিসাব</h4>
-              <div id="earnCyclesList"></div>
-              <div class="earn-total">
-                <span>মোট অর্জিত (<span id="cyclesCount">০</span> চক্র × ৫০ টাকা)</span>
-                <span class="amount" id="totalEarned">এখনো ০ টাকা</span>
-              </div>
-              <button class="earn-claim" id="earnClaimBtn" onclick="claimReward()" style="display:none">
-                🎉 পুরস্কার দাবি করুন
-              </button>
-            </div>
-
-            <button onclick="doLogout()" style="width:100%;padding:10px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;font-size:13px;transition:.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
-              🚪 লগআউট
-            </button>
-          </div>
-        </div>
-
-        <!-- ══ RIGHT: POLLS ══════════════════════════════════ -->
-        <div class="col-lg-8">
-          <div class="ptabs" id="ptabs">
-            <button class="ptab on" data-c="all">সব</button>
-            <button class="ptab" data-c="রাজনীতি">🏛️ রাজনীতি</button>
-            <button class="ptab" data-c="অর্থনীতি">💰 অর্থনীতি</button>
-            <button class="ptab" data-c="জুলাই অভ্যুত্থান">⚡ জুলাই</button>
-            <button class="ptab" data-c="সমাজ">🤝 সমাজ</button>
-            <button class="ptab" data-c="সরকার">🏢 সরকার</button>
-          </div>
-
-          <!-- AI loading -->
-          <div id="aiLoad" class="ai-load">
-            <div class="ai-orb">🤖</div>
-            <h3 style="color:#1a1a2e;margin-bottom:6px">AI প্রশ্ন তৈরি করছে...</h3>
-            <p style="color:#6b7280;font-size:13px">বাংলাদেশের সর্বশেষ পরিস্থিতি বিশ্লেষণ হচ্ছে</p>
-          </div>
-
-          <div id="pollsGrid" class="polls-grid" style="display:none"></div>
-
-          <div id="loadMore" class="text-center mt-4" style="display:none">
-            <button onclick="showMore()" style="background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border:none;padding:12px 32px;border-radius:50px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:.3s;box-shadow:0 4px 14px rgba(144,22,31,.3);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-              আরও প্রশ্ন দেখুন
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ LEADERBOARD ════════════════════════════════════ -->
-      <div class="row mt-5">
-        <div class="col-12">
-          <div class="section-heading joaf-reveal-flip">
-            <h2>🏆 শীর্ষ ভোটারগণ</h2>
-            <p>যারা সবচেয়ে বেশি ধারাবাহিকভাবে ভোট দিয়েছেন</p>
-          </div>
-          <div class="lb-wrap joaf-reveal">
-            <div class="lb-header">
-              <h4>🏆 লিডারবোর্ড</h4>
-              <span id="lbTotal">০ জন অংশগ্রহণকারী</span>
-            </div>
-            <div id="lbList">
-              <div style="padding:28px;text-align:center;color:#9ca3af;font-size:14px">
-                লগইন করলে এখানে আপনার নাম দেখাবে
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
+        </section>
 
   <div id="joaf-footer"></div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
-<script src="/js/plugins.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/js/plugins.js"></script>
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
-<script src="/js/rainbow-swirl-cursor.js" defer></script>
-<script>
-// ============================================================
-// JOAF জনরায় v5 — AI Poll + Streak + Leaderboard + Earnings
-// ============================================================
-
-// 🔑 ──────────────────────────────────────────────────────────
-// GROQ_KEY এখানে বসাও (console.groq.com থেকে নাও)
-// !! MANUALLY_REPLACE !! → const GROQ_KEY = 'gsk_XXXXXXXXXX';
-const GROQ_KEY = 'YOUR_GROQ_API_KEY';
-// ─────────────────────────────────────────────────────────────
-
-const GROQ_MODEL  = 'llama3-8b-8192';
-const POLLS_COUNT = 30;
-const STREAK_GOAL = 30;
-const REWARD_AMT  = 50; // ৳
-
-// ── Utils ─────────────────────────────────────────────────────
-const bn = n => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
-const today = () => new Date().toISOString().slice(0, 10);
-const yest  = () => { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); };
-
-const LS = {
-  get: k => { try { return JSON.parse(localStorage.getItem('j_'+k)); } catch { return null; } },
-  set: (k,v) => { try { localStorage.setItem('j_'+k, JSON.stringify(v)); } catch {} },
-  del: k => localStorage.removeItem('j_'+k),
-  keys: () => { const r=[]; for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('j_'))r.push(k.slice(2));} return r; }
-};
-
-// ── State ─────────────────────────────────────────────────────
-let CU = null;      // current user object
-let allPolls = [];  // all 30 polls for today
-let activeCat = 'all';
-let showN = 10;
-
-// ── Vote storage (shared across users) ────────────────────────
-const getVD  = pid => LS.get('vd_'+pid) || { c:{}, t:0 };
-const saveVD = (pid, oi) => {
-  const d = getVD(pid);
-  d.c[oi] = (d.c[oi]||0) + 1;
-  d.t = (d.t||0) + 1;
-  LS.set('vd_'+pid, d);
-};
-
-// ── User helpers ──────────────────────────────────────────────
-const hasVoted = pid => CU ? CU.votes?.[today()]?.[pid] !== undefined : false;
-const myVote   = pid => CU ? (CU.votes?.[today()]?.[pid] ?? null) : null;
-
-function doLogin() {
-  const name  = document.getElementById('lName').value.trim();
-  const phone = document.getElementById('lPhone').value.trim();
-  const photo = document.getElementById('lPhoto').value.trim();
-  if (!name || name.length < 2) { alert('নাম লিখুন (কমপক্ষে ২ অক্ষর)'); return; }
-  if (!phone.match(/^01[3-9]\d{8}$/)) { alert('সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন'); return; }
-
-  const uid = 'u' + phone.replace(/\D/g,'');
-  let u = LS.get(uid) || {
-    id: uid, name, phone, photo: photo||'',
-    streak: 0, maxStreak: 0,
-    lastVote: null, voteDays: [],
-    totalVotes: 0, cycles: 0,
-    claimedCycles: 0, votes: {}
-  };
-  u.name  = name;
-  u.phone = phone;
-  if (photo) u.photo = photo;
-  LS.set(uid, u);
-  LS.set('cu', uid);
-  loadUser(uid);
-}
-
-function loadUser(uid) {
-  const u = LS.get(uid);
-  if (!u) return;
-
-  // Check missed day → reset streak
-  if (u.lastVote && u.lastVote !== today() && u.lastVote !== yest()) {
-    u.streak = 0;
-    LS.set(uid, u);
-    document.getElementById('missedWarn').style.display = 'block';
-  } else {
-    document.getElementById('missedWarn').style.display = 'none';
-  }
-
-  CU = u;
-  document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('userSection').style.display  = 'block';
-  refreshDash();
-  renderStreakCal();
-  renderEarnings();
-  renderLB();
-  renderPolls(activeCat); // re-render to show vote states
-}
-
-function doLogout() {
-  CU = null;
-  LS.del('cu');
-  document.getElementById('loginSection').style.display = 'block';
-  document.getElementById('userSection').style.display  = 'none';
-  document.getElementById('missedWarn').style.display   = 'none';
-  renderPolls(activeCat);
-}
-
-// ── Refresh dashboard ─────────────────────────────────────────
-function refreshDash() {
-  if (!CU) return;
-  const u   = CU;
-  const ts  = today();
-  const tv  = Object.keys(u.votes?.[ts]||{}).length;
-  const s   = u.streak || 0;
-  const pct = Math.min(s / STREAK_GOAL * 100, 100);
-  const rem = Math.max(STREAK_GOAL - s, 0);
-
-  // Avatar
-  const avEl = document.getElementById('dAvatar');
-  if (u.photo) {
-    avEl.innerHTML = `<img loading="lazy" src="${u.photo}" alt="${u.name}" onerror="this.parentElement.textContent='${u.name.charAt(0).toUpperCase()}'">`;
-  } else {
-    avEl.textContent = u.name.charAt(0).toUpperCase();
-  }
-
-  document.getElementById('dName').textContent     = u.name;
-  document.getElementById('dPhone').textContent    = '📱 ' + u.phone;
-  document.getElementById('dStreak').textContent   = bn(s);
-  document.getElementById('dStreakLbl').textContent = (s>=15?'🔥':s>=7?'⚡':s>=3?'💪':'✊') + ' স্ট্রিক';
-  document.getElementById('dVoted').textContent    = bn(tv);
-  document.getElementById('dCycles').textContent   = bn(u.cycles||0);
-  document.getElementById('dProg').textContent     = bn(s) + '/' + bn(STREAK_GOAL) + ' দিন';
-  document.getElementById('eFill').style.width     = pct + '%';
-  document.getElementById('dEarnMsg').innerHTML    = rem === 0
-    ? `🎉 পুরস্কারের জন্য নিচে দাবি করুন!`
-    : `আরও <strong>${bn(rem)} দিন</strong> বাকি`;
-
-  // Today progress
-  const tp = Math.min(tv / POLLS_COUNT * 100, 100);
-  document.getElementById('todayCount').textContent  = bn(tv) + '/' + bn(POLLS_COUNT);
-  document.getElementById('todayBar').style.width    = tp + '%';
-  document.getElementById('todayDone').style.display = tv >= POLLS_COUNT ? 'block' : 'none';
-}
-
-// ── Streak Calendar ───────────────────────────────────────────
-function renderStreakCal() {
-  if (!CU) return;
-  const cal   = document.getElementById('streakCal');
-  const days  = [];
-  const ts    = today();
-  const votedDays = new Set(Object.keys(CU.votes || {}));
-
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
-  }
-
-  cal.innerHTML = days.map(d => {
-    const isToday   = d === ts;
-    const didVote   = votedDays.has(d);
-    const isPast    = d < ts;
-    let cls = 'cal-day ';
-    if (isToday && didVote) cls += 'cd-done';
-    else if (isToday)       cls += 'cd-today';
-    else if (isPast && didVote) cls += 'cd-done';
-    else if (isPast)            cls += 'cd-miss';
-    else                        cls += 'cd-empty';
-    const label = d.slice(8); // day number
-    return `<div class="${cls}" title="${d}">${bn(parseInt(label))}</div>`;
-  }).join('');
-}
-
-// ── Earnings tracker ──────────────────────────────────────────
-function renderEarnings() {
-  if (!CU) return;
-  const cycles        = CU.cycles        || 0;
-  const claimedCycles = CU.claimedCycles || 0;
-  const unclaimedCycles = cycles - claimedCycles;
-  const totalEarned   = cycles * REWARD_AMT;
-
-  const listEl = document.getElementById('earnCyclesList');
-  if (cycles === 0) {
-    listEl.innerHTML = `<div class="earn-item" style="justify-content:center;color:#9ca3af;">এখনো কোনো চক্র সম্পন্ন হয়নি</div>`;
-  } else {
-    const rows = [];
-    for (let i = 1; i <= cycles; i++) {
-      const claimed = i <= claimedCycles;
-      rows.push(`
-        <div class="earn-item">
-          <span>চক্র ${bn(i)} (${bn(STREAK_GOAL)} দিন)</span>
-          <span class="cycle-badge">${claimed ? '✅ পেয়েছেন' : '⏳ দাবি করুন'}</span>
-        </div>
-      `);
-    }
-    listEl.innerHTML = rows.join('');
-  }
-
-  const cyclesCountEl = document.getElementById('cyclesCount');
-  if (cyclesCountEl) cyclesCountEl.textContent = bn(cycles);
-
-  document.getElementById('totalEarned').textContent = totalEarned > 0
-    ? bn(totalEarned) + ' টাকা'
-    : 'এখনো ০ টাকা';
-
-  const claimBtn = document.getElementById('earnClaimBtn');
-  if (unclaimedCycles > 0) {
-    claimBtn.style.display = 'block';
-    claimBtn.textContent   = `🎉 ${bn(unclaimedCycles)} চক্রের ৳${bn(unclaimedCycles * REWARD_AMT)} দাবি করুন`;
-  } else {
-    claimBtn.style.display = 'none';
-  }
-}
-
-function claimReward() {
-  if (!CU) return;
-  const unclaimed = (CU.cycles||0) - (CU.claimedCycles||0);
-  if (unclaimed <= 0) return;
-  const amount = unclaimed * REWARD_AMT;
-  const msg = `🎉 অভিনন্দন ${CU.name}!\n\nআপনি ${bn(unclaimed)} চক্র সম্পন্ন করেছেন।\nমোট: ৳${bn(amount)}\n\nপুরস্কার পেতে ইমেইল করুন:\njoafforum@gmail.com\n\nবিষয়: জনরায় পুরস্কার - ${CU.phone}`;
-  alert(msg);
-  // Mark as claimed
-  CU.claimedCycles = CU.cycles;
-  LS.set(CU.id, CU);
-  renderEarnings();
-}
-
-// ── Record vote & streak logic ────────────────────────────────
-function recordVote(pid, oi) {
-  if (!CU) return;
-  const ts = today();
-  if (!CU.votes)    CU.votes = {};
-  if (!CU.votes[ts]) CU.votes[ts] = {};
-  if (CU.votes[ts][pid] !== undefined) return;
-
-  CU.votes[ts][pid] = oi;
-  CU.totalVotes = (CU.totalVotes||0) + 1;
-
-  const tv = Object.keys(CU.votes[ts]).length;
-
-  // Streak: mark day complete when all 30 polls voted
-  if (tv >= POLLS_COUNT && CU.lastVote !== ts) {
-    CU.lastVote = ts;
-
-    // Track voted days for calendar
-    if (!CU.voteDays) CU.voteDays = [];
-    if (!CU.voteDays.includes(ts)) CU.voteDays.push(ts);
-
-    // Streak logic
-    if (CU.lastVote === ts) {
-      CU.streak = (CU.streak||0) + 1;
-    } else if (CU.lastVote === yest()) {
-      CU.streak = (CU.streak||0) + 1;
-    } else {
-      CU.streak = 1;
-    }
-
-    CU.maxStreak = Math.max(CU.maxStreak||0, CU.streak);
-
-    // Completed a 30-day cycle!
-    if (CU.streak >= STREAK_GOAL) {
-      CU.cycles = (CU.cycles||0) + 1;
-      CU.streak = 0;
-      setTimeout(() => {
-        alert(`🎉 অভিনন্দন ${CU.name}!\nটানা ৩০ দিন সম্পন্ন!\nনিচে আয়ের হিসাবে "পুরস্কার দাবি করুন" বাটন চাপুন।`);
-        renderEarnings();
-      }, 400);
-    }
-  }
-
-  LS.set(CU.id, CU);
-  refreshDash();
-  renderStreakCal();
-  renderEarnings();
-  renderLB();
-}
-
-// ── Groq API poll generation ──────────────────────────────────
-function getCacheKey() {
-  // Changes every 12 hours: session 0 (00:00-11:59) or session 1 (12:00-23:59)
-  const session = Math.floor(new Date().getHours() / 12);
-  return `polls_${today()}_s${session}`;
-}
-
-const FALLBACK_POLLS = [
-  {id:'fb1', q:'জুলাই ২০২৪ গণ-অভ্যুত্থানের পর পরিস্থিতি কেমন হয়েছে?',           cat:'জুলাই অভ্যুত্থান', opts:['ভালো হয়েছে','কিছুটা ভালো','খারাপ হয়েছে']},
-  {id:'fb2', q:'বর্তমান অন্তর্বর্তী সরকার নিয়ে আপনার মূল্যায়ন?',                 cat:'সরকার',           opts:['সন্তুষ্ট','মোটামুটি','অসন্তুষ্ট']},
-  {id:'fb3', q:'জাতীয় নির্বাচন কখন হওয়া উচিত?',                                  cat:'রাজনীতি',         opts:['এখনই','সংস্কারের পরে','২০২৬ সালে']},
-  {id:'fb4', q:'দ্রব্যমূল্য নিয়ন্ত্রণে সরকার কি সফল?',                            cat:'অর্থনীতি',        opts:['হ্যাঁ','না','আংশিক']},
-  {id:'fb5', q:'আইনশৃঙ্খলা পরিস্থিতি কেমন?',                                       cat:'সমাজ',            opts:['ভালো','মোটামুটি','খারাপ']},
-  {id:'fb6', q:'ছাত্র আন্দোলনের অর্জন কি টেকসই?',                                 cat:'জুলাই অভ্যুত্থান', opts:['হ্যাঁ','আংশিক','না']},
-  {id:'fb7', q:'ভারত-বাংলাদেশ সম্পর্ক কেমন হওয়া উচিত?',                          cat:'রাজনীতি',         opts:['সমমর্যাদার','বন্ধুত্বপূর্ণ','কঠোর']},
-  {id:'fb8', q:'দুর্নীতি দমনে সবচেয়ে জরুরি পদক্ষেপ কী?',                         cat:'সরকার',           opts:['আইনের প্রয়োগ','রাজনৈতিক সদিচ্ছা','জনসচেতনতা']},
-  {id:'fb9', q:'মিডিয়া স্বাধীনতার বর্তমান অবস্থা?',                               cat:'সমাজ',            opts:['ভালো','আগের চেয়ে ভালো','সীমাবদ্ধ']},
-  {id:'fb10',q:'বেকারত্ব সমাধানে কোন পথ সবচেয়ে কার্যকর?',                        cat:'অর্থনীতি',        opts:['নতুন শিল্প','দক্ষতা উন্নয়ন','বিদেশে কর্মসংস্থান']},
-  {id:'fb11',q:'শিক্ষাব্যবস্থার সবচেয়ে বড় সমস্যা কী?',                           cat:'সমাজ',            opts:['মানসম্পন্ন শিক্ষক','পাঠ্যক্রম','রাজনীতি']},
-  {id:'fb12',q:'নির্বাচনে সবচেয়ে গুরুত্বপূর্ণ ইস্যু কী?',                        cat:'রাজনীতি',         opts:['অর্থনীতি','সুশাসন','গণতন্ত্র']},
-  {id:'fb13',q:'নারী নিরাপত্তার পরিস্থিতি কেমন?',                                  cat:'সমাজ',            opts:['উন্নত','একই','খারাপ']},
-  {id:'fb14',q:'সংবিধান সংশোধন করা উচিত?',                                         cat:'রাজনীতি',         opts:['হ্যাঁ সম্পূর্ণ','কিছু অংশ','না']},
-  {id:'fb15',q:'প্রবাসীদের ভোটাধিকার দেওয়া উচিত?',                                cat:'রাজনীতি',         opts:['হ্যাঁ','বিবেচনা করা যায়','না']},
-  {id:'fb16',q:'অর্থনৈতিক পুনরুদ্ধারে সবচেয়ে গুরুত্বপূর্ণ খাত?',                 cat:'অর্থনীতি',        opts:['পোশাক শিল্প','রেমিট্যান্স','আইটি সেক্টর']},
-  {id:'fb17',q:'জুলাই শহীদদের পরিবারের জন্য কী করা উচিত?',                        cat:'জুলাই অভ্যুত্থান', opts:['সরকারি ভাতা','ন্যায়বিচার নিশ্চিত','উভয়ই']},
-  {id:'fb18',q:'পুলিশ সংস্কার কি যথেষ্ট হয়েছে?',                                  cat:'সরকার',           opts:['হ্যাঁ','আংশিক','না মোটেই']},
-  {id:'fb19',q:'রোহিঙ্গা সংকট সমাধানে সর্বোত্তম পথ?',                            cat:'সমাজ',            opts:['প্রত্যাবাসন','আন্তর্জাতিক চাপ','সরাসরি আলোচনা']},
-  {id:'fb20',q:'ডিজিটাল নিরাপত্তা আইনের মতো আইন ফিরে আসা উচিত?',                 cat:'রাজনীতি',         opts:['না কখনো','সংশোধন করলে','হ্যাঁ']},
-  {id:'fb21',q:'বিশ্ববিদ্যালয়ে ছাত্র রাজনীতি নিষিদ্ধ হওয়া উচিত?',              cat:'সমাজ',            opts:['হ্যাঁ','না','সীমিত রাখতে হবে']},
-  {id:'fb22',q:'জ্বালানি সংকট কবে নাগাদ সমাধান হবে?',                             cat:'অর্থনীতি',        opts:['এক বছরে','পাঁচ বছরে','দীর্ঘমেয়াদী সমস্যা']},
-  {id:'fb23',q:'আওয়ামী লীগ কি বিচারের পর রাজনীতিতে ফিরতে পারবে?',               cat:'রাজনীতি',         opts:['হ্যাঁ','বিচারের পরে দেখা যাবে','না']},
-  {id:'fb24',q:'সরকারি চাকরিতে কোটা কেমন হওয়া উচিত?',                            cat:'সমাজ',            opts:['সম্পূর্ণ মেধায়','সীমিত কোটা','বর্তমান ব্যবস্থা']},
-  {id:'fb25',q:'জুলাই অভ্যুত্থানের চেতনা কি রক্ষা পাচ্ছে?',                      cat:'জুলাই অভ্যুত্থান', opts:['হ্যাঁ পুরোপুরি','আংশিক','না হচ্ছে না']},
-  {id:'fb26',q:'মূল্যস্ফীতি নিয়ন্ত্রণে সবচেয়ে কার্যকর পদক্ষেপ?',               cat:'অর্থনীতি',        opts:['আমদানি শুল্ক কমানো','বাজার মনিটরিং','ব্যাংক সুদহার']},
-  {id:'fb27',q:'বিচারব্যবস্থা কি প্রকৃতপক্ষে স্বাধীন?',                           cat:'সরকার',           opts:['সম্পূর্ণ স্বাধীন','আংশিক','না']},
-  {id:'fb28',q:'নদী দূষণ নিয়ন্ত্রণ কি সম্ভব?',                                    cat:'সমাজ',            opts:['হ্যাঁ সম্ভব','কঠিন কিন্তু সম্ভব','প্রায় অসম্ভব']},
-  {id:'fb29',q:'সাইবার নিরাপত্তায় বাংলাদেশ কতটা প্রস্তুত?',                      cat:'সরকার',           opts:['ভালো প্রস্তুতি','মোটামুটি','একদমই না']},
-  {id:'fb30',q:'১০ বছরে বাংলাদেশ কি উচ্চ-মধ্যম আয়ের দেশ হতে পারবে?',           cat:'অর্থনীতি',        opts:['হ্যাঁ অবশ্যই','সম্ভব যদি সংস্কার হয়','কঠিন']},
-];
-
-async function genPolls() {
-  const ck     = getCacheKey();
-  const cached = LS.get(ck);
-  if (cached && Array.isArray(cached) && cached.length >= 20) return cached;
-
-  // No key → fallback immediately
-  if (!GROQ_KEY || GROQ_KEY === 'YOUR_GROQ_API_KEY') return FALLBACK_POLLS;
-
-  const prompt = `তুমি বাংলাদেশের একজন নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ ${today()}।
-
-বাংলাদেশের বর্তমান পরিস্থিতি (জুলাই ২০২৪ অভ্যুত্থান পরবর্তী, অন্তর্বর্তী সরকার, সংস্কার প্রক্রিয়া) নিয়ে ঠিক ৩০টি জনমত জরিপ প্রশ্ন তৈরি করো।
-
-বিষয়: রাজনীতি, অর্থনীতি, জুলাই অভ্যুত্থান, সমাজ, সরকার
-
-শুধু নিচের JSON array return করো, আর কিছু না:
-[{"id":"p1","q":"প্রশ্ন বাংলায়","cat":"রাজনীতি","opts":["বিকল্প১","বিকল্প২","বিকল্প৩"]}]
-
-নিয়ম:
-- সব বাংলায়
-- cat মান শুধু: রাজনীতি, অর্থনীতি, জুলাই অভ্যুত্থান, সমাজ, সরকার
-- প্রতিটি প্রশ্নে ঠিক ৩টি বিকল্প
-- নিরপেক্ষ, চিন্তাউদ্দীপক প্রশ্ন
-- ঠিক ৩০টি প্রশ্ন`;
-
-  try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:  'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_KEY },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [{ role:'user', content:prompt }],
-        temperature: 0.85,
-        max_tokens:  4500
-      })
-    });
-    const data = await r.json();
-    let txt = data.choices?.[0]?.message?.content || '';
-    // Strip markdown fences
-    txt = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
-    // Find JSON array
-    const match = txt.match(/\[[\s\S]*\]/);
-    if (match) {
-      const polls = JSON.parse(match[0]);
-      if (Array.isArray(polls) && polls.length >= 20) {
-        LS.set(ck, polls);
-        return polls;
-      }
-    }
-  } catch(e) {
-    console.warn('Groq API error:', e);
-  }
-  return FALLBACK_POLLS;
-}
-
-// ── Render polls ──────────────────────────────────────────────
-function getShown() {
-  return activeCat === 'all' ? allPolls : allPolls.filter(p => p.cat === activeCat);
-}
-
-function renderPolls(cat) {
-  activeCat = cat || activeCat;
-  const grid    = document.getElementById('pollsGrid');
-  const shown   = getShown().slice(0, showN);
-  grid.innerHTML = shown.map((p, i) => makeCard(p, i)).join('');
-  const hasMore  = getShown().length > showN;
-  document.getElementById('loadMore').style.display = hasMore ? 'block' : 'none';
-  // attach vote handlers
-  grid.querySelectorAll('.p-opt').forEach(btn => {
-    btn.addEventListener('click', () => onVote(btn.dataset.pid, +btn.dataset.oi));
-  });
-  setTimeout(() => JOAFComponents.initAnimations(), 60);
-}
-
-function makeCard(p, idx) {
-  const vd    = getVD(p.id);
-  const mv    = myVote(p.id);
-  const voted = mv !== null;
-  const total = vd.t || 0;
-  const opts  = (p.opts || []).map((o, i) => {
-    const cnt = vd.c?.[i] || 0;
-    const pct = total > 0 ? Math.round(cnt / total * 100) : 0;
-    const isMine = mv === i;
-    let cls = 'p-opt';
-    if (voted) cls += isMine ? ' selected' : ' other-voted';
-    return `<button class="${cls}" data-pid="${p.id}" data-oi="${i}" ${voted&&!isMine?'disabled':''}>
-      ${voted ? `<div class="p-bar" style="width:${pct}%"></div>` : ''}
-      <span style="position:relative;z-index:1">${o}</span>
-      ${voted ? `<span class="p-pct" style="position:relative;z-index:1">${bn(pct)}%</span>` : ''}
-    </button>`;
-  }).join('');
-
-  return `<div class="poll-card${voted?' voted':''} joaf-reveal-scale" style="transition-delay:${(idx%6)*0.05}s">
-    <div class="p-num">প্রশ্ন ${bn(idx+1)}</div>
-    <span class="p-cat-tag">${p.cat}</span>
-    <div class="p-question">${p.q}</div>
-    ${opts}
-    ${voted ? '<div class="p-voted-badge">✅ ভোট দেওয়া হয়েছে</div>' : ''}
-    <div class="p-total">${bn(total)} জন ভোট দিয়েছেন</div>
-  </div>`;
-}
-
-function onVote(pid, oi) {
-  if (!CU) {
-    // Scroll to login panel
-    document.getElementById('lName').focus();
-    document.getElementById('loginSection').scrollIntoView({behavior:'smooth'});
-    alert('👈 ভোট দিতে আগে বাম দিকে নাম ও নম্বর দিয়ে প্রবেশ করুন!');
-    return;
-  }
-  if (hasVoted(pid)) return;
-  saveVD(pid, oi);
-  recordVote(pid, oi);
-  // Re-render just this card
-  const shown = getShown();
-  const idx   = shown.findIndex(p => p.id === pid);
-  if (idx !== -1) {
-    const cards = document.querySelectorAll('.poll-card');
-    if (cards[idx]) {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = makeCard(shown[idx], idx);
-      const newCard = tmp.firstElementChild;
-      newCard.classList.add('visible');
-      cards[idx].replaceWith(newCard);
-    }
-  }
-}
-
-function showMore() { showN += 10; renderPolls(activeCat); }
-
-// ── Leaderboard ───────────────────────────────────────────────
-function renderLB() {
-  const lbEl    = document.getElementById('lbList');
-  const totalEl = document.getElementById('lbTotal');
-  const users   = [];
-
-  LS.keys().forEach(k => {
-    if (k.startsWith('u')) {
-      const u = LS.get(k);
-      if (u?.name && u?.phone) users.push(u);
-    }
-  });
-
-  totalEl.textContent = bn(users.length) + ' জন অংশগ্রহণকারী';
-
-  if (!users.length) {
-    lbEl.innerHTML = '<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px">এখনো কেউ অংশগ্রহণ করেননি</div>';
-    return;
-  }
-
-  // Sort: cycles desc, then streak desc, then total votes desc
-  users.sort((a,b) =>
-    ((b.cycles||0) - (a.cycles||0)) ||
-    ((b.streak||0) - (a.streak||0)) ||
-    ((b.totalVotes||0) - (a.totalVotes||0))
-  );
-
-  const rankCls  = ['rank-1','rank-2','rank-3'];
-  const rankIcon = ['🥇','🥈','🥉'];
-  const ts = today();
-
-  lbEl.innerHTML = users.slice(0, 15).map((u, i) => {
-    const isMe    = CU && u.id === CU.id;
-    const tv      = Object.keys(u.votes?.[ts]||{}).length;
-    const earned  = (u.cycles||0) * REWARD_AMT;
-    const avatarHtml = u.photo
-      ? `<img loading="lazy" src="${u.photo}" alt="${u.name}" onerror="this.parentElement.style.background='linear-gradient(135deg,#90161f,#075e55)';this.remove();this.parentElement.textContent='${u.name.charAt(0).toUpperCase()}'">`
-      : u.name.charAt(0).toUpperCase();
-
-    return `<div class="lb-row${isMe?' is-me':''}">
-      <div class="lb-rank ${rankCls[i]||'rank-n'}">${i<3?rankIcon[i]:bn(i+1)}</div>
-      <div class="lb-av">${avatarHtml}</div>
-      <div class="lb-info">
-        <div class="lb-name">${u.name}${isMe?'<span class="me-badge">আপনি</span>':''}</div>
-        <div class="lb-meta">🔥 ${bn(u.streak||0)} দিন স্ট্রিক · আজ ${bn(tv)} ভোট · সর্বোচ্চ ${bn(u.maxStreak||0)}</div>
-      </div>
-      <div class="lb-right">
-        <div class="lb-earn">${bn(earned)} টাকা</div>
-        <div class="lb-streak">${bn(u.cycles||0)} চক্র</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── Countdown timer — BD timezone (UTC+6) ─────────────────────
-function tick() {
-  // BD time = UTC + 6 hours
-  const nowUTC  = new Date();
-  const bdOffset = 6 * 60; // minutes
-  const bdMs    = nowUTC.getTime() + (bdOffset + nowUTC.getTimezoneOffset()) * 60000;
-  const now     = new Date(bdMs);
-
-  const next = new Date(bdMs);
-  next.setMinutes(0, 0, 0);
-  if (now.getHours() < 12) next.setHours(12);
-  else { next.setHours(24); }
-
-  const diff = next - now;
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
-  const fmt = n => bn(n < 10 ? '0'+n : n);
-  const el = document.getElementById('cd');
-  if (el) el.textContent = fmt(h) + ':' + fmt(m) + ':' + fmt(s);
-}
-
-// ── Tab events ────────────────────────────────────────────────
-document.getElementById('ptabs').addEventListener('click', e => {
-  const btn = e.target.closest('[data-c]');
-  if (!btn) return;
-  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  showN = 10;
-  renderPolls(btn.dataset.c);
-});
-
-// ── Boot ──────────────────────────────────────────────────────
-window.addEventListener('load', async () => {
-  // Restore session
-  const uid = LS.get('cu');
-  if (uid) loadUser(uid);
-
-  // Start countdown
-  tick(); setInterval(tick, 1000);
-
-  // Load polls (AI or fallback)
-  try {
-    allPolls = await genPolls();
-  } catch(e) {
-    allPolls = FALLBACK_POLLS;
-  }
-
-  document.getElementById('aiLoad').style.display    = 'none';
-  document.getElementById('pollsGrid').style.display = 'grid';
-  renderPolls('all');
-  renderLB();
-
-  // Hide preloader
-  clearTimeout(window._ppTimer);
-  const pl = document.getElementById('joaf-preloader');
-  if (pl) pl.classList.add('hidden');
-});
-</script>
+<script src="/js/rainbow-swirl-cursor.js"></script>
+<script>window.addEventListener('load',()=>{const pl=document.getElementById('joaf-preloader');if(pl)setTimeout(()=>pl.classList.add('hidden'),300);});</script>
 </body>
 </html>

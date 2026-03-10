@@ -2,29 +2,11 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>✊ সদস্য হোন — জোয়াফ</title>
-  <meta name="description" content="জোয়াফের সদস্য হয়ে পরিবর্তনের অংশ হোন। বাংলাদেশের ভবিষ্যৎ গড়তে আজই যোগ দিন।">
-  <meta property="og:title" content="জোয়াফে যোগ দিন — সদস্য হোন">
-  <meta property="og:description" content="জোয়াফের সদস্য হয়ে পরিবর্তনের অংশ হোন। বাংলাদেশের ভবিষ্যৎ গড়তে আজই যোগ দিন।">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>সদস্যতা ফর্ম — JOAF</title>
+  <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরামে সদস্য হোন।">
+  <meta property="og:title" content="সদস্যতা ফর্ম — JOAF">
   <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
-  <meta property="og:image:width" content="800">
-  <meta property="og:image:height" content="800">
-  <meta property="og:url" content="https://julyforum.com/membership.html">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম">
-  <meta property="fb:app_id" content="1114707634145642">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="জোয়াফে যোগ দিন — সদস্য হোন">
-  <meta name="twitter:description" content="জোয়াফের সদস্য হয়ে পরিবর্তনের অংশ হোন। বাংলাদেশের ভবিষ্যৎ গড়তে আজই যোগ দিন।">
-  <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png">
-  <link rel="canonical" href="https://julyforum.com/membership.html">
-    <!-- Resource hints for speed -->
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="preconnect" href="https://code.jquery.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-  <link rel="dns-prefetch" href="https://ipapi.co">
   <link rel="icon" href="/favicon.ico">
   <link rel="manifest" href="/site.webmanifest">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -34,420 +16,38 @@
   <link rel="stylesheet" href="/css/joaf.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
-  <style>
-  /* ── MEMBERSHIP PAGE FULL CUSTOM DESIGN ── */
-  /* Hero */
-  .mem-hero{
-    background:linear-gradient(135deg,#0d0d1a 0%,#1a0a0d 50%,#0a1f1c 100%);
-    padding:56px 0 44px;color:#fff;text-align:center;position:relative;overflow:hidden;
-  }
-  .mem-hero::before{
-    content:'';position:absolute;inset:0;
-    background:radial-gradient(circle at 25% 50%,rgba(144,22,31,.3) 0%,transparent 50%),
-               radial-gradient(circle at 75% 30%,rgba(7,94,85,.25) 0%,transparent 50%);
-  }
-  .mem-hero-inner{position:relative;z-index:2;}
-  .mem-hero-tag{
-    display:inline-flex;align-items:center;gap:8px;
-    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
-    padding:5px 16px;border-radius:50px;font-size:11px;font-weight:700;
-    letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.8);margin-bottom:18px;
-  }
-  .mem-hero h1{font-size:clamp(1.8rem,4vw,2.7rem);font-weight:900;line-height:1.2;
-    background:linear-gradient(135deg,#fff 40%,#c9a227 80%);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-    margin-bottom:12px;
-  }
-  .mem-hero p{opacity:.82;font-size:15px;max-width:500px;margin:0 auto 28px;line-height:1.8;}
-  /* Benefit chips in hero */
-  .benefit-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
-  .b-chip{
-    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
-    padding:9px 16px;border-radius:12px;font-size:13px;font-weight:700;
-    display:inline-flex;align-items:center;gap:8px;
-    transition:.3s;color:#fff;
-  }
-  .b-chip:hover{background:rgba(255,255,255,.15);transform:translateY(-2px);}
-  .b-chip span{font-size:18px;}
-
-  /* Step progress bar — custom visual */
-  .mem-progress{
-    background:#fff;border-bottom:2px solid #f0f0f0;
-    padding:16px 0;position:sticky;top:0;z-index:100;
-    box-shadow:0 2px 16px rgba(0,0,0,.07);
-  }
-  .step-track{display:flex;align-items:center;justify-content:center;gap:0;max-width:480px;margin:0 auto;}
-  .st-item{display:flex;align-items:center;flex:1;}
-  .st-circle{
-    width:36px;height:36px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:13px;transition:.4s;flex-shrink:0;
-    border:2px solid #e5e7eb;background:#f9fafb;color:#9ca3af;
-  }
-  .st-circle.active{
-    background:linear-gradient(135deg,#90161f,#b91c1c);
-    border-color:transparent;color:#fff;
-    box-shadow:0 4px 12px rgba(144,22,31,.4);
-  }
-  .st-circle.done{
-    background:linear-gradient(135deg,#075e55,#15803d);
-    border-color:transparent;color:#fff;
-  }
-  .st-line{flex:1;height:3px;background:#e5e7eb;transition:.4s;margin:0 4px;}
-  .st-line.done{background:linear-gradient(90deg,#075e55,#25d366);}
-  .st-label{
-    font-size:11px;font-weight:700;color:#9ca3af;
-    position:absolute;top:44px;left:50%;transform:translateX(-50%);
-    white-space:nowrap;
-  }
-  .st-item{position:relative;}
-  @media(max-width:480px){
-    .st-label{display:none;}
-    .st-circle{width:30px;height:30px;font-size:12px;}
-  }
-
-  /* Form card */
-  .mem-form-card{
-    background:#fff;border-radius:20px;
-    box-shadow:0 8px 40px rgba(0,0,0,.1);
-    overflow:hidden;
-    border:1px solid rgba(0,0,0,.05);
-  }
-  /* Coloured top stripe per step */
-  .mem-form-card::before{
-    content:'';display:block;height:6px;
-    background:linear-gradient(90deg,#90161f,#c9a227,#075e55);
-  }
-  .form-inner{padding:32px;}
-  /* Step header */
-  .step-head{
-    display:flex;align-items:center;gap:12px;
-    margin-bottom:24px;padding-bottom:16px;
-    border-bottom:2px solid #f0f0f0;
-  }
-  .step-head-icon{
-    width:44px;height:44px;border-radius:12px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:20px;flex-shrink:0;
-  }
-  .step-head-icon.s1{background:linear-gradient(135deg,#fee2e2,#fecaca);}
-  .step-head-icon.s2{background:linear-gradient(135deg,#dcfce7,#bbf7d0);}
-  .step-head-icon.s3{background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
-  .step-head h3{font-size:16px;font-weight:900;color:#1a202c;margin:0;}
-  .step-head p{font-size:12px;color:#6b7280;margin:2px 0 0;}
-
-  /* Form fields */
-  .f-group{margin-bottom:18px;}
-  .f-label{
-    display:flex;align-items:center;gap:5px;
-    font-weight:700;font-size:13px;color:#374151;
-    margin-bottom:7px;
-  }
-  .f-label .req{color:#90161f;font-size:15px;}
-  .f-input{
-    width:100%;padding:12px 14px;
-    border:2px solid #e5e7eb;border-radius:12px;
-    font-family:inherit;font-size:14px;color:#1a202c;
-    background:#fafafa;transition:.3s;outline:none;
-    appearance:none;-webkit-appearance:none;
-  }
-  .f-input:focus{
-    border-color:#90161f;background:#fff;
-    box-shadow:0 0 0 4px rgba(144,22,31,.08);
-  }
-  .f-input.valid{border-color:#075e55;background:#f0fffe;}
-  .f-input.error{border-color:#ef4444;background:#fff5f5;
-    box-shadow:0 0 0 4px rgba(239,68,68,.08);}
-  select.f-input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
-  textarea.f-input{resize:vertical;min-height:80px;}
-
-  /* Field hint */
-  .f-hint{font-size:11px;color:#9ca3af;margin-top:5px;display:flex;align-items:center;gap:4px;}
-
-  /* Privacy box */
-  .privacy-box{
-    background:linear-gradient(135deg,#f0fffe,#e0f7f4);
-    border:1.5px solid #075e55;border-radius:12px;
-    padding:14px 16px;margin:18px 0;
-    font-size:13px;color:#374151;line-height:1.7;
-    display:flex;gap:10px;align-items:flex-start;
-  }
-  .privacy-box .lock{font-size:20px;flex-shrink:0;margin-top:2px;}
-
-  /* Buttons */
-  .btn-row{display:flex;gap:10px;margin-top:24px;}
-  .btn-back{
-    flex:1;padding:13px;border-radius:50px;border:2px solid #e5e7eb;
-    background:#f9fafb;font-family:inherit;font-size:14px;
-    font-weight:700;cursor:pointer;color:#6b7280;transition:.3s;
-  }
-  .btn-back:hover{background:#f3f4f6;border-color:#d1d5db;}
-  .btn-next{
-    flex:2;padding:13px;border-radius:50px;border:none;
-    background:linear-gradient(135deg,#90161f,#b91c1c);
-    color:#fff;font-family:inherit;font-size:14px;
-    font-weight:800;cursor:pointer;transition:.3s;
-    box-shadow:0 4px 14px rgba(144,22,31,.3);
-    display:flex;align-items:center;justify-content:center;gap:8px;
-  }
-  .btn-next:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(144,22,31,.4);}
-  .btn-next:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-  .btn-submit{
-    background:linear-gradient(135deg,#075e55,#15803d);
-    box-shadow:0 4px 14px rgba(7,94,85,.3);
-  }
-  .btn-submit:hover{box-shadow:0 8px 24px rgba(7,94,85,.4);}
-
-  /* Success screen */
-  .success-screen{text-align:center;padding:32px 0;}
-  .success-lottie{font-size:5rem;margin-bottom:16px;animation:pop .5s ease;}
-  @keyframes pop{0%{transform:scale(.5);opacity:0}80%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
-  .success-screen h2{color:#075e55;font-weight:900;font-size:1.8rem;margin-bottom:10px;}
-  .success-screen p{color:#374151;font-size:15px;line-height:1.8;max-width:400px;margin:0 auto 24px;}
-  .success-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-  .success-btns a{
-    padding:12px 24px;border-radius:50px;font-weight:800;font-size:14px;
-    text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:.3s;
-  }
-  .s-btn-wa{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;}
-  .s-btn-home{background:#f3f4f6;color:#374151;border:2px solid #e5e7eb;}
-  .success-btns a:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.15);color:inherit;}
-
-  /* Error */
-  .form-err{background:#fee2e2;border:1.5px solid #ef4444;border-radius:10px;padding:12px 16px;font-size:13px;color:#dc2626;margin-top:12px;display:none;}
-
-  @media(max-width:576px){.form-inner{padding:20px 16px;}.btn-row{flex-direction:column;}.btn-back{flex:unset;}.btn-next{flex:unset;}}
-  </style>
 </head>
 <body data-page="membership">
 
-<script>
-// Safety: force-hide preloader after 3s max — prevents stuck loading screen
-(function(){
-  var t = setTimeout(function(){
-    var el = document.getElementById('joaf-preloader');
-    if (el) el.classList.add('hidden');
-  }, 3000);
-  window.addEventListener('load', function(){
-    clearTimeout(t);
-    var el = document.getElementById('joaf-preloader');
-    if (el) setTimeout(function(){ el.classList.add('hidden'); }, 200);
-  });
-})();
-</script>
 <div id="joaf-preloader">
   <img src="/logoc7c3.png" alt="JOAF" class="preloader-logo">
-  <p class="preloader-text">লোড হচ্ছে...</p>
+  <p class="preloader-text">JOAF লোড হচ্ছে...</p>
   <div class="preloader-bar"></div>
 </div>
 
 <div class="wrapper fix">
   <div id="joaf-header"></div>
-  <div id="joaf-ticker"></div>
 
-  <!-- Hero -->
-  <section class="mem-hero">
-    <div class="container mem-hero-inner">
-      <div class="mem-hero-tag">✊ সদস্যতা</div>
-      <h1>জোয়াফের সদস্য হোন</h1>
-      <p>দেশের পরিবর্তনে অংশ নিন। প্রতিটি সদস্য একটি শক্তি। বাংলাদেশের ভবিষ্যৎ গড়তে আজই যোগ দিন।</p>
-      <div class="benefit-row">
-        <div class="b-chip"><span>🌐</span> কমিউনিটি অ্যাক্সেস</div>
-        <div class="b-chip"><span>📢</span> সরাসরি আপডেট</div>
-        <div class="b-chip"><span>🗳️</span> জনমত প্রদান</div>
-        <div class="b-chip"><span>🤝</span> নেটওয়ার্ক সুবিধা</div>
-        <div class="b-chip"><span>🏆</span> বিশেষ সুযোগ</div>
-      </div>
+  <section style="background:linear-gradient(135deg,#075e55,#90161f);color:#fff;padding:60px 0">
+    <div class="container text-center">
+      <h1 style="font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;margin-bottom:12px">🤝 সদস্যতা ফর্ম</h1>
+      <p style="opacity:.85;font-size:16px">JOAF-এর সাথে যুক্ত হোন — দেশ গড়ার অঙ্গীকারে</p>
     </div>
   </section>
 
-  <!-- Sticky step progress -->
-  <div class="mem-progress" id="memProgress">
-    <div class="container">
-      <div class="step-track">
-        <div class="st-item">
-          <div class="st-circle active" id="sn1">১</div>
-          <span class="st-label">ব্যক্তিগত</span>
-        </div>
-        <div class="st-line" id="sl1"></div>
-        <div class="st-item">
-          <div class="st-circle" id="sn2">২</div>
-          <span class="st-label">ঠিকানা</span>
-        </div>
-        <div class="st-line" id="sl2"></div>
-        <div class="st-item">
-          <div class="st-circle" id="sn3">৩</div>
-          <span class="st-label">যোগাযোগ</span>
-        </div>
-        <div class="st-line" id="sl3"></div>
-        <div class="st-item">
-          <div class="st-circle" id="sn4">৪</div>
-          <span class="st-label">সম্পন্ন</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <section class="section">
     <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-lg-7 col-xl-6">
-
-          <!-- Form card -->
-          <div class="mem-form-card joaf-reveal">
-            <div class="form-inner">
-            <form id="joafForm" novalidate>
-
-              <!-- Step 1: Personal -->
-              <div id="step1">
-                <div class="step-head">
-                  <div class="step-head-icon s1">👤</div>
-                  <div><h3>ব্যক্তিগত তথ্য</h3><p>আপনার পরিচয় সম্পর্কিত তথ্য দিন</p></div>
-                </div>
-                <div class="f-group">
-                  <label class="f-label">পূর্ণ নাম <span class="req">*</span></label>
-                  <input class="f-input" type="text" name="full_name" placeholder="আপনার পূর্ণ নাম লিখুন" required>
-                </div>
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <div class="f-group">
-                      <label class="f-label">বয়স <span class="req">*</span></label>
-                      <select class="f-input" name="age" required>
-                        <option value="">বয়স নির্বাচন করুন</option>
-                        <option value="18-25">১৮–২৫ বছর</option>
-                        <option value="26-35">২৬–৩৫ বছর</option>
-                        <option value="36-45">৩৬–৪৫ বছর</option>
-                        <option value="46-55">৪৬–৫৫ বছর</option>
-                        <option value="56+">৫৬+ বছর</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="f-group">
-                      <label class="f-label">লিঙ্গ <span class="req">*</span></label>
-                      <select class="f-input" name="gender" required>
-                        <option value="">নির্বাচন করুন</option>
-                        <option value="male">পুরুষ</option>
-                        <option value="female">মহিলা</option>
-                        <option value="other">অন্যান্য</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <div class="f-group">
-                      <label class="f-label">শিক্ষাগত যোগ্যতা <span class="req">*</span></label>
-                      <input class="f-input" type="text" name="education" placeholder="যেমন: স্নাতক, এসএসসি" required>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="f-group">
-                      <label class="f-label">পেশা <span class="req">*</span></label>
-                      <input class="f-input" type="text" name="occupation" placeholder="যেমন: ছাত্র, চাকরিজীবী" required>
-                    </div>
-                  </div>
-                </div>
-                <div class="btn-row">
-                  <button type="button" class="btn-next" onclick="nextStep(1)">পরবর্তী ধাপ <i class="zmdi zmdi-arrow-right"></i></button>
-                </div>
-              </div>
-
-              <!-- Step 2: Address -->
-              <div id="step2" style="display:none">
-                <div class="step-head">
-                  <div class="step-head-icon s2">📍</div>
-                  <div><h3>ঠিকানা</h3><p>আপনার বর্তমান অবস্থানের তথ্য</p></div>
-                </div>
-                <div class="f-group">
-                  <label class="f-label">বিভাগ <span class="req">*</span></label>
-                  <select class="f-input" id="division" name="division_id" required onchange="updateDistricts()">
-                    <option value="">বিভাগ নির্বাচন করুন</option>
-                    <option value="1">ঢাকা</option>
-                    <option value="2">চট্টগ্রাম</option>
-                    <option value="3">রাজশাহী</option>
-                    <option value="4">খুলনা</option>
-                    <option value="5">বরিশাল</option>
-                    <option value="6">সিলেট</option>
-                    <option value="7">রংপুর</option>
-                    <option value="8">ময়মনসিংহ</option>
-                  </select>
-                  <input type="hidden" id="division_name" name="division" value="">
-                </div>
-                <div class="f-group">
-                  <label class="f-label">জেলা <span class="req">*</span></label>
-                  <select class="f-input" id="district" name="district" required>
-                    <option value="">আগে বিভাগ নির্বাচন করুন</option>
-                  </select>
-                </div>
-                <div class="f-group">
-                  <label class="f-label">উপজেলা <span class="req">*</span></label>
-                  <input class="f-input" type="text" name="upazila" placeholder="উপজেলা লিখুন" required>
-                </div>
-                <div class="f-group">
-                  <label class="f-label">প্রবাসী?</label>
-                  <select class="f-input" id="expatriate" name="expatriate" onchange="toggleCountry()">
-                    <option value="">না, বাংলাদেশে আছি</option>
-                    <option value="yes">হ্যাঁ, বিদেশে আছি</option>
-                  </select>
-                </div>
-                <div class="f-group" id="countryWrap" style="display:none">
-                  <label>দেশের নাম</label>
-                  <input class="f-input" type="text" name="country" placeholder="আপনার দেশের নাম লিখুন">
-                </div>
-                <div class="btn-row">
-                  <button type="button" class="btn-back" onclick="prevStep(2)"><i class="zmdi zmdi-arrow-left"></i> পূর্ববর্তী</button>
-                  <button type="button" class="btn-next" onclick="nextStep(2)">পরবর্তী ধাপ <i class="zmdi zmdi-arrow-right"></i></button>
-                </div>
-              </div>
-
-              <!-- Step 3: Contact -->
-              <div id="step3" style="display:none">
-                <div class="step-head">
-                  <div class="step-head-icon s3">📱</div>
-                  <div><h3>যোগাযোগ</h3><p>শেষ ধাপ — যোগাযোগের তথ্য</p></div>
-                </div>
-                <div class="f-group">
-                  <label class="f-label">মোবাইল নম্বর <span class="req">*</span></label>
-                  <input class="f-input" type="tel" name="phone" id="phone" placeholder="01XXXXXXXXX" pattern="^01[3-9][0-9]{8}$" required>
-                  <div class="f-hint"><i class="zmdi zmdi-info"></i> ১১ সংখ্যার বাংলাদেশি নম্বর দিন</div>
-                </div>
-                <div class="f-group">
-                  <label class="f-label">আপনি কি বলতে চান? <span style="font-weight:400;color:#9ca3af">(ঐচ্ছিক)</span></label>
-                  <textarea class="f-input" name="do_you_want_to_vote" rows="3" placeholder="আপনার বার্তা বা মন্তব্য লিখুন..."></textarea>
-                </div>
-                <div class="privacy-box">
-                  <span class="lock">🔒</span>
-                  <div><strong>তথ্য সম্পূর্ণ নিরাপদ:</strong> আপনার তথ্য শুধুমাত্র JOAF-এর সদস্যপদ প্রক্রিয়ার জন্য ব্যবহৃত হবে। তৃতীয় পক্ষের সাথে শেয়ার করা হবে না।</div>
-                </div>
-                <div class="btn-row">
-                  <button type="button" class="btn-back" onclick="prevStep(3)"><i class="zmdi zmdi-arrow-left"></i> পূর্ববর্তী</button>
-                  <button type="submit" class="btn-next btn-submit" id="submitBtn">✊ সদস্যতা নিশ্চিত করুন</button>
-                </div>
-              </div>
-
-              <!-- Step 4: Success -->
-              <div id="step4" style="display:none">
-                <div class="success-screen">
-                  <div class="success-lottie">🎉</div>
-                  <h2>আবেদন সফল হয়েছে!</h2>
-                  <p>আপনার সদস্যপদ আবেদন গ্রহণ করা হয়েছে। আমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে।</p>
-                  <div class="success-btns">
-                    <a href="https://chat.whatsapp.com/DjABAy1NNQMEtSW3wh8bXg" target="_blank" class="s-btn-wa">
-                      <i class="zmdi zmdi-whatsapp"></i> WhatsApp গ্রুপে যোগ দিন
-                    </a>
-                    <a href="/" class="s-btn-home">
-                      <i class="zmdi zmdi-home"></i> হোমে ফিরুন
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-            </form>
-            </div><!-- /form-inner -->
-            <div class="form-err" id="formError"></div>
-          </div><!-- /mem-form-card -->
-
+      <div class="row">
+        <div class="col-md-10 mx-auto joaf-reveal">
+          <div style="background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.1);overflow:hidden">
+            <!-- Google Form embed -->
+            <iframe
+              src="https://docs.google.com/forms/d/e/1FAIpQLSczAxkgcYluNmmMJ_66nf6aPu40IS6crPAuysIA2Krg6bPJrA/viewform?embedded=true"
+              width="100%" height="900" frameborder="0" marginheight="0" marginwidth="0"
+              loading="lazy" title="JOAF Membership Form">
+              লোড হচ্ছে...
+            </iframe>
+          </div>
         </div>
       </div>
     </div>
@@ -456,114 +56,12 @@
   <div id="joaf-footer"></div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
-<script src="/js/plugins.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/js/plugins.js"></script>
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
-<script src="/js/rainbow-swirl-cursor.js" defer></script>
-<script>
-// District data
-const DISTRICTS = {
-  1:["ঢাকা","গাজীপুর","নারায়ণগঞ্জ","মানিকগঞ্জ","মুন্সীগঞ্জ","নরসিংদী","রাজবাড়ী","শরীয়তপুর","ফরিদপুর","মাদারীপুর","গোপালগঞ্জ","কিশোরগঞ্জ","টাঙ্গাইল"],
-  2:["চট্টগ্রাম","কক্সবাজার","রাঙামাটি","বান্দরবান","খাগড়াছড়ি","ফেনী","নোয়াখালী","লক্ষ্মীপুর","কুমিল্লা","চাঁদপুর","ব্রাহ্মণবাড়িয়া"],
-  3:["রাজশাহী","নাটোর","নওগাঁ","চাঁপাইনবাবগঞ্জ","পাবনা","সিরাজগঞ্জ","বগুড়া","জয়পুরহাট"],
-  4:["খুলনা","বাগেরহাট","সাতক্ষীরা","যশোর","নড়াইল","ঝিনাইদহ","মাগুরা","কুষ্টিয়া","চুয়াডাঙ্গা","মেহেরপুর"],
-  5:["বরিশাল","পটুয়াখালী","পিরোজপুর","ঝালকাঠি","ভোলা","বরগুনা"],
-  6:["সিলেট","মৌলভীবাজার","হবিগঞ্জ","সুনামগঞ্জ"],
-  7:["রংপুর","দিনাজপুর","নীলফামারী","ঠাকুরগাঁও","পঞ্চগড়","লালমনিরহাট","কুড়িগ্রাম","গাইবান্ধা"],
-  8:["ময়মনসিংহ","জামালপুর","শেরপুর","নেত্রকোণা"]
-};
-const DIV_NAMES = {1:"ঢাকা",2:"চট্টগ্রাম",3:"রাজশাহী",4:"খুলনা",5:"বরিশাল",6:"সিলেট",7:"রংপুর",8:"ময়মনসিংহ"};
-
-function updateDistricts() {
-  const divId = document.getElementById('division').value;
-  const sel = document.getElementById('district');
-  document.getElementById('division_name').value = DIV_NAMES[divId] || '';
-  sel.innerHTML = '<option value="">জেলা নির্বাচন করুন</option>';
-  if (divId && DISTRICTS[divId]) {
-    DISTRICTS[divId].forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
-  }
-}
-
-function toggleCountry() {
-  const show = document.getElementById('expatriate').value === 'yes';
-  document.getElementById('countryWrap').style.display = show ? 'block' : 'none';
-}
-
-function setStep(n) {
-  [1,2,3,4].forEach(i => {
-    document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
-    const sn = document.getElementById('sn'+i);
-    if (sn) {
-      if(i<n) sn.className='st-circle done';
-      else if(i===n) sn.className='st-circle active';
-      else sn.className='st-circle';
-    }
-    const sl = document.getElementById('sl'+i);
-    if(sl) sl.className = 'st-line' + (i<n?' done':'');
-  });
-  // Hide progress on success
-  const prog = document.getElementById('memProgress');
-  if(prog) prog.style.display = n===4 ? 'none' : 'block';
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function nextStep(cur) {
-  // Simple validation for each step
-  const step = document.getElementById('step'+cur);
-  const inputs = step.querySelectorAll('[required]');
-  let ok = true;
-  inputs.forEach(inp => {
-    if (!inp.value.trim()) {
-      inp.style.borderColor = 'var(--brand)';
-      ok = false;
-      inp.focus();
-    } else {
-      inp.style.borderColor = '';
-    }
-  });
-  if (!ok) { return; }
-  setStep(cur+1);
-}
-
-function prevStep(cur) { setStep(cur-1); }
-
-// Ensure preloader hides
-setTimeout(function(){
-  var pl = document.getElementById('joaf-preloader');
-  if (pl) pl.classList.add('hidden');
-}, 400);
-
-// Form submit
-document.getElementById('joafForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ পাঠানো হচ্ছে...';
-
-  // Normalize phone
-  let phone = this.phone.value.trim();
-  if (phone.startsWith('+88')) phone = phone.slice(3);
-  if (phone.startsWith('88') && phone.length > 11) phone = phone.slice(2);
-  this.phone.value = phone;
-
-  const data = new FormData(this);
-
-  try {
-    await fetch(JOAF.site.formAction, {
-      method: 'POST',
-      body: data,
-      mode: 'no-cors' // Apps Script requires this
-    });
-    setStep(4);
-  } catch(err) {
-    document.getElementById('formError').style.display = 'block';
-    document.getElementById('formError').textContent = 'সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।';
-    btn.disabled = false;
-    btn.textContent = '✊ সদস্যতা নিশ্চিত করুন';
-  }
-});
-</script>
+<script src="/js/rainbow-swirl-cursor.js"></script>
+<script>window.addEventListener('load',()=>{const pl=document.getElementById('joaf-preloader');if(pl)setTimeout(()=>pl.classList.add('hidden'),300);});</script>
 </body>
 </html>
