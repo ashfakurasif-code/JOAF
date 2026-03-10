@@ -54,28 +54,13 @@
   <div id="joaf-header"></div>
 
   <!-- ── Announcement Ticker ───────────────────────── -->
-  <div class="announcement-ticker" aria-label="সর্বশেষ ঘোষণা">
-    <span class="ticker-label">🔴 সর্বশেষ</span>
-    <div class="ticker-track" id="ticker-track">
-      <span class="ticker-item">🗳️ JOAF Polls — আপনার মতামত দিন →</span>
-      <span class="ticker-item">📄 আর্থিক বিবরণী প্রকাশিত হয়েছে →</span>
-      <span class="ticker-item">🤝 সদস্যতা গ্রহণ চলছে — JOIN FORM পূরণ করুন →</span>
-      <span class="ticker-item">📢 নতুন প্রেস রিলিজ প্রকাশিত হয়েছে →</span>
-      <span class="ticker-item">🌐 এখন যুক্তরাষ্ট্র ও ইউরোপেও আমাদের প্রতিনিধিত্ব →</span>
-      <!-- duplicate for seamless loop -->
-      <span class="ticker-item">🗳️ JOAF Polls — আপনার মতামত দিন →</span>
-      <span class="ticker-item">📄 আর্থিক বিবরণী প্রকাশিত হয়েছে →</span>
-      <span class="ticker-item">🤝 সদস্যতা গ্রহণ চলছে — JOIN FORM পূরণ করুন →</span>
-      <span class="ticker-item">📢 নতুন প্রেস রিলিজ প্রকাশিত হয়েছে →</span>
-      <span class="ticker-item">🌐 এখন যুক্তরাষ্ট্র ও ইউরোপেও আমাদের প্রতিনিধিত্ব →</span>
-    </div>
-  </div>
+  <div id="joaf-ticker"><!-- ticker injected by components.js --></div>
 
   <!-- ── Hero ─────────────────────────────────────────── -->
   <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
     <div class="hero-slider">
       <div class="hs-item video-hero">
-        <video id="heroVideo" class="hero-video" autoplay muted loop playsinline preload="metadata"
+        <video id="heroVideo" class="hero-video" autoplay muted loop playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;object-position:center center;"
                poster="/img/hero-1.jpg" aria-hidden="true">
           <source src="/video/video-1.mp4" type="video/mp4">
         </video>
@@ -392,18 +377,19 @@ function initGalleryFilter() {
   grid.innerHTML = latest.map((p, i) => `
     <div class="col-md-6 col-lg-3 joaf-reveal" style="transition-delay:${i*0.1}s">
       <div class="press-card">
-        <div style="overflow:hidden;height:200px;position:relative">
-          <img src="${p.img}" alt="${p.title}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
-          <span class="press-card-badge">${BanglaUtil.formatDate(p.date).split(',')[0]}</span>
+        <div class="press-card-img-wrap">
+          <img src="${p.img}" alt="${p.title}" loading="lazy">
+          <span class="press-date-top"><i class="zmdi zmdi-calendar"></i> ${BanglaUtil.formatDateShort(p.date)}</span>
+          <span class="press-date-bottom">#${p.id}</span>
         </div>
         <div class="press-card-body">
           <h4>${p.title}</h4>
           <p>${p.summary}</p>
-          <a href="/${p.slug}.html" class="read-more">পড়ুন <i class="zmdi zmdi-arrow-right"></i></a>
+          <a href="/press-releases/${p.slug}.html" class="press-read-more">পড়ুন <i class="zmdi zmdi-arrow-right"></i></a>
           <div class="share-row">
-            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://julyforum.com/'+p.slug+'.html')}" target="_blank" class="s-fb"><i class="zmdi zmdi-facebook"></i></a>
-            <a href="https://wa.me/?text=${encodeURIComponent(p.title+' https://julyforum.com/'+p.slug+'.html')}" target="_blank" class="s-wa"><i class="zmdi zmdi-whatsapp"></i></a>
-            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(p.title)}&url=${encodeURIComponent('https://julyforum.com/'+p.slug+'.html')}" target="_blank" class="s-tw"><i class="zmdi zmdi-twitter"></i></a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-fb"><i class="zmdi zmdi-facebook"></i></a>
+            <a href="https://wa.me/?text=${encodeURIComponent(p.title+'\nhttps://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-wa"><i class="zmdi zmdi-whatsapp"></i></a>
+            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(p.title)}&url=${encodeURIComponent('https://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-tw"><i class="zmdi zmdi-twitter"></i></a>
           </div>
         </div>
       </div>
