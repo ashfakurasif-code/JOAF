@@ -140,7 +140,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   display:flex;white-space:nowrap;
   padding-left:90px;
   /* CSS animation — much smoother than any JS approach */
-  animation:ticker-scroll 20s linear infinite;
+  animation:ticker-scroll 30s linear infinite;
   will-change:transform;
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
@@ -429,7 +429,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   .press-card-img-wrap{height:160px;}
 
   /* Ticker */
-  .ticker-track{animation-duration:14s;}
+  .ticker-track{animation-duration:20s;}
   .ticker-item{padding:0 20px;font-size:12px;}
 
   /* Forms */

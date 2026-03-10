@@ -370,12 +370,12 @@
 </div><!-- .wrapper -->
 
 <!-- ── Scripts ────────────────────────────────────────────── -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
-<script src="/js/plugins.js" defer></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/js/plugins.js"></script>
 <!-- JOAF Data & Components -->
-<script src="/js/data.js"></script>
-<script src="/js/components.js"></script>
+<script src="/js/data.js?v=4.2"></script>
+<script src="/js/components.js?v=4.2"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 
 <script>
@@ -528,44 +528,46 @@ function initGalleryFilter() {
 
 // Hero video controls
 const heroVideo = document.getElementById('heroVideo');
-const muteBtn = document.getElementById('muteToggle');
+const muteBtn   = document.getElementById('muteToggle');
 if (heroVideo && muteBtn) {
-  // Ensure video plays on load
   heroVideo.muted = true;
   heroVideo.play().catch(() => {});
 
-  muteBtn.addEventListener('click', async () => {
-    try {
-      if (heroVideo.muted) {
-        // Unmute: must play again after unmuting (browser policy)
-        heroVideo.muted = false;
-        await heroVideo.play();
-        muteBtn.textContent = '🔊';
-        muteBtn.setAttribute('aria-pressed', 'true');
-        muteBtn.title = 'নিঃশব্দ করুন';
-      } else {
-        heroVideo.muted = true;
-        muteBtn.textContent = '🔈';
-        muteBtn.setAttribute('aria-pressed', 'false');
-        muteBtn.title = 'শব্দ চালু করুন';
-      }
-    } catch(e) {
-      // Autoplay blocked — try muted play fallback
+  muteBtn.addEventListener('click', function() {
+    if (heroVideo.muted) {
+      // Unmute flow: pause → unmute → play
+      heroVideo.pause();
+      heroVideo.muted = false;
+      heroVideo.play()
+        .then(() => {
+          muteBtn.textContent = '🔊';
+          muteBtn.setAttribute('aria-pressed', 'true');
+          muteBtn.title = 'নিঃশব্দ করুন';
+        })
+        .catch(() => {
+          // Browser blocked unmuted play — stay muted
+          heroVideo.muted = true;
+          heroVideo.play().catch(() => {});
+          muteBtn.textContent = '🔈';
+          muteBtn.setAttribute('aria-pressed', 'false');
+        });
+    } else {
       heroVideo.muted = true;
-      heroVideo.play().catch(() => {});
       muteBtn.textContent = '🔈';
+      muteBtn.setAttribute('aria-pressed', 'false');
+      muteBtn.title = 'শব্দ চালু করুন';
     }
   });
 
-  // Mobile: resume play on first touch
-  document.addEventListener('touchstart', () => {
+  // Mobile: resume on first touch
+  document.addEventListener('touchstart', function() {
     if (heroVideo.paused) heroVideo.play().catch(() => {});
   }, { once: true });
 
-  // Pause when scrolled out of view (saves battery)
+  // Pause when out of view
   if ('IntersectionObserver' in window) {
-    new IntersectionObserver(entries => {
-      entries.forEach(e => {
+    new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
         if (e.isIntersecting) heroVideo.play().catch(() => {});
         else heroVideo.pause();
       });
