@@ -1,6 +1,6 @@
 // ============================================================
-// JOAF Components v4.1 — Header, Footer, Ticker, OG meta
-// Fix: init timing, ticker inject, Bangla nav
+// JOAF Components v4.2 — Header, Footer, Ticker, OG meta
+// Fix: mobile nav overlay, sound button, desktop menu timing
 // ============================================================
 
 const JOAFComponents = {
@@ -41,7 +41,7 @@ const JOAFComponents = {
               </div>
             </div>
             <div class="col">
-              <nav class="main-menu" id="main-menu" aria-label="প্রধান নেভিগেশন" style="display:none">
+              <nav class="main-menu" id="main-menu" aria-label="প্রধান নেভিগেশন">
                 <ul style="justify-content:flex-end">${navItems}</ul>
               </nav>
             </div>
@@ -50,12 +50,13 @@ const JOAFComponents = {
       </div>
     </header>
 
-    <!-- Mobile nav overlay -->
-    <div id="mobile-nav-overlay" style="
-      display:none;position:fixed;inset:0;z-index:10000;
+    <!-- Mobile nav overlay — z-index above everything -->
+    <div id="mobile-nav-overlay" aria-hidden="true" style="
+      position:fixed;inset:0;z-index:99999;
       background:rgba(13,13,26,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
       flex-direction:column;align-items:center;justify-content:center;
-      transition:opacity .3s ease,visibility .3s ease;opacity:0;visibility:hidden;
+      opacity:0;visibility:hidden;display:none;
+      transition:opacity .3s ease,visibility .3s ease;
     ">
       <button id="mobileNavClose" aria-label="বন্ধ করুন" style="
         position:absolute;top:18px;right:18px;
@@ -73,12 +74,12 @@ const JOAFComponents = {
       <nav style="width:100%;max-width:320px;padding:0 24px">
         <ul style="list-style:none;padding:0;margin:0">
           ${JOAF.nav.map((item, idx) => {
-            const active = item.id === activePage ? 'style="color:var(--gold)!important"' : '';
+            const isActive = item.id === activePage;
             return `<li style="transform:translateX(-30px);opacity:0;transition:transform .4s ease ${idx*.06}s, opacity .4s ease ${idx*.06}s" class="mnav-item">
-              <a href="${item.href}" ${active} style="
+              <a href="${item.href}" style="
                 display:flex;align-items:center;gap:12px;
                 padding:13px 16px;border-radius:12px;
-                color:#fff;text-decoration:none;font-size:15px;font-weight:700;
+                color:${isActive ? 'var(--gold)' : '#fff'};text-decoration:none;font-size:15px;font-weight:700;
                 border:1px solid rgba(255,255,255,0);
                 transition:background .2s,border-color .2s;
               "
@@ -97,7 +98,6 @@ const JOAFComponents = {
       </div>
     </div>`;
   },
-  },
 
   // ── Ticker ──────────────────────────────────────────────
   renderTicker() {
@@ -106,7 +106,7 @@ const JOAFComponents = {
       .join('');
     return `<div class="announcement-ticker" role="marquee" aria-label="সর্বশেষ ঘোষণা">
       <span class="ticker-label">🔴 সর্বশেষ</span>
-      <div class="ticker-track" style="animation-duration:150ms">${items}</div>
+      <div class="ticker-track">${items}</div>
     </div>`;
   },
 
@@ -207,7 +207,7 @@ const JOAFComponents = {
 
   // ── Scroll animations ────────────────────────────────────
   initAnimations() {
-    const SEL = '.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom';
+    const SEL = '.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom,.joaf-reveal-card,.joaf-reveal-rotate';
     if (!('IntersectionObserver' in window)) {
       document.querySelectorAll(SEL).forEach(el => el.classList.add('visible'));
       return;
@@ -220,7 +220,9 @@ const JOAFComponents = {
         }
       });
     }, { threshold: 0.06 });
-    document.querySelectorAll(SEL).forEach(el => obs.observe(el));
+    document.querySelectorAll(SEL).forEach(el => {
+      if (!el.classList.contains('visible')) obs.observe(el);
+    });
   },
 
   // ── Lazy images ──────────────────────────────────────────
@@ -274,31 +276,38 @@ const JOAFComponents = {
     const overlay = document.getElementById('mobile-nav-overlay');
     const closeBtn= document.getElementById('mobileNavClose');
 
-    // Desktop: show standard menu
+    // FIX: Desktop menu — show immediately, no delay
     if (menu) {
       if (window.innerWidth >= 768) {
-        menu.style.display = '';
+        menu.style.cssText = 'display:block !important';
+      } else {
+        menu.style.display = 'none';
       }
       window.addEventListener('resize', () => {
         if (window.innerWidth >= 768) {
-          menu.style.display = '';
+          menu.style.cssText = 'display:block !important';
           if (overlay) closeOverlay();
         } else {
-          menu.style.display = 'none';
+          menu.style.cssText = 'display:none';
         }
       });
     }
 
-    if (!overlay) return;
+    if (!overlay || !btn) return;
+
+    // FIX: Use a state flag instead of checking inline style
+    let isOpen = false;
 
     const openOverlay = () => {
+      isOpen = true;
       overlay.style.display = 'flex';
-      requestAnimationFrame(() => {
-        overlay.style.opacity = '1';
-        overlay.style.visibility = 'visible';
-      });
+      // Force reflow before transition
+      overlay.getBoundingClientRect();
+      overlay.style.opacity = '1';
+      overlay.style.visibility = 'visible';
+      overlay.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      if (btn) btn.setAttribute('aria-expanded', 'true');
+      btn.setAttribute('aria-expanded', 'true');
       // Animate nav items in
       setTimeout(() => {
         overlay.querySelectorAll('.mnav-item').forEach(el => {
@@ -309,24 +318,27 @@ const JOAFComponents = {
     };
 
     const closeOverlay = () => {
+      isOpen = false;
       overlay.style.opacity = '0';
       overlay.style.visibility = 'hidden';
+      overlay.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
-      if (btn) btn.setAttribute('aria-expanded', 'false');
-      // Reset item positions
+      btn.setAttribute('aria-expanded', 'false');
       overlay.querySelectorAll('.mnav-item').forEach(el => {
         el.style.transform = 'translateX(-30px)';
         el.style.opacity = '0';
       });
-      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      setTimeout(() => {
+        if (!isOpen) overlay.style.display = 'none';
+      }, 320);
     };
 
-    if (btn) {
-      btn.addEventListener('click', () => {
-        if (overlay.style.opacity === '1') closeOverlay();
-        else openOverlay();
-      });
-    }
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isOpen) closeOverlay();
+      else openOverlay();
+    });
+
     if (closeBtn) closeBtn.addEventListener('click', closeOverlay);
 
     // Close on link click
@@ -341,7 +353,7 @@ const JOAFComponents = {
 
     // Close on Escape
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closeOverlay();
+      if (e.key === 'Escape' && isOpen) closeOverlay();
     });
   },
 
@@ -356,7 +368,7 @@ const JOAFComponents = {
     // Inject ticker
     const ta = document.getElementById('joaf-ticker');
     if (ta) ta.outerHTML = this.renderTicker();
-    // Fallback: if ticker still not in DOM, insert after header
+    // Fallback
     setTimeout(() => {
       if (!document.querySelector('.announcement-ticker')) {
         const hdr = document.querySelector('header.header-area');
@@ -378,16 +390,13 @@ const JOAFComponents = {
     this.lazyImages();
     this.injectOGMeta();
     this.initMobileNav();
-
-    // Run immediately for above-fold elements, then again for late-rendered ones
     this.initAnimations();
-    setTimeout(() => this.initAnimations(), 300);
+    setTimeout(() => this.initAnimations(), 400);
     this.hidePreloader();
   }
 };
 
-// ── Safe init: works whether DOM is ready or not ─────────────
-// This is the KEY fix — handles both sync and async script loading
+// ── Safe init ─────────────────────────────────────────────────
 function _joafInit() {
   const page = (document.body && document.body.dataset.page) ||
     window.location.pathname.split('/').pop().replace('.html', '').replace('/', '') || 'home';
@@ -397,6 +406,5 @@ function _joafInit() {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', _joafInit);
 } else {
-  // DOM already ready (scripts loaded at bottom of body)
   _joafInit();
 }
