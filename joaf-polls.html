@@ -2,11 +2,29 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🗳️ জনমত — জোয়াফ</title>
-  <meta name="description" content="JOAF জনমত — প্রতিদিন ৩০টি AI-তৈরি প্রশ্ন। ভোট দিন, স্ট্রিক ধরুন, পুরস্কার জিতুন।">
-  <meta property="og:title" content="জোয়াফ জনমত — আপনার মতামত দিন">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>🗳️ জনরায় — জোয়াফ</title>
+  <meta name="description" content="JOAF জনরায় — প্রতিদিন ৩০টি AI-তৈরি প্রশ্ন। ভোট দিন, স্ট্রিক ধরুন, পুরস্কার জিতুন।">
+  <meta property="og:title" content="জোয়াফ জনরায় — আপনার মতামত দিন">
+  <meta property="og:description" content="প্রতিদিন ৩০টি প্রশ্নে ভোট দিন। টানা ৩০ দিন ভোট দিলে ৫০ টাকা পুরস্কার।">
   <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
+  <meta property="og:image:width" content="800">
+  <meta property="og:image:height" content="800">
+  <meta property="og:url" content="https://julyforum.com/joaf-polls.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম">
+  <meta property="fb:app_id" content="1114707634145642">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="জোয়াফ জনরায় — আপনার মতামত দিন">
+  <meta name="twitter:description" content="প্রতিদিন ৩০টি প্রশ্নে ভোট দিন। টানা ৩০ দিন ভোট দিলে ৫০ টাকা পুরস্কার।">
+  <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png">
+  <link rel="canonical" href="https://julyforum.com/joaf-polls.html">
+    <!-- Resource hints for speed -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://code.jquery.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+  <link rel="dns-prefetch" href="https://ipapi.co">
   <link rel="icon" href="/favicon.ico">
   <link rel="manifest" href="/site.webmanifest">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -17,72 +35,162 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
   <style>
-    .polls-hero{background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 60%,#075e55 100%);padding:52px 0 38px;color:#fff;text-align:center;}
-    .polls-hero h1{font-size:clamp(1.8rem,4vw,2.7rem);font-weight:900;margin-bottom:10px;}
-    .refresh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:8px 18px;border-radius:50px;font-size:13px;font-weight:600;margin-top:8px;}
-    .countdown{font-size:1.3rem;font-weight:900;color:#c9a227;}
-    /* Login */
-    .login-box{background:#fff;border-radius:16px;box-shadow:0 8px 36px rgba(0,0,0,.16);padding:28px;position:relative;overflow:hidden;}
-    .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#90161f,#c9a227,#075e55);}
-    .login-input{width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px;transition:.3s;}
-    .login-input:focus{outline:none;border-color:#90161f;box-shadow:0 0 0 3px rgba(144,22,31,.1);}
-    .login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border:none;border-radius:50px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;transition:.3s;}
-    .login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.2);}
-    /* Dashboard */
-    .dash{background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border-radius:16px;padding:22px;margin-bottom:16px;}
-    .dash-init{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0;}
-    .dash-stat-num{font-size:1.5rem;font-weight:900;display:block;}
-    .dash-stat-lbl{font-size:10px;opacity:.75;}
-    .earn-bar{background:rgba(255,255,255,.2);border-radius:10px;height:8px;overflow:hidden;margin-top:6px;}
-    .earn-fill{height:100%;background:#c9a227;border-radius:10px;transition:width .7s ease;}
-    /* Polls */
-    .polls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
-    .poll-item{background:#fff;border-radius:14px;box-shadow:0 3px 14px rgba(0,0,0,.08);padding:20px;transition:.3s;position:relative;border-left:4px solid #90161f;}
-    .poll-item:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.12);}
-    .p-num{font-size:10px;font-weight:700;color:#90161f;opacity:.6;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
-    .p-cat{display:inline-block;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:10px;}
-    .p-q{font-size:14px;font-weight:700;line-height:1.6;margin-bottom:14px;color:#1a202c;}
-    .p-opt{display:block;width:100%;text-align:left;padding:9px 12px;border:2px solid #e5e7eb;background:#fafafa;border-radius:9px;margin-bottom:7px;font-family:inherit;font-size:13px;cursor:pointer;transition:.2s;position:relative;overflow:hidden;}
-    .p-opt:hover:not(:disabled){border-color:#90161f;background:#fff8f8;}
-    .p-opt.sel{background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border-color:transparent;}
-    .p-opt:disabled{cursor:default;}
-    .p-bar{position:absolute;left:0;top:0;bottom:0;background:rgba(144,22,31,.1);pointer-events:none;transition:width .6s ease;border-radius:7px;}
-    .p-pct{float:right;font-weight:700;font-size:11px;position:relative;z-index:1;}
-    .p-voted{display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#166534;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;margin-top:6px;}
-    .p-total{font-size:11px;color:#9ca3af;margin-top:8px;text-align:right;}
-    /* AI loading */
-    .ai-load{text-align:center;padding:60px 20px;}
-    .ai-orb{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#90161f,#075e55);margin:0 auto 18px;animation:orb 1.4s ease-in-out infinite;display:flex;align-items:center;justify-content:center;font-size:24px;}
-    @keyframes orb{0%,100%{transform:scale(1)}50%{transform:scale(1.1);opacity:.8}}
-    /* Leaderboard */
-    .lb{background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(0,0,0,.09);overflow:hidden;}
-    .lb-head{background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#fff;padding:18px 22px;}
-    .lb-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #f0f0f0;transition:.2s;}
-    .lb-row:hover{background:#fafafa;}
-    .lb-rank{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;}
-    .r-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;}
-    .r-silver{background:linear-gradient(135deg,#9ca3af,#6b7280);color:#fff;}
-    .r-bronze{background:linear-gradient(135deg,#b45309,#92400e);color:#fff;}
-    .r-n{background:#f3f4f6;color:#374151;}
-    .lb-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex-shrink:0;}
-    /* Tabs */
-    .ptabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px;}
-    .ptab{padding:8px 14px;border-radius:50px;border:2px solid #e5e7eb;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;color:#374151;}
-    .ptab.on{background:#90161f;color:#fff;border-color:#90161f;}
-    /* Reward card */
-    .reward-info{background:linear-gradient(135deg,#fff8e7,#fef3c7);border:2px solid #c9a227;border-radius:14px;padding:20px;}
-    .reward-info h3{color:#92400e;font-weight:800;margin-bottom:12px;font-size:15px;}
-    .rr{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.6;}
-    /* Missed warning */
-    .missed{background:#fee2e2;border:2px solid #f87171;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;}
-    @media(max-width:600px){.polls-grid{grid-template-columns:1fr;}}
+  /* ══ POLLS PAGE ══════════════════════════════════════════ */
+  .polls-hero{
+    background:linear-gradient(135deg,#0d0d1a 0%,#0f2744 50%,#0a1f1c 100%);
+    padding:52px 0 38px;color:#fff;text-align:center;position:relative;overflow:hidden;
+  }
+  .polls-hero::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 20% 50%,rgba(15,52,96,.6),transparent 60%),
+               radial-gradient(circle at 80% 30%,rgba(7,94,85,.4),transparent 50%);
+  }
+  .polls-hero-inner{position:relative;z-index:2;}
+  .polls-hero h1{font-size:clamp(1.8rem,4vw,2.7rem);font-weight:900;margin-bottom:8px;}
+  .hero-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px;}
+  .hero-chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:5px 14px;border-radius:50px;font-size:12px;font-weight:700;}
+  .refresh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:7px 16px;border-radius:50px;font-size:13px;font-weight:600;margin-top:10px;}
+  .countdown{font-size:1.2rem;font-weight:900;color:#c9a227;font-variant-numeric:tabular-nums;}
+
+  /* ══ LEFT PANEL ══════════════════════════════════════════ */
+  .panel-card{background:#fff;border-radius:18px;box-shadow:0 6px 28px rgba(0,0,0,.1);overflow:hidden;margin-bottom:16px;}
+  .panel-card-top{height:5px;background:linear-gradient(90deg,#90161f,#c9a227,#075e55);}
+  .panel-body{padding:22px;}
+
+  /* Login */
+  .login-title{font-size:1.1rem;font-weight:900;color:#1a1a2e;margin-bottom:4px;}
+  .login-sub{font-size:12px;color:#9ca3af;margin-bottom:16px;}
+  .f-inp{width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:11px;font-family:inherit;font-size:14px;margin-bottom:10px;transition:.3s;outline:none;background:#fafafa;}
+  .f-inp:focus{border-color:#90161f;background:#fff;box-shadow:0 0 0 3px rgba(144,22,31,.08);}
+  .login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border:none;border-radius:50px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.2);}
+  .login-note{font-size:11px;color:#9ca3af;text-align:center;margin-top:8px;}
+
+  /* User dashboard */
+  .dash{background:linear-gradient(135deg,#0d0d1a,#0f3460,#075e55);color:#fff;border-radius:16px;padding:20px;margin-bottom:12px;}
+  .dash-avatar{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.3);overflow:hidden;}
+  .dash-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+  .dash-name{font-size:1rem;font-weight:800;line-height:1.2;}
+  .dash-sub{font-size:11px;opacity:.7;margin-top:2px;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;}
+  .stat-box{background:rgba(255,255,255,.1);border-radius:12px;padding:10px 6px;text-align:center;}
+  .stat-num{font-size:1.4rem;font-weight:900;display:block;line-height:1;}
+  .stat-lbl{font-size:10px;opacity:.75;margin-top:4px;display:block;}
+  .earn-section{background:rgba(255,255,255,.08);border-radius:12px;padding:12px;margin-top:4px;}
+  .earn-label{display:flex;justify-content:space-between;font-size:11px;opacity:.85;margin-bottom:6px;}
+  .earn-bar{background:rgba(255,255,255,.2);border-radius:50px;height:8px;overflow:hidden;}
+  .earn-fill{height:100%;background:linear-gradient(90deg,#c9a227,#f59e0b);border-radius:50px;transition:width .8s cubic-bezier(.16,1,.3,1);}
+  .earn-msg{font-size:11px;opacity:.8;margin-top:6px;text-align:center;}
+
+  /* Today's progress mini card */
+  .today-card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:12px;}
+  .today-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .today-head strong{font-size:13px;color:#1a1a2e;}
+  .today-count{font-weight:900;color:#075e55;font-size:13px;}
+  .today-bar-wrap{height:7px;background:#f0f0f0;border-radius:50px;overflow:hidden;}
+  .today-bar-fill{height:100%;background:linear-gradient(90deg,#90161f,#075e55);border-radius:50px;transition:width .6s ease;}
+  .today-done{margin-top:8px;background:#dcfce7;color:#166534;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;display:none;}
+
+  /* Missed warning */
+  .missed-warn{background:#fee2e2;border:1.5px solid #fca5a5;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#991b1b;display:none;}
+
+  /* Earnings tracker */
+  .earn-tracker{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #c9a227;border-radius:16px;padding:18px;margin-bottom:12px;}
+  .earn-tracker h4{color:#92400e;font-weight:900;font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+  .earn-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(255,255,255,.7);border-radius:10px;margin-bottom:7px;font-size:13px;}
+  .earn-item .cycle-badge{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:2px 10px;border-radius:50px;font-size:11px;font-weight:800;}
+  .earn-total{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#92400e;color:#fff;border-radius:10px;margin-top:6px;font-weight:800;}
+  .earn-total .amount{font-size:1.2rem;font-weight:900;color:#fde68a;}
+  .earn-claim{width:100%;margin-top:10px;padding:10px;background:linear-gradient(135deg,#92400e,#b45309);color:#fff;border:none;border-radius:50px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;transition:.3s;}
+  .earn-claim:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(146,64,14,.4);}
+
+  /* Reward info */
+  .reward-card{background:linear-gradient(135deg,#f0fffe,#e0f7f4);border:1.5px solid #075e55;border-radius:16px;padding:18px;}
+  .reward-card h4{color:#065f46;font-weight:900;font-size:14px;margin-bottom:12px;}
+  .reward-row{display:flex;gap:10px;margin-bottom:9px;font-size:13px;line-height:1.6;align-items:flex-start;}
+  .reward-row span:first-child{font-size:1.2rem;flex-shrink:0;}
+
+  /* ══ POLLS GRID ══════════════════════════════════════════ */
+  .ptabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+  .ptab{padding:7px 14px;border-radius:50px;border:2px solid #e5e7eb;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.25s;color:#374151;}
+  .ptab.on{background:linear-gradient(135deg,#90161f,#b91c1c);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(144,22,31,.3);}
+  .ptab:hover:not(.on){border-color:#90161f;color:#90161f;}
+
+  .polls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+  .poll-card{background:#fff;border-radius:16px;box-shadow:0 3px 16px rgba(0,0,0,.08);padding:18px;transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;border-top:4px solid #90161f;overflow:hidden;}
+  .poll-card::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle at 100% 0%,rgba(144,22,31,.06),transparent 70%);pointer-events:none;}
+  .poll-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.12);}
+  .poll-card.voted{border-top-color:#075e55;}
+  .p-num{font-size:10px;font-weight:800;color:#90161f;opacity:.7;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+  .p-cat-tag{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;padding:3px 10px;border-radius:50px;font-size:10px;font-weight:700;margin-bottom:10px;}
+  .p-question{font-size:14px;font-weight:700;line-height:1.65;margin-bottom:14px;color:#1a202c;}
+  .p-opt{display:block;width:100%;text-align:left;padding:9px 12px;border:2px solid #e5e7eb;background:#fafafa;border-radius:10px;margin-bottom:7px;font-family:inherit;font-size:13px;cursor:pointer;transition:.2s;position:relative;overflow:hidden;color:#374151;}
+  .p-opt:hover:not(:disabled){border-color:#90161f;background:#fff8f8;transform:translateX(3px);}
+  .p-opt.selected{background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border-color:transparent;}
+  .p-opt.other-voted{background:#f8f9fa;cursor:default;}
+  .p-opt:disabled{cursor:default;}
+  .p-bar{position:absolute;left:0;top:0;bottom:0;background:rgba(144,22,31,.08);pointer-events:none;transition:width .7s cubic-bezier(.16,1,.3,1);border-radius:9px;}
+  .p-opt.selected .p-bar{background:rgba(255,255,255,.15);}
+  .p-pct{float:right;font-weight:800;font-size:11px;position:relative;z-index:1;}
+  .p-voted-badge{display:inline-flex;align-items:center;gap:5px;background:#dcfce7;color:#166534;padding:4px 10px;border-radius:50px;font-size:11px;font-weight:700;margin-top:8px;}
+  .p-total{font-size:11px;color:#9ca3af;margin-top:6px;text-align:right;}
+
+  /* AI loading */
+  .ai-load{text-align:center;padding:60px 20px;}
+  .ai-orb{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#90161f,#075e55);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-size:26px;animation:orb-pulse 1.4s ease-in-out infinite;}
+  @keyframes orb-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(144,22,31,.4)}50%{transform:scale(1.08);box-shadow:0 0 0 12px rgba(144,22,31,0)}}
+
+  /* ══ LEADERBOARD ═════════════════════════════════════════ */
+  .lb-wrap{background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,.09);overflow:hidden;}
+  .lb-header{background:linear-gradient(135deg,#0d0d1a,#0f3460);color:#fff;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;}
+  .lb-header h4{margin:0;font-size:1rem;font-weight:900;}
+  .lb-header span{font-size:11px;opacity:.65;}
+  .lb-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #f5f5f5;transition:.2s;position:relative;}
+  .lb-row:last-child{border-bottom:none;}
+  .lb-row:hover{background:#fafafa;}
+  .lb-row.is-me{background:linear-gradient(90deg,rgba(7,94,85,.06),rgba(144,22,31,.04));}
+  .lb-rank{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;}
+  .rank-1{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 3px 8px rgba(245,158,11,.4);}
+  .rank-2{background:linear-gradient(135deg,#9ca3af,#6b7280);color:#fff;}
+  .rank-3{background:linear-gradient(135deg,#b45309,#92400e);color:#fff;}
+  .rank-n{background:#f3f4f6;color:#374151;}
+  .lb-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex-shrink:0;overflow:hidden;border:2px solid #e5e7eb;}
+  .lb-av img{width:100%;height:100%;object-fit:cover;}
+  .lb-info{flex:1;min-width:0;}
+  .lb-name{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .lb-meta{font-size:11px;color:#9ca3af;margin-top:1px;}
+  .lb-right{text-align:right;flex-shrink:0;}
+  .lb-earn{font-weight:900;color:#075e55;font-size:14px;}
+  .lb-streak{font-size:11px;color:#9ca3af;}
+  .me-badge{background:#dcfce7;color:#166534;padding:1px 7px;border-radius:50px;font-size:10px;font-weight:700;margin-left:5px;}
+
+  /* ══ STREAK CALENDAR ═════════════════════════════════════ */
+  .streak-cal{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;}
+  .streak-cal h5{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:12px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+  .cd-done{background:linear-gradient(135deg,#075e55,#15803d);color:#fff;}
+  .cd-today{background:linear-gradient(135deg,#90161f,#b91c1c);color:#fff;}
+  .cd-miss{background:#fee2e2;color:#f87171;}
+  .cd-empty{background:#f9fafb;color:#d1d5db;}
+
+  @media(max-width:600px){.polls-grid{grid-template-columns:1fr;}}
   </style>
 </head>
 <body data-page="polls">
 
+<script>
+(function(){
+  var t = setTimeout(function(){
+    var el = document.getElementById('joaf-preloader');
+    if(el) el.classList.add('hidden');
+  }, 6000);
+  window._ppTimer = t;
+})();
+</script>
 <div id="joaf-preloader">
   <img src="/logoc7c3.png" alt="JOAF" class="preloader-logo">
-  <p class="preloader-text">জনমত লোড হচ্ছে...</p>
+  <p class="preloader-text">জনরায় লোড হচ্ছে...</p>
   <div class="preloader-bar"></div>
 </div>
 
@@ -90,11 +198,18 @@
   <div id="joaf-header"></div>
   <div id="joaf-ticker"></div>
 
+  <!-- Hero -->
   <section class="polls-hero">
-    <div class="container joaf-reveal">
-      <h1>🗳️ জোয়াফ জনমত</h1>
-      <p style="opacity:.85;font-size:15px;max-width:520px;margin:0 auto 12px">প্রতিদিন ৩০টি নতুন প্রশ্ন — AI দ্বারা তৈরি। বাংলাদেশের ভবিষ্যৎ গড়তে আপনার মতামত দিন।</p>
-      <div class="refresh-badge">🔄 পরবর্তী প্রশ্নসমূহ: <span class="countdown" id="cd">--:--:--</span></div>
+    <div class="container polls-hero-inner joaf-reveal-zoom">
+      <h1>🗳️ জোয়াফ জনরায়</h1>
+      <p style="opacity:.82;font-size:15px;max-width:520px;margin:0 auto 8px">প্রতিদিন ৩০টি নতুন প্রশ্ন। বাংলাদেশের ভবিষ্যৎ গড়তে আপনার মতামত দিন।</p>
+      <div class="refresh-badge">🔄 পরবর্তী সেশন: <span class="countdown" id="cd">--:--:--</span></div>
+      <div class="hero-chips">
+        <div class="hero-chip">🗳️ দৈনিক জনমত প্রশ্ন</div>
+        <div class="hero-chip">🔥 স্ট্রিক সিস্টেম</div>
+        <div class="hero-chip">🎁 ৫০ টাকা ফোন রিচার্জ পুরস্কার</div>
+        <div class="hero-chip">🏆 লিডারবোর্ড</div>
+      </div>
     </div>
   </section>
 
@@ -102,58 +217,115 @@
     <div class="container">
       <div class="row g-4">
 
-        <!-- LEFT PANEL -->
+        <!-- ══ LEFT PANEL ══════════════════════════════════ -->
         <div class="col-lg-4">
+
+          <!-- LOGIN (not logged in) -->
           <div id="loginSection">
-            <div class="login-box mb-4 joaf-reveal">
-              <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:6px;color:#1a1a2e;">📱 লগইন করুন</h2>
-              <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">ভোট সংরক্ষণ ও পুরস্কারের জন্য লগইন করুন।</p>
-              <input type="text" id="lName" class="login-input" placeholder="আপনার নাম">
-              <input type="tel" id="lPhone" class="login-input" placeholder="মোবাইল নম্বর (01XXXXXXXXX)">
-              <button class="login-btn" onclick="doLogin()">✅ লগইন করুন</button>
-              <p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:8px">তথ্য শুধু পুরস্কারের জন্য ব্যবহৃত হবে।</p>
+            <div class="panel-card joaf-reveal">
+              <div class="panel-card-top"></div>
+              <div class="panel-body">
+                <div class="login-title">📱 প্রবেশ করুন</div>
+                <div class="login-sub">ভোট সংরক্ষণ ও পুরস্কারের জন্য নাম ও নম্বর দিন</div>
+                <input type="text" id="lName" class="f-inp" placeholder="আপনার নাম লিখুন">
+                <input type="tel" id="lPhone" class="f-inp" placeholder="মোবাইল নম্বর (01XXXXXXXXX)">
+                <!-- Optional profile photo URL -->
+                <input type="url" id="lPhoto" class="f-inp" placeholder="প্রোফাইল ছবির লিঙ্ক (ঐচ্ছিক)">
+                <button class="login-btn" onclick="doLogin()">
+                  <i class="zmdi zmdi-check-circle"></i> প্রবেশ করুন
+                </button>
+                <p class="login-note">তথ্য শুধু পুরস্কারের জন্য ব্যবহৃত হবে। তৃতীয় পক্ষকে দেওয়া হবে না।</p>
+              </div>
             </div>
-            <div class="reward-info joaf-reveal">
-              <h3>🎁 কীভাবে ৫০ টাকা পাবেন?</h3>
-              <div class="rr"><span style="font-size:18px">🗓️</span><span>প্রতিদিন সব ৩০টি প্রশ্নে ভোট দিন</span></div>
-              <div class="rr"><span style="font-size:18px">📅</span><span>টানা <strong>৩০ দিন</strong> ধারাবাহিকভাবে করুন</span></div>
-              <div class="rr"><span style="font-size:18px">💸</span><span>মোবাইলে <strong>৫০ টাকা রিচার্জ</strong> পাবেন</span></div>
-              <div class="rr"><span style="font-size:18px">⚠️</span><span>একদিন মিস করলে আবার শুরু</span></div>
-              <div class="rr"><span style="font-size:18px">♾️</span><span>প্রতি ৩০ দিন পর পুনরায় শুরু করা যাবে</span></div>
+            <div class="reward-card joaf-reveal">
+              <h4>🎁 কীভাবে ৫০ টাকা পাবেন?</h4>
+              <div class="reward-row"><span>🗓️</span><span>প্রতিদিন সব <strong>৩০টি</strong> প্রশ্নে ভোট দিন</span></div>
+              <div class="reward-row"><span>📅</span><span>টানা <strong>৩০ দিন</strong> ধারাবাহিকভাবে করুন</span></div>
+              <div class="reward-row"><span>💸</span><span>মোবাইলে <strong>৫০ টাকা রিচার্জ</strong> পাবেন</span></div>
+              <div class="reward-row"><span>⚠️</span><span>একদিন মিস করলে আবার শুরু করতে হবে</span></div>
+              <div class="reward-row"><span>♾️</span><span>প্রতি ৩০ দিন পর পুনরায় শুরু করা যাবে</span></div>
             </div>
           </div>
 
+          <!-- USER DASHBOARD (logged in) -->
           <div id="userSection" style="display:none">
-            <div id="missedWarn" class="missed" style="display:none">⚠️ <strong>গতকাল ভোট দেননি!</strong> স্ট্রিক রিসেট হয়েছে।</div>
+
+            <!-- Missed warning -->
+            <div class="missed-warn" id="missedWarn">
+              ⚠️ <strong>গতকাল ভোট দেননি!</strong> স্ট্রিক রিসেট হয়েছে।
+            </div>
+
+            <!-- Main dashboard card -->
             <div class="dash mb-3 joaf-reveal">
               <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="dash-init" id="dInit">?</div>
-                <div><div style="font-size:1.05rem;font-weight:800" id="dName">—</div><div style="font-size:11px;opacity:.75" id="dPhone">—</div></div>
+                <div class="dash-avatar" id="dAvatar">?</div>
+                <div>
+                  <div class="dash-name" id="dName">—</div>
+                  <div class="dash-sub" id="dPhone">—</div>
+                </div>
               </div>
-              <div class="row g-2 text-center mb-3">
-                <div class="col-4"><span class="dash-stat-num" id="dStreak">০</span><span class="dash-stat-lbl" id="dStreakIco">🔥 স্ট্রিক</span></div>
-                <div class="col-4"><span class="dash-stat-num" id="dVoted">০</span><span class="dash-stat-lbl">🗳️ আজকের</span></div>
-                <div class="col-4"><span class="dash-stat-num" id="dCycles">০</span><span class="dash-stat-lbl">💚 চক্র</span></div>
+              <div class="stats-row">
+                <div class="stat-box">
+                  <span class="stat-num" id="dStreak">০</span>
+                  <span class="stat-lbl" id="dStreakLbl">🔥 স্ট্রিক</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-num" id="dVoted">০</span>
+                  <span class="stat-lbl">🗳️ আজকের</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-num" id="dCycles">০</span>
+                  <span class="stat-lbl">🏆 চক্র</span>
+                </div>
               </div>
-              <div style="font-size:11px;opacity:.8;display:flex;justify-content:space-between;margin-bottom:4px"><span>পুরস্কার অগ্রগতি</span><span id="dProg">০/৩০</span></div>
-              <div class="earn-bar"><div class="earn-fill" id="eFill" style="width:0%"></div></div>
-              <div style="font-size:11px;opacity:.8;margin-top:6px" id="dEarn">আরও ৩০ দিন বাকি</div>
+              <div class="earn-section">
+                <div class="earn-label">
+                  <span>পুরস্কার অগ্রগতি</span>
+                  <span id="dProg">০/৩০ দিন</span>
+                </div>
+                <div class="earn-bar"><div class="earn-fill" id="eFill" style="width:0%"></div></div>
+                <div class="earn-msg" id="dEarnMsg">আরও ৩০ দিন বাকি</div>
+              </div>
             </div>
-            <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:12px">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <strong style="font-size:14px">আজকের ভোট</strong>
-                <span id="todayProg" style="font-weight:700;color:#075e55;font-size:13px">০/৩০</span>
-              </div>
-              <div style="height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden">
-                <div id="todayBar" style="height:100%;background:linear-gradient(90deg,#90161f,#075e55);border-radius:4px;transition:width .5s ease;width:0%"></div>
-              </div>
-              <div id="todayDone" style="display:none;margin-top:8px;background:#dcfce7;color:#166534;padding:7px 10px;border-radius:7px;font-size:12px;font-weight:700;text-align:center">✅ আজকের সব ভোট দেওয়া হয়েছে!</div>
+
+            <!-- Streak Calendar (last 30 days) -->
+            <div class="streak-cal joaf-reveal">
+              <h5>📅 স্ট্রিক ক্যালেন্ডার (শেষ ৩০ দিন)</h5>
+              <div class="cal-grid" id="streakCal"></div>
             </div>
-            <button onclick="doLogout()" style="width:100%;padding:9px;background:#fee2e2;color:#991b1b;border:none;border-radius:9px;font-family:inherit;font-weight:700;cursor:pointer;font-size:13px">🚪 লগআউট</button>
+
+            <!-- Today's progress -->
+            <div class="today-card joaf-reveal">
+              <div class="today-head">
+                <strong>আজকের ভোট</strong>
+                <span class="today-count" id="todayCount">০/৩০</span>
+              </div>
+              <div class="today-bar-wrap">
+                <div class="today-bar-fill" id="todayBar" style="width:0%"></div>
+              </div>
+              <div class="today-done" id="todayDone">✅ আজকের সব ভোট দেওয়া হয়েছে!</div>
+            </div>
+
+            <!-- Earnings Tracker -->
+            <div class="earn-tracker joaf-reveal" id="earningsTracker">
+              <h4>💰 আয়ের হিসাব</h4>
+              <div id="earnCyclesList"></div>
+              <div class="earn-total">
+                <span>মোট অর্জিত (<span id="cyclesCount">০</span> চক্র × ৫০ টাকা)</span>
+                <span class="amount" id="totalEarned">এখনো ০ টাকা</span>
+              </div>
+              <button class="earn-claim" id="earnClaimBtn" onclick="claimReward()" style="display:none">
+                🎉 পুরস্কার দাবি করুন
+              </button>
+            </div>
+
+            <button onclick="doLogout()" style="width:100%;padding:10px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;font-size:13px;transition:.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
+              🚪 লগআউট
+            </button>
           </div>
         </div>
 
-        <!-- RIGHT: POLLS -->
+        <!-- ══ RIGHT: POLLS ══════════════════════════════════ -->
         <div class="col-lg-8">
           <div class="ptabs" id="ptabs">
             <button class="ptab on" data-c="all">সব</button>
@@ -163,272 +335,492 @@
             <button class="ptab" data-c="সমাজ">🤝 সমাজ</button>
             <button class="ptab" data-c="সরকার">🏢 সরকার</button>
           </div>
+
+          <!-- AI loading -->
           <div id="aiLoad" class="ai-load">
             <div class="ai-orb">🤖</div>
             <h3 style="color:#1a1a2e;margin-bottom:6px">AI প্রশ্ন তৈরি করছে...</h3>
             <p style="color:#6b7280;font-size:13px">বাংলাদেশের সর্বশেষ পরিস্থিতি বিশ্লেষণ হচ্ছে</p>
           </div>
+
           <div id="pollsGrid" class="polls-grid" style="display:none"></div>
+
           <div id="loadMore" class="text-center mt-4" style="display:none">
-            <button onclick="showMore()" style="background:#90161f;color:#fff;border:none;padding:11px 28px;border-radius:50px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer">আরও প্রশ্ন দেখুন</button>
+            <button onclick="showMore()" style="background:linear-gradient(135deg,#90161f,#075e55);color:#fff;border:none;padding:12px 32px;border-radius:50px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:.3s;box-shadow:0 4px 14px rgba(144,22,31,.3);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+              আরও প্রশ্ন দেখুন
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Leaderboard -->
+      <!-- ══ LEADERBOARD ════════════════════════════════════ -->
       <div class="row mt-5">
         <div class="col-12">
-          <div class="section-heading joaf-reveal"><h2>🏆 শীর্ষ ভোটারগণ</h2><p>যারা সবচেয়ে বেশি ধারাবাহিকভাবে ভোট দিয়েছেন</p></div>
-          <div class="lb joaf-reveal">
-            <div class="lb-head"><h4 style="margin:0;font-size:1rem">🏆 লিডারবোর্ড</h4></div>
-            <div id="lbList"><div style="padding:28px;text-align:center;color:#9ca3af;font-size:14px">লগইন করলে এখানে আপনার নাম দেখাবে</div></div>
+          <div class="section-heading joaf-reveal-flip">
+            <h2>🏆 শীর্ষ ভোটারগণ</h2>
+            <p>যারা সবচেয়ে বেশি ধারাবাহিকভাবে ভোট দিয়েছেন</p>
+          </div>
+          <div class="lb-wrap joaf-reveal">
+            <div class="lb-header">
+              <h4>🏆 লিডারবোর্ড</h4>
+              <span id="lbTotal">০ জন অংশগ্রহণকারী</span>
+            </div>
+            <div id="lbList">
+              <div style="padding:28px;text-align:center;color:#9ca3af;font-size:14px">
+                লগইন করলে এখানে আপনার নাম দেখাবে
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
     </div>
   </section>
 
   <div id="joaf-footer"></div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script src="/js/plugins.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
+<script src="/js/plugins.js" defer></script>
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
-<script src="/js/rainbow-swirl-cursor.js"></script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script>
 // ============================================================
-// JOAF জনমত — AI Poll System v4
-// AI: Groq API (FREE, fast, unlimited near)
-// Storage: localStorage — no server needed, free forever
+// JOAF জনরায় v5 — AI Poll + Streak + Leaderboard + Earnings
 // ============================================================
 
-// 🔑 Groq API key — পাওয়ার জন্য: https://console.groq.com → API Keys → Create
-// Free tier: প্রতি মিনিটে ৩০ req, প্রতিদিন ১৪,৪০০ req — আমাদের জন্য যথেষ্ট
-const GROQ_KEY = 'YOUR_GROQ_API_KEY'; // 👈 এখানে তোমার Groq API key বসাও
-const GROQ_MODEL = 'llama3-8b-8192'; // Free, fast
+// 🔑 ──────────────────────────────────────────────────────────
+// GROQ_KEY এখানে বসাও (console.groq.com থেকে নাও)
+// !! MANUALLY_REPLACE !! → const GROQ_KEY = 'gsk_XXXXXXXXXX';
+const GROQ_KEY = 'YOUR_GROQ_API_KEY';
+// ─────────────────────────────────────────────────────────────
 
-const POLLS_PER_DAY = 30, STREAK_GOAL = 30;
-let CU = null, allPolls = [], shown = [], activeCat = 'all', showN = 10;
+const GROQ_MODEL  = 'llama3-8b-8192';
+const POLLS_COUNT = 30;
+const STREAK_GOAL = 30;
+const REWARD_AMT  = 50; // ৳
 
-const today = () => new Date().toISOString().slice(0,10);
-const bn = n => n.toString().split('').map(d=>'০১২৩৪৫৬৭৮৯'[+d]||d).join('');
+// ── Utils ─────────────────────────────────────────────────────
+const bn = n => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+const today = () => new Date().toISOString().slice(0, 10);
+const yest  = () => { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); };
+
 const LS = {
   get: k => { try { return JSON.parse(localStorage.getItem('j_'+k)); } catch { return null; } },
-  set: (k,v) => localStorage.setItem('j_'+k, JSON.stringify(v)),
-  del: k => localStorage.removeItem('j_'+k)
+  set: (k,v) => { try { localStorage.setItem('j_'+k, JSON.stringify(v)); } catch {} },
+  del: k => localStorage.removeItem('j_'+k),
+  keys: () => { const r=[]; for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('j_'))r.push(k.slice(2));} return r; }
 };
 
-// ── User ─────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────
+let CU = null;      // current user object
+let allPolls = [];  // all 30 polls for today
+let activeCat = 'all';
+let showN = 10;
+
+// ── Vote storage (shared across users) ────────────────────────
+const getVD  = pid => LS.get('vd_'+pid) || { c:{}, t:0 };
+const saveVD = (pid, oi) => {
+  const d = getVD(pid);
+  d.c[oi] = (d.c[oi]||0) + 1;
+  d.t = (d.t||0) + 1;
+  LS.set('vd_'+pid, d);
+};
+
+// ── User helpers ──────────────────────────────────────────────
+const hasVoted = pid => CU ? CU.votes?.[today()]?.[pid] !== undefined : false;
+const myVote   = pid => CU ? (CU.votes?.[today()]?.[pid] ?? null) : null;
+
 function doLogin() {
-  const name = document.getElementById('lName').value.trim();
+  const name  = document.getElementById('lName').value.trim();
   const phone = document.getElementById('lPhone').value.trim();
-  if (!name || name.length < 2) { alert('নাম লিখুন'); return; }
-  if (!phone.match(/^01[3-9]\d{8}$/)) { alert('সঠিক মোবাইল নম্বর দিন'); return; }
+  const photo = document.getElementById('lPhoto').value.trim();
+  if (!name || name.length < 2) { alert('নাম লিখুন (কমপক্ষে ২ অক্ষর)'); return; }
+  if (!phone.match(/^01[3-9]\d{8}$/)) { alert('সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন'); return; }
+
   const uid = 'u' + phone.replace(/\D/g,'');
-  let u = LS.get(uid) || {id:uid,name,phone,streak:0,lastVote:null,totalV:0,cycles:0,votes:{}};
-  u.name = name; LS.set(uid, u); LS.set('cu', uid); loadUser(uid);
+  let u = LS.get(uid) || {
+    id: uid, name, phone, photo: photo||'',
+    streak: 0, maxStreak: 0,
+    lastVote: null, voteDays: [],
+    totalVotes: 0, cycles: 0,
+    claimedCycles: 0, votes: {}
+  };
+  u.name  = name;
+  u.phone = phone;
+  if (photo) u.photo = photo;
+  LS.set(uid, u);
+  LS.set('cu', uid);
+  loadUser(uid);
 }
 
 function loadUser(uid) {
-  const u = LS.get(uid); if (!u) return;
-  const ts = today(), yest = new Date(); yest.setDate(yest.getDate()-1);
-  const ys = yest.toISOString().slice(0,10);
-  if (u.lastVote && u.lastVote !== ts && u.lastVote !== ys) {
+  const u = LS.get(uid);
+  if (!u) return;
+
+  // Check missed day → reset streak
+  if (u.lastVote && u.lastVote !== today() && u.lastVote !== yest()) {
     u.streak = 0;
+    LS.set(uid, u);
     document.getElementById('missedWarn').style.display = 'block';
   } else {
     document.getElementById('missedWarn').style.display = 'none';
   }
-  LS.set(uid, u); CU = u;
+
+  CU = u;
   document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('userSection').style.display = 'block';
-  refreshDash(); renderLB();
+  document.getElementById('userSection').style.display  = 'block';
+  refreshDash();
+  renderStreakCal();
+  renderEarnings();
+  renderLB();
+  renderPolls(activeCat); // re-render to show vote states
 }
 
+function doLogout() {
+  CU = null;
+  LS.del('cu');
+  document.getElementById('loginSection').style.display = 'block';
+  document.getElementById('userSection').style.display  = 'none';
+  document.getElementById('missedWarn').style.display   = 'none';
+  renderPolls(activeCat);
+}
+
+// ── Refresh dashboard ─────────────────────────────────────────
 function refreshDash() {
   if (!CU) return;
-  const u = CU, tv = Object.keys(u.votes[today()]||{}).length, s = u.streak||0;
-  const pct = Math.min(s/STREAK_GOAL*100,100), dl = Math.max(STREAK_GOAL-s,0);
-  document.getElementById('dInit').textContent = u.name.charAt(0).toUpperCase();
-  document.getElementById('dName').textContent = u.name;
-  document.getElementById('dPhone').textContent = '📱 '+u.phone;
-  document.getElementById('dStreak').textContent = bn(s);
-  document.getElementById('dStreakIco').textContent = (s>=7?'🔥':s>=3?'⚡':'💪')+' স্ট্রিক';
-  document.getElementById('dVoted').textContent = bn(tv);
-  document.getElementById('dCycles').textContent = bn(u.cycles||0);
-  document.getElementById('dProg').textContent = bn(s)+'/'+bn(STREAK_GOAL);
-  document.getElementById('eFill').style.width = pct+'%';
-  document.getElementById('dEarn').innerHTML = dl===0
-    ? '🎉 পুরস্কারের জন্য <a href="mailto:joafforum@gmail.com" style="color:#fff;font-weight:700">যোগাযোগ করুন</a>'
-    : `আরও <strong>${bn(dl)} দিন</strong> বাকি`;
-  const tp = Math.min(tv/POLLS_PER_DAY*100,100);
-  document.getElementById('todayProg').textContent = bn(tv)+'/'+bn(POLLS_PER_DAY);
-  document.getElementById('todayBar').style.width = tp+'%';
-  document.getElementById('todayDone').style.display = tv>=POLLS_PER_DAY?'block':'none';
+  const u   = CU;
+  const ts  = today();
+  const tv  = Object.keys(u.votes?.[ts]||{}).length;
+  const s   = u.streak || 0;
+  const pct = Math.min(s / STREAK_GOAL * 100, 100);
+  const rem = Math.max(STREAK_GOAL - s, 0);
+
+  // Avatar
+  const avEl = document.getElementById('dAvatar');
+  if (u.photo) {
+    avEl.innerHTML = `<img loading="lazy" src="${u.photo}" alt="${u.name}" onerror="this.parentElement.textContent='${u.name.charAt(0).toUpperCase()}'">`;
+  } else {
+    avEl.textContent = u.name.charAt(0).toUpperCase();
+  }
+
+  document.getElementById('dName').textContent     = u.name;
+  document.getElementById('dPhone').textContent    = '📱 ' + u.phone;
+  document.getElementById('dStreak').textContent   = bn(s);
+  document.getElementById('dStreakLbl').textContent = (s>=15?'🔥':s>=7?'⚡':s>=3?'💪':'✊') + ' স্ট্রিক';
+  document.getElementById('dVoted').textContent    = bn(tv);
+  document.getElementById('dCycles').textContent   = bn(u.cycles||0);
+  document.getElementById('dProg').textContent     = bn(s) + '/' + bn(STREAK_GOAL) + ' দিন';
+  document.getElementById('eFill').style.width     = pct + '%';
+  document.getElementById('dEarnMsg').innerHTML    = rem === 0
+    ? `🎉 পুরস্কারের জন্য নিচে দাবি করুন!`
+    : `আরও <strong>${bn(rem)} দিন</strong> বাকি`;
+
+  // Today progress
+  const tp = Math.min(tv / POLLS_COUNT * 100, 100);
+  document.getElementById('todayCount').textContent  = bn(tv) + '/' + bn(POLLS_COUNT);
+  document.getElementById('todayBar').style.width    = tp + '%';
+  document.getElementById('todayDone').style.display = tv >= POLLS_COUNT ? 'block' : 'none';
 }
 
+// ── Streak Calendar ───────────────────────────────────────────
+function renderStreakCal() {
+  if (!CU) return;
+  const cal   = document.getElementById('streakCal');
+  const days  = [];
+  const ts    = today();
+  const votedDays = new Set(Object.keys(CU.votes || {}));
+
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  cal.innerHTML = days.map(d => {
+    const isToday   = d === ts;
+    const didVote   = votedDays.has(d);
+    const isPast    = d < ts;
+    let cls = 'cal-day ';
+    if (isToday && didVote) cls += 'cd-done';
+    else if (isToday)       cls += 'cd-today';
+    else if (isPast && didVote) cls += 'cd-done';
+    else if (isPast)            cls += 'cd-miss';
+    else                        cls += 'cd-empty';
+    const label = d.slice(8); // day number
+    return `<div class="${cls}" title="${d}">${bn(parseInt(label))}</div>`;
+  }).join('');
+}
+
+// ── Earnings tracker ──────────────────────────────────────────
+function renderEarnings() {
+  if (!CU) return;
+  const cycles        = CU.cycles        || 0;
+  const claimedCycles = CU.claimedCycles || 0;
+  const unclaimedCycles = cycles - claimedCycles;
+  const totalEarned   = cycles * REWARD_AMT;
+
+  const listEl = document.getElementById('earnCyclesList');
+  if (cycles === 0) {
+    listEl.innerHTML = `<div class="earn-item" style="justify-content:center;color:#9ca3af;">এখনো কোনো চক্র সম্পন্ন হয়নি</div>`;
+  } else {
+    const rows = [];
+    for (let i = 1; i <= cycles; i++) {
+      const claimed = i <= claimedCycles;
+      rows.push(`
+        <div class="earn-item">
+          <span>চক্র ${bn(i)} (${bn(STREAK_GOAL)} দিন)</span>
+          <span class="cycle-badge">${claimed ? '✅ পেয়েছেন' : '⏳ দাবি করুন'}</span>
+        </div>
+      `);
+    }
+    listEl.innerHTML = rows.join('');
+  }
+
+  const cyclesCountEl = document.getElementById('cyclesCount');
+  if (cyclesCountEl) cyclesCountEl.textContent = bn(cycles);
+
+  document.getElementById('totalEarned').textContent = totalEarned > 0
+    ? bn(totalEarned) + ' টাকা'
+    : 'এখনো ০ টাকা';
+
+  const claimBtn = document.getElementById('earnClaimBtn');
+  if (unclaimedCycles > 0) {
+    claimBtn.style.display = 'block';
+    claimBtn.textContent   = `🎉 ${bn(unclaimedCycles)} চক্রের ৳${bn(unclaimedCycles * REWARD_AMT)} দাবি করুন`;
+  } else {
+    claimBtn.style.display = 'none';
+  }
+}
+
+function claimReward() {
+  if (!CU) return;
+  const unclaimed = (CU.cycles||0) - (CU.claimedCycles||0);
+  if (unclaimed <= 0) return;
+  const amount = unclaimed * REWARD_AMT;
+  const msg = `🎉 অভিনন্দন ${CU.name}!\n\nআপনি ${bn(unclaimed)} চক্র সম্পন্ন করেছেন।\nমোট: ৳${bn(amount)}\n\nপুরস্কার পেতে ইমেইল করুন:\njoafforum@gmail.com\n\nবিষয়: জনরায় পুরস্কার - ${CU.phone}`;
+  alert(msg);
+  // Mark as claimed
+  CU.claimedCycles = CU.cycles;
+  LS.set(CU.id, CU);
+  renderEarnings();
+}
+
+// ── Record vote & streak logic ────────────────────────────────
 function recordVote(pid, oi) {
   if (!CU) return;
   const ts = today();
+  if (!CU.votes)    CU.votes = {};
   if (!CU.votes[ts]) CU.votes[ts] = {};
   if (CU.votes[ts][pid] !== undefined) return;
+
   CU.votes[ts][pid] = oi;
-  CU.totalV = (CU.totalV||0)+1;
+  CU.totalVotes = (CU.totalVotes||0) + 1;
+
   const tv = Object.keys(CU.votes[ts]).length;
-  if (tv >= POLLS_PER_DAY && CU.lastVote !== ts) {
+
+  // Streak: mark day complete when all 30 polls voted
+  if (tv >= POLLS_COUNT && CU.lastVote !== ts) {
     CU.lastVote = ts;
-    CU.streak = (CU.streak||0)+1;
+
+    // Track voted days for calendar
+    if (!CU.voteDays) CU.voteDays = [];
+    if (!CU.voteDays.includes(ts)) CU.voteDays.push(ts);
+
+    // Streak logic
+    if (CU.lastVote === ts) {
+      CU.streak = (CU.streak||0) + 1;
+    } else if (CU.lastVote === yest()) {
+      CU.streak = (CU.streak||0) + 1;
+    } else {
+      CU.streak = 1;
+    }
+
+    CU.maxStreak = Math.max(CU.maxStreak||0, CU.streak);
+
+    // Completed a 30-day cycle!
     if (CU.streak >= STREAK_GOAL) {
-      CU.cycles = (CU.cycles||0)+1; CU.streak = 0;
-      setTimeout(() => alert('🎉 অভিনন্দন! টানা ৩০ দিন সম্পন্ন!\njoafforum@gmail.com এ যোগাযোগ করুন ৫০ টাকা পেতে।'), 500);
+      CU.cycles = (CU.cycles||0) + 1;
+      CU.streak = 0;
+      setTimeout(() => {
+        alert(`🎉 অভিনন্দন ${CU.name}!\nটানা ৩০ দিন সম্পন্ন!\nনিচে আয়ের হিসাবে "পুরস্কার দাবি করুন" বাটন চাপুন।`);
+        renderEarnings();
+      }, 400);
     }
   }
-  LS.set(CU.id, CU); refreshDash(); renderLB();
+
+  LS.set(CU.id, CU);
+  refreshDash();
+  renderStreakCal();
+  renderEarnings();
+  renderLB();
 }
 
-const hasVoted = pid => CU ? CU.votes[today()]?.[pid] !== undefined : false;
-const myVote = pid => CU ? (CU.votes[today()]?.[pid] ?? null) : null;
-
-function doLogout() {
-  CU = null; LS.del('cu');
-  document.getElementById('loginSection').style.display = 'block';
-  document.getElementById('userSection').style.display = 'none';
-  document.getElementById('missedWarn').style.display = 'none';
-  renderPolls();
-}
-
-// ── Vote data ─────────────────────────────────────────────────
-const getVD = pid => LS.get('vd_'+pid)||{c:{},t:0};
-function saveVD(pid, oi) {
-  const d = getVD(pid);
-  d.c[oi] = (d.c[oi]||0)+1; d.t = (d.t||0)+1;
-  LS.set('vd_'+pid, d);
-}
-
-// ── AI Poll Generation (Groq — Free & Unlimited) ──────────────
-// Cache key: changes every 12 hours (0 or 1 per day)
+// ── Groq API poll generation ──────────────────────────────────
 function getCacheKey() {
-  const h = Math.floor(new Date().getHours()/12);
-  return `polls_${today()}_${h}`;
+  // Changes every 12 hours: session 0 (00:00-11:59) or session 1 (12:00-23:59)
+  const session = Math.floor(new Date().getHours() / 12);
+  return `polls_${today()}_s${session}`;
 }
 
 const FALLBACK_POLLS = [
-  {id:'fb1',q:'জুলাই ২০২৪ গণ-অভ্যুত্থানের পর পরিস্থিতি কেমন হয়েছে?',cat:'জুলাই অভ্যুত্থান',opts:['ভালো হয়েছে','কিছুটা ভালো','খারাপ হয়েছে']},
-  {id:'fb2',q:'বর্তমান সরকার নিয়ে আপনার মূল্যায়ন?',cat:'সরকার',opts:['সন্তুষ্ট','মোটামুটি','অসন্তুষ্ট']},
-  {id:'fb3',q:'জাতীয় নির্বাচন কখন হওয়া উচিত?',cat:'রাজনীতি',opts:['এখনই','সংস্কারের পরে','২০২৬ সালে']},
-  {id:'fb4',q:'দ্রব্যমূল্য নিয়ন্ত্রণে সরকার কি সফল?',cat:'অর্থনীতি',opts:['হ্যাঁ','না','আংশিক']},
-  {id:'fb5',q:'আইনশৃঙ্খলা পরিস্থিতি কেমন?',cat:'সমাজ',opts:['ভালো','মোটামুটি','খারাপ']},
-  {id:'fb6',q:'ছাত্র আন্দোলনের অর্জন কি টেকসই?',cat:'জুলাই অভ্যুত্থান',opts:['হ্যাঁ','আংশিক','না']},
-  {id:'fb7',q:'ভারত-বাংলাদেশ সম্পর্ক কেমন হওয়া উচিত?',cat:'রাজনীতি',opts:['সমমর্যাদার','বন্ধুত্বপূর্ণ','কঠোর']},
-  {id:'fb8',q:'দুর্নীতি দমনে প্রধান পদক্ষেপ কী?',cat:'সরকার',opts:['আইনের প্রয়োগ','রাজনৈতিক সদিচ্ছা','জনসচেতনতা']},
-  {id:'fb9',q:'মিডিয়া স্বাধীনতার অবস্থা?',cat:'সমাজ',opts:['ভালো','আগের চেয়ে ভালো','সীমাবদ্ধ']},
-  {id:'fb10',q:'বেকারত্ব সমাধানে কী করা উচিত?',cat:'অর্থনীতি',opts:['নতুন শিল্প','দক্ষতা উন্নয়ন','বিদেশে কর্মসংস্থান']},
-  {id:'fb11',q:'শিক্ষাব্যবস্থার বড় সমস্যা?',cat:'সমাজ',opts:['মানসম্পন্ন শিক্ষক','পাঠ্যক্রম','রাজনীতি']},
-  {id:'fb12',q:'নির্বাচনে সবচেয়ে গুরুত্বপূর্ণ বিষয়?',cat:'রাজনীতি',opts:['অর্থনীতি','সুশাসন','গণতন্ত্র']},
-  {id:'fb13',q:'নারী নিরাপত্তার পরিস্থিতি?',cat:'সমাজ',opts:['উন্নত','একই','খারাপ']},
-  {id:'fb14',q:'সংবিধান সংশোধন করা উচিত?',cat:'রাজনীতি',opts:['হ্যাঁ','কিছু অংশ','না']},
-  {id:'fb15',q:'প্রবাসীদের ভোটাধিকার?',cat:'রাজনীতি',opts:['হ্যাঁ','বিবেচনা করা যেতে পারে','না']},
-  {id:'fb16',q:'অর্থনৈতিক পুনরুদ্ধারে গুরুত্বপূর্ণ খাত?',cat:'অর্থনীতি',opts:['পোশাক শিল্প','রেমিট্যান্স','আইটি']},
-  {id:'fb17',q:'জুলাই শহীদদের পরিবারের জন্য কী করা উচিত?',cat:'জুলাই অভ্যুত্থান',opts:['সরকারি ভাতা','ন্যায়বিচার','উভয়ই']},
-  {id:'fb18',q:'পুলিশ সংস্কার কি সম্পন্ন হয়েছে?',cat:'সরকার',opts:['হ্যাঁ','আংশিক','না']},
-  {id:'fb19',q:'রোহিঙ্গা সংকট সমাধানে কী করা উচিত?',cat:'সমাজ',opts:['প্রত্যাবাসন','আন্তর্জাতিক চাপ','সরাসরি আলোচনা']},
-  {id:'fb20',q:'ডিজিটাল নিরাপত্তা আইন কি ফেরত আসা উচিত?',cat:'রাজনীতি',opts:['না','পরিবর্তন করে','হ্যাঁ']},
-  {id:'fb21',q:'বিশ্ববিদ্যালয়ে ছাত্র রাজনীতি নিষিদ্ধ হওয়া উচিত?',cat:'সমাজ',opts:['হ্যাঁ','না','সীমিত']},
-  {id:'fb22',q:'জ্বালানি সংকট কখন সমাধান হবে?',cat:'অর্থনীতি',opts:['এক বছরে','পাঁচ বছরে','অনেক সময় লাগবে']},
-  {id:'fb23',q:'আওয়ামী লীগ কি রাজনীতিতে ফিরতে পারবে?',cat:'রাজনীতি',opts:['হ্যাঁ','বিচারের পরে','না']},
-  {id:'fb24',q:'সরকারি চাকরিতে কোটা কেমন হওয়া উচিত?',cat:'সমাজ',opts:['সম্পূর্ণ মেধায়','সীমিত কোটা','বর্তমান ব্যবস্থা']},
-  {id:'fb25',q:'জুলাই অভ্যুত্থানের চেতনা রক্ষা পাচ্ছে?',cat:'জুলাই অভ্যুত্থান',opts:['হ্যাঁ','আংশিক','না']},
-  {id:'fb26',q:'মূল্যস্ফীতি নিয়ন্ত্রণে কার্যকর পদক্ষেপ?',cat:'অর্থনীতি',opts:['আমদানি শুল্ক','বাজার মনিটরিং','ব্যাংক রেট']},
-  {id:'fb27',q:'বিচারব্যবস্থা কি স্বাধীন?',cat:'সরকার',opts:['সম্পূর্ণ','আংশিক','না']},
-  {id:'fb28',q:'নদী দূষণ কি নিয়ন্ত্রণ সম্ভব?',cat:'সমাজ',opts:['হ্যাঁ','কঠিন','অসম্ভব']},
-  {id:'fb29',q:'সাইবার নিরাপত্তা কি যথেষ্ট?',cat:'সরকার',opts:['হ্যাঁ','না','মোটামুটি']},
-  {id:'fb30',q:'১০ বছরে বাংলাদেশ মধ্যম আয়ের দেশ হবে?',cat:'অর্থনীতি',opts:['হ্যাঁ অবশ্যই','সম্ভব','কঠিন']}
+  {id:'fb1', q:'জুলাই ২০২৪ গণ-অভ্যুত্থানের পর পরিস্থিতি কেমন হয়েছে?',           cat:'জুলাই অভ্যুত্থান', opts:['ভালো হয়েছে','কিছুটা ভালো','খারাপ হয়েছে']},
+  {id:'fb2', q:'বর্তমান অন্তর্বর্তী সরকার নিয়ে আপনার মূল্যায়ন?',                 cat:'সরকার',           opts:['সন্তুষ্ট','মোটামুটি','অসন্তুষ্ট']},
+  {id:'fb3', q:'জাতীয় নির্বাচন কখন হওয়া উচিত?',                                  cat:'রাজনীতি',         opts:['এখনই','সংস্কারের পরে','২০২৬ সালে']},
+  {id:'fb4', q:'দ্রব্যমূল্য নিয়ন্ত্রণে সরকার কি সফল?',                            cat:'অর্থনীতি',        opts:['হ্যাঁ','না','আংশিক']},
+  {id:'fb5', q:'আইনশৃঙ্খলা পরিস্থিতি কেমন?',                                       cat:'সমাজ',            opts:['ভালো','মোটামুটি','খারাপ']},
+  {id:'fb6', q:'ছাত্র আন্দোলনের অর্জন কি টেকসই?',                                 cat:'জুলাই অভ্যুত্থান', opts:['হ্যাঁ','আংশিক','না']},
+  {id:'fb7', q:'ভারত-বাংলাদেশ সম্পর্ক কেমন হওয়া উচিত?',                          cat:'রাজনীতি',         opts:['সমমর্যাদার','বন্ধুত্বপূর্ণ','কঠোর']},
+  {id:'fb8', q:'দুর্নীতি দমনে সবচেয়ে জরুরি পদক্ষেপ কী?',                         cat:'সরকার',           opts:['আইনের প্রয়োগ','রাজনৈতিক সদিচ্ছা','জনসচেতনতা']},
+  {id:'fb9', q:'মিডিয়া স্বাধীনতার বর্তমান অবস্থা?',                               cat:'সমাজ',            opts:['ভালো','আগের চেয়ে ভালো','সীমাবদ্ধ']},
+  {id:'fb10',q:'বেকারত্ব সমাধানে কোন পথ সবচেয়ে কার্যকর?',                        cat:'অর্থনীতি',        opts:['নতুন শিল্প','দক্ষতা উন্নয়ন','বিদেশে কর্মসংস্থান']},
+  {id:'fb11',q:'শিক্ষাব্যবস্থার সবচেয়ে বড় সমস্যা কী?',                           cat:'সমাজ',            opts:['মানসম্পন্ন শিক্ষক','পাঠ্যক্রম','রাজনীতি']},
+  {id:'fb12',q:'নির্বাচনে সবচেয়ে গুরুত্বপূর্ণ ইস্যু কী?',                        cat:'রাজনীতি',         opts:['অর্থনীতি','সুশাসন','গণতন্ত্র']},
+  {id:'fb13',q:'নারী নিরাপত্তার পরিস্থিতি কেমন?',                                  cat:'সমাজ',            opts:['উন্নত','একই','খারাপ']},
+  {id:'fb14',q:'সংবিধান সংশোধন করা উচিত?',                                         cat:'রাজনীতি',         opts:['হ্যাঁ সম্পূর্ণ','কিছু অংশ','না']},
+  {id:'fb15',q:'প্রবাসীদের ভোটাধিকার দেওয়া উচিত?',                                cat:'রাজনীতি',         opts:['হ্যাঁ','বিবেচনা করা যায়','না']},
+  {id:'fb16',q:'অর্থনৈতিক পুনরুদ্ধারে সবচেয়ে গুরুত্বপূর্ণ খাত?',                 cat:'অর্থনীতি',        opts:['পোশাক শিল্প','রেমিট্যান্স','আইটি সেক্টর']},
+  {id:'fb17',q:'জুলাই শহীদদের পরিবারের জন্য কী করা উচিত?',                        cat:'জুলাই অভ্যুত্থান', opts:['সরকারি ভাতা','ন্যায়বিচার নিশ্চিত','উভয়ই']},
+  {id:'fb18',q:'পুলিশ সংস্কার কি যথেষ্ট হয়েছে?',                                  cat:'সরকার',           opts:['হ্যাঁ','আংশিক','না মোটেই']},
+  {id:'fb19',q:'রোহিঙ্গা সংকট সমাধানে সর্বোত্তম পথ?',                            cat:'সমাজ',            opts:['প্রত্যাবাসন','আন্তর্জাতিক চাপ','সরাসরি আলোচনা']},
+  {id:'fb20',q:'ডিজিটাল নিরাপত্তা আইনের মতো আইন ফিরে আসা উচিত?',                 cat:'রাজনীতি',         opts:['না কখনো','সংশোধন করলে','হ্যাঁ']},
+  {id:'fb21',q:'বিশ্ববিদ্যালয়ে ছাত্র রাজনীতি নিষিদ্ধ হওয়া উচিত?',              cat:'সমাজ',            opts:['হ্যাঁ','না','সীমিত রাখতে হবে']},
+  {id:'fb22',q:'জ্বালানি সংকট কবে নাগাদ সমাধান হবে?',                             cat:'অর্থনীতি',        opts:['এক বছরে','পাঁচ বছরে','দীর্ঘমেয়াদী সমস্যা']},
+  {id:'fb23',q:'আওয়ামী লীগ কি বিচারের পর রাজনীতিতে ফিরতে পারবে?',               cat:'রাজনীতি',         opts:['হ্যাঁ','বিচারের পরে দেখা যাবে','না']},
+  {id:'fb24',q:'সরকারি চাকরিতে কোটা কেমন হওয়া উচিত?',                            cat:'সমাজ',            opts:['সম্পূর্ণ মেধায়','সীমিত কোটা','বর্তমান ব্যবস্থা']},
+  {id:'fb25',q:'জুলাই অভ্যুত্থানের চেতনা কি রক্ষা পাচ্ছে?',                      cat:'জুলাই অভ্যুত্থান', opts:['হ্যাঁ পুরোপুরি','আংশিক','না হচ্ছে না']},
+  {id:'fb26',q:'মূল্যস্ফীতি নিয়ন্ত্রণে সবচেয়ে কার্যকর পদক্ষেপ?',               cat:'অর্থনীতি',        opts:['আমদানি শুল্ক কমানো','বাজার মনিটরিং','ব্যাংক সুদহার']},
+  {id:'fb27',q:'বিচারব্যবস্থা কি প্রকৃতপক্ষে স্বাধীন?',                           cat:'সরকার',           opts:['সম্পূর্ণ স্বাধীন','আংশিক','না']},
+  {id:'fb28',q:'নদী দূষণ নিয়ন্ত্রণ কি সম্ভব?',                                    cat:'সমাজ',            opts:['হ্যাঁ সম্ভব','কঠিন কিন্তু সম্ভব','প্রায় অসম্ভব']},
+  {id:'fb29',q:'সাইবার নিরাপত্তায় বাংলাদেশ কতটা প্রস্তুত?',                      cat:'সরকার',           opts:['ভালো প্রস্তুতি','মোটামুটি','একদমই না']},
+  {id:'fb30',q:'১০ বছরে বাংলাদেশ কি উচ্চ-মধ্যম আয়ের দেশ হতে পারবে?',           cat:'অর্থনীতি',        opts:['হ্যাঁ অবশ্যই','সম্ভব যদি সংস্কার হয়','কঠিন']},
 ];
 
 async function genPolls() {
-  const ck = getCacheKey();
+  const ck     = getCacheKey();
   const cached = LS.get(ck);
-  if (cached && cached.length >= POLLS_PER_DAY) return cached;
+  if (cached && Array.isArray(cached) && cached.length >= 20) return cached;
 
+  // No key → fallback immediately
   if (!GROQ_KEY || GROQ_KEY === 'YOUR_GROQ_API_KEY') return FALLBACK_POLLS;
 
-  const prompt = `তুমি বাংলাদেশের রাজনৈতিক বিশ্লেষক। আজকের (${today()}) বাংলাদেশের পরিস্থিতি নিয়ে ৩০টি জনমত জরিপ প্রশ্ন তৈরি করো।
+  const prompt = `তুমি বাংলাদেশের একজন নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ ${today()}।
 
-বিষয়সমূহ: জুলাই অভ্যুত্থান, বর্তমান সরকার, নির্বাচন, দ্রব্যমূল্য, ছাত্র আন্দোলন, রাজনৈতিক দল, আইনশৃঙ্খলা, অর্থনীতি, মিডিয়া, দুর্নীতি
+বাংলাদেশের বর্তমান পরিস্থিতি (জুলাই ২০২৪ অভ্যুত্থান পরবর্তী, অন্তর্বর্তী সরকার, সংস্কার প্রক্রিয়া) নিয়ে ঠিক ৩০টি জনমত জরিপ প্রশ্ন তৈরি করো।
 
-শুধু নিচের JSON array return করো (অন্য কিছু না):
-[{"id":"p1","q":"প্রশ্ন","cat":"রাজনীতি","opts":["বিকল্প১","বিকল্প২","বিকল্প৩"]}]
+বিষয়: রাজনীতি, অর্থনীতি, জুলাই অভ্যুত্থান, সমাজ, সরকার
 
-cat মান: রাজনীতি, অর্থনীতি, জুলাই অভ্যুত্থান, সমাজ, সরকার
-সব বাংলায়। নিরপেক্ষ ও চিন্তাউদ্দীপক প্রশ্ন।`;
+শুধু নিচের JSON array return করো, আর কিছু না:
+[{"id":"p1","q":"প্রশ্ন বাংলায়","cat":"রাজনীতি","opts":["বিকল্প১","বিকল্প২","বিকল্প৩"]}]
+
+নিয়ম:
+- সব বাংলায়
+- cat মান শুধু: রাজনীতি, অর্থনীতি, জুলাই অভ্যুত্থান, সমাজ, সরকার
+- প্রতিটি প্রশ্নে ঠিক ৩টি বিকল্প
+- নিরপেক্ষ, চিন্তাউদ্দীপক প্রশ্ন
+- ঠিক ৩০টি প্রশ্ন`;
 
   try {
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+      method:  'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_KEY },
       body: JSON.stringify({
         model: GROQ_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.9, max_tokens: 4000
+        messages: [{ role:'user', content:prompt }],
+        temperature: 0.85,
+        max_tokens:  4500
       })
     });
-    const d = await r.json();
-    let txt = d.choices?.[0]?.message?.content || '';
-    txt = txt.replace(/```json|```/g, '').trim();
-    const polls = JSON.parse(txt);
-    if (Array.isArray(polls) && polls.length >= 20) {
-      LS.set(ck, polls); return polls;
+    const data = await r.json();
+    let txt = data.choices?.[0]?.message?.content || '';
+    // Strip markdown fences
+    txt = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+    // Find JSON array
+    const match = txt.match(/\[[\s\S]*\]/);
+    if (match) {
+      const polls = JSON.parse(match[0]);
+      if (Array.isArray(polls) && polls.length >= 20) {
+        LS.set(ck, polls);
+        return polls;
+      }
     }
-  } catch(e) { console.warn('Groq:', e); }
+  } catch(e) {
+    console.warn('Groq API error:', e);
+  }
   return FALLBACK_POLLS;
 }
 
-// ── Render ────────────────────────────────────────────────────
-function renderPolls(cat = 'all') {
-  const grid = document.getElementById('pollsGrid');
-  shown = cat === 'all' ? allPolls : allPolls.filter(p => p.cat === cat);
-  const slice = shown.slice(0, showN);
-  grid.innerHTML = slice.map((p, i) => makeCard(p, i)).join('');
-  document.getElementById('loadMore').style.display = shown.length > showN ? 'block' : 'none';
-  grid.querySelectorAll('.p-opt').forEach(b => b.addEventListener('click', () => onVote(b.dataset.pid, +b.dataset.oi)));
+// ── Render polls ──────────────────────────────────────────────
+function getShown() {
+  return activeCat === 'all' ? allPolls : allPolls.filter(p => p.cat === activeCat);
+}
+
+function renderPolls(cat) {
+  activeCat = cat || activeCat;
+  const grid    = document.getElementById('pollsGrid');
+  const shown   = getShown().slice(0, showN);
+  grid.innerHTML = shown.map((p, i) => makeCard(p, i)).join('');
+  const hasMore  = getShown().length > showN;
+  document.getElementById('loadMore').style.display = hasMore ? 'block' : 'none';
+  // attach vote handlers
+  grid.querySelectorAll('.p-opt').forEach(btn => {
+    btn.addEventListener('click', () => onVote(btn.dataset.pid, +btn.dataset.oi));
+  });
   setTimeout(() => JOAFComponents.initAnimations(), 60);
 }
 
 function makeCard(p, idx) {
-  const vd = getVD(p.id), mv = myVote(p.id), voted = mv !== null, total = vd.t||0;
-  const opts = (p.opts||p.options||[]).map((o, i) => {
-    const cnt = vd.c?.[i]||0, pct = total > 0 ? Math.round(cnt/total*100) : 0, sel = mv===i;
-    return `<button class="p-opt${sel?' sel':''}" data-pid="${p.id}" data-oi="${i}" ${voted&&!sel?'disabled':''}>
-      ${voted?`<div class="p-bar" style="width:${pct}%"></div>`:''}
+  const vd    = getVD(p.id);
+  const mv    = myVote(p.id);
+  const voted = mv !== null;
+  const total = vd.t || 0;
+  const opts  = (p.opts || []).map((o, i) => {
+    const cnt = vd.c?.[i] || 0;
+    const pct = total > 0 ? Math.round(cnt / total * 100) : 0;
+    const isMine = mv === i;
+    let cls = 'p-opt';
+    if (voted) cls += isMine ? ' selected' : ' other-voted';
+    return `<button class="${cls}" data-pid="${p.id}" data-oi="${i}" ${voted&&!isMine?'disabled':''}>
+      ${voted ? `<div class="p-bar" style="width:${pct}%"></div>` : ''}
       <span style="position:relative;z-index:1">${o}</span>
-      ${voted?`<span class="p-pct" style="position:relative;z-index:1">${pct}%</span>`:''}
+      ${voted ? `<span class="p-pct" style="position:relative;z-index:1">${bn(pct)}%</span>` : ''}
     </button>`;
   }).join('');
-  return `<div class="poll-item joaf-reveal-scale" style="transition-delay:${(idx%6)*.05}s">
+
+  return `<div class="poll-card${voted?' voted':''} joaf-reveal-scale" style="transition-delay:${(idx%6)*0.05}s">
     <div class="p-num">প্রশ্ন ${bn(idx+1)}</div>
-    <span class="p-cat">${p.cat}</span>
-    <div class="p-q">${p.q}</div>
+    <span class="p-cat-tag">${p.cat}</span>
+    <div class="p-question">${p.q}</div>
     ${opts}
-    ${voted?'<div class="p-voted">✅ ভোট দেওয়া হয়েছে</div>':''}
+    ${voted ? '<div class="p-voted-badge">✅ ভোট দেওয়া হয়েছে</div>' : ''}
     <div class="p-total">${bn(total)} জন ভোট দিয়েছেন</div>
   </div>`;
 }
 
 function onVote(pid, oi) {
-  if (!CU) { alert('ভোট দিতে আগে লগইন করুন! 👈 বাম দিকে তথ্য দিন।'); return; }
+  if (!CU) {
+    // Scroll to login panel
+    document.getElementById('lName').focus();
+    document.getElementById('loginSection').scrollIntoView({behavior:'smooth'});
+    alert('👈 ভোট দিতে আগে বাম দিকে নাম ও নম্বর দিয়ে প্রবেশ করুন!');
+    return;
+  }
   if (hasVoted(pid)) return;
-  saveVD(pid, oi); recordVote(pid, oi);
-  const idx = shown.findIndex(p => p.id === pid);
+  saveVD(pid, oi);
+  recordVote(pid, oi);
+  // Re-render just this card
+  const shown = getShown();
+  const idx   = shown.findIndex(p => p.id === pid);
   if (idx !== -1) {
-    const cards = document.querySelectorAll('.poll-item');
+    const cards = document.querySelectorAll('.poll-card');
     if (cards[idx]) {
-      const d = document.createElement('div');
-      d.innerHTML = makeCard(shown[idx], idx);
-      const nc = d.firstElementChild;
-      nc.classList.add('visible');
-      cards[idx].replaceWith(nc);
+      const tmp = document.createElement('div');
+      tmp.innerHTML = makeCard(shown[idx], idx);
+      const newCard = tmp.firstElementChild;
+      newCard.classList.add('visible');
+      cards[idx].replaceWith(newCard);
     }
   }
 }
@@ -437,56 +829,115 @@ function showMore() { showN += 10; renderPolls(activeCat); }
 
 // ── Leaderboard ───────────────────────────────────────────────
 function renderLB() {
-  const lbEl = document.getElementById('lbList');
-  const users = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k && k.startsWith('j_u')) {
-      try { const u = JSON.parse(localStorage.getItem(k)); if (u?.name) users.push(u); } catch {}
+  const lbEl    = document.getElementById('lbList');
+  const totalEl = document.getElementById('lbTotal');
+  const users   = [];
+
+  LS.keys().forEach(k => {
+    if (k.startsWith('u')) {
+      const u = LS.get(k);
+      if (u?.name && u?.phone) users.push(u);
     }
+  });
+
+  totalEl.textContent = bn(users.length) + ' জন অংশগ্রহণকারী';
+
+  if (!users.length) {
+    lbEl.innerHTML = '<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px">এখনো কেউ অংশগ্রহণ করেননি</div>';
+    return;
   }
-  if (!users.length) { lbEl.innerHTML = '<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px">এখনো কেউ লগইন করেননি</div>'; return; }
-  users.sort((a,b) => (b.streak||0)-(a.streak||0));
-  const rc = ['r-gold','r-silver','r-bronze'], re = ['🥇','🥈','🥉'];
-  lbEl.innerHTML = users.slice(0,10).map((u,i) => {
-    const tv = Object.keys(u.votes?.[today()]||{}).length;
-    const ic = CU && u.id === CU.id;
-    return `<div class="lb-row">
-      <div class="lb-rank ${rc[i]||'r-n'}">${i<3?re[i]:(i+1)}</div>
-      <div class="lb-av">${u.name.charAt(0)}</div>
-      <div style="flex:1"><div style="font-weight:700;font-size:13px">${u.name}${ic?' <span style="background:#dcfce7;color:#166534;padding:1px 7px;border-radius:10px;font-size:10px">আপনি</span>':''}</div><div style="font-size:11px;color:#9ca3af">🔥 ${bn(u.streak||0)} দিন · আজ ${bn(tv)} ভোট</div></div>
-      <div style="font-weight:800;color:#075e55;font-size:14px">${bn(u.cycles||0)}×৫০৳</div>
+
+  // Sort: cycles desc, then streak desc, then total votes desc
+  users.sort((a,b) =>
+    ((b.cycles||0) - (a.cycles||0)) ||
+    ((b.streak||0) - (a.streak||0)) ||
+    ((b.totalVotes||0) - (a.totalVotes||0))
+  );
+
+  const rankCls  = ['rank-1','rank-2','rank-3'];
+  const rankIcon = ['🥇','🥈','🥉'];
+  const ts = today();
+
+  lbEl.innerHTML = users.slice(0, 15).map((u, i) => {
+    const isMe    = CU && u.id === CU.id;
+    const tv      = Object.keys(u.votes?.[ts]||{}).length;
+    const earned  = (u.cycles||0) * REWARD_AMT;
+    const avatarHtml = u.photo
+      ? `<img loading="lazy" src="${u.photo}" alt="${u.name}" onerror="this.parentElement.style.background='linear-gradient(135deg,#90161f,#075e55)';this.remove();this.parentElement.textContent='${u.name.charAt(0).toUpperCase()}'">`
+      : u.name.charAt(0).toUpperCase();
+
+    return `<div class="lb-row${isMe?' is-me':''}">
+      <div class="lb-rank ${rankCls[i]||'rank-n'}">${i<3?rankIcon[i]:bn(i+1)}</div>
+      <div class="lb-av">${avatarHtml}</div>
+      <div class="lb-info">
+        <div class="lb-name">${u.name}${isMe?'<span class="me-badge">আপনি</span>':''}</div>
+        <div class="lb-meta">🔥 ${bn(u.streak||0)} দিন স্ট্রিক · আজ ${bn(tv)} ভোট · সর্বোচ্চ ${bn(u.maxStreak||0)}</div>
+      </div>
+      <div class="lb-right">
+        <div class="lb-earn">${bn(earned)} টাকা</div>
+        <div class="lb-streak">${bn(u.cycles||0)} চক্র</div>
+      </div>
     </div>`;
   }).join('');
 }
 
-// ── Countdown ─────────────────────────────────────────────────
+// ── Countdown timer — BD timezone (UTC+6) ─────────────────────
 function tick() {
-  const now = new Date(), next = new Date();
-  next.setMinutes(0,0,0);
+  // BD time = UTC + 6 hours
+  const nowUTC  = new Date();
+  const bdOffset = 6 * 60; // minutes
+  const bdMs    = nowUTC.getTime() + (bdOffset + nowUTC.getTimezoneOffset()) * 60000;
+  const now     = new Date(bdMs);
+
+  const next = new Date(bdMs);
+  next.setMinutes(0, 0, 0);
   if (now.getHours() < 12) next.setHours(12);
-  else { next.setHours(0,0,0,0); next.setDate(next.getDate()+1); }
-  const d = next - now, h = Math.floor(d/3600000), m = Math.floor((d%3600000)/60000), s = Math.floor((d%60000)/1000);
+  else { next.setHours(24); }
+
+  const diff = next - now;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  const fmt = n => bn(n < 10 ? '0'+n : n);
   const el = document.getElementById('cd');
-  if (el) el.textContent = bn(h)+':'+bn(m<10?'0'+m:m)+':'+bn(s<10?'0'+s:s);
+  if (el) el.textContent = fmt(h) + ':' + fmt(m) + ':' + fmt(s);
 }
 
-// ── Tabs ──────────────────────────────────────────────────────
+// ── Tab events ────────────────────────────────────────────────
 document.getElementById('ptabs').addEventListener('click', e => {
-  const b = e.target.closest('[data-c]'); if (!b) return;
-  document.querySelectorAll('.ptab').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); activeCat = b.dataset.c; showN = 10;
-  renderPolls(activeCat);
+  const btn = e.target.closest('[data-c]');
+  if (!btn) return;
+  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  showN = 10;
+  renderPolls(btn.dataset.c);
 });
 
-// ── Init ──────────────────────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
-  const uid = LS.get('cu'); if (uid) loadUser(uid);
-  setInterval(tick, 1000); tick();
-  try { allPolls = await genPolls(); } catch { allPolls = FALLBACK_POLLS; }
-  document.getElementById('aiLoad').style.display = 'none';
+  // Restore session
+  const uid = LS.get('cu');
+  if (uid) loadUser(uid);
+
+  // Start countdown
+  tick(); setInterval(tick, 1000);
+
+  // Load polls (AI or fallback)
+  try {
+    allPolls = await genPolls();
+  } catch(e) {
+    allPolls = FALLBACK_POLLS;
+  }
+
+  document.getElementById('aiLoad').style.display    = 'none';
   document.getElementById('pollsGrid').style.display = 'grid';
-  renderPolls(); renderLB();
+  renderPolls('all');
+  renderLB();
+
+  // Hide preloader
+  clearTimeout(window._ppTimer);
+  const pl = document.getElementById('joaf-preloader');
+  if (pl) pl.classList.add('hidden');
 });
 </script>
 </body>

@@ -2,12 +2,18 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title id="pr-page-title">প্রেস রিলিজ — জোয়াফ</title>
   <meta name="description" id="pr-meta-desc" content="">
   <meta property="og:title" id="pr-og-title" content="">
   <meta property="og:image" id="pr-og-img" content="https://julyforum.com/logoc7c3.png">
   <meta property="og:type" content="article">
+    <!-- Resource hints for speed -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://code.jquery.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+  <link rel="dns-prefetch" href="https://ipapi.co">
   <link rel="icon" href="/favicon.ico">
   <link rel="manifest" href="/site.webmanifest">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -58,6 +64,7 @@
         <div class="pr-date-badge"><i class="zmdi zmdi-calendar"></i> <span id="pr-date-display">—</span></div>
         <h1 id="pr-title">লোড হচ্ছে...</h1>
         <p id="pr-summary" style="opacity:.82;font-size:15px;max-width:640px;margin-top:10px"></p>
+        <div style="margin-top:10px;opacity:.7;font-size:13px" id="pr-read-time"></div>
       </div>
     </div>
   </section>
@@ -98,12 +105,12 @@
   <div id="joaf-footer"></div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script src="/js/plugins.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
+<script src="/js/plugins.js" defer></script>
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
-<script src="/js/rainbow-swirl-cursor.js"></script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script>
 (function() {
   // Detect which press release this is from URL
@@ -132,13 +139,46 @@
   document.getElementById('pr-img-date-top').innerHTML = '<i class="zmdi zmdi-calendar"></i> ' + dateShort;
   document.getElementById('pr-img-date-bottom').textContent = '#' + pr.id;
 
-  // Content — load from /press-releases/content/ folder if available
+  // Reading time estimate
+  const readTimeEl = document.getElementById('pr-read-time');
+
+  // Content — load from /press-releases/content/ folder
   const contentEl = document.getElementById('pr-content');
   fetch('/press-releases/content/' + slug + '.txt')
     .then(r => r.ok ? r.text() : null)
     .then(text => {
       if (text) {
-        contentEl.innerHTML = text.split('\n\n').map(p => `<p>${p.trim()}</p>`).join('');
+        // Smart text → HTML parser
+        // Supports: ## headings, **bold**, empty line = new paragraph
+        const lines = text.split('\n');
+        let html = '';
+        let para = [];
+        const flushPara = () => {
+          if (para.length) {
+            const t = para.join(' ').trim();
+            if (t) html += `<p>${t}</p>`;
+            para = [];
+          }
+        };
+        lines.forEach(line => {
+          const l = line.trim();
+          if (!l) { flushPara(); return; }
+          if (l.startsWith('## ')) { flushPara(); html += `<h3 style="font-weight:900;color:#1a202c;margin:24px 0 10px;font-size:1.15rem">${l.slice(3)}</h3>`; return; }
+          if (l.startsWith('# '))  { flushPara(); html += `<h2 style="font-weight:900;color:#90161f;margin:28px 0 12px;font-size:1.3rem">${l.slice(2)}</h2>`; return; }
+          if (l.startsWith('- ') || l.startsWith('• ')) { flushPara(); html += `<li style="margin-bottom:6px">${l.slice(2)}</li>`; return; }
+          // Inline bold **text**
+          const formatted = l.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          para.push(formatted);
+        });
+        flushPara();
+        // Wrap consecutive <li> in <ul>
+        html = html.replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, m => `<ul style="padding-left:20px;margin-bottom:16px">${m}</ul>`);
+        contentEl.innerHTML = html;
+
+        // Reading time
+        const words = text.split(/\s+/).length;
+        const mins  = Math.max(1, Math.round(words / 200));
+        if (readTimeEl) readTimeEl.textContent = `⏱ ${mins} মিনিট পড়ার সময়`;
       } else {
         contentEl.innerHTML = `<p>${pr.summary}</p><p style="color:#9ca3af;font-size:14px">📌 বিস্তারিত বিষয়বস্তু শীঘ্রই প্রকাশিত হবে।</p>`;
       }
@@ -146,6 +186,14 @@
     .catch(() => {
       contentEl.innerHTML = `<p>${pr.summary}</p>`;
     });
+
+  // Dynamic canonical
+  const canonEl = document.getElementById('pr-canonical');
+  if (canonEl) canonEl.href = 'https://julyforum.com/press-releases/' + slug + '.html';
+  // Dynamic OG URL
+  let ogUrl = document.querySelector('meta[property="og:url"]');
+  if (!ogUrl) { ogUrl = document.createElement('meta'); ogUrl.setAttribute('property','og:url'); document.head.appendChild(ogUrl); }
+  ogUrl.content = 'https://julyforum.com/press-releases/' + slug + '.html';
 
   // Share buttons
   const url = encodeURIComponent('https://julyforum.com/press-releases/' + slug + '.html');
