@@ -1,16 +1,22 @@
 // ============================================================
-// JOAF Components v4.1 — Header, Footer, Ticker, OG meta
-// Fix: init timing, ticker inject, Bangla nav
+// JOAF Components v4.0
+// ✅ Header, Footer, Ticker, OG meta — সব এখানে
 // ============================================================
 
 const JOAFComponents = {
 
   // ── Header ──────────────────────────────────────────────
-  renderHeader(activePage) {
+  renderHeader(activePage = '') {
     const s = JOAF.site;
     const navItems = JOAF.nav.map(item => {
       const active = item.id === activePage ? 'active' : '';
-      return `<li class="${active}"><a href="${item.href}"${active ? ' aria-current="page"' : ''}>${item.label}</a></li>`;
+      // Special styling for membership item
+      const isMember = item.id === 'membership';
+      const liStyle = isMember ? ' class="nav-cta-item"' : (active ? ` class="${active}"` : '');
+      const aExtra = isMember
+        ? ` style="background:linear-gradient(135deg,var(--brand),#b91c1c);color:#fff !important;padding:6px 14px !important;border-radius:50px;font-weight:800;letter-spacing:.3px;"`
+        : '';
+      return `<li${liStyle}><a href="${item.href}" ${active && !isMember ? 'aria-current="page"' : ''}${aExtra}>${item.label}</a></li>`;
     }).join('');
 
     return `<header class="header-area" role="banner">
@@ -27,21 +33,23 @@ const JOAFComponents = {
       </div>
       <div class="header-bottom">
         <div class="container">
-          <div class="row align-items-center" style="padding:4px 0">
+          <div class="row align-items-center" style="padding:2px 0;margin:0;">
             <div class="col-auto">
-              <div class="d-flex align-items-center" style="gap:0">
+              <div class="navbar-header d-flex align-items-center" style="gap:0">
                 <a href="/" class="logo navbar-brand">
-                  <img src="${s.logo}?v=${s.version}" alt="${s.abbr}" style="max-width:105px">
+                  <img src="${s.logo}?v=${s.version}" alt="${s.abbr}" style="max-width:90px;height:auto;display:block;">
                 </a>
-                <button class="navbar-toggle d-block d-md-none" id="navToggleBtn"
+                <button class="navbar-toggle collapsed d-block d-md-none"
+                  data-bs-toggle="collapse" data-bs-target="#main-menu"
                   aria-label="মেনু" aria-expanded="false"
-                  style="margin-left:12px;background:var(--brand);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:20px;cursor:pointer">
-                  <i class="zmdi zmdi-menu" id="menuOpenIcon"></i>
+                  style="margin-left:12px;background:var(--brand);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:20px;">
+                  <i class="zmdi zmdi-menu menu-open"></i>
+                  <i class="zmdi zmdi-close menu-close" style="display:none"></i>
                 </button>
               </div>
             </div>
             <div class="col">
-              <nav class="main-menu" id="main-menu" aria-label="প্রধান নেভিগেশন">
+              <nav class="main-menu collapse" id="main-menu" aria-label="প্রধান নেভিগেশন">
                 <ul style="justify-content:flex-end">${navItems}</ul>
               </nav>
             </div>
@@ -53,6 +61,7 @@ const JOAFComponents = {
 
   // ── Ticker ──────────────────────────────────────────────
   renderTicker() {
+    // Duplicate items for seamless CSS loop
     const items = [...JOAF.ticker, ...JOAF.ticker]
       .map(t => `<span class="ticker-item"><a href="${t.href}">${t.text}</a><span class="ticker-sep">•</span></span>`)
       .join('');
@@ -99,37 +108,34 @@ const JOAFComponents = {
       </div>
       <div class="footer-bottom">
         <p>দেশ আগে, দল পরে — ${s.abbr} |
-          <a href="/membership.html">✊ শামিল হোন</a> |
-          <a href="/donate.html">💚 পাশে থাকুন</a>
+          <a href="/membership.html">✊ যোগ দিন</a> |
+          <a href="/donate.html">💚 সহযোগিতা</a>
         </p>
       </div>
     </footer>`;
   },
 
-  // ── Clock / Date / Location ──────────────────────────────
+  // ── Clock ────────────────────────────────────────────────
   startClock() {
-    const locEl  = document.getElementById('hm-loc');
+    const loc = document.getElementById('hm-loc');
     const dateEl = document.getElementById('hm-date');
     const timeEl = document.getElementById('hm-time');
-    if (!dateEl && !timeEl) return;
-
-    if (locEl) {
-      fetch('https://ipapi.co/json/')
-        .then(r => r.json())
-        .then(d => { locEl.innerHTML = `<i class="zmdi zmdi-pin"></i> ${BanglaUtil.toCity(d.city || 'Dhaka')}`; })
+    if (!dateEl) return;
+    // IP location
+    if (loc) {
+      fetch('https://ipapi.co/json/').then(r => r.json())
+        .then(d => { loc.innerHTML = `<i class="zmdi zmdi-pin"></i> ${BanglaUtil.toCity(d.city || 'Dhaka')}`; })
         .catch(() => {});
     }
-
     const tick = () => {
       const now = new Date();
       if (dateEl) dateEl.innerHTML = `<i class="zmdi zmdi-calendar"></i> ${BanglaUtil.formatDate(now)}`;
       if (timeEl) timeEl.innerHTML = `<i class="zmdi zmdi-time"></i> ${BanglaUtil.formatTime(now)}`;
     };
-    tick();
-    setInterval(tick, 1000);
+    tick(); setInterval(tick, 1000);
   },
 
-  // ── Scroll-to-top button ─────────────────────────────────
+  // ── Scroll Top Button ───────────────────────────────────
   addScrollTop() {
     const btn = document.createElement('button');
     btn.setAttribute('aria-label', 'উপরে যান');
@@ -144,7 +150,7 @@ const JOAFComponents = {
     btn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
-  // ── WhatsApp float ───────────────────────────────────────
+  // ── WhatsApp Float ──────────────────────────────────────
   addWhatsApp() {
     const a = document.createElement('a');
     a.href = `https://wa.me/?text=${encodeURIComponent(JOAF.site.name + '\n' + window.location.href)}`;
@@ -157,104 +163,113 @@ const JOAFComponents = {
     document.body.appendChild(a);
   },
 
-  // ── Scroll animations ────────────────────────────────────
+  // ── Scroll Animations — Impressive Staggered ───────────
   initAnimations() {
-    if (!('IntersectionObserver' in window)) {
-      document.querySelectorAll('.joaf-reveal,.joaf-reveal-left,.joaf-reveal-scale')
-        .forEach(el => el.classList.add('visible'));
-      return;
+    const sel = '.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom,.section-heading';
+    if ('IntersectionObserver' in window) {
+      // Group elements by their parent container for natural stagger
+      const grouped = new Map();
+      document.querySelectorAll(sel).forEach(el => {
+        const parent = el.parentElement || document.body;
+        if (!grouped.has(parent)) grouped.set(parent, []);
+        grouped.get(parent).push(el);
+      });
+
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          // Get sibling index for stagger
+          const siblings = grouped.get(el.parentElement) || [el];
+          const idx = siblings.indexOf(el);
+          // Base delay from inline style or data attr, plus sibling stagger
+          const baseDelay = parseFloat(el.style.transitionDelay) || 0;
+          const stagger = idx * 0.07;
+          const totalDelay = baseDelay + stagger;
+          // Apply
+          el.style.transitionDelay = totalDelay + 's';
+          requestAnimationFrame(() => el.classList.add('visible'));
+          obs.unobserve(el);
+        });
+      }, { threshold: 0.06, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll(sel).forEach(el => obs.observe(el));
+    } else {
+      document.querySelectorAll(sel).forEach(el => el.classList.add('visible'));
     }
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach((e, i) => {
-        if (e.isIntersecting) {
-          setTimeout(() => e.target.classList.add('visible'), i * 60);
-          obs.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.06 });
-    document.querySelectorAll('.joaf-reveal,.joaf-reveal-left,.joaf-reveal-scale')
-      .forEach(el => obs.observe(el));
+
+    // Add lift-card class to all interactive cards
+    document.querySelectorAll('.c-card,.press-card,.vision-box,.member-card,.person-card').forEach(el => {
+      if (!el.classList.contains('lift-card')) el.classList.add('lift-card');
+    });
+
+    // Pulse on primary CTA buttons
+    document.querySelectorAll('.cta-primary,.btn-wa,.hero-cta .cta-primary').forEach(el => {
+      el.classList.add('pulse-btn');
+    });
   },
 
-  // ── Lazy images ──────────────────────────────────────────
+  // ── Lazy Images ─────────────────────────────────────────
   lazyImages() {
-    if (!('IntersectionObserver' in window)) return;
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          const img = e.target;
-          if (img.dataset.src) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
-          obs.unobserve(img);
-        }
-      });
-    }, { rootMargin: '120px' });
-    document.querySelectorAll('img[data-src]').forEach(img => obs.observe(img));
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            const img = e.target;
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+            obs.unobserve(img);
+          }
+        });
+      }, { rootMargin: '100px' });
+      document.querySelectorAll('img[data-src]').forEach(img => obs.observe(img));
+    }
   },
 
-  // ── OG / Social meta ────────────────────────────────────
-  injectOGMeta(config) {
-    config = config || {};
+  // ── OG / Social Meta ────────────────────────────────────
+  injectOGMeta(config = {}) {
     const s = JOAF.site;
     const title = config.title || document.title;
-    const desc  = config.desc  || (document.querySelector('meta[name="description"]') || {}).content || s.tagline2;
-    const img   = config.img   || (s.baseUrl + s.logo);
-    const url   = config.url   || (typeof window !== 'undefined' ? window.location.href : s.baseUrl);
-    const set = (prop, val, isName) => {
-      const attr = isName ? 'name' : 'property';
-      let el = document.querySelector(`meta[${attr}="${prop}"]`);
-      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, prop); document.head.appendChild(el); }
+    const desc = config.desc || document.querySelector('meta[name="description"]')?.content || s.tagline2;
+    const img = config.img || (s.baseUrl + s.logo);
+    const url = config.url || (typeof window !== 'undefined' ? window.location.href : s.baseUrl);
+    const set = (prop, val, isName = false) => {
+      let el = document.querySelector(`meta[${isName ? 'name' : 'property'}="${prop}"]`);
+      if (!el) { el = document.createElement('meta'); el.setAttribute(isName ? 'name' : 'property', prop); document.head.appendChild(el); }
       el.setAttribute('content', val);
     };
     set('og:title', title); set('og:description', desc);
-    set('og:image', img);   set('og:image:width', '1600'); set('og:image:height', '900');
-    set('og:url', url);     set('og:type', 'website');     set('og:site_name', s.name);
+    set('og:image', img); set('og:image:width', '1600'); set('og:image:height', '900');
+    set('og:url', url); set('og:type', 'website'); set('og:site_name', s.name);
     set('fb:app_id', s.fbAppId);
     set('twitter:card', 'summary_large_image', true);
     set('twitter:title', title, true); set('twitter:description', desc, true);
     set('twitter:image', img, true);
   },
 
-  // ── Preloader hide ───────────────────────────────────────
+  // ── Preloader hide ──────────────────────────────────────
   hidePreloader() {
     const el = document.getElementById('joaf-preloader');
-    if (el) setTimeout(() => el.classList.add('hidden'), 250);
+    if (!el) return;
+    const hide = () => { el.classList.add('hidden'); };
+    // Hide after 300ms normally, force-hide at 2.5s max (safety net)
+    setTimeout(hide, 300);
+    setTimeout(hide, 2500);
+    // Also hide on any error so page never stays stuck
+    window.addEventListener('error', () => setTimeout(hide, 400), { once: true });
   },
 
-  // ── Mobile nav toggle ────────────────────────────────────
-  initMobileNav() {
-    const btn  = document.getElementById('navToggleBtn');
-    const menu = document.getElementById('main-menu');
-    if (!btn || !menu) return;
-    btn.addEventListener('click', () => {
-      const open = menu.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open);
-      const icon = document.getElementById('menuOpenIcon');
-      if (icon) icon.className = open ? 'zmdi zmdi-close' : 'zmdi zmdi-menu';
-    });
-    // Close on outside click
-    document.addEventListener('click', e => {
-      if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
-        menu.classList.remove('open');
-        btn.setAttribute('aria-expanded', 'false');
-        const icon = document.getElementById('menuOpenIcon');
-        if (icon) icon.className = 'zmdi zmdi-menu';
-      }
-    });
-  },
-
-  // ── Main Init ────────────────────────────────────────────
+  // ── Main Init ───────────────────────────────────────────
   init(pageId) {
-    pageId = pageId || 'home';
-
-    // Inject header
+    // Header
     const hp = document.getElementById('joaf-header');
     if (hp) hp.outerHTML = this.renderHeader(pageId);
 
-    // Inject ticker — find by id, replace
+    // Ticker (inject after header if exists)
     const ta = document.getElementById('joaf-ticker');
     if (ta) ta.outerHTML = this.renderTicker();
 
-    // Inject footer
+    // Footer
     const fp = document.getElementById('joaf-footer');
     if (fp) fp.outerHTML = this.renderFooter();
 
@@ -263,24 +278,24 @@ const JOAFComponents = {
     this.addWhatsApp();
     this.lazyImages();
     this.injectOGMeta();
-    this.initMobileNav();
-
-    setTimeout(() => this.initAnimations(), 150);
+    setTimeout(() => this.initAnimations(), 120);
     this.hidePreloader();
+
+    // Mobile nav toggle icon swap
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.navbar-toggle');
+      if (!btn) return;
+      const open = btn.querySelector('.menu-open');
+      const close = btn.querySelector('.menu-close');
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      if (open) open.style.display = expanded ? 'none' : 'inline';
+      if (close) close.style.display = expanded ? 'inline' : 'none';
+    });
   }
 };
 
-// ── Safe init: works whether DOM is ready or not ─────────────
-// This is the KEY fix — handles both sync and async script loading
-function _joafInit() {
-  const page = (document.body && document.body.dataset.page) ||
-    window.location.pathname.split('/').pop().replace('.html', '').replace('/', '') || 'home';
+document.addEventListener('DOMContentLoaded', () => {
+  const page = document.body.dataset.page ||
+    window.location.pathname.split('/').pop().replace('.html', '') || 'home';
   JOAFComponents.init(page);
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', _joafInit);
-} else {
-  // DOM already ready (scripts loaded at bottom of body)
-  _joafInit();
-}
+});
