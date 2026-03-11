@@ -317,10 +317,11 @@
     .member-card-img-wrap{height:220px;}
     .person-card .card-img-wrap{height:190px;}
     .qa-btn{font-size:13px;padding:12px 14px;}
-    #main-menu{ display:none; }
+    #main-menu{ display:none !important; }
+    #mobile-nav-overlay{ display:none; }
   }
-  @media(min-width:768px){
-    #main-menu{ display:flex !important; }
+    @media(min-width:768px){
+    #main-menu{ display:block !important; }
     #mobile-nav-overlay{ display:none !important; }
   }
   </style>
@@ -881,60 +882,42 @@ function initFilter() {
 const heroVideo = document.getElementById('heroVideo');
 const muteBtn   = document.getElementById('muteToggle');
 if (heroVideo && muteBtn) {
-  // Always start muted (browser policy)
   heroVideo.muted = true;
   heroVideo.play().catch(() => {});
 
-  // Track whether user wants sound on
-  let userWantsSound = false;
-
-  function setMuted(muted) {
-    heroVideo.muted = muted;
-    userWantsSound  = !muted;
-    muteBtn.textContent = muted ? '🔈' : '🔊';
-    muteBtn.setAttribute('aria-pressed', muted ? 'false' : 'true');
-    muteBtn.title = muted ? 'শব্দ চালু করুন' : 'নিঃশব্দ করুন';
-  }
-
   muteBtn.addEventListener('click', function() {
     if (heroVideo.muted) {
-      // Unmute: must play() after unmuting for browser policy
+      heroVideo.pause();
       heroVideo.muted = false;
       heroVideo.play()
         .then(() => {
-          userWantsSound = true;
           muteBtn.textContent = '🔊';
-          muteBtn.setAttribute('aria-pressed', 'true');
+          muteBtn.setAttribute('aria-pressed','true');
           muteBtn.title = 'নিঃশব্দ করুন';
         })
         .catch(() => {
-          // Browser blocked — stay muted
           heroVideo.muted = true;
-          userWantsSound = false;
+          heroVideo.play().catch(()=>{});
           muteBtn.textContent = '🔈';
-          muteBtn.setAttribute('aria-pressed', 'false');
+          muteBtn.setAttribute('aria-pressed','false');
         });
     } else {
-      setMuted(true);
+      heroVideo.muted = true;
+      muteBtn.textContent = '🔈';
+      muteBtn.setAttribute('aria-pressed','false');
+      muteBtn.title = 'শব্দ চালু করুন';
     }
   });
 
-  // Mobile: unlock audio on first touch
-  document.addEventListener('touchstart', function() {
-    if (heroVideo.paused) heroVideo.play().catch(() => {});
+  document.addEventListener('touchstart', () => {
+    if (heroVideo.paused) heroVideo.play().catch(()=>{});
   }, { once: true });
 
-  // IntersectionObserver: pause/play but RESPECT user mute choice
   if ('IntersectionObserver' in window) {
-    new IntersectionObserver(function(entries) {
-      entries.forEach(function(e) {
-        if (e.isIntersecting) {
-          // Restore user's mute preference before playing
-          heroVideo.muted = !userWantsSound;
-          heroVideo.play().catch(() => {});
-        } else {
-          heroVideo.pause();
-        }
+    new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) heroVideo.play().catch(()=>{});
+        else heroVideo.pause();
       });
     }, { threshold: 0.2 }).observe(heroVideo);
   }
