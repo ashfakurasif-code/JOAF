@@ -202,12 +202,12 @@
   <section class="polls-hero">
     <div class="container polls-hero-inner joaf-reveal-zoom">
       <h1>🗳️ জোয়াফ জনরায়</h1>
-      <p style="opacity:.82;font-size:15px;max-width:520px;margin:0 auto 8px">প্রতিদিন ৩০টি নতুন প্রশ্ন — AI দ্বারা তৈরি। বাংলাদেশের ভবিষ্যৎ গড়তে আপনার মতামত দিন।</p>
+      <p style="opacity:.82;font-size:15px;max-width:520px;margin:0 auto 8px">প্রতিদিন ৩০টি নতুন প্রশ্ন। বাংলাদেশের ভবিষ্যৎ গড়তে আপনার মতামত দিন।</p>
       <div class="refresh-badge">🔄 পরবর্তী সেশন: <span class="countdown" id="cd">--:--:--</span></div>
       <div class="hero-chips">
-        <div class="hero-chip">🤖 AI-জেনারেটেড প্রশ্ন</div>
+        <div class="hero-chip">🗳️ দৈনিক জনমত প্রশ্ন</div>
         <div class="hero-chip">🔥 স্ট্রিক সিস্টেম</div>
-        <div class="hero-chip">💸 ৫০৳ পুরস্কার</div>
+        <div class="hero-chip">🎁 ৫০ টাকা ফোন রিচার্জ পুরস্কার</div>
         <div class="hero-chip">🏆 লিডারবোর্ড</div>
       </div>
     </div>
@@ -311,8 +311,8 @@
               <h4>💰 আয়ের হিসাব</h4>
               <div id="earnCyclesList"></div>
               <div class="earn-total">
-                <span>মোট অর্জিত</span>
-                <span class="amount" id="totalEarned">৳০</span>
+                <span>মোট অর্জিত (<span id="cyclesCount">০</span> চক্র × ৫০ টাকা)</span>
+                <span class="amount" id="totalEarned">এখনো ০ টাকা</span>
               </div>
               <button class="earn-claim" id="earnClaimBtn" onclick="claimReward()" style="display:none">
                 🎉 পুরস্কার দাবি করুন
@@ -380,11 +380,11 @@
   <div id="joaf-footer"></div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
-<script src="/js/plugins.js" defer></script>
-<script src="/js/data.js"></script>
-<script src="/js/components.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/js/plugins.js"></script>
+<script src="/js/data.js?v=4.2"></script>
+<script src="/js/components.js?v=4.2"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script>
 // ============================================================
@@ -579,7 +579,12 @@ function renderEarnings() {
     listEl.innerHTML = rows.join('');
   }
 
-  document.getElementById('totalEarned').textContent = '৳' + bn(totalEarned);
+  const cyclesCountEl = document.getElementById('cyclesCount');
+  if (cyclesCountEl) cyclesCountEl.textContent = bn(cycles);
+
+  document.getElementById('totalEarned').textContent = totalEarned > 0
+    ? bn(totalEarned) + ' টাকা'
+    : 'এখনো ০ টাকা';
 
   const claimBtn = document.getElementById('earnClaimBtn');
   if (unclaimedCycles > 0) {
@@ -869,20 +874,26 @@ function renderLB() {
         <div class="lb-meta">🔥 ${bn(u.streak||0)} দিন স্ট্রিক · আজ ${bn(tv)} ভোট · সর্বোচ্চ ${bn(u.maxStreak||0)}</div>
       </div>
       <div class="lb-right">
-        <div class="lb-earn">৳${bn(earned)}</div>
+        <div class="lb-earn">${bn(earned)} টাকা</div>
         <div class="lb-streak">${bn(u.cycles||0)} চক্র</div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ── Countdown timer ───────────────────────────────────────────
+// ── Countdown timer — BD timezone (UTC+6) ─────────────────────
 function tick() {
-  const now  = new Date();
-  const next = new Date();
+  // BD time = UTC + 6 hours
+  const nowUTC  = new Date();
+  const bdOffset = 6 * 60; // minutes
+  const bdMs    = nowUTC.getTime() + (bdOffset + nowUTC.getTimezoneOffset()) * 60000;
+  const now     = new Date(bdMs);
+
+  const next = new Date(bdMs);
   next.setMinutes(0, 0, 0);
   if (now.getHours() < 12) next.setHours(12);
   else { next.setHours(24); }
+
   const diff = next - now;
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);

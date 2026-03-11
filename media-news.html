@@ -46,6 +46,7 @@
 
 <div class="wrapper fix">
   <div id="joaf-header"></div>
+  <div id="joaf-ticker"></div>
 
   <!-- Page Hero -->
   <section class="section-sm" style="background:linear-gradient(135deg,#90161f,#075e55);color:#fff;padding:50px 0;margin-top:0">
@@ -90,11 +91,11 @@
   <div id="joaf-footer"></div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
-<script src="/js/plugins.js" defer></script>
-<script src="/js/data.js"></script>
-<script src="/js/components.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="/js/plugins.js"></script>
+<script src="/js/data.js?v=4.2"></script>
+<script src="/js/components.js?v=4.2"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script>
 window.addEventListener('load', () => {
@@ -102,9 +103,9 @@ window.addEventListener('load', () => {
   if (pl) setTimeout(() => pl.classList.add('hidden'), 300);
 });
 
-(function renderAllPress() {
+function renderAllPress() {
   const grid = document.getElementById('all-press-grid');
-  if (!grid) return;
+  if (!grid || typeof JOAF === 'undefined') return;
   const sorted = [...JOAF.pressReleases].sort((a,b) => new Date(b.date)-new Date(a.date));
   grid.innerHTML = sorted.map((p, i) => `
     <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:${(i%3)*0.1}s">
@@ -126,7 +127,13 @@ window.addEventListener('load', () => {
       </div>
     </div>
   `).join('');
-})();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderAllPress);
+} else {
+  renderAllPress();
+}
 </script>
 </body>
 </html>

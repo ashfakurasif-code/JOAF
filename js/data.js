@@ -1,3 +1,4 @@
+// JOAF Data v4.2 — cache bust: 20260310
 // ============================================================
 // JOAF Central Data v4.0
 // ✅ এই একটা ফাইল বদলালে সব জায়গায় আপডেট হবে
@@ -32,15 +33,15 @@ const JOAF = {
   // ── নেভিগেশন ──────────────────────────────────────────────
   // এখানে বদলালে সব pages এ nav আপডেট হবে
   nav: [
-    { label: "🏠 মূলপাতা",       href: "/",                        id: "home"       },
-    { label: "📅 কর্মসূচি",       href: "/events.html",             id: "events"     },
-    { label: "📰 গণমাধ্যম",       href: "/media-news.html",         id: "media"      },
-    { label: "🗳️ জনরায়",         href: "/joaf-polls.html",         id: "polls"      },
-    { label: "🤝 নেটওয়ার্ক",     href: "/community.html",          id: "community"  },
-    { label: "💡 আমাদের কথা",     href: "/#about-area",             id: "about"      },
-    { label: "✊ আন্দোলনে যোগ দিন",href: "/membership.html",         id: "membership" },
-    { label: "💚 সহযোগিতা করুন", href: "/donate.html",             id: "donate"     },
-    { label: "📬 যোগাযোগ",        href: "/#contact-area",           id: "contact"    },
+    { label: "🏠 মূলপাতা",      href: "/",                       id: "home"       },
+    { label: "📅 অনুষ্ঠান",      href: "/events.html",            id: "events"     },
+    { label: "📰 সংবাদ",         href: "/media-news.html",        id: "media"      },
+    { label: "🗳️ জনমত",         href: "/joaf-polls.html",        id: "polls"      },
+    { label: "🤝 কমিউনিটি",      href: "/community.html",         id: "community"  },
+    { label: "💡 আমরা কে",       href: "/#about-area",            id: "about"      },
+    { label: "✊ যোগ দিন",       href: "/membership.html",        id: "membership" },
+    { label: "💚 সহযোগিতা",      href: "/donate.html",            id: "donate"     },
+    { label: "📬 যোগাযোগ",       href: "/#contact-area",          id: "contact"    },
   ],
 
   // ── কমিউনিটি গ্রুপ ────────────────────────────────────────
