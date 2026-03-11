@@ -339,7 +339,7 @@
   <div id="joaf-ticker"></div>
 
   <!-- ══ HERO ══════════════════════════════════════════════════ -->
-  <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
+  <section id="hero-area" class="hero-area" aria-labelledby="hero-title">
     <div class="cinematic-hero">
 
       <!-- Video -->
@@ -719,36 +719,6 @@ window.addEventListener('load', () => {
   const pl = document.getElementById('joaf-preloader');
   if (pl) setTimeout(() => pl.classList.add('hidden'), 300);
 });
-
-// ── Stats ──────────────────────────────────────────────────
-(function() {
-  const row = document.getElementById('stats-row');
-  if (!row) return;
-
-  // Member counter — starts at 5724, increments every second
-  let memberCount = 5724;
-
-  row.innerHTML = JOAF.stats.map((s, i) => {
-    const isMember = s.label.includes('সদস্য');
-    const numDisplay = isMember
-      ? `<span id="live-member-count">${BanglaUtil.toNum(memberCount)}+</span>`
-      : s.number;
-    return `
-    <div class="col-6 col-md-3 stat-item" style="transition-delay:${i*.1}s">
-      <div class="stat-number">${numDisplay}</div>
-      <div class="stat-label">${s.label}</div>
-    </div>`;
-  }).join('');
-
-  // Live counter
-  const counterEl = document.getElementById('live-member-count');
-  if (counterEl) {
-    setInterval(() => {
-      memberCount++;
-      counterEl.textContent = BanglaUtil.toNum(memberCount) + '+';
-    }, 1000);
-  }
-})();
 
 // ── Role → CSS class mapper ────────────────────────────────
 function getRoleClass(role) {

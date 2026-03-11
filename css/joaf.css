@@ -144,7 +144,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 /* TICKER */
 .announcement-ticker{background:linear-gradient(90deg,var(--brand) 0%,#5a0b10 40%,var(--accent) 100%);color:#fff;padding:9px 0;overflow:hidden;position:relative;z-index:5;}
 .ticker-label{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.42);padding:0 14px;display:flex;align-items:center;font-weight:800;font-size:12px;white-space:nowrap;z-index:2;min-width:82px;letter-spacing:.5px;}
-.ticker-track{display:flex;white-space:nowrap;padding-left:90px;animation:ticker-scroll 13s linear infinite;will-change:transform;transform:translateZ(0);}
+.ticker-track{display:flex;white-space:nowrap;padding-left:96px;animation:ticker-scroll 13s linear infinite;will-change:transform;transform:translateZ(0);}
 .ticker-track:hover{animation-play-state:paused;cursor:pointer;}
 .ticker-item{white-space:nowrap;padding:0 32px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
 .ticker-item a{color:#fff;text-decoration:none;transition:opacity .2s;}
@@ -398,7 +398,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
   .joaf-header-meta span{font-size:11px;}
   .joaf-logo img{max-width:72px!important;}
   .ticker-label{min-width:60px;font-size:11px;padding:0 10px;}
-  .ticker-track{animation-duration:4s!important;}
+  /* ticker speed set by JS */
   .ticker-item{padding:0 18px;font-size:12px;}
   .ch-content{padding:0 16px 28px;}
   .hero-cta{gap:8px;}
@@ -427,7 +427,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
   .section-heading h2{font-size:1.28rem;}
   .hero-cta{flex-direction:column;align-items:center;}
   .hero-cta a{width:100%;max-width:260px;justify-content:center;}
-  .ticker-track{animation-duration:3s!important;}
+  /* ticker speed set by JS */
   .section{padding:28px 0;}
   .container{padding-left:16px;padding-right:16px;}
 }

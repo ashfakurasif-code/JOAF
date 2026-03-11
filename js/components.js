@@ -162,7 +162,7 @@ const JOAFComponents = {
     const track = document.getElementById('joafTickerTrack');
     if (!track) return;
     const w = window.innerWidth;
-    track.style.animationDuration = w < 480 ? '3s' : w < 768 ? '4s' : w < 1200 ? '7s' : '13s';
+    track.style.animationDuration = w < 480 ? '8s' : w < 768 ? '10s' : w < 1200 ? '12s' : '15s';
   },
 
   // ── Mobile nav ───────────────────────────────────────────
@@ -338,15 +338,28 @@ const JOAFComponents = {
   },
 
   init(pageId) {
-    pageId=pageId||'home';
-    const hp=document.getElementById('joaf-header');if(hp)hp.outerHTML=this.renderHeader(pageId);
-    const ta=document.getElementById('joaf-ticker');if(ta)ta.outerHTML=this.renderTicker();
-    setTimeout(()=>{if(!document.querySelector('.announcement-ticker')){const hdr=document.querySelector('.joaf-header');if(hdr){const d=document.createElement('div');d.innerHTML=this.renderTicker();hdr.insertAdjacentElement('afterend',d.firstElementChild);}}},80);
-    const fp=document.getElementById('joaf-footer');if(fp)fp.outerHTML=this.renderFooter();
+    pageId = pageId || 'home';
 
+    // 1. Inject header
+    const hp = document.getElementById('joaf-header');
+    if (hp) hp.outerHTML = this.renderHeader(pageId);
+
+    // 2. Inject ticker — use innerHTML of wrapper to keep reference
+    const ta = document.getElementById('joaf-ticker');
+    if (ta) {
+      ta.outerHTML = this.renderTicker();
+    } else if (!document.querySelector('.announcement-ticker')) {
+      const hdr = document.querySelector('.joaf-header');
+      if (hdr) { const d = document.createElement('div'); d.innerHTML = this.renderTicker(); hdr.insertAdjacentElement('afterend', d.firstElementChild); }
+    }
+
+    // 3. Inject footer
+    const fp = document.getElementById('joaf-footer');
+    if (fp) fp.outerHTML = this.renderFooter();
+
+    // 4. Init UI — after DOM injections complete
     this.startClock();
     this.initScrollHeader();
-    this.initTicker();
     this.initMobileNav();
     this.initMuteButton();
     this.addScrollTop();
@@ -354,13 +367,41 @@ const JOAFComponents = {
     this.lazyImages();
     this.injectOGMeta();
     this.initAnimations();
-    setTimeout(()=>this.initAnimations(),500);
-    // Desktop extras after DOM settles
-    setTimeout(()=>{
+    this.hidePreloader();
+
+    // 5. initTicker AFTER ticker HTML is in DOM
+    setTimeout(() => this.initTicker(), 0);
+
+    // 6. Stats AFTER full DOM ready
+    setTimeout(() => this.renderStats(), 0);
+
+    // 7. Desktop extras
+    setTimeout(() => {
       this.initCardTilt();
       this.initHeroParticles();
+      this.initAnimations();
     }, 400);
-    this.hidePreloader();
+  },
+
+  renderStats() {
+    const row = document.getElementById('stats-row');
+    if (!row) { setTimeout(()=>this.renderStats(), 80); return; }
+    if (row.children.length > 0) return; // already rendered
+    let memberCount = 5724;
+    row.innerHTML = (typeof JOAF !== 'undefined' ? JOAF.stats : []).map(s => {
+      const isMember = s.label.includes('সদস্য');
+      const numDisplay = isMember
+        ? `<span id="live-member-count">${BanglaUtil.toNum(memberCount)}+</span>`
+        : s.number;
+      return `<div class="col-6 col-md-3 stat-item">
+        <div class="stat-number">${numDisplay}</div>
+        <div class="stat-label">${s.label}</div>
+      </div>`;
+    }).join('');
+    const el = document.getElementById('live-member-count');
+    if (el) {
+      setInterval(() => { memberCount++; el.textContent = BanglaUtil.toNum(memberCount) + '+'; }, 1000);
+    }
   }
 };
 
