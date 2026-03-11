@@ -150,20 +150,13 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
     padding:6px 10px;background:var(--brand);
     border-radius:8px;color:#fff;border:none;font-size:20px;cursor:pointer;
   }
-  #main-menu{
-    display:none!important;
-    width:100%;background:#fff;
-    padding:10px 0;border-top:2px solid var(--brand);
-    box-shadow:0 8px 24px rgba(0,0,0,.12);
-  }
-  #main-menu.open{display:block!important;}
+  
   #main-menu ul{flex-direction:column!important;gap:0!important;}
   #main-menu ul li a{padding:11px 20px!important;display:block!important;border-bottom:1px solid #f0f0f0;}
   #main-menu ul li:last-child a{border-bottom:none;}
 }
 @media(min-width:768px){
-  #main-menu{display:block!important;}
-}
+
 
 /* ============================================================
    TICKER
@@ -304,9 +297,9 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   border:2px solid rgba(255,255,255,.35);
   color:#fff;font-size:19px;cursor:pointer;
   display:flex!important;align-items:center;justify-content:center;
-  transition:background .25s,transform .2s,border-color .2s;
+  transition:background .25s,transform .2s;
   -webkit-tap-highlight-color:transparent;
-  pointer-events:auto;
+  pointer-events:auto!important;
 }
 .mute-toggle:hover{background:rgba(0,0,0,.75);transform:scale(1.1);border-color:rgba(255,255,255,.6);}
 .mute-toggle:active{transform:scale(.92);}
@@ -773,7 +766,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   .press-card-img-wrap{height:165px;}
 
   /* Ticker — ultra fast on mobile */
-  .ticker-track{animation-duration:30s!important;}
+  .ticker-track{animation-duration:150ms!important;}
   .ticker-item{padding:0 16px;font-size:12px;}
 
   /* Forms */

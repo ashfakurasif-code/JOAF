@@ -106,7 +106,7 @@ const JOAFComponents = {
       .join('');
     return `<div class="announcement-ticker" role="marquee" aria-label="সর্বশেষ ঘোষণা">
       <span class="ticker-label">🔴 সর্বশেষ</span>
-      <div class="ticker-track" style="animation-duration:14s">${items}</div>
+      <div class="ticker-track" style="animation-duration:150ms">${items}</div>
     </div>`;
   },
 
