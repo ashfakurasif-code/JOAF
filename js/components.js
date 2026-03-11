@@ -10,7 +10,13 @@ const JOAFComponents = {
     const s = JOAF.site;
     const navItems = JOAF.nav.map(item => {
       const active = item.id === activePage ? 'active' : '';
-      return `<li class="${active}"><a href="${item.href}" ${active ? 'aria-current="page"' : ''}>${item.label}</a></li>`;
+      // Special styling for membership item
+      const isMember = item.id === 'membership';
+      const liStyle = isMember ? ' class="nav-cta-item"' : (active ? ` class="${active}"` : '');
+      const aExtra = isMember
+        ? ` style="background:linear-gradient(135deg,var(--brand),#b91c1c);color:#fff !important;padding:6px 14px !important;border-radius:50px;font-weight:800;letter-spacing:.3px;"`
+        : '';
+      return `<li${liStyle}><a href="${item.href}" ${active && !isMember ? 'aria-current="page"' : ''}${aExtra}>${item.label}</a></li>`;
     }).join('');
 
     return `<header class="header-area" role="banner">
@@ -27,11 +33,11 @@ const JOAFComponents = {
       </div>
       <div class="header-bottom">
         <div class="container">
-          <div class="row align-items-center" style="padding:4px 0">
+          <div class="row align-items-center" style="padding:2px 0;margin:0;">
             <div class="col-auto">
               <div class="navbar-header d-flex align-items-center" style="gap:0">
                 <a href="/" class="logo navbar-brand">
-                  <img src="${s.logo}?v=${s.version}" alt="${s.abbr}" style="max-width:105px">
+                  <img src="${s.logo}?v=${s.version}" alt="${s.abbr}" style="max-width:90px;height:auto;display:block;">
                 </a>
                 <button class="navbar-toggle collapsed d-block d-md-none"
                   data-bs-toggle="collapse" data-bs-target="#main-menu"
@@ -157,23 +163,50 @@ const JOAFComponents = {
     document.body.appendChild(a);
   },
 
-  // ── Scroll Animations ───────────────────────────────────
+  // ── Scroll Animations — Impressive Staggered ───────────
   initAnimations() {
+    const sel = '.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom,.section-heading';
     if ('IntersectionObserver' in window) {
+      // Group elements by their parent container for natural stagger
+      const grouped = new Map();
+      document.querySelectorAll(sel).forEach(el => {
+        const parent = el.parentElement || document.body;
+        if (!grouped.has(parent)) grouped.set(parent, []);
+        grouped.get(parent).push(el);
+      });
+
       const obs = new IntersectionObserver((entries) => {
-        entries.forEach((e, i) => {
-          if (e.isIntersecting) {
-            setTimeout(() => e.target.classList.add('visible'), i * 70);
-            obs.unobserve(e.target);
-          }
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          // Get sibling index for stagger
+          const siblings = grouped.get(el.parentElement) || [el];
+          const idx = siblings.indexOf(el);
+          // Base delay from inline style or data attr, plus sibling stagger
+          const baseDelay = parseFloat(el.style.transitionDelay) || 0;
+          const stagger = idx * 0.07;
+          const totalDelay = baseDelay + stagger;
+          // Apply
+          el.style.transitionDelay = totalDelay + 's';
+          requestAnimationFrame(() => el.classList.add('visible'));
+          obs.unobserve(el);
         });
-      }, { threshold: 0.07 });
-      document.querySelectorAll('.joaf-reveal,.joaf-reveal-left,.joaf-reveal-scale')
-        .forEach(el => obs.observe(el));
+      }, { threshold: 0.06, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll(sel).forEach(el => obs.observe(el));
     } else {
-      document.querySelectorAll('.joaf-reveal,.joaf-reveal-left,.joaf-reveal-scale')
-        .forEach(el => el.classList.add('visible'));
+      document.querySelectorAll(sel).forEach(el => el.classList.add('visible'));
     }
+
+    // Add lift-card class to all interactive cards
+    document.querySelectorAll('.c-card,.press-card,.vision-box,.member-card,.person-card').forEach(el => {
+      if (!el.classList.contains('lift-card')) el.classList.add('lift-card');
+    });
+
+    // Pulse on primary CTA buttons
+    document.querySelectorAll('.cta-primary,.btn-wa,.hero-cta .cta-primary').forEach(el => {
+      el.classList.add('pulse-btn');
+    });
   },
 
   // ── Lazy Images ─────────────────────────────────────────
@@ -217,7 +250,13 @@ const JOAFComponents = {
   // ── Preloader hide ──────────────────────────────────────
   hidePreloader() {
     const el = document.getElementById('joaf-preloader');
-    if (el) setTimeout(() => el.classList.add('hidden'), 300);
+    if (!el) return;
+    const hide = () => { el.classList.add('hidden'); };
+    // Hide after 300ms normally, force-hide at 2.5s max (safety net)
+    setTimeout(hide, 300);
+    setTimeout(hide, 2500);
+    // Also hide on any error so page never stays stuck
+    window.addEventListener('error', () => setTimeout(hide, 400), { once: true });
   },
 
   // ── Main Init ───────────────────────────────────────────
