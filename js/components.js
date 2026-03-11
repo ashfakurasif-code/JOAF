@@ -1,6 +1,7 @@
 // ============================================================
 // JOAF Components v4.2 — Header, Footer, Ticker, OG meta
 // Fix: mobile nav overlay, sound button, desktop menu timing
+// Updated: 2026-03-11
 // ============================================================
 
 const JOAFComponents = {
