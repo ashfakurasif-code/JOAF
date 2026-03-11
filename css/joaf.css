@@ -773,7 +773,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   .press-card-img-wrap{height:165px;}
 
   /* Ticker — ultra fast on mobile */
-  .ticker-track{animation-duration:5s!important;}
+  .ticker-track{animation-duration:30s!important;}
   .ticker-item{padding:0 16px;font-size:12px;}
 
   /* Forms */
