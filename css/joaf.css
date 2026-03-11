@@ -291,7 +291,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
 
 /* Mute button — fixed bottom-right of hero, always visible */
 .mute-toggle{
-  position:absolute;bottom:72px;right:20px;z-index:10;
+  position:absolute;bottom:72px;right:20px;z-index:20;
   width:46px;height:46px;border-radius:50%;
   background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border:2px solid rgba(255,255,255,.35);
