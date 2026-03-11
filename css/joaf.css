@@ -116,10 +116,10 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
 
 /* Nav */
 .main-menu{margin-left:8px;}
-.main-menu ul{margin:0;padding:0;}
+.main-menu ul{margin:0;padding:0;flex-wrap:nowrap!important;}
 .main-menu ul li a{
-  font-size:12.5px;font-weight:700;
-  padding:4px 8px!important;white-space:nowrap;
+  font-size:11.5px;font-weight:700;
+  padding:4px 6px!important;white-space:nowrap;
   position:relative;transition:color var(--tr);
 }
 .main-menu ul li a::after{
@@ -195,6 +195,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
 .hs-item.video-hero{
   position:relative;width:100%;height:100vh;
   min-height:520px;overflow:hidden;background:var(--dark);
+  display:flex;align-items:center;justify-content:center;
 }
 /* Override stylec7c3 red overlay */
 .hs-item.video-hero::before{
@@ -291,7 +292,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
 
 /* Mute button — fixed bottom-right of hero, always visible */
 .mute-toggle{
-  position:absolute;bottom:72px;right:20px;z-index:20;
+  position:absolute;bottom:72px;right:20px;z-index:10;
   width:46px;height:46px;border-radius:50%;
   background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border:2px solid rgba(255,255,255,.35);
