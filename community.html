@@ -368,12 +368,21 @@ document.getElementById('searchBox').addEventListener('input',e=>{searchQuery=e.
 function clearSearch(){document.getElementById('searchBox').value='';searchQuery='';renderCards();}
 
 // Boot
-initParticles();
-renderHeroStats();
-renderCards();
-setTimeout(initWorldMap,600);
-clearTimeout(window._commPL);
-setTimeout(()=>{const pl=document.getElementById('joaf-preloader');if(pl)pl.classList.add('hidden');},500);
+function communityBoot() {
+  if (typeof JOAF === 'undefined') return;
+  initParticles();
+  renderHeroStats();
+  renderCards();
+  setTimeout(initWorldMap, 600);
+  clearTimeout(window._commPL);
+  setTimeout(()=>{const pl=document.getElementById('joaf-preloader');if(pl)pl.classList.add('hidden');},500);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', communityBoot);
+} else {
+  communityBoot();
+}
 </script>
 </body>
 </html>
