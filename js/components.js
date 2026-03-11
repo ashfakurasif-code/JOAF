@@ -87,7 +87,7 @@ const JOAFComponents = {
   },
 
   renderTicker() {
-    const items = [...JOAF.ticker, ...JOAF.ticker, ...JOAF.ticker]
+    const items = [...JOAF.ticker, ...JOAF.ticker]
       .map(t => `<span class="ticker-item"><a href="${t.href}">${t.text}</a><span class="ticker-sep">◆</span></span>`)
       .join('');
     return `<div class="announcement-ticker" role="marquee" aria-label="সর্বশেষ ঘোষণা">

@@ -34,7 +34,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 @keyframes pl-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 @keyframes pl-bar{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
 @keyframes fade-up{0%{opacity:0;transform:translateY(30px)}100%{opacity:1;transform:translateY(0)}}
-@keyframes ticker-scroll{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-33.333%,0,0)}}
+@keyframes ticker-scroll{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-50%,0,0)}}
 @keyframes hero-float-1{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-22px) rotate(4deg)}}
 @keyframes hero-float-2{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
 @keyframes glow-pulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
