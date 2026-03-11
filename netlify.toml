@@ -1,6 +1,16 @@
+# JOAF Netlify Config v4.0
+
 [build]
-  functions = "netlify/functions/"
   publish = "."
+
+# ── Performance Headers ──────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
 [[headers]]
   for = "/css/*"
@@ -15,27 +25,74 @@
 [[headers]]
   for = "/img/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/members/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
 
 [[headers]]
   for = "/*.html"
   [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
+    Cache-Control = "public, max-age=3600"
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
+# ── Clean URLs — index.html → / ─────────────────────────────
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
+  force = true
 
+# ── Community case fix ───────────────────────────────────────
 [[redirects]]
   from = "/Community.html"
   to = "/community.html"
   status = 301
 
+# ── Old press release URLs → new press-releases/ folder ─────
 [[redirects]]
-  from = "/home"
-  to = "/"
+  from = "/press-release-1.html"
+  to = "/press-releases/press-release-1.html"
   status = 301
+
+[[redirects]]
+  from = "/press-release-2.html"
+  to = "/press-releases/press-release-2.html"
+  status = 301
+
+[[redirects]]
+  from = "/press-release-3.html"
+  to = "/press-releases/press-release-3.html"
+  status = 301
+
+[[redirects]]
+  from = "/press-release-4.html"
+  to = "/press-releases/press-release-4.html"
+  status = 301
+
+[[redirects]]
+  from = "/press-release-5.html"
+  to = "/press-releases/press-release-5.html"
+  status = 301
+
+[[redirects]]
+  from = "/press-release-6.html"
+  to = "/press-releases/press-release-6.html"
+  status = 301
+
+[[redirects]]
+  from = "/press-release-7.html"
+  to = "/press-releases/press-release-7.html"
+  status = 301
+
+[[redirects]]
+  from = "/press-release-8.html"
+  to = "/press-releases/press-release-8.html"
+  status = 301
+
+# ── SPA fallback ─────────────────────────────────────────────
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404

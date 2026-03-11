@@ -1,67 +1,75 @@
-# JOAF v3.0 — Developer Guide
+# 📘 JOAF Website v4.0 — সম্পাদনা নির্দেশিকা
 
-## ফাইল স্ট্রাকচার
+## 🗂️ ফোল্ডার কাঠামো
 
 ```
-joaf-v3/
-├── index.html              ← Home page
-├── events.html             ← Events
-├── media-news.html         ← Media & Press Releases  
-├── membership.html         ← Membership form
-├── donate.html             ← Donation page
-├── joaf-polls.html         ← Polls
-├── community.html          ← Community
-├── financial-report.html   ← Financial report
-├── financial-policy.html   ← Financial policy
-├── press-release-1..8.html ← Press releases
-├── privacy.html            ← Privacy policy
-├── css/
-│   ├── joaf.css            ← 🔴 MAIN CSS — এখানে সব design
-│   ├── stylec7c3.css       ← Base theme (original)
-│   └── pluginsc7c3.css     ← Plugin styles (original)
+joaf-v4/
+├── index.html              — হোম পেজ
+├── community.html          — কমিউনিটি গ্রুপ (data.js থেকে auto-render)
+├── membership.html         — সদস্যতা ফর্ম
+├── joaf-polls.html         — AI জনমত
+├── media-news.html         — সংবাদ ও প্রেস রিলিজ
+├── events.html             — অনুষ্ঠান
+├── donate.html             — সহযোগিতা
+│
+├── press-releases/         — সব প্রেস রিলিজ এখানে
+│   ├── template.html       — নতুন PR এর জন্য কপি করুন
+│   ├── press-release-1.html...press-release-8.html
+│   └── content/            — প্রতিটি PR এর .txt ফাইল রাখুন
+│
 ├── js/
-│   ├── data.js             ← 🔴 CENTRAL DATA — member info, nav, stats সব এখানে
-│   ├── components.js       ← 🔴 Header/Footer auto-inject
-│   ├── plugins.js          ← jQuery plugins
-│   └── rainbow-swirl-cursor.js
-└── netlify/
-    └── functions/
-        └── vote.js         ← Poll votes (upgrade path documented)
+│   ├── data.js             ← ✅ এই একটা ফাইল বদলালেই সব আপডেট
+│   ├── components.js       — Header, Footer, Ticker
+│   └── main.js             — অন্যান্য JS
+│
+├── css/
+│   └── joaf.css            — সব design এখানে
+│
+└── netlify.toml            — Hosting config
 ```
 
-## কোথায় কী বদলাবেন
+---
 
-### নতুন member যোগ করতে:
-`js/data.js` → `JOAF.nucleus` array তে নতুন object যোগ করুন
+## ✏️ কীভাবে কী বদলাবেন
 
-### Nav বদলাতে:
-`js/data.js` → `JOAF.nav` array
+### নতুন প্রেস রিলিজ যোগ করতে:
+1. `js/data.js` খুলুন → `pressReleases` array তে যোগ করুন:
+   ```js
+   { id: 9, slug: "press-release-9", title: "শিরোনাম", date: "2025-09-01",
+     img: "/img/press-release-9.jpg", summary: "সারসংক্ষেপ" }
+   ```
+2. `press-releases/template.html` কপি করে `press-releases/press-release-9.html` বানান
+3. `press-releases/content/press-release-9.txt` তৈরি করুন (বিস্তারিত লেখা)
+4. ছবি `/img/press-release-9.jpg` ফোল্ডারে রাখুন
 
-### Header/Footer বদলাতে:
-`js/components.js` → `renderHeader()` বা `renderFooter()` function
+### নতুন WhatsApp group যোগ করতে:
+`js/data.js` → `communityGroups` array তে যোগ করুন
 
-### Design বদলাতে:
-`css/joaf.css` → CSS variables at top: `--brand`, `--accent` etc.
+### Nav menu বদলাতে:
+`js/data.js` → `nav` array
 
-### নতুন Press Release যোগ করতে:
-1. `js/data.js` → `JOAF.pressReleases` array তে যোগ করুন
-2. নতুন HTML file বানান: `press-release-9.html`
-3. Automatically সব page এ দেখাবে
+### Ticker আইটেম বদলাতে:
+`js/data.js` → `ticker` array
 
-## Social links আপডেট করুন
-`js/data.js` → `JOAF.site.social` object
+### AI Polls Groq key বসাতে:
+`joaf-polls.html` → `const GROQ_KEY = 'আপনার_key_এখানে';`
+পাওয়ার জন্য: https://console.groq.com → API Keys → Create (Free)
 
-## Google Analytics
-`js/data.js` → `JOAF.site.gaId` (একটাই জায়গায়)
+### সদস্যতা form endpoint বদলাতে:
+`js/data.js` → `site.formAction`
 
-## Deploy (Netlify)
+---
+
+## 🚀 Deployment (GitHub → Netlify)
+
 ```bash
 git add .
-git commit -m "JOAF v3.0"
-git push
+git commit -m "আপডেট: নতুন প্রেস রিলিজ"
+git push origin main
 ```
-Netlify auto-deploy করবে।
+Netlify auto-deploy হবে।
 
-## Polls Persistent বানাতে:
-`netlify/functions/vote.js` এর comment এ upgrade path দেওয়া আছে।
-Free option: Netlify Blobs বা Supabase free tier।
+---
+
+## 📱 Mobile দেখতে সমস্যা?
+সব CSS `css/joaf.css` এ। `@media(max-width:767px)` section দেখুন।
