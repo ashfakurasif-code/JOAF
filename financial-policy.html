@@ -7,17 +7,15 @@
   <meta name="description" content="জোয়াফের আর্থিক স্বচ্ছতা ও নীতিমালা।">
   <meta property="og:title" content="আর্থিক নীতি — জোয়াফ">
   <meta property="og:description" content="জোয়াফের আর্থিক স্বচ্ছতা ও নীতিমালা।">
+  <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
   <meta property="og:url" content="https://julyforum.com/financial-policy.html">
   <meta property="fb:app_id" content="1114707634145642">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://julyforum.com/financial-policy.html">
-  <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
-    <!-- Resource hints for speed -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://code.jquery.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-  <link rel="dns-prefetch" href="https://ipapi.co">
   <link rel="icon" href="/favicon.ico">
   <link rel="manifest" href="/site.webmanifest">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -27,6 +25,43 @@
   <link rel="stylesheet" href="/css/joaf.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
+  <style>
+    .fp-hero{background:linear-gradient(135deg,#075e55 0%,#0d0d1a 60%,#90161f 100%);padding:80px 0 50px;text-align:center;color:#fff;}
+    .fp-hero h1{font-size:clamp(1.6rem,4vw,2.8rem);font-weight:900;margin-bottom:10px;}
+    .fp-hero p{opacity:.8;font-size:1rem;max-width:600px;margin:0 auto 24px;}
+    .fp-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:6px 18px;font-size:12px;font-weight:700;letter-spacing:1px;}
+    .policy-nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:30px 0 20px;}
+    .policy-nav-btn{padding:8px 20px;border-radius:50px;border:2px solid #e5e7eb;background:#fff;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;color:#374151;}
+    .policy-nav-btn.active{background:#075e55;border-color:#075e55;color:#fff;}
+    .policy-nav-btn:hover:not(.active){border-color:#075e55;color:#075e55;}
+    .policy-section{display:none;animation:fadeIn .3s ease;}
+    .policy-section.active{display:block;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .policy-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,.08);margin-bottom:20px;}
+    .policy-card h3{font-size:1.1rem;font-weight:900;color:#111827;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+    .accordion-item-fp{border:none;margin-bottom:10px;}
+    .accordion-btn-fp{width:100%;text-align:left;background:#f8f9fa;border:none;border-radius:12px;padding:16px 20px;font-weight:700;font-size:14px;color:#111827;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .2s;}
+    .accordion-btn-fp:hover{background:#e5e7eb;}
+    .accordion-btn-fp.open{background:#075e55;color:#fff;border-radius:12px 12px 0 0;}
+    .accordion-body-fp{background:#f0fdf4;border-radius:0 0 12px 12px;padding:0;max-height:0;overflow:hidden;transition:all .3s ease;}
+    .accordion-body-fp.open{padding:16px 20px;max-height:500px;}
+    .accordion-body-fp p{font-size:14px;color:#374151;margin:0;line-height:1.7;}
+    .rule-item{display:flex;gap:14px;align-items:flex-start;padding:14px;background:#f8f9fa;border-radius:12px;margin-bottom:10px;}
+    .rule-num{width:32px;height:32px;border-radius:50%;background:#075e55;color:#fff;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .rule-text{font-size:14px;color:#374151;line-height:1.6;flex:1;}
+    .rule-text strong{color:#111827;display:block;margin-bottom:4px;}
+    .principle-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);text-align:center;border-top:4px solid #075e55;transition:transform .2s;}
+    .principle-card:hover{transform:translateY(-4px);}
+    .principle-icon{font-size:2.2rem;margin-bottom:12px;}
+    .principle-title{font-weight:900;font-size:15px;color:#111827;margin-bottom:8px;}
+    .principle-desc{font-size:13px;color:#6b7280;line-height:1.6;}
+    .flowstep{display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;}
+    .flow-circle{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#075e55,#0a8a7a);color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .flow-line{width:2px;background:#e5e7eb;margin:0 auto;}
+    .flow-content{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06);flex:1;}
+    .flow-title{font-weight:800;font-size:14px;color:#111827;}
+    .flow-desc{font-size:13px;color:#6b7280;margin-top:4px;line-height:1.5;}
+  </style>
 </head>
 <body data-page="financial_policy">
 
@@ -39,17 +74,231 @@
 <div class="wrapper fix">
   <div id="joaf-header"></div>
 
-  <!-- Special Area -->
-    <section id="special-area" class="about-area section pb-120 pt-120" aria-labelledby="special-title">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12 mx-auto text-center">
-                    <h2 class="section-title h2 pb-40 pt-40" id="special-title">Financial Policy</h2>
-                    <iframe src="finance-policy-draft-1.pdf" frameborder="0" style="width: 100%; height: 100vh;"></iframe>
-                </div>
+  <!-- Hero -->
+  <div class="fp-hero">
+    <div class="container">
+      <div class="fp-badge">📋 অনুমোদিত নীতিমালা • সংস্করণ ১.০</div>
+      <h1 style="margin-top:16px">আর্থিক নীতিমালা</h1>
+      <p>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরামের আর্থিক ব্যবস্থাপনা, স্বচ্ছতা এবং জবাবদিহিতা নিশ্চিতকরণে গৃহীত নীতিমালা।</p>
+    </div>
+  </div>
+
+  <section class="section pt-60 pb-80" style="background:#f8f9fa;">
+    <div class="container">
+
+      <!-- Nav -->
+      <div class="policy-nav">
+        <button class="policy-nav-btn active" onclick="showPolicy('principles')">🌟 মূলনীতি</button>
+        <button class="policy-nav-btn" onclick="showPolicy('income')">💚 আয় নীতি</button>
+        <button class="policy-nav-btn" onclick="showPolicy('expense')">🔴 ব্যয় নীতি</button>
+        <button class="policy-nav-btn" onclick="showPolicy('process')">⚙️ অনুমোদন প্রক্রিয়া</button>
+        <button class="policy-nav-btn" onclick="showPolicy('audit')">🔍 নিরীক্ষা ও জবাবদিহিতা</button>
+      </div>
+
+      <!-- Principles -->
+      <div class="policy-section active" id="policy-principles">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4 col-sm-6">
+            <div class="principle-card">
+              <div class="principle-icon">🔍</div>
+              <div class="principle-title">স্বচ্ছতা</div>
+              <div class="principle-desc">প্রতিটি আয়-ব্যয় জনসমক্ষে প্রকাশিত। কোনো গোপন লেনদেন নেই।</div>
             </div>
+          </div>
+          <div class="col-md-4 col-sm-6">
+            <div class="principle-card">
+              <div class="principle-icon">⚖️</div>
+              <div class="principle-title">জবাবদিহিতা</div>
+              <div class="principle-desc">প্রতিটি ব্যয়ের জন্য নির্বাহী কমিটি সদস্যদের কাছে জবাবদিহি করতে হবে।</div>
+            </div>
+          </div>
+          <div class="col-md-4 col-sm-6">
+            <div class="principle-card">
+              <div class="principle-icon">🤝</div>
+              <div class="principle-title">অংশগ্রহণমূলক</div>
+              <div class="principle-desc">বাজেট প্রণয়নে সকল বিভাগীয় প্রতিনিধির মতামত নেওয়া হয়।</div>
+            </div>
+          </div>
+          <div class="col-md-4 col-sm-6">
+            <div class="principle-card">
+              <div class="principle-icon">🎯</div>
+              <div class="principle-title">উদ্দেশ্যমুখী</div>
+              <div class="principle-desc">সকল ব্যয় সংগঠনের লক্ষ্য ও উদ্দেশ্যের সাথে সামঞ্জস্যপূর্ণ হতে হবে।</div>
+            </div>
+          </div>
+          <div class="col-md-4 col-sm-6">
+            <div class="principle-card">
+              <div class="principle-icon">💡</div>
+              <div class="principle-title">মিতব্যয়িতা</div>
+              <div class="principle-desc">সর্বনিম্ন খরচে সর্বোচ্চ ফলাফল অর্জনই আমাদের আর্থিক লক্ষ্য।</div>
+            </div>
+          </div>
+          <div class="col-md-4 col-sm-6">
+            <div class="principle-card">
+              <div class="principle-icon">📱</div>
+              <div class="principle-title">ডিজিটাল প্রথম</div>
+              <div class="principle-desc">সকল লেনদেন ডিজিটাল মাধ্যমে — bKash, Nagad বা ব্যাংকিং চ্যানেলে।</div>
+            </div>
+          </div>
         </div>
-    </section>
+      </div>
+
+      <!-- Income Policy -->
+      <div class="policy-section" id="policy-income">
+        <div class="policy-card">
+          <h3>💚 আয়ের উৎস ও নীতি</h3>
+          <div class="rule-item">
+            <div class="rule-num">১</div>
+            <div class="rule-text"><strong>সদস্যপদ ফি</strong>প্রতি সদস্যের বার্ষিক সদস্যপদ ফি ৳৪০ নির্ধারিত। এটি সংগঠনের প্রধান আয়ের উৎস। ফি পরিবর্তনের জন্য সাধারণ সভার অনুমোদন প্রয়োজন।</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-num">২</div>
+            <div class="rule-text"><strong>স্বেচ্ছামূলক অনুদান</strong>দেশীয় ও প্রবাসী শুভানুধ্যায়ীদের স্বেচ্ছামূলক অনুদান গ্রহণযোগ্য। অনুদানকারীর পরিচয় ও পরিমাণ নথিভুক্ত করা বাধ্যতামূলক।</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-num">৩</div>
+            <div class="rule-text"><strong>ইভেন্ট আয়</strong>সেমিনার, ওয়েবিনার ও কার্যক্রম থেকে প্রাপ্ত রেজিস্ট্রেশন ফি ও স্পনসরশিপ আয় হিসাবে গণ্য হবে।</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-num">৪</div>
+            <div class="rule-text"><strong>নিষিদ্ধ উৎস</strong>কোনো রাজনৈতিক দল, বিদেশী সরকার বা সন্দেহজনক উৎস থেকে অর্থ গ্রহণ সম্পূর্ণ নিষিদ্ধ।</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expense Policy -->
+      <div class="policy-section" id="policy-expense">
+        <div class="policy-card">
+          <h3>🔴 ব্যয় নীতিমালা</h3>
+
+          <div style="margin-bottom:10px">
+            <button class="accordion-btn-fp" onclick="toggleAccordion(this)">
+              <span>📊 ব্যয়ের সীমা ও অনুমোদন স্তর</span><span class="acc-arrow">▼</span>
+            </button>
+            <div class="accordion-body-fp">
+              <p>• ৳৫,০০০ পর্যন্ত: বিভাগীয় প্রধান অনুমোদন করতে পারবেন<br>
+              • ৳৫,০০১ – ৳২০,০০০: সাধারণ সম্পাদক ও কোষাধ্যক্ষের যৌথ অনুমোদন<br>
+              • ৳২০,০০১ – ৳৫০,০০০: নির্বাহী কমিটির সংখ্যাগরিষ্ঠ অনুমোদন<br>
+              • ৳৫০,০০০ এর উপরে: সাধারণ সভার অনুমোদন বাধ্যতামূলক</p>
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <button class="accordion-btn-fp" onclick="toggleAccordion(this)">
+              <span>🧾 ভাউচার ও রসিদ নীতি</span><span class="acc-arrow">▼</span>
+            </button>
+            <div class="accordion-body-fp">
+              <p>প্রতিটি ব্যয়ের জন্য ভাউচার বা ডিজিটাল রসিদ সংরক্ষণ বাধ্যতামূলক। ৳১,০০০ এর উপরে সকল ব্যয়ের জন্য অবশ্যই লিখিত প্রমাণ থাকতে হবে। সকল ডকুমেন্ট ন্যূনতম ৫ বছর সংরক্ষণ করতে হবে।</p>
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <button class="accordion-btn-fp" onclick="toggleAccordion(this)">
+              <span>🚫 নিষিদ্ধ ব্যয়</span><span class="acc-arrow">▼</span>
+            </button>
+            <div class="accordion-body-fp">
+              <p>• ব্যক্তিগত সুবিধার জন্য সংগঠনের অর্থ ব্যবহার সম্পূর্ণ নিষিদ্ধ<br>
+              • রাজনৈতিক কোনো দলের প্রচারণায় অর্থায়ন নিষিদ্ধ<br>
+              • অনুমোদন ছাড়া কোনো বিনিয়োগ বা ঋণ গ্রহণ নিষিদ্ধ<br>
+              • নগদ লেনদেন ৳৫,০০০ এর উপরে নিষিদ্ধ</p>
+            </div>
+          </div>
+
+          <div>
+            <button class="accordion-btn-fp" onclick="toggleAccordion(this)">
+              <span>🤲 সামাজিক সহায়তা তহবিল নীতি</span><span class="acc-arrow">▼</span>
+            </button>
+            <div class="accordion-body-fp">
+              <p>মোট আয়ের ন্যূনতম ১০% শহীদ পরিবার ও আহত আন্দোলনকারীদের সহায়তায় বরাদ্দ রাখা হবে। এই তহবিল থেকে বিতরণের জন্য বিশেষ কমিটির অনুমোদন প্রয়োজন।</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Process -->
+      <div class="policy-section" id="policy-process">
+        <div class="policy-card">
+          <h3>⚙️ অর্থ অনুমোদন প্রক্রিয়া</h3>
+          <div class="flowstep">
+            <div>
+              <div class="flow-circle">১</div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-title">আবেদন দাখিল</div>
+              <div class="flow-desc">সংশ্লিষ্ট বিভাগ লিখিত বা ডিজিটাল ফর্মে ব্যয়ের আবেদন করবে। আবেদনে উদ্দেশ্য, পরিমাণ ও প্রয়োজনীয়তার বিবরণ থাকতে হবে।</div>
+            </div>
+          </div>
+          <div class="flowstep">
+            <div>
+              <div class="flow-circle">২</div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-title">কোষাধ্যক্ষ যাচাই</div>
+              <div class="flow-desc">কোষাধ্যক্ষ তহবিলের প্রাপ্যতা ও বাজেট সামঞ্জস্য যাচাই করবেন। ৪৮ ঘণ্টার মধ্যে প্রাথমিক মতামত দিতে বাধ্য।</div>
+            </div>
+          </div>
+          <div class="flowstep">
+            <div>
+              <div class="flow-circle">৩</div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-title">অনুমোদন কমিটি</div>
+              <div class="flow-desc">পরিমাণ অনুযায়ী নির্ধারিত স্তরের অনুমোদন নেওয়া হবে। জরুরি ক্ষেত্রে ডিজিটাল ভোটিং ব্যবস্থা।</div>
+            </div>
+          </div>
+          <div class="flowstep">
+            <div>
+              <div class="flow-circle">৪</div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-title">ডিজিটাল ট্রান্সফার</div>
+              <div class="flow-desc">অনুমোদনের পর bKash/Nagad/Bank এর মাধ্যমে অর্থ স্থানান্তর। নগদ লেনদেন যতটা সম্ভব এড়িয়ে চলা হয়।</div>
+            </div>
+          </div>
+          <div class="flowstep">
+            <div>
+              <div class="flow-circle">৫</div>
+            </div>
+            <div class="flow-content">
+              <div class="flow-title">রসিদ ও নথিভুক্তি</div>
+              <div class="flow-desc">ব্যয়ের পর রসিদ জমা দেওয়া বাধ্যতামূলক। ৭২ ঘণ্টার মধ্যে অনলাইন লেজারে এন্ট্রি করতে হবে।</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit -->
+      <div class="policy-section" id="policy-audit">
+        <div class="policy-card">
+          <h3>🔍 নিরীক্ষা ও জবাবদিহিতা</h3>
+          <div class="rule-item">
+            <div class="rule-num" style="background:#c9a227">📅</div>
+            <div class="rule-text"><strong>ত্রৈমাসিক প্রতিবেদন</strong>প্রতি ৩ মাসে আয়-ব্যয়ের সম্পূর্ণ বিবরণ ওয়েবসাইটে প্রকাশ করা হবে। সদস্যরা যেকোনো সময় প্রতিবেদন দেখতে পারবেন।</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-num" style="background:#c9a227">🔎</div>
+            <div class="rule-text"><strong>বার্ষিক নিরীক্ষা</strong>প্রতি বছর স্বাধীন নিরীক্ষা কমিটি সম্পূর্ণ আর্থিক হিসাব যাচাই করবে। নিরীক্ষা প্রতিবেদন সাধারণ সভায় উপস্থাপন করা হবে।</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-num" style="background:#c9a227">📢</div>
+            <div class="rule-text"><strong>সদস্যদের অধিকার</strong>যেকোনো সদস্য আর্থিক তথ্য জানতে চাইলে কোষাধ্যক্ষ ৭ কার্যদিবসের মধ্যে তথ্য প্রদান করতে বাধ্য।</div>
+          </div>
+          <div class="rule-item">
+            <div class="rule-num" style="background:#c9a227">⚠️</div>
+            <div class="rule-text"><strong>অনিয়মের শাস্তি</strong>আর্থিক অনিয়মের প্রমাণ পেলে সংশ্লিষ্ট ব্যক্তির বিরুদ্ধে শাস্তিমূলক ব্যবস্থা নেওয়া হবে এবং আইনি পদক্ষেপ গ্রহণের অধিকার সংগঠন সংরক্ষণ করে।</div>
+          </div>
+
+          <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:14px;padding:24px;margin-top:20px;text-align:center;">
+            <div style="font-size:2rem;margin-bottom:10px">📬</div>
+            <div style="font-weight:900;font-size:16px;color:#166534;margin-bottom:8px">আর্থিক অনিয়ম জানাতে</div>
+            <div style="font-size:14px;color:#374151;margin-bottom:12px">কোনো সন্দেহজনক লেনদেন বা অনিয়ম লক্ষ্য করলে আমাদের জানান</div>
+            <a href="mailto:joafforum@gmail.com" style="display:inline-block;background:#075e55;color:#fff;padding:10px 24px;border-radius:50px;font-weight:700;font-size:14px;text-decoration:none;">joafforum@gmail.com</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
 
   <div id="joaf-footer"></div>
 </div>
@@ -60,6 +309,32 @@
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
-<script>window.addEventListener('load',()=>{const pl=document.getElementById('joaf-preloader');if(pl)setTimeout(()=>pl.classList.add('hidden'),300);});</script>
+<script>
+function showPolicy(id) {
+  document.querySelectorAll('.policy-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.policy-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('policy-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+function toggleAccordion(btn) {
+  const body = btn.nextElementSibling;
+  const isOpen = btn.classList.contains('open');
+  // close all in this card
+  btn.closest('.policy-card').querySelectorAll('.accordion-btn-fp').forEach(b => {
+    b.classList.remove('open');
+    b.nextElementSibling.classList.remove('open');
+    b.querySelector('.acc-arrow').textContent = '▼';
+  });
+  if (!isOpen) {
+    btn.classList.add('open');
+    body.classList.add('open');
+    btn.querySelector('.acc-arrow').textContent = '▲';
+  }
+}
+window.addEventListener('load', () => {
+  const pl = document.getElementById('joaf-preloader');
+  if (pl) setTimeout(() => pl.classList.add('hidden'), 300);
+});
+</script>
 </body>
 </html>

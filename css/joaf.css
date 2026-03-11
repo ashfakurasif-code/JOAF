@@ -5,6 +5,9 @@
    ============================================================ */
 
 /* ── Variables ───────────────────────────────────────────── */
+/* Font display swap for faster text render */
+@font-face{font-family:'SolaimanLipi';font-display:swap;}
+
 :root {
   --brand:#90161f; --brand2:#b91c1c;
   --accent:#075e55; --accent2:#15803d;
@@ -24,6 +27,7 @@
 *,*::before,*::after{box-sizing:border-box;}
 a,button{touch-action:manipulation;}
 html{scroll-behavior:smooth;}
+img{max-width:100%;height:auto;}
 body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
 
 /* ── Custom cursor ───────────────────────────────────────── */
@@ -155,9 +159,6 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   #main-menu ul li a{padding:11px 20px!important;display:block!important;border-bottom:1px solid #f0f0f0;}
   #main-menu ul li:last-child a{border-bottom:none;}
 }
-@media(min-width:768px){
-
-
 /* ============================================================
    TICKER
    ============================================================ */
@@ -719,13 +720,13 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
 .footer-area h4{color:#fff;font-size:1.05rem;margin-bottom:16px;font-weight:700;}
 .footer-area ul{list-style:none;padding:0;}
 .footer-area ul li{margin-bottom:7px;}
-.footer-area ul li a{color:rgba(255,255,255,.6);font-size:14px;text-decoration:none;transition:var(--tr);}
+.footer-area ul li a{color:rgba(255,255,255,.78);font-size:14px;text-decoration:none;transition:var(--tr);}
 .footer-area ul li a:hover{color:var(--gold);padding-left:4px;}
-.footer-area p{color:rgba(255,255,255,.6);font-size:14px;line-height:1.8;}
-.footer-area a{color:rgba(255,255,255,.6);}
-.footer-area .footer-social a{font-size:20px;margin-right:12px;color:rgba(255,255,255,.6);transition:var(--tr);display:inline-block;}
+.footer-area p{color:rgba(255,255,255,.78);font-size:14px;line-height:1.8;}
+.footer-area a{color:rgba(255,255,255,.78);}
+.footer-area .footer-social a{font-size:20px;margin-right:12px;color:rgba(255,255,255,.82);transition:var(--tr);display:inline-block;}
 .footer-area .footer-social a:hover{color:var(--gold);transform:translateY(-2px);}
-.footer-bottom{background:rgba(0,0,0,.3);padding:16px 0;text-align:center;margin-top:36px;color:rgba(255,255,255,.45);font-size:13px;}
+.footer-bottom{background:rgba(0,0,0,.3);padding:16px 0;text-align:center;margin-top:36px;color:rgba(255,255,255,.70);font-size:13px;}
 .footer-bottom a{color:var(--gold);text-decoration:none;}
 
 /* ============================================================

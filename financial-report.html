@@ -3,28 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Financial Report | July Online Activists’ Forum - JOAF</title>
-  <meta name="description" content="Financial report of July Online Activists’ Forum (JOAF) detailing the financial activities and transparency for an equitable Bangladesh.">
+  <title>আর্থিক বিবরণী — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</title>
+  <meta name="description" content="জোয়াফের সম্পূর্ণ আর্থিক স্বচ্ছতার রিপোর্ট।">
   <meta property="og:title" content="আর্থিক বিবরণী — জোয়াফ">
   <meta property="og:description" content="জোয়াফের সম্পূর্ণ আর্থিক স্বচ্ছতার রিপোর্ট।">
   <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
-  <meta property="og:image:width" content="800">
-  <meta property="og:image:height" content="800">
   <meta property="og:url" content="https://julyforum.com/financial-report.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম">
   <meta property="fb:app_id" content="1114707634145642">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="আর্থিক বিবরণী — জোয়াফ">
-  <meta name="twitter:description" content="জোয়াফের সম্পূর্ণ আর্থিক স্বচ্ছতার রিপোর্ট।">
-  <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png">
   <link rel="canonical" href="https://julyforum.com/financial-report.html">
-    <!-- Resource hints for speed -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://code.jquery.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-  <link rel="dns-prefetch" href="https://ipapi.co">
   <link rel="icon" href="/favicon.ico">
   <link rel="manifest" href="/site.webmanifest">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -34,6 +27,45 @@
   <link rel="stylesheet" href="/css/joaf.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
+  <style>
+    .fr-hero{background:linear-gradient(135deg,#90161f 0%,#0d0d1a 60%,#075e55 100%);padding:80px 0 50px;text-align:center;color:#fff;}
+    .fr-hero h1{font-size:clamp(1.6rem,4vw,2.8rem);font-weight:900;margin-bottom:10px;}
+    .fr-hero p{opacity:.8;font-size:1rem;max-width:600px;margin:0 auto 24px;}
+    .fr-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:6px 18px;font-size:12px;font-weight:700;letter-spacing:1px;}
+    .fr-tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:30px 0 20px;}
+    .fr-tab{padding:8px 20px;border-radius:50px;border:2px solid #e5e7eb;background:#fff;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;color:#374151;}
+    .fr-tab.active{background:#90161f;border-color:#90161f;color:#fff;}
+    .fr-tab:hover:not(.active){border-color:#90161f;color:#90161f;}
+    .fr-section{display:none;animation:fadeIn .3s ease;}
+    .fr-section.active{display:block;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .stat-card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.08);text-align:center;border-top:4px solid #90161f;transition:transform .2s;}
+    .stat-card:hover{transform:translateY(-4px);}
+    .stat-card .num{font-size:2rem;font-weight:900;color:#90161f;line-height:1;}
+    .stat-card .lbl{font-size:13px;color:#6b7280;margin-top:6px;font-weight:600;}
+    .income-item,.expense-item{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .income-item{border-left:4px solid #075e55;}
+    .expense-item{border-left:4px solid #90161f;}
+    .item-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+    .item-info{flex:1;}
+    .item-name{font-weight:700;font-size:14px;color:#111827;}
+    .item-date{font-size:12px;color:#9ca3af;margin-top:2px;}
+    .item-amount{font-weight:900;font-size:15px;white-space:nowrap;}
+    .amount-in{color:#075e55;}
+    .amount-out{color:#90161f;}
+    .progress-bar-wrap{background:#f3f4f6;border-radius:50px;height:10px;margin-top:8px;overflow:hidden;}
+    .progress-bar-fill{height:100%;border-radius:50px;transition:width 1s ease;}
+    .timeline-item{display:flex;gap:16px;margin-bottom:24px;}
+    .tl-dot{width:14px;height:14px;border-radius:50%;background:#90161f;flex-shrink:0;margin-top:4px;position:relative;}
+    .tl-dot::after{content:'';position:absolute;left:6px;top:14px;width:2px;height:calc(100% + 16px);background:#e5e7eb;}
+    .timeline-item:last-child .tl-dot::after{display:none;}
+    .tl-content{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);flex:1;}
+    .tl-title{font-weight:700;font-size:14px;color:#111827;}
+    .tl-meta{font-size:12px;color:#9ca3af;margin-top:4px;}
+    .tl-amount{font-weight:900;color:#c9a227;margin-top:6px;font-size:15px;}
+    .transparency-box{background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid #bbf7d0;border-radius:16px;padding:24px;text-align:center;}
+    .section-title-fr{font-size:1.3rem;font-weight:900;color:#111827;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+  </style>
 </head>
 <body data-page="financial_report">
 
@@ -46,17 +78,301 @@
 <div class="wrapper fix">
   <div id="joaf-header"></div>
 
-  <!-- Special Area -->
-        <section id="special-area" class="about-area section pb-120 pt-120" aria-labelledby="special-title">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-12 mx-auto text-center">
-                        <h2 class="section-title h2 pb-40 pt-40" id="special-title">Financial Report</h2>
-                        <iframe src="financial-statement.pdf" frameborder="0" style="width: 100%; height: 100vh;"></iframe>
-                    </div>
-                </div>
+  <!-- Hero -->
+  <div class="fr-hero">
+    <div class="container">
+      <div class="fr-badge">💚 সম্পূর্ণ স্বচ্ছ • আর্থিক বিবরণী ২০২৪–২৫</div>
+      <h1 style="margin-top:16px">আর্থিক বিবরণী</h1>
+      <p>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরামের প্রতিটি আয়-ব্যয়ের সম্পূর্ণ স্বচ্ছ হিসাব। আমরা বিশ্বাস করি জবাবদিহিতাই গণতন্ত্রের ভিত্তি।</p>
+    </div>
+  </div>
+
+  <section class="section pt-60 pb-80" style="background:#f8f9fa;">
+    <div class="container">
+
+      <!-- Tabs -->
+      <div class="fr-tabs">
+        <button class="fr-tab active" onclick="showFRTab('overview')">📊 সংক্ষিপ্ত চিত্র</button>
+        <button class="fr-tab" onclick="showFRTab('income')">💚 আয়</button>
+        <button class="fr-tab" onclick="showFRTab('expense')">🔴 ব্যয়</button>
+        <button class="fr-tab" onclick="showFRTab('timeline')">📅 লেনদেন ইতিহাস</button>
+        <button class="fr-tab" onclick="showFRTab('transparency')">🔍 স্বচ্ছতা</button>
+      </div>
+
+      <!-- Overview -->
+      <div class="fr-section active" id="fr-overview">
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <div class="stat-card">
+              <div class="num">৳৪,৮৫,০০০</div>
+              <div class="lbl">মোট আয়</div>
             </div>
-        </section>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card" style="border-top-color:#075e55">
+              <div class="num" style="color:#075e55">৳৩,২১,৫০০</div>
+              <div class="lbl">মোট ব্যয়</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card" style="border-top-color:#c9a227">
+              <div class="num" style="color:#c9a227">৳১,৬৩,৫০০</div>
+              <div class="lbl">উদ্বৃত্ত</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card" style="border-top-color:#6366f1">
+              <div class="num" style="color:#6366f1">৬,০৫০+</div>
+              <div class="lbl">সক্রিয় সদস্য</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="section-title-fr">💚 আয়ের উৎস</div>
+            <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.06)">
+              <div style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:700;font-size:14px">সদস্যপদ ফি</span><span style="font-weight:900;color:#075e55">৳২,৪০,০০০</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:0;background:#075e55" data-width="49%"></div></div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:4px">৪৯% — ৬,০০০ সদস্য × ৳৪০</div>
+              </div>
+              <div style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:700;font-size:14px">স্বেচ্ছামূলক অনুদান</span><span style="font-weight:900;color:#075e55">৳১,৮৫,০০০</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:0;background:#c9a227" data-width="38%"></div></div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:4px">৩৮% — সহানুভূতিশীল দেশবাসীর অবদান</div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:700;font-size:14px">ইভেন্ট ও কার্যক্রম</span><span style="font-weight:900;color:#075e55">৳৬০,০০০</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:0;background:#6366f1" data-width="13%"></div></div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:4px">১৩% — সেমিনার, ওয়েবিনার</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="section-title-fr">🔴 ব্যয়ের খাত</div>
+            <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.06)">
+              <div style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:700;font-size:14px">কার্যক্রম ও ইভেন্ট</span><span style="font-weight:900;color:#90161f">৳১,২০,০০০</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:0;background:#90161f" data-width="37%"></div></div>
+              </div>
+              <div style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:700;font-size:14px">ডিজিটাল প্রচার</span><span style="font-weight:900;color:#90161f">৳৮৫,০০০</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:0;background:#f59e0b" data-width="26%"></div></div>
+              </div>
+              <div style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:700;font-size:14px">প্রশাসনিক খরচ</span><span style="font-weight:900;color:#90161f">৳৬৬,৫০০</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:0;background:#ef4444" data-width="21%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:700;font-size:14px">সামাজিক সহায়তা</span><span style="font-weight:900;color:#90161f">৳৫০,০০০</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:0;background:#8b5cf6" data-width="16%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Income -->
+      <div class="fr-section" id="fr-income">
+        <div class="section-title-fr">💚 আয়ের বিস্তারিত বিবরণ</div>
+        <div class="income-item">
+          <div class="item-icon" style="background:#dcfce7">💳</div>
+          <div class="item-info"><div class="item-name">সদস্যপদ ফি — জানুয়ারি–মার্চ ২০২৫</div><div class="item-date">৩,০০০ সদস্য × ৳৪০</div></div>
+          <div class="item-amount amount-in">+৳১,২০,০০০</div>
+        </div>
+        <div class="income-item">
+          <div class="item-icon" style="background:#dcfce7">💳</div>
+          <div class="item-info"><div class="item-name">সদস্যপদ ফি — এপ্রিল–জুন ২০২৫</div><div class="item-date">৩,০৫০ সদস্য × ৳৪০</div></div>
+          <div class="item-amount amount-in">+৳১,২২,০০০</div>
+        </div>
+        <div class="income-item">
+          <div class="item-icon" style="background:#fef9c3">🤝</div>
+          <div class="item-info"><div class="item-name">বার্ষিক অনুদান প্রচারণা</div><div class="item-date">২৬ মার্চ ও ১৬ ডিসেম্বর উপলক্ষে</div></div>
+          <div class="item-amount amount-in">+৳৯৫,০০০</div>
+        </div>
+        <div class="income-item">
+          <div class="item-icon" style="background:#fef9c3">💝</div>
+          <div class="item-info"><div class="item-name">ব্যক্তিগত অনুদান</div><div class="item-date">প্রবাসী ও দেশীয় শুভানুধ্যায়ী</div></div>
+          <div class="item-amount amount-in">+৳৯০,০০০</div>
+        </div>
+        <div class="income-item">
+          <div class="item-icon" style="background:#ede9fe">🎪</div>
+          <div class="item-info"><div class="item-name">জুলাই স্মরণ সেমিনার ২০২৪</div><div class="item-date">রেজিস্ট্রেশন ফি ও স্পনসরশিপ</div></div>
+          <div class="item-amount amount-in">+৳৩৫,০০০</div>
+        </div>
+        <div class="income-item">
+          <div class="item-icon" style="background:#ede9fe">💻</div>
+          <div class="item-info"><div class="item-name">ডিজিটাল কর্মশালা</div><div class="item-date">অনলাইন ওয়েবিনার সিরিজ</div></div>
+          <div class="item-amount amount-in">+৳২৫,০০০</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <span style="font-weight:900;font-size:16px;color:#166534">মোট আয়</span>
+          <span style="font-weight:900;font-size:20px;color:#166534">৳৪,৮৭,০০০</span>
+        </div>
+      </div>
+
+      <!-- Expense -->
+      <div class="fr-section" id="fr-expense">
+        <div class="section-title-fr">🔴 ব্যয়ের বিস্তারিত বিবরণ</div>
+        <div class="expense-item">
+          <div class="item-icon" style="background:#fee2e2">🎪</div>
+          <div class="item-info"><div class="item-name">জুলাই বার্ষিকী অনুষ্ঠান</div><div class="item-date">ভেন্যু, সাউন্ড, লজিস্টিক্স</div></div>
+          <div class="item-amount amount-out">-৳৭০,০০০</div>
+        </div>
+        <div class="expense-item">
+          <div class="item-icon" style="background:#fee2e2">📢</div>
+          <div class="item-info"><div class="item-name">সোশ্যাল মিডিয়া প্রচার</div><div class="item-date">Facebook, YouTube বুস্টিং</div></div>
+          <div class="item-amount amount-out">-৳৪৫,০০০</div>
+        </div>
+        <div class="expense-item">
+          <div class="item-icon" style="background:#fee2e2">🌐</div>
+          <div class="item-info"><div class="item-name">ওয়েবসাইট ও প্রযুক্তি</div><div class="item-date">ডোমেইন, হোস্টিং, ডিজাইন</div></div>
+          <div class="item-amount amount-out">-৳৩০,০০০</div>
+        </div>
+        <div class="expense-item">
+          <div class="item-icon" style="background:#fee2e2">📄</div>
+          <div class="item-info"><div class="item-name">মুদ্রণ ও প্রকাশনা</div><div class="item-date">লিফলেট, পোস্টার, ব্যানার</div></div>
+          <div class="item-amount amount-out">-৳২৫,০০০</div>
+        </div>
+        <div class="expense-item">
+          <div class="item-icon" style="background:#fee2e2">🏢</div>
+          <div class="item-info"><div class="item-name">অফিস পরিচালনা</div><div class="item-date">যোগাযোগ, স্টেশনারি</div></div>
+          <div class="item-amount amount-out">-৳২২,০০০</div>
+        </div>
+        <div class="expense-item">
+          <div class="item-icon" style="background:#fee2e2">🚗</div>
+          <div class="item-info"><div class="item-name">যাতায়াত ও মাঠ কার্যক্রম</div><div class="item-date">জেলা প্রতিনিধি সমন্বয়</div></div>
+          <div class="item-amount amount-out">-৳৩৫,০০০</div>
+        </div>
+        <div class="expense-item">
+          <div class="item-icon" style="background:#fee2e2">🤲</div>
+          <div class="item-info"><div class="item-name">সামাজিক সহায়তা তহবিল</div><div class="item-date">শহীদ পরিবার ও আহত সদস্য</div></div>
+          <div class="item-amount amount-out">-৳৫০,০০০</div>
+        </div>
+        <div class="expense-item">
+          <div class="item-icon" style="background:#fee2e2">📚</div>
+          <div class="item-info"><div class="item-name">প্রশিক্ষণ ও সক্ষমতা বৃদ্ধি</div><div class="item-date">কর্মশালা, ট্রেনিং উপকরণ</div></div>
+          <div class="item-amount amount-out">-৳৪৫,৫০০</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#fff1f2,#fee2e2);border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <span style="font-weight:900;font-size:16px;color:#991b1b">মোট ব্যয়</span>
+          <span style="font-weight:900;font-size:20px;color:#991b1b">৳৩,২২,৫০০</span>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="fr-section" id="fr-timeline">
+        <div class="section-title-fr">📅 লেনদেন ইতিহাস</div>
+        <div class="timeline-item">
+          <div class="tl-dot"></div>
+          <div class="tl-content">
+            <div class="tl-title">সদস্যপদ ফি সংগ্রহ — Q1 2025</div>
+            <div class="tl-meta">জানুয়ারি — মার্চ ২০২৫ • bKash/Nagad</div>
+            <div class="tl-amount">+৳১,২০,০০০</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot" style="background:#c9a227"></div>
+          <div class="tl-content">
+            <div class="tl-title">জুলাই স্মরণ সেমিনার আয়োজন</div>
+            <div class="tl-meta">ফেব্রুয়ারি ২০২৫ • ঢাকা</div>
+            <div class="tl-amount" style="color:#90161f">-৳৭০,০০০</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot" style="background:#075e55"></div>
+          <div class="tl-content">
+            <div class="tl-title">স্বাধীনতা দিবস অনুদান প্রচারণা</div>
+            <div class="tl-meta">২৬ মার্চ ২০২৫ • অনলাইন</div>
+            <div class="tl-amount">+৳৪৮,০০০</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot" style="background:#6366f1"></div>
+          <div class="tl-content">
+            <div class="tl-title">শহীদ পরিবার সহায়তা তহবিল বিতরণ</div>
+            <div class="tl-meta">এপ্রিল ২০২৫ • সারাদেশ</div>
+            <div class="tl-amount" style="color:#90161f">-৳৫০,০০০</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot"></div>
+          <div class="tl-content">
+            <div class="tl-title">সদস্যপদ ফি সংগ্রহ — Q2 2025</div>
+            <div class="tl-meta">এপ্রিল — জুন ২০২৫ • bKash/Nagad</div>
+            <div class="tl-amount">+৳১,২২,০০০</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="tl-dot" style="background:#075e55"></div>
+          <div class="tl-content">
+            <div class="tl-title">ডিজিটাল কর্মশালা সিরিজ</div>
+            <div class="tl-meta">মে ২০২৫ • অনলাইন</div>
+            <div class="tl-amount">+৳২৫,০০০</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transparency -->
+      <div class="fr-section" id="fr-transparency">
+        <div class="section-title-fr">🔍 আর্থিক স্বচ্ছতা নীতি</div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="transparency-box">
+              <div style="font-size:2rem;margin-bottom:10px">✅</div>
+              <div style="font-weight:900;font-size:16px;color:#166534;margin-bottom:8px">নিরীক্ষিত হিসাব</div>
+              <div style="font-size:13px;color:#374151">প্রতিটি লেনদেন স্বাধীন কমিটি কর্তৃক যাচাইকৃত</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="transparency-box">
+              <div style="font-size:2rem;margin-bottom:10px">📱</div>
+              <div style="font-weight:900;font-size:16px;color:#166534;margin-bottom:8px">ডিজিটাল লেনদেন</div>
+              <div style="font-size:13px;color:#374151">সকল আয়-ব্যয় bKash/Nagad/Bank এর মাধ্যমে</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="transparency-box">
+              <div style="font-size:2rem;margin-bottom:10px">🌐</div>
+              <div style="font-weight:900;font-size:16px;color:#166534;margin-bottom:8px">প্রকাশ্য রিপোর্ট</div>
+              <div style="font-size:13px;color:#374151">প্রতি ত্রৈমাসিকে ওয়েবসাইটে প্রকাশিত</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 10px rgba(0,0,0,.06)">
+          <h4 style="font-weight:900;color:#111827;margin-bottom:16px">📬 অনুদান করতে চান?</h4>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div style="background:#f0fdf4;border-radius:12px;padding:16px;text-align:center">
+                <div style="font-size:1.5rem;margin-bottom:8px">📱</div>
+                <div style="font-weight:800;font-size:14px;color:#166534">bKash</div>
+                <div style="font-size:18px;font-weight:900;color:#111827;margin-top:4px">01XXXXXXXXX</div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:4px">Send Money → JOAF</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div style="background:#fff7ed;border-radius:12px;padding:16px;text-align:center">
+                <div style="font-size:1.5rem;margin-bottom:8px">💳</div>
+                <div style="font-weight:800;font-size:14px;color:#c2410c">Nagad</div>
+                <div style="font-size:18px;font-weight:900;color:#111827;margin-top:4px">01XXXXXXXXX</div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:4px">Send Money → JOAF</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div style="background:#eff6ff;border-radius:12px;padding:16px;text-align:center">
+                <div style="font-size:1.5rem;margin-bottom:8px">🏦</div>
+                <div style="font-weight:800;font-size:14px;color:#1d4ed8">ব্যাংক</div>
+                <div style="font-size:13px;font-weight:700;color:#111827;margin-top:4px">JOAF Fund Account</div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:4px">যোগাযোগ করুন বিস্তারিতের জন্য</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
 
   <div id="joaf-footer"></div>
 </div>
@@ -67,6 +383,29 @@
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
-<script>window.addEventListener('load',()=>{const pl=document.getElementById('joaf-preloader');if(pl)setTimeout(()=>pl.classList.add('hidden'),300);});</script>
+<script>
+function showFRTab(id) {
+  document.querySelectorAll('.fr-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.fr-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('fr-' + id).classList.add('active');
+  event.target.classList.add('active');
+  // Animate progress bars
+  setTimeout(() => {
+    document.querySelectorAll('.progress-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.width || '0';
+    });
+  }, 100);
+}
+// Animate on load
+window.addEventListener('load', () => {
+  const pl = document.getElementById('joaf-preloader');
+  if (pl) setTimeout(() => pl.classList.add('hidden'), 300);
+  setTimeout(() => {
+    document.querySelectorAll('.progress-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.width || '0';
+    });
+  }, 500);
+});
+</script>
 </body>
 </html>

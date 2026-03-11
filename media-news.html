@@ -94,8 +94,8 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="/js/plugins.js"></script>
-<script src="/js/data.js?v=4.2"></script>
-<script src="/js/components.js?v=4.2"></script>
+<script src="/js/data.js?v=5.1"></script>
+<script src="/js/components.js?v=5.1"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script>
 window.addEventListener('load', () => {
@@ -120,8 +120,8 @@ function renderAllPress() {
           <p>${p.summary}</p>
           <a href="/press-releases/${p.slug}.html" class="press-read-more">বিস্তারিত পড়ুন <i class="zmdi zmdi-arrow-right"></i></a>
           <div class="share-row">
-            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-fb"><i class="zmdi zmdi-facebook"></i> শেয়ার</a>
-            <a href="https://wa.me/?text=${encodeURIComponent(p.title+'\nhttps://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-wa"><i class="zmdi zmdi-whatsapp"></i> শেয়ার</a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-fb" aria-label="Facebook শেয়ার"><i class="zmdi zmdi-facebook"></i> শেয়ার</a>
+            <a href="https://wa.me/?text=${encodeURIComponent(p.title+'\nhttps://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-wa" aria-label="WhatsApp শেয়ার"><i class="zmdi zmdi-whatsapp"></i> শেয়ার</a>
           </div>
         </div>
       </div>

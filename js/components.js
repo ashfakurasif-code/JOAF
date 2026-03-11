@@ -122,8 +122,8 @@ const JOAFComponents = {
           <div class="col-md-4 col-12 mb-40">
             <img src="${s.logo}" alt="${s.abbr}" style="max-width:85px;margin-bottom:12px;filter:brightness(10)">
             <h4>${s.name}</h4>
-            <p>${s.tagline2}</p>
-            <p style="margin-top:10px;font-size:12px;opacity:.55">© ${new Date().getFullYear()} ${s.name}</p>
+            <p style="color:rgba(255,255,255,.82)">${s.tagline2}</p>
+            <p style="margin-top:10px;font-size:12px;opacity:.75">© ${new Date().getFullYear()} ${s.name}</p>
           </div>
           <div class="col-md-4 col-12 mb-40">
             <h4>⚡ দ্রুত লিঙ্ক</h4>
@@ -133,10 +133,10 @@ const JOAFComponents = {
             <h4>📬 যোগাযোগ</h4>
             <p><i class="zmdi zmdi-email"></i> <a href="mailto:${s.email}">${s.email}</a></p>
             <p><i class="zmdi zmdi-map-pin"></i> ${s.address}</p>
-            <div class="footer-social" style="margin-top:14px">
-              <a href="${s.social.facebook}" target="_blank" rel="noopener" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
-              <a href="${s.social.twitter}" target="_blank" rel="noopener" aria-label="Twitter"><i class="zmdi zmdi-twitter"></i></a>
-              <a href="${s.social.instagram}" target="_blank" rel="noopener" aria-label="Instagram"><i class="zmdi zmdi-instagram"></i></a>
+            <div class="footer-social" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+              <a href="${s.social.facebook}" target="_blank" rel="noopener" aria-label="Facebook" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.7);transition:.2s;text-decoration:none"><i class="zmdi zmdi-facebook"></i></a>
+              <a href="${s.social.twitter}" target="_blank" rel="noopener" aria-label="Twitter" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.7);transition:.2s;text-decoration:none"><i class="zmdi zmdi-twitter"></i></a>
+              <a href="${s.social.instagram}" target="_blank" rel="noopener" aria-label="Instagram" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(255,255,255,.7);transition:.2s;text-decoration:none"><i class="zmdi zmdi-instagram"></i></a>
             </div>
             <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
               <a href="/financial-report.html" style="background:var(--brand);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;text-decoration:none">আর্থিক বিবরণী</a>
@@ -364,6 +364,11 @@ const JOAFComponents = {
     // Inject header
     const hp = document.getElementById('joaf-header');
     if (hp) hp.outerHTML = this.renderHeader(pageId);
+    // Add main landmark if not present
+    if (!document.querySelector('main,[role="main"]')) {
+      const wrapper = document.querySelector('.wrapper');
+      if (wrapper) wrapper.setAttribute('role', 'main');
+    }
 
     // Inject ticker
     const ta = document.getElementById('joaf-ticker');

@@ -743,7 +743,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 .page-banner-area {
   padding-bottom: 100px;
   padding-top: 270px;
-  background-image: url("img/video.jpg");
+  background-image: url("../img/video.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
@@ -853,7 +853,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   z-index: 1;
 }
 .section-title h1 {
-  background: rgba(0, 0, 0, 0) url("img/title-shape.png") no-repeat scroll center bottom;
+  background: rgba(0, 0, 0, 0) url("../img/title-shape.png") no-repeat scroll center bottom;
   font-size: 36px;
   color: #5e5e5e;
   text-transform: uppercase;
@@ -875,7 +875,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   }
 }
 .section-title.title-white h1 {
-  background: rgba(0, 0, 0, 0) url("img/title-shape-light.png") no-repeat scroll center bottom;
+  background: rgba(0, 0, 0, 0) url("../img/title-shape-light.png") no-repeat scroll center bottom;
   color: #fff;
 }
 
@@ -2062,7 +2062,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 /*  5.  Doantion Area
 /*----------------------------------------*/
 .donation-area {
-  background-image: url("img/donation.jpg");
+  background-image: url("../img/donation.jpg");
 }
 
 /*Donation Form*/
@@ -2337,7 +2337,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   background-repeat: no-repeat;
   background-size: cover;
   -webkit-background-size: cover;
-  background-image: url("img/achivment.jpg");
+  background-image: url("../img/achivment.jpg");
 }
 
 .single-achivment img {
@@ -2493,7 +2493,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
 
 /*Video Area*/
 .video-area {
-  background-image: url("img/video.jpg");
+  background-image: url("../img/video.jpg");
   padding: 216px 0;
 }
 @media only screen and (min-width: 768px) and (max-width: 991px) {
@@ -3005,7 +3005,7 @@ input:-ms-input-placeholder, textarea:-ms-input-placeholder {
   padding-bottom: 22px;
   margin-bottom: 38px;
   text-transform: uppercase;
-  background-image: url("img/small-title-shape.png");
+  background-image: url("../img/small-title-shape.png");
   background-repeat: no-repeat;
   background-position: center bottom;
 }

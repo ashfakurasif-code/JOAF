@@ -1,4 +1,4 @@
-// JOAF Data v4.2 — cache bust: 20260310
+// JOAF Data v5.1 — cache bust: 20260311
 // ============================================================
 // JOAF Central Data v4.0
 // ✅ এই একটা ফাইল বদলালে সব জায়গায় আপডেট হবে
@@ -18,7 +18,7 @@ const JOAF = {
     baseUrl: "https://julyforum.com",
     fbAppId: "1114707634145642",
     gaId: "G-QV3CFV7R98",
-    version: "4.0.0",
+    version: "5.1.0",
     social: {
       facebook: "https://www.facebook.com/julyforum",
       twitter: "https://twitter.com/julyforum",

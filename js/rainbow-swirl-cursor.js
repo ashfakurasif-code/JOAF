@@ -1,5 +1,7 @@
 // Clean, crisp oily rainbow cursor (no fog on page!)
 (function() {
+  // Skip on mobile/touch devices for performance
+  if (window.matchMedia("(pointer: coarse)").matches) return;
   const canvas = document.createElement('canvas');
   canvas.style.position = 'fixed';
   canvas.style.top = '0';
