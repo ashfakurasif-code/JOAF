@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম — JOAF</title>
   <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) — দেশ আগে, দল পরে। বাংলাদেশকে এগিয়ে নেওয়ার জন্য প্রতিশ্রুতিবদ্ধ।">
   <meta name="keywords" content="JOAF, জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম, জুলাই অভ্যুত্থান, বাংলাদেশ, গণতন্ত্র">
@@ -21,7 +21,14 @@
   <meta name="twitter:title" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম — JOAF">
   <meta name="twitter:description" content="দেশের পক্ষে, গুজবের বিরুদ্ধে।">
   <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png">
-  <link rel="canonical" href="https://julyforum.com/">
+  <link rel="canonical" href="https://julyforum.com/">  <!-- Resource hints for speed -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://code.jquery.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="preload" href="/css/joaf.css" as="style">
+
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <link rel="manifest" href="/site.webmanifest">
   <!-- CSS: plugins first, then base, then our overrides -->
@@ -39,7 +46,7 @@
   <!-- Modernizr -->
   <script src="/js/modernizr-2.8.3.min.js"></script>
 </head>
-<body data-page="home">
+<body data-page="home" style="overflow-x:hidden">
 
 <!-- ── Preloader ─────────────────────────────────────── -->
 <div id="joaf-preloader" role="status" aria-label="লোড হচ্ছে">
@@ -60,12 +67,12 @@
   <section id="hero-area" class="hero-area section" aria-labelledby="hero-title">
     <div class="hero-slider">
       <div class="hs-item video-hero">
-        <video id="heroVideo" class="hero-video" autoplay muted loop playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;object-position:center center;"
+        <video id="heroVideo" class="hero-video" autoplay muted loop playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;object-position:center center;max-width:100%;display:block;"
                poster="/img/hero-1.jpg" aria-hidden="true">
           <source src="/video/video-1.mp4" type="video/mp4">
         </video>
         <div class="hs-item-wrapper fix"></div>
-        <div class="hs-content fix">
+        <div class="hs-content fix joaf-reveal-zoom">
           <h2>We are...</h2>
           <h1 id="hero-title">জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</h1>
           <p>দেশ আগে, দল পরে — আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</p>
@@ -96,17 +103,17 @@
     <div class="container">
       <div class="row g-3">
         <div class="col-md-4">
-          <a href="/financial-report.html" class="qa-btn financial joaf-reveal">
+          <a href="/financial-report.html" class="qa-btn financial joaf-reveal-scale delay-1 pulse-btn">
             <i class="zmdi zmdi-money"></i> আর্থিক বিবরণী
           </a>
         </div>
         <div class="col-md-4">
-          <a href="/membership.html" class="qa-btn join joaf-reveal" style="transition-delay:.1s">
+          <a href="/membership.html" class="qa-btn join joaf-reveal-scale delay-2">
             <i class="zmdi zmdi-account-add"></i> সদস্যতা ফর্ম (JOIN)
           </a>
         </div>
         <div class="col-md-4">
-          <a href="/financial-policy.html" class="qa-btn policy joaf-reveal" style="transition-delay:.2s">
+          <a href="/financial-policy.html" class="qa-btn policy joaf-reveal-scale delay-3">
             <i class="zmdi zmdi-file-text"></i> আর্থিক নীতিমালা
           </a>
         </div>
@@ -117,12 +124,12 @@
   <!-- ── About ───────────────────────────────────────────── -->
   <section id="about-area" class="section bg-subtle" aria-labelledby="about-title">
     <div class="container">
-      <div class="section-heading joaf-reveal">
+      <div class="section-heading joaf-reveal-flip">
         <h2 id="about-title">জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF)</h2>
         <p>নিরপেক্ষ দৃষ্টিভঙ্গিতে দেশের জন্য কাজ করতে প্রতিশ্রুতিবদ্ধ</p>
       </div>
       <div class="row g-4 mb-5">
-        <div class="col-md-8 mx-auto joaf-reveal">
+        <div class="col-md-8 mx-auto joaf-reveal-zoom">
           <div class="about-highlight">
             <p>আমরা জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF), যারা নিরপেক্ষ দৃষ্টিভঙ্গিতে দেশের জন্য কাজ করতে প্রতিশ্রুতিবদ্ধ।</p>
           </div>
@@ -140,17 +147,17 @@
   <!-- ── Vision & Mission ────────────────────────────────── -->
   <section id="vision-mission-area" class="section" aria-labelledby="vision-title">
     <div class="container">
-      <div class="section-heading joaf-reveal">
+      <div class="section-heading joaf-reveal-flip">
         <h2 id="vision-title">ভিশন ও মিশন</h2>
       </div>
       <div class="row g-4">
-        <div class="col-md-6 joaf-reveal">
+        <div class="col-md-6 joaf-reveal-left">
           <div class="vision-box vision">
             <h2>🎯 ভিশন</h2>
             <p>দেশের পক্ষে, গুজবের বিরুদ্ধে। আমরা — গণতন্ত্রে, সংহতিতে বিশ্বাসী।</p>
           </div>
         </div>
-        <div class="col-md-6 joaf-reveal" style="transition-delay:.15s">
+        <div class="col-md-6 joaf-reveal-right" style="transition-delay:.1s">
           <div class="vision-box mission">
             <h2>🚀 মিশন</h2>
             <p>অনলাইনে ভুল তথ্য রোধে কাজ করা, সকল রাজনৈতিক দলের প্রতিনিধি, তৃতীয় লিঙ্গ ও সমাজকর্মীদের নিয়ে সমন্বিত উদ্যোগ গড়ে তোলা।</p>
@@ -163,7 +170,7 @@
   <!-- ── Movement ────────────────────────────────────────── -->
   <section id="movement" class="section bg-subtle" aria-labelledby="movement-title">
     <div class="container">
-      <div class="section-heading joaf-reveal">
+      <div class="section-heading joaf-reveal-flip">
         <h2 id="movement-title">জনমত গঠন ও রাজনৈতিক আন্দোলন</h2>
       </div>
       <div class="row">
@@ -186,7 +193,7 @@
   <!-- ── Leadership Gallery ──────────────────────────────── -->
   <section id="gallery-area" class="section" aria-labelledby="gallery-title">
     <div class="container">
-      <div class="section-heading joaf-reveal">
+      <div class="section-heading joaf-reveal-flip">
         <h2 id="gallery-title">নিউক্লিয়াস — কেন্দ্রীয় নেতৃত্ব</h2>
         <p>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরামের কেন্দ্রীয় নেতৃবৃন্দ</p>
       </div>
@@ -208,7 +215,7 @@
   <!-- ── Advisors ────────────────────────────────────────── -->
   <section class="section bg-subtle" aria-labelledby="advisors-title">
     <div class="container">
-      <div class="section-heading joaf-reveal">
+      <div class="section-heading joaf-reveal-flip">
         <h2 id="advisors-title">উপদেষ্টা বলয় (পরামর্শক প্যানেল)</h2>
       </div>
       <div class="row g-4" id="advisors-grid"></div>
@@ -218,7 +225,7 @@
   <!-- ── Coalition ───────────────────────────────────────── -->
   <section class="section" aria-labelledby="coalition-title">
     <div class="container">
-      <div class="section-heading joaf-reveal">
+      <div class="section-heading joaf-reveal-flip">
         <h2 id="coalition-title">সম্মিলিত বৈপ্লবিক জোট</h2>
         <p>সংযুক্ত রাজনৈতিক ও সামাজিক প্ল্যাটফর্ম</p>
       </div>
@@ -229,11 +236,11 @@
   <!-- ── Press Releases Preview ─────────────────────────── -->
   <section class="section bg-subtle" aria-labelledby="press-title">
     <div class="container">
-      <div class="section-heading joaf-reveal">
+      <div class="section-heading joaf-reveal-flip">
         <h2 id="press-title">সর্বশেষ প্রেস রিলিজ</h2>
       </div>
       <div class="row g-4" id="press-grid"></div>
-      <div class="text-center mt-4 joaf-reveal">
+      <div class="text-center mt-4 joaf-reveal-scale">
         <a href="/media-news.html" class="btn btn-primary px-4 py-2" style="background:var(--brand);border:none;border-radius:50px;font-weight:700">
           সব প্রেস রিলিজ দেখুন <i class="zmdi zmdi-arrow-right"></i>
         </a>
@@ -242,18 +249,134 @@
   </section>
 
   <!-- ── Footer (injected by components.js) ──────────────── -->
+  <!-- ══ যোগাযোগ করুন ══════════════════════════════════════ -->
+  <section id="contact-area" class="section" style="background:linear-gradient(135deg,#0d0d1a 0%,#1a0a0d 50%,#0a1f1c 100%);padding:60px 0;" aria-labelledby="contact-title">
+    <div class="container">
+      <div class="section-heading joaf-reveal-flip" style="margin-bottom:40px">
+        <h2 id="contact-title" style="color:#fff;font-size:clamp(1.5rem,4vw,2rem);font-weight:900">📬 আমাদের সাথে যোগাযোগ করুন</h2>
+        <p style="color:rgba(255,255,255,.65)">আপনার মতামত, অভিযোগ বা সহযোগিতার প্রস্তাব জানাতে নির্দ্বিধায় যোগাযোগ করুন।</p>
+      </div>
+      <div class="row g-4 justify-content-center">
+
+        <!-- যোগাযোগের উপায় -->
+        <div class="col-lg-5 col-md-6">
+          <div class="joaf-reveal" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;height:100%">
+            <h4 style="color:#c9a227;font-weight:900;margin-bottom:20px;font-size:1rem;letter-spacing:1px;text-transform:uppercase">📞 যোগাযোগের উপায়</h4>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <a href="mailto:joafforum@gmail.com" style="display:flex;align-items:center;gap:14px;text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;transition:.3s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">
+                <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#90161f,#b91c1c);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <i class="zmdi zmdi-email" style="color:#fff;font-size:18px"></i>
+                </div>
+                <div>
+                  <div style="color:rgba(255,255,255,.55);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">ইমেইল</div>
+                  <div style="color:#fff;font-weight:700;font-size:14px">joafforum@gmail.com</div>
+                </div>
+              </a>
+              <a href="https://chat.whatsapp.com/DjABAy1NNQMEtSW3wh8bXg" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;transition:.3s" onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">
+                <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#25d366,#128c7e);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <i class="zmdi zmdi-whatsapp" style="color:#fff;font-size:20px"></i>
+                </div>
+                <div>
+                  <div style="color:rgba(255,255,255,.55);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">WhatsApp গ্রুপ</div>
+                  <div style="color:#fff;font-weight:700;font-size:14px">মেইন গ্রুপে যোগ দিন</div>
+                </div>
+              </a>
+              <div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 16px">
+                <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#075e55,#15803d);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <i class="zmdi zmdi-map-pin" style="color:#fff;font-size:18px"></i>
+                </div>
+                <div>
+                  <div style="color:rgba(255,255,255,.55);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">ঠিকানা</div>
+                  <div style="color:#fff;font-weight:700;font-size:14px">রোড-৯, দক্ষিণ বনশ্রী, ঢাকা-১২১৯</div>
+                </div>
+              </div>
+              <!-- Social links -->
+              <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+                <a href="https://www.facebook.com/joafforum" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;background:#3b5998;color:#fff;padding:9px 16px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;transition:.3s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                  <i class="zmdi zmdi-facebook"></i> Facebook
+                </a>
+                <a href="https://twitter.com/joafforum" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;background:#1da1f2;color:#fff;padding:9px 16px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;transition:.3s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                  <i class="zmdi zmdi-twitter"></i> Twitter
+                </a>
+                <a href="https://www.instagram.com/joafforum" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;padding:9px 16px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;transition:.3s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                  <i class="zmdi zmdi-instagram"></i> Instagram
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick message form -->
+        <div class="col-lg-5 col-md-6">
+          <div class="joaf-reveal" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;height:100%" id="contact-form-wrap">
+            <h4 style="color:#c9a227;font-weight:900;margin-bottom:20px;font-size:1rem;letter-spacing:1px;text-transform:uppercase">✉️ বার্তা পাঠান</h4>
+            <div id="contact-success" style="display:none;text-align:center;padding:30px 0">
+              <div style="font-size:3rem;margin-bottom:12px">✅</div>
+              <p style="color:#25d366;font-weight:700;font-size:16px">বার্তা পাঠানো হয়েছে!</p>
+              <p style="color:rgba(255,255,255,.65);font-size:13px">আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।</p>
+            </div>
+            <div id="contact-form-inner">
+              <div style="margin-bottom:14px">
+                <input id="c-name" type="text" placeholder="আপনার নাম" style="width:100%;padding:12px 16px;border:2px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.07);color:#fff;font-family:inherit;font-size:14px;outline:none;transition:.3s" onfocus="this.style.borderColor='rgba(201,162,39,.6)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
+              </div>
+              <div style="margin-bottom:14px">
+                <input id="c-contact" type="text" placeholder="ইমেইল বা ফোন নম্বর" style="width:100%;padding:12px 16px;border:2px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.07);color:#fff;font-family:inherit;font-size:14px;outline:none;transition:.3s" onfocus="this.style.borderColor='rgba(201,162,39,.6)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
+              </div>
+              <div style="margin-bottom:18px">
+                <textarea id="c-msg" rows="4" placeholder="আপনার বার্তা লিখুন..." style="width:100%;padding:12px 16px;border:2px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.07);color:#fff;font-family:inherit;font-size:14px;outline:none;resize:vertical;min-height:100px;transition:.3s" onfocus="this.style.borderColor='rgba(201,162,39,.6)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'"></textarea>
+              </div>
+              <button onclick="sendContactMsg()" id="c-btn" style="width:100%;padding:13px;border:none;border-radius:50px;background:linear-gradient(135deg,#90161f,#075e55);color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                <i class="zmdi zmdi-send"></i> বার্তা পাঠান
+              </button>
+              <p id="c-err" style="color:#f87171;font-size:12px;margin-top:8px;display:none">সব তথ্য পূরণ করুন।</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <div id="joaf-footer"></div>
+
+  <script>
+  function sendContactMsg() {
+    const name = document.getElementById('c-name').value.trim();
+    const contact = document.getElementById('c-contact').value.trim();
+    const msg = document.getElementById('c-msg').value.trim();
+    const err = document.getElementById('c-err');
+    if (!name || !contact || !msg) { err.style.display='block'; return; }
+    err.style.display='none';
+    const btn = document.getElementById('c-btn');
+    btn.disabled = true; btn.innerHTML = '<i class="zmdi zmdi-spinner zmdi-hc-spin"></i> পাঠানো হচ্ছে...';
+    // Send to same Google Apps Script endpoint
+    const fd = new FormData();
+    fd.append('full_name', name);
+    fd.append('phone', contact);
+    fd.append('do_you_want_to_vote', msg);
+    fd.append('_type', 'contact');
+    fetch(JOAF.site.formAction, { method:'POST', body:fd, mode:'no-cors' })
+      .then(() => {
+        document.getElementById('contact-form-inner').style.display='none';
+        document.getElementById('contact-success').style.display='block';
+      })
+      .catch(() => {
+        document.getElementById('contact-form-inner').style.display='none';
+        document.getElementById('contact-success').style.display='block';
+      });
+  }
+  </script>
 
 </div><!-- .wrapper -->
 
 <!-- ── Scripts ────────────────────────────────────────────── -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script src="/js/plugins.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
+<script src="/js/plugins.js" defer></script>
 <!-- JOAF Data & Components -->
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
-<script src="/js/rainbow-swirl-cursor.js"></script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
 
 <script>
 // ── Page-specific JS ──────────────────────────────────────
@@ -383,6 +506,12 @@ function initGalleryFilter() {
           <span class="press-date-bottom">#${p.id}</span>
         </div>
         <div class="press-card-body">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <span style="background:var(--brand);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+              <i class="zmdi zmdi-calendar"></i> ${BanglaUtil.formatDateShort(p.date)}
+            </span>
+            <span style="background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">#${p.id}</span>
+          </div>
           <h4>${p.title}</h4>
           <p>${p.summary}</p>
           <a href="/press-releases/${p.slug}.html" class="press-read-more">পড়ুন <i class="zmdi zmdi-arrow-right"></i></a>
