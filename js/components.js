@@ -35,20 +35,68 @@ const JOAFComponents = {
                 </a>
                 <button class="navbar-toggle d-block d-md-none" id="navToggleBtn"
                   aria-label="মেনু" aria-expanded="false"
-                  style="margin-left:12px;background:var(--brand);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:20px;cursor:pointer">
+                  style="margin-left:12px;background:var(--brand);border:none;border-radius:8px;padding:7px 11px;color:#fff;font-size:20px;cursor:pointer;z-index:10001;position:relative">
                   <i class="zmdi zmdi-menu" id="menuOpenIcon"></i>
                 </button>
               </div>
             </div>
             <div class="col">
-              <nav class="main-menu" id="main-menu" aria-label="প্রধান নেভিগেশন">
+              <nav class="main-menu" id="main-menu" aria-label="প্রধান নেভিগেশন" style="display:none">
                 <ul style="justify-content:flex-end">${navItems}</ul>
               </nav>
             </div>
           </div>
         </div>
       </div>
-    </header>`;
+    </header>
+
+    <!-- Mobile nav overlay -->
+    <div id="mobile-nav-overlay" style="
+      display:none;position:fixed;inset:0;z-index:10000;
+      background:rgba(13,13,26,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      flex-direction:column;align-items:center;justify-content:center;
+      transition:opacity .3s ease,visibility .3s ease;opacity:0;visibility:hidden;
+    ">
+      <button id="mobileNavClose" aria-label="বন্ধ করুন" style="
+        position:absolute;top:18px;right:18px;
+        width:44px;height:44px;border-radius:50%;
+        background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
+        color:#fff;font-size:22px;cursor:pointer;
+        display:flex;align-items:center;justify-content:center;
+      "><i class="zmdi zmdi-close"></i></button>
+
+      <div style="text-align:center;margin-bottom:28px">
+        <img src="${s.logo}" alt="${s.abbr}" style="width:52px;filter:brightness(10);margin-bottom:10px">
+        <div style="color:rgba(255,255,255,.5);font-size:11px;letter-spacing:2px;text-transform:uppercase">${s.tagline}</div>
+      </div>
+
+      <nav style="width:100%;max-width:320px;padding:0 24px">
+        <ul style="list-style:none;padding:0;margin:0">
+          ${JOAF.nav.map((item, idx) => {
+            const active = item.id === activePage ? 'style="color:var(--gold)!important"' : '';
+            return `<li style="transform:translateX(-30px);opacity:0;transition:transform .4s ease ${idx*.06}s, opacity .4s ease ${idx*.06}s" class="mnav-item">
+              <a href="${item.href}" ${active} style="
+                display:flex;align-items:center;gap:12px;
+                padding:13px 16px;border-radius:12px;
+                color:#fff;text-decoration:none;font-size:15px;font-weight:700;
+                border:1px solid rgba(255,255,255,0);
+                transition:background .2s,border-color .2s;
+              "
+              onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.borderColor='rgba(255,255,255,.12)'"
+              onmouseout="this.style.background='transparent';this.style.borderColor='rgba(255,255,255,0)'"
+              >${item.label}</a>
+            </li>`;
+          }).join('')}
+        </ul>
+      </nav>
+
+      <div style="margin-top:28px;display:flex;gap:12px">
+        <a href="${s.social.facebook}" target="_blank" rel="noopener" style="width:40px;height:40px;border-radius:50%;background:#3b5998;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none"><i class="zmdi zmdi-facebook"></i></a>
+        <a href="${s.social.whatsapp}" target="_blank" rel="noopener" style="width:40px;height:40px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none"><i class="zmdi zmdi-whatsapp"></i></a>
+        <a href="${s.social.twitter}" target="_blank" rel="noopener" style="width:40px;height:40px;border-radius:50%;background:#1da1f2;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none"><i class="zmdi zmdi-twitter"></i></a>
+      </div>
+    </div>`;
+  },
   },
 
   // ── Ticker ──────────────────────────────────────────────
@@ -58,7 +106,7 @@ const JOAFComponents = {
       .join('');
     return `<div class="announcement-ticker" role="marquee" aria-label="সর্বশেষ ঘোষণা">
       <span class="ticker-label">🔴 সর্বশেষ</span>
-      <div class="ticker-track">${items}</div>
+      <div class="ticker-track" style="animation-duration:14s">${items}</div>
     </div>`;
   },
 
@@ -159,10 +207,9 @@ const JOAFComponents = {
 
   // ── Scroll animations ────────────────────────────────────
   initAnimations() {
-    const REVEAL_SEL = '.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom';
+    const SEL = '.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom';
     if (!('IntersectionObserver' in window)) {
-      document.querySelectorAll(REVEAL_SEL)
-        .forEach(el => el.classList.add('visible'));
+      document.querySelectorAll(SEL).forEach(el => el.classList.add('visible'));
       return;
     }
     const obs = new IntersectionObserver((entries) => {
@@ -173,8 +220,7 @@ const JOAFComponents = {
         }
       });
     }, { threshold: 0.06 });
-    document.querySelectorAll(REVEAL_SEL)
-      .forEach(el => obs.observe(el));
+    document.querySelectorAll(SEL).forEach(el => obs.observe(el));
   },
 
   // ── Lazy images ──────────────────────────────────────────
@@ -223,23 +269,79 @@ const JOAFComponents = {
 
   // ── Mobile nav toggle ────────────────────────────────────
   initMobileNav() {
-    const btn  = document.getElementById('navToggleBtn');
-    const menu = document.getElementById('main-menu');
-    if (!btn || !menu) return;
-    btn.addEventListener('click', () => {
-      const open = menu.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open);
-      const icon = document.getElementById('menuOpenIcon');
-      if (icon) icon.className = open ? 'zmdi zmdi-close' : 'zmdi zmdi-menu';
-    });
-    // Close on outside click
-    document.addEventListener('click', e => {
-      if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
-        menu.classList.remove('open');
-        btn.setAttribute('aria-expanded', 'false');
-        const icon = document.getElementById('menuOpenIcon');
-        if (icon) icon.className = 'zmdi zmdi-menu';
+    const btn     = document.getElementById('navToggleBtn');
+    const menu    = document.getElementById('main-menu');
+    const overlay = document.getElementById('mobile-nav-overlay');
+    const closeBtn= document.getElementById('mobileNavClose');
+
+    // Desktop: show standard menu
+    if (menu) {
+      if (window.innerWidth >= 768) {
+        menu.style.display = '';
       }
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+          menu.style.display = '';
+          if (overlay) closeOverlay();
+        } else {
+          menu.style.display = 'none';
+        }
+      });
+    }
+
+    if (!overlay) return;
+
+    const openOverlay = () => {
+      overlay.style.display = 'flex';
+      requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+        overlay.style.visibility = 'visible';
+      });
+      document.body.style.overflow = 'hidden';
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+      // Animate nav items in
+      setTimeout(() => {
+        overlay.querySelectorAll('.mnav-item').forEach(el => {
+          el.style.transform = 'translateX(0)';
+          el.style.opacity = '1';
+        });
+      }, 50);
+    };
+
+    const closeOverlay = () => {
+      overlay.style.opacity = '0';
+      overlay.style.visibility = 'hidden';
+      document.body.style.overflow = '';
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+      // Reset item positions
+      overlay.querySelectorAll('.mnav-item').forEach(el => {
+        el.style.transform = 'translateX(-30px)';
+        el.style.opacity = '0';
+      });
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    };
+
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (overlay.style.opacity === '1') closeOverlay();
+        else openOverlay();
+      });
+    }
+    if (closeBtn) closeBtn.addEventListener('click', closeOverlay);
+
+    // Close on link click
+    overlay.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', closeOverlay);
+    });
+
+    // Close on backdrop click
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeOverlay();
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeOverlay();
     });
   },
 
@@ -277,7 +379,9 @@ const JOAFComponents = {
     this.injectOGMeta();
     this.initMobileNav();
 
-    setTimeout(() => this.initAnimations(), 150);
+    // Run immediately for above-fold elements, then again for late-rendered ones
+    this.initAnimations();
+    setTimeout(() => this.initAnimations(), 300);
     this.hidePreloader();
   }
 };
