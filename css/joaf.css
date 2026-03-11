@@ -156,7 +156,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   #main-menu ul li:last-child a{border-bottom:none;}
 }
 @media(min-width:768px){
-}
+
 
 /* ============================================================
    TICKER
@@ -190,54 +190,69 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
 .ticker-sep{opacity:.4;padding:0 8px;}
 
 /* ============================================================
-   HERO — VIDEO
+   CINEMATIC HERO
    ============================================================ */
-.hs-item.video-hero{
+.cinematic-hero{
   position:relative;width:100%;
-  background:var(--dark);overflow:hidden;
-  /* Desktop: full viewport height */
-  height:100vh;min-height:520px;
+  background:#000;
 }
-/* Override stylec7c3 red overlay */
-.hs-item.video-hero::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(144,22,31,.62) 0%,rgba(13,13,26,.55) 50%,rgba(7,94,85,.42) 100%)!important;
-  z-index:1;opacity:1!important;
+/* Video wrap — scrolls naturally, no fixed height */
+.ch-video-wrap{
+  position:relative;width:100%;
+  line-height:0;
 }
-/* Animated particle overlay */
-.hs-item.video-hero::after{
-  content:'';position:absolute;inset:0;z-index:1;
-  background:
-    radial-gradient(circle at 20% 80%,rgba(201,162,39,.12) 0%,transparent 50%),
-    radial-gradient(circle at 80% 20%,rgba(144,22,31,.15) 0%,transparent 50%);
-  pointer-events:none;
+.ch-video-wrap video{
+  width:100%;height:auto;
+  display:block;
+  object-fit:contain;
 }
-.hero-video{
-  /* Desktop: cover fill */
-  position:absolute;top:0;left:0;
-  width:100%;height:100%;
-  object-fit:cover;object-position:center center;
-  z-index:0;pointer-events:none;display:block;
-  -webkit-transform:translateZ(0);transform:translateZ(0);
+/* Gradient overlay on top of video */
+.ch-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(
+    to bottom,
+    rgba(13,13,26,.55) 0%,
+    rgba(13,13,26,.15) 30%,
+    rgba(13,13,26,.15) 60%,
+    rgba(13,13,26,.75) 100%
+  );
+  z-index:1;pointer-events:none;
 }
-/* Mobile: show full portrait video */
-@media(max-width:767px){
-  .hs-item.video-hero{
-    height:auto!important;min-height:unset!important;
-    padding-bottom:0;
-  }
-  .hero-video{
-    position:relative!important;top:auto!important;left:auto!important;
-    width:100%!important;height:auto!important;
-    object-fit:unset!important;display:block!important;
-  }
-  .hs-item.video-hero::before,
-  .hs-item.video-hero::after{
-    position:absolute;top:0;left:0;width:100%;height:100%;
-  }
-  .hs-content{
-    position:absolute!important;
-    top:0;left:0;width:100%;height:100%;
+/* Content centered over video */
+.ch-content{
+  position:absolute;inset:0;
+  z-index:2;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:20px;
+  color:#fff;
+}
+.ch-tag{
+  background:rgba(144,22,31,.85);
+  color:#fff;font-size:11px;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;
+  padding:5px 14px;border-radius:50px;
+  margin-bottom:16px;
+  border:1px solid rgba(255,255,255,.2);
+}
+.ch-content h1{
+  font-size:clamp(1.6rem,5vw,3.2rem);
+  font-weight:900;line-height:1.2;
+  margin-bottom:14px;
+  text-shadow:0 2px 20px rgba(0,0,0,.6);
+}
+.ch-content p{
+  font-size:clamp(.9rem,2.5vw,1.1rem);
+  opacity:.9;margin-bottom:24px;
+  text-shadow:0 1px 8px rgba(0,0,0,.5);
+}
+/* Desktop: fixed fullscreen height, video covers */
+@media(min-width:768px){
+  .cinematic-hero{height:100vh;min-height:520px;overflow:hidden;}
+  .ch-video-wrap{position:absolute;inset:0;}
+  .ch-video-wrap video{
+    width:100%;height:100%;
+    object-fit:cover;object-position:center center;
   }
 }
 .hs-content{
