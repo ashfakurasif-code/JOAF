@@ -477,5 +477,5 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
   .hero-cta a{padding:9px 28px!important;font-size:13px!important;width:auto!important;justify-content:center;}
   .hero-badges{gap:5px!important;justify-content:center!important;}
   .hero-badge{font-size:10px!important;padding:4px 8px!important;}
-  .scroll-hint{display:none!important;}
+
 }
