@@ -344,13 +344,15 @@ const JOAFComponents = {
     const hp = document.getElementById('joaf-header');
     if (hp) hp.outerHTML = this.renderHeader(pageId);
 
-    // 2. Inject ticker — use innerHTML of wrapper to keep reference
-    const ta = document.getElementById('joaf-ticker');
-    if (ta) {
-      ta.outerHTML = this.renderTicker();
-    } else if (!document.querySelector('.announcement-ticker')) {
-      const hdr = document.querySelector('.joaf-header');
-      if (hdr) { const d = document.createElement('div'); d.innerHTML = this.renderTicker(); hdr.insertAdjacentElement('afterend', d.firstElementChild); }
+    // 2. Ticker already hardcoded in HTML — just ensure it exists
+    // If somehow missing, inject it
+    if (!document.querySelector('.announcement-ticker')) {
+      const ta = document.getElementById('joaf-ticker');
+      if (ta) { ta.outerHTML = this.renderTicker(); }
+      else {
+        const hdr = document.querySelector('.joaf-header');
+        if (hdr) { const d = document.createElement('div'); d.innerHTML = this.renderTicker(); hdr.insertAdjacentElement('afterend', d.firstElementChild); }
+      }
     }
 
     // 3. Inject footer

@@ -144,7 +144,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 /* TICKER */
 .announcement-ticker{background:linear-gradient(90deg,var(--brand) 0%,#5a0b10 40%,var(--accent) 100%);color:#fff;padding:9px 0;overflow:hidden;position:relative;z-index:5;}
 .ticker-label{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.42);padding:0 14px;display:flex;align-items:center;font-weight:800;font-size:12px;white-space:nowrap;z-index:2;min-width:82px;letter-spacing:.5px;}
-.ticker-track{display:flex;white-space:nowrap;padding-left:96px;animation:ticker-scroll 13s linear infinite;will-change:transform;transform:translateZ(0);}
+.ticker-track{display:flex;white-space:nowrap;padding-left:96px;animation:ticker-scroll 10s linear infinite;will-change:transform;transform:translateZ(0);}
 .ticker-track:hover{animation-play-state:paused;cursor:pointer;}
 .ticker-item{white-space:nowrap;padding:0 32px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
 .ticker-item a{color:#fff;text-decoration:none;transition:opacity .2s;}
