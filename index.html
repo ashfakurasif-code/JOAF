@@ -392,7 +392,7 @@
   </section>
 
   <!-- ══ STATS BAR ═════════════════════════════════════════════ -->
-  <section id="stats-bar" class="stats-bar" aria-label="পরিসংখ্যান">
+  <section id="stats-bar" class="stats-bar" aria-label="পরিসংখ্যান" style="min-height:80px;display:block;">
     <div class="container">
       <div class="row" id="stats-row"><!-- JS injected --></div>
     </div>
@@ -734,7 +734,7 @@ window.addEventListener('load', () => {
       ? `<span id="live-member-count">${BanglaUtil.toNum(memberCount)}+</span>`
       : s.number;
     return `
-    <div class="col-6 col-md-3 stat-item joaf-reveal" style="transition-delay:${i*.1}s">
+    <div class="col-6 col-md-3 stat-item" style="transition-delay:${i*.1}s">
       <div class="stat-number">${numDisplay}</div>
       <div class="stat-label">${s.label}</div>
     </div>`;
