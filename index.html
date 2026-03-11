@@ -366,6 +366,7 @@
           </div>
         </div>
 
+        <!-- Mute button — outside hs-content, always visible -->
         <button id="muteToggle" class="mute-toggle" aria-pressed="false" title="শব্দ চালু করুন">🔈</button>
 
         <div class="scroll-hint" onclick="document.getElementById('stats-bar').scrollIntoView({behavior:'smooth'})">
@@ -708,11 +709,30 @@ window.addEventListener('load', () => {
 (function() {
   const row = document.getElementById('stats-row');
   if (!row) return;
-  row.innerHTML = JOAF.stats.map((s, i) => `
+
+  // Member counter — starts at 6000, increments every second
+  let memberCount = 6000;
+
+  row.innerHTML = JOAF.stats.map((s, i) => {
+    const isMember = s.label.includes('সদস্য');
+    const numDisplay = isMember
+      ? `<span id="live-member-count">${BanglaUtil.toNum(memberCount)}+</span>`
+      : s.number;
+    return `
     <div class="col-6 col-md-3 stat-item joaf-reveal" style="transition-delay:${i*.1}s">
-      <div class="stat-number">${s.number}</div>
+      <div class="stat-number">${numDisplay}</div>
       <div class="stat-label">${s.label}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+
+  // Live counter
+  const counterEl = document.getElementById('live-member-count');
+  if (counterEl) {
+    setInterval(() => {
+      memberCount++;
+      counterEl.textContent = BanglaUtil.toNum(memberCount) + '+';
+    }, 1000);
+  }
 })();
 
 // ── Role → CSS class mapper ────────────────────────────────
@@ -825,7 +845,12 @@ function initFilter() {
   const grid = document.getElementById('press-grid');
   if (!grid) return;
   const latest = [...JOAF.pressReleases].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,4);
-  grid.innerHTML = latest.map((p, i) => `
+  grid.innerHTML = latest.map((p, i) => {
+    // Smart truncate summary to ~55 chars
+    const shortSummary = p.summary.length > 58
+      ? p.summary.substring(0, 55).replace(/[\s,।]+$/, '') + '...'
+      : p.summary;
+    return `
     <div class="col-md-6 col-lg-3 joaf-reveal" style="transition-delay:${i*.1}s">
       <div class="press-card">
         <div class="press-card-img-wrap">
@@ -835,7 +860,7 @@ function initFilter() {
         </div>
         <div class="press-card-body">
           <h4>${p.title}</h4>
-          <p>${p.summary}</p>
+          <p>${shortSummary}</p>
           <a href="/press-releases/${p.slug}.html" class="press-read-more">পড়ুন <i class="zmdi zmdi-arrow-right"></i></a>
           <div class="share-row">
             <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-fb"><i class="zmdi zmdi-facebook"></i></a>
@@ -844,7 +869,7 @@ function initFilter() {
           </div>
         </div>
       </div>
-    </div>`).join('');
+    </div>`; }).join('');
 })();
 
 // ── Hero video mute toggle ─────────────────────────────────
