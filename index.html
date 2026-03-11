@@ -741,8 +741,8 @@ function getRoleClass(role) {
   const r = role.trim();
   if (r.includes('সভাপতি')) return 'president';
   if (r.includes('সাধারণ সম্পাদক')) return 'secretary';
-  if (r.includes('সিনিয়র যুগ্ম সংগঠক')) return 'senior-coordinator';
-  if (r.includes('যুগ্ম মূখ্য সংগঠক')) return 'coordinator';
+  if (r.includes('সিনিয়র যুগ্ম')) return 'senior-coordinator';
+  if (r.includes('যুগ্ম মূখ্য')) return 'coordinator';
   if (r.includes('মূখ্য সংগঠক') || r.includes('মূখ্য সংগঠক')) return 'chief-organizer';
   return 'member';
 }
