@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>সদস্যতা ফর্ম — JOAF</title>
-  <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরামে সদস্য হোন।">
-  <meta property="og:title" content="সদস্যতা ফর্ম — JOAF">
+  <title>✊ সদস্য হোন — জোয়াফ</title>
+  <meta name="description" content="জোয়াফের সদস্য হয়ে পরিবর্তনের অংশ হোন। বাংলাদেশের ভবিষ্যৎ গড়তে আজই যোগ দিন।">
+  <meta property="og:title" content="জোয়াফে যোগ দিন — পরিবর্তনের অংশ হোন">
   <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
   <link rel="icon" href="/favicon.ico">
   <link rel="manifest" href="/site.webmanifest">
@@ -16,38 +16,212 @@
   <link rel="stylesheet" href="/css/joaf.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
+  <style>
+    .mem-hero{background:linear-gradient(135deg,#90161f,#1a1a2e,#075e55);padding:52px 0 40px;color:#fff;text-align:center;}
+    .mem-hero h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;margin-bottom:10px;}
+    .mem-hero p{opacity:.88;font-size:15px;max-width:520px;margin:0 auto;}
+    .benefit-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:16px;text-align:center;transition:.3s;}
+    .benefit-card:hover{background:rgba(255,255,255,.18);transform:translateY(-3px);}
+    .benefit-icon{font-size:2rem;margin-bottom:8px;}
+    .benefit-title{font-weight:700;font-size:14px;}
+    /* Step indicator */
+    .step-wrap{display:flex;justify-content:center;gap:0;margin-bottom:32px;flex-wrap:wrap;}
+    .step-item{display:flex;align-items:center;gap:8px;}
+    .step-num{width:32px;height:32px;border-radius:50%;background:#e5e7eb;color:#9ca3af;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.3s;flex-shrink:0;}
+    .step-num.active{background:var(--brand);color:#fff;}
+    .step-num.done{background:var(--accent);color:#fff;}
+    .step-label{font-size:13px;font-weight:600;color:#9ca3af;}
+    .step-label.active{color:var(--brand);}
+    .step-divider{width:40px;height:2px;background:#e5e7eb;margin:0 8px;}
+    @media(max-width:480px){.step-label{display:none;}.step-divider{width:20px;}}
+  </style>
 </head>
 <body data-page="membership">
 
 <div id="joaf-preloader">
   <img src="/logoc7c3.png" alt="JOAF" class="preloader-logo">
-  <p class="preloader-text">JOAF লোড হচ্ছে...</p>
+  <p class="preloader-text">লোড হচ্ছে...</p>
   <div class="preloader-bar"></div>
 </div>
 
 <div class="wrapper fix">
   <div id="joaf-header"></div>
+  <div id="joaf-ticker"></div>
 
-  <section style="background:linear-gradient(135deg,#075e55,#90161f);color:#fff;padding:60px 0">
-    <div class="container text-center">
-      <h1 style="font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;margin-bottom:12px">🤝 সদস্যতা ফর্ম</h1>
-      <p style="opacity:.85;font-size:16px">JOAF-এর সাথে যুক্ত হোন — দেশ গড়ার অঙ্গীকারে</p>
+  <!-- Hero -->
+  <section class="mem-hero">
+    <div class="container">
+      <div class="joaf-reveal">
+        <h1>✊ জোয়াফের সদস্য হোন</h1>
+        <p>দেশের পরিবর্তনে অংশ নিন। প্রতিটি সদস্য একটি শক্তি।</p>
+      </div>
+      <div class="row g-3 mt-4 justify-content-center">
+        <div class="col-6 col-md-3 joaf-reveal-scale">
+          <div class="benefit-card"><div class="benefit-icon">🌐</div><div class="benefit-title">কমিউনিটি অ্যাক্সেস</div></div>
+        </div>
+        <div class="col-6 col-md-3 joaf-reveal-scale" style="transition-delay:.1s">
+          <div class="benefit-card"><div class="benefit-icon">📢</div><div class="benefit-title">সরাসরি আপডেট</div></div>
+        </div>
+        <div class="col-6 col-md-3 joaf-reveal-scale" style="transition-delay:.2s">
+          <div class="benefit-card"><div class="benefit-icon">🗳️</div><div class="benefit-title">জনমত প্রদান</div></div>
+        </div>
+        <div class="col-6 col-md-3 joaf-reveal-scale" style="transition-delay:.3s">
+          <div class="benefit-card"><div class="benefit-icon">🤝</div><div class="benefit-title">নেটওয়ার্ক সুবিধা</div></div>
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="section">
     <div class="container">
-      <div class="row">
-        <div class="col-md-10 mx-auto joaf-reveal">
-          <div style="background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.1);overflow:hidden">
-            <!-- Google Form embed -->
-            <iframe
-              src="https://docs.google.com/forms/d/e/1FAIpQLSczAxkgcYluNmmMJ_66nf6aPu40IS6crPAuysIA2Krg6bPJrA/viewform?embedded=true"
-              width="100%" height="900" frameborder="0" marginheight="0" marginwidth="0"
-              loading="lazy" title="JOAF Membership Form">
-              লোড হচ্ছে...
-            </iframe>
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+          <!-- Step indicator -->
+          <div class="step-wrap joaf-reveal" id="stepWrap">
+            <div class="step-item"><div class="step-num active" id="sn1">১</div><div class="step-label active">ব্যক্তিগত তথ্য</div></div>
+            <div class="step-divider"></div>
+            <div class="step-item"><div class="step-num" id="sn2">২</div><div class="step-label">ঠিকানা</div></div>
+            <div class="step-divider"></div>
+            <div class="step-item"><div class="step-num" id="sn3">৩</div><div class="step-label">যোগাযোগ</div></div>
+            <div class="step-divider"></div>
+            <div class="step-item"><div class="step-num" id="sn4">৪</div><div class="step-label">সম্পন্ন</div></div>
           </div>
+
+          <!-- Form -->
+          <div class="joaf-form-wrap joaf-reveal">
+            <form id="joafForm" novalidate>
+
+              <!-- Step 1: Personal -->
+              <div id="step1">
+                <div class="form-section-head">👤 ধাপ ১: ব্যক্তিগত তথ্য</div>
+                <div class="form-group">
+                  <label>পূর্ণ নাম <span class="req">*</span></label>
+                  <input type="text" name="full_name" placeholder="আপনার পূর্ণ নাম লিখুন" required>
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>বয়স <span class="req">*</span></label>
+                      <select name="age" required>
+                        <option value="">বয়স নির্বাচন করুন</option>
+                        <option value="18-25">১৮–২৫ বছর</option>
+                        <option value="26-35">২৬–৩৫ বছর</option>
+                        <option value="36-45">৩৬–৪৫ বছর</option>
+                        <option value="46-55">৪৬–৫৫ বছর</option>
+                        <option value="56+">৫৬+ বছর</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>লিঙ্গ <span class="req">*</span></label>
+                      <select name="gender" required>
+                        <option value="">নির্বাচন করুন</option>
+                        <option value="male">পুরুষ</option>
+                        <option value="female">মহিলা</option>
+                        <option value="other">অন্যান্য</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>শিক্ষাগত যোগ্যতা <span class="req">*</span></label>
+                      <input type="text" name="education" placeholder="সর্বশেষ শিক্ষাগত যোগ্যতা" required>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>পেশা <span class="req">*</span></label>
+                      <input type="text" name="occupation" placeholder="আপনার পেশা লিখুন" required>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" class="joaf-submit-btn" onclick="nextStep(1)">পরবর্তী ধাপ →</button>
+              </div>
+
+              <!-- Step 2: Address -->
+              <div id="step2" style="display:none">
+                <div class="form-section-head">📍 ধাপ ২: ঠিকানা</div>
+                <div class="form-group">
+                  <label>বিভাগ <span class="req">*</span></label>
+                  <select id="division" name="division_id" required onchange="updateDistricts()">
+                    <option value="">বিভাগ নির্বাচন করুন</option>
+                    <option value="1">ঢাকা</option>
+                    <option value="2">চট্টগ্রাম</option>
+                    <option value="3">রাজশাহী</option>
+                    <option value="4">খুলনা</option>
+                    <option value="5">বরিশাল</option>
+                    <option value="6">সিলেট</option>
+                    <option value="7">রংপুর</option>
+                    <option value="8">ময়মনসিংহ</option>
+                  </select>
+                  <input type="hidden" id="division_name" name="division" value="">
+                </div>
+                <div class="form-group">
+                  <label>জেলা <span class="req">*</span></label>
+                  <select id="district" name="district" required>
+                    <option value="">আগে বিভাগ নির্বাচন করুন</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>উপজেলা <span class="req">*</span></label>
+                  <input type="text" name="upazila" placeholder="উপজেলা লিখুন" required>
+                </div>
+                <div class="form-group">
+                  <label>প্রবাসী?</label>
+                  <select id="expatriate" name="expatriate" onchange="toggleCountry()">
+                    <option value="">না, বাংলাদেশে আছি</option>
+                    <option value="yes">হ্যাঁ, বিদেশে আছি</option>
+                  </select>
+                </div>
+                <div class="form-group" id="countryWrap" style="display:none">
+                  <label>দেশের নাম</label>
+                  <input type="text" name="country" placeholder="আপনার দেশের নাম লিখুন">
+                </div>
+                <div style="display:flex;gap:10px">
+                  <button type="button" class="joaf-submit-btn" style="background:#6b7280;flex:1" onclick="prevStep(2)">← পূর্ববর্তী</button>
+                  <button type="button" class="joaf-submit-btn" style="flex:2" onclick="nextStep(2)">পরবর্তী ধাপ →</button>
+                </div>
+              </div>
+
+              <!-- Step 3: Contact -->
+              <div id="step3" style="display:none">
+                <div class="form-section-head">📱 ধাপ ৩: যোগাযোগ</div>
+                <div class="form-group">
+                  <label>মোবাইল নম্বর <span class="req">*</span></label>
+                  <input type="tel" name="phone" id="phone" placeholder="01XXXXXXXXX" pattern="^01[3-9][0-9]{8}$" required>
+                </div>
+                <div class="form-group">
+                  <label>আপনি কি বলতে চান? (ঐচ্ছিক)</label>
+                  <textarea name="do_you_want_to_vote" rows="3" placeholder="আপনার বার্তা বা মন্তব্য লিখুন..."></textarea>
+                </div>
+                <!-- Privacy notice -->
+                <div style="background:linear-gradient(135deg,#f0fffe,#e0f2fe);border:1px solid #075e55;border-radius:10px;padding:14px;margin-bottom:18px;font-size:13px;color:#374151;line-height:1.7;">
+                  🔒 <strong>গোপনীয়তা নিশ্চিত:</strong> আপনার তথ্য শুধুমাত্র JOAF-এর সদস্যপদ প্রক্রিয়ার জন্য ব্যবহৃত হবে। তৃতীয় পক্ষের সাথে শেয়ার করা হবে না।
+                </div>
+                <div style="display:flex;gap:10px">
+                  <button type="button" class="joaf-submit-btn" style="background:#6b7280;flex:1" onclick="prevStep(3)">← পূর্ববর্তী</button>
+                  <button type="submit" class="joaf-submit-btn" id="submitBtn" style="flex:2">✊ সদস্যতা নিশ্চিত করুন</button>
+                </div>
+              </div>
+
+              <!-- Step 4: Success -->
+              <div id="step4" style="display:none;text-align:center;padding:20px 0">
+                <div style="font-size:4rem;margin-bottom:16px">🎉</div>
+                <h2 style="color:var(--accent);font-weight:900;margin-bottom:10px">আবেদন সফল!</h2>
+                <p style="color:#374151;font-size:15px;line-height:1.8;max-width:420px;margin:0 auto 24px">আপনার সদস্যপদ আবেদন গ্রহণ করা হয়েছে। আমাদের দল শীঘ্রই আপনার সাথে যোগাযোগ করবে।</p>
+                <a href="/community.html" class="joaf-submit-btn" style="display:inline-block;text-decoration:none;padding:14px 28px;width:auto">
+                  🤝 কমিউনিটিতে যোগ দিন
+                </a>
+              </div>
+
+            </form>
+            <div class="form-error" id="formError"></div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -62,6 +236,95 @@
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js"></script>
-<script>window.addEventListener('load',()=>{const pl=document.getElementById('joaf-preloader');if(pl)setTimeout(()=>pl.classList.add('hidden'),300);});</script>
+<script>
+// District data
+const DISTRICTS = {
+  1:["ঢাকা","গাজীপুর","নারায়ণগঞ্জ","মানিকগঞ্জ","মুন্সীগঞ্জ","নরসিংদী","রাজবাড়ী","শরীয়তপুর","ফরিদপুর","মাদারীপুর","গোপালগঞ্জ","কিশোরগঞ্জ","টাঙ্গাইল"],
+  2:["চট্টগ্রাম","কক্সবাজার","রাঙামাটি","বান্দরবান","খাগড়াছড়ি","ফেনী","নোয়াখালী","লক্ষ্মীপুর","কুমিল্লা","চাঁদপুর","ব্রাহ্মণবাড়িয়া"],
+  3:["রাজশাহী","নাটোর","নওগাঁ","চাঁপাইনবাবগঞ্জ","পাবনা","সিরাজগঞ্জ","বগুড়া","জয়পুরহাট"],
+  4:["খুলনা","বাগেরহাট","সাতক্ষীরা","যশোর","নড়াইল","ঝিনাইদহ","মাগুরা","কুষ্টিয়া","চুয়াডাঙ্গা","মেহেরপুর"],
+  5:["বরিশাল","পটুয়াখালী","পিরোজপুর","ঝালকাঠি","ভোলা","বরগুনা"],
+  6:["সিলেট","মৌলভীবাজার","হবিগঞ্জ","সুনামগঞ্জ"],
+  7:["রংপুর","দিনাজপুর","নীলফামারী","ঠাকুরগাঁও","পঞ্চগড়","লালমনিরহাট","কুড়িগ্রাম","গাইবান্ধা"],
+  8:["ময়মনসিংহ","জামালপুর","শেরপুর","নেত্রকোণা"]
+};
+const DIV_NAMES = {1:"ঢাকা",2:"চট্টগ্রাম",3:"রাজশাহী",4:"খুলনা",5:"বরিশাল",6:"সিলেট",7:"রংপুর",8:"ময়মনসিংহ"};
+
+function updateDistricts() {
+  const divId = document.getElementById('division').value;
+  const sel = document.getElementById('district');
+  document.getElementById('division_name').value = DIV_NAMES[divId] || '';
+  sel.innerHTML = '<option value="">জেলা নির্বাচন করুন</option>';
+  if (divId && DISTRICTS[divId]) {
+    DISTRICTS[divId].forEach(d => sel.innerHTML += `<option value="${d}">${d}</option>`);
+  }
+}
+
+function toggleCountry() {
+  const show = document.getElementById('expatriate').value === 'yes';
+  document.getElementById('countryWrap').style.display = show ? 'block' : 'none';
+}
+
+function setStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
+    const sn = document.getElementById('sn'+i);
+    if (sn) {
+      sn.className = 'step-num' + (i<n?' done':i===n?' active':'');
+    }
+  });
+  window.scrollTo({top:300,behavior:'smooth'});
+}
+
+function nextStep(cur) {
+  // Simple validation for each step
+  const step = document.getElementById('step'+cur);
+  const inputs = step.querySelectorAll('[required]');
+  let ok = true;
+  inputs.forEach(inp => {
+    if (!inp.value.trim()) {
+      inp.style.borderColor = 'var(--brand)';
+      ok = false;
+      inp.focus();
+    } else {
+      inp.style.borderColor = '';
+    }
+  });
+  if (!ok) { return; }
+  setStep(cur+1);
+}
+
+function prevStep(cur) { setStep(cur-1); }
+
+// Form submit
+document.getElementById('joafForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ পাঠানো হচ্ছে...';
+
+  // Normalize phone
+  let phone = this.phone.value.trim();
+  if (phone.startsWith('+88')) phone = phone.slice(3);
+  if (phone.startsWith('88') && phone.length > 11) phone = phone.slice(2);
+  this.phone.value = phone;
+
+  const data = new FormData(this);
+
+  try {
+    await fetch(JOAF.site.formAction, {
+      method: 'POST',
+      body: data,
+      mode: 'no-cors' // Apps Script requires this
+    });
+    setStep(4);
+  } catch(err) {
+    document.getElementById('formError').style.display = 'block';
+    document.getElementById('formError').textContent = 'সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।';
+    btn.disabled = false;
+    btn.textContent = '✊ সদস্যতা নিশ্চিত করুন';
+  }
+});
+</script>
 </body>
 </html>
