@@ -50,6 +50,11 @@ const JOAFComponents = {
                 <span class="joaf-hamburger-bar"></span>
               </button>
             </div>
+            <!-- Mobile right side — fills white space next to hamburger -->
+            <div class="joaf-mobile-right d-md-none">
+              <div class="joaf-mobile-sitename">${s.abbr}</div>
+              <div class="joaf-mobile-tagline">${s.tagline}</div>
+            </div>
             <nav class="joaf-desktop-nav d-none d-md-flex" id="main-menu" role="navigation" aria-label="প্রধান নেভিগেশন">
               <ul>${navItems}</ul>
             </nav>
@@ -161,8 +166,37 @@ const JOAFComponents = {
   initTicker() {
     const track = document.getElementById('joafTickerTrack');
     if (!track) return;
-    const w = window.innerWidth;
-    track.style.animationDuration = w < 480 ? '8s' : w < 768 ? '10s' : w < 1200 ? '12s' : '15s';
+
+    // Remove CSS animation — use JS pixel scroll for perfect seamless loop
+    track.style.animation = 'none';
+    track.style.transform = 'translateZ(0)';
+
+    // Speed: pixels per frame (lower = slower)
+    const speed = window.innerWidth < 768 ? 0.6 : 1.0;
+    let x = 0;
+    let paused = false;
+
+    // We only need the first half (6 items) — track is 12 items (2x)
+    // Scroll until x reaches half of total width, then reset to 0
+    const ticker = track.parentElement;
+    if (ticker) {
+      ticker.addEventListener('mouseenter', () => { paused = true; });
+      ticker.addEventListener('mouseleave', () => { paused = false; });
+      ticker.addEventListener('touchstart', () => { paused = true; }, {passive:true});
+      ticker.addEventListener('touchend', () => { setTimeout(() => { paused = false; }, 1200); }, {passive:true});
+    }
+
+    const step = () => {
+      if (!paused) {
+        x += speed;
+        // Reset when scrolled exactly half the track width (the 2nd copy starts)
+        const halfWidth = track.scrollWidth / 2;
+        if (x >= halfWidth) x = 0;
+        track.style.transform = `translate3d(-${x}px, 0, 0)`;
+      }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   },
 
   // ── Mobile nav ───────────────────────────────────────────
