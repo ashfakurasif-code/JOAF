@@ -457,12 +457,22 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
   animation:glow-pulse 1.5s ease infinite;
 }
 .joaf-mobile-herotitle{
-  font-size:15px;font-weight:900;color:var(--brand);
+  font-size:13px;font-weight:900;color:var(--brand);
   line-height:1.2;
 }
+.joaf-mobile-herop{
+  font-size:9.5px;color:var(--muted);
+  font-weight:600;line-height:1.3;margin-top:2px;
+}
 @media(min-width:768px){.joaf-mobile-right{display:none!important;}}
-/* Hide ch-tag + hero title in hero section on mobile — shown in header instead */
+/* Mobile hero — hide ch-tag+title (in header), compact content over video */
 @media(max-width:767px){
   .ch-tag{display:none!important;}
   #hero-title,.ch-content h1{display:none!important;}
+  .ch-content p{font-size:.82rem!important;margin-bottom:12px!important;line-height:1.5!important;opacity:.92;}
+  .hero-cta{margin-bottom:10px!important;gap:7px!important;}
+  .hero-cta a{padding:9px 16px!important;font-size:12.5px!important;}
+  .hero-badges{gap:5px!important;}
+  .hero-badge{font-size:10px!important;padding:4px 9px!important;}
+  .scroll-hint{display:none;}
 }
