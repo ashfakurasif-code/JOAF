@@ -53,8 +53,7 @@ const JOAFComponents = {
             <!-- Mobile right side — ch-tag + hero title in header white space -->
             <div class="joaf-mobile-right d-md-none">
               <div class="joaf-mobile-chtag"><span class="joaf-mobile-chtag-dot"></span>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</div>
-              <div class="joaf-mobile-herotitle">দেশ আগে, দল পরে — আমরা ফিরে এসেছি।</div>
-              <div class="joaf-mobile-herop">এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</div>
+              <div class="joaf-mobile-herop">দেশ আগে, দল পরে — আমরা ফিরে এসেছি।<br>এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</div>
             </div>
             <nav class="joaf-desktop-nav d-none d-md-flex" id="main-menu" role="navigation" aria-label="প্রধান নেভিগেশন">
               <ul>${navItems}</ul>

@@ -76,7 +76,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 .joaf-header-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;}
 .joaf-header-meta span{color:rgba(255,255,255,.8);font-size:12px;display:flex;align-items:center;gap:5px;}
 .joaf-header-main{padding:0;}
-.joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;}
+.joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;}
 .joaf-header-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .joaf-logo img{max-width:95px;height:auto;display:block;padding:4px 0;transition:transform .35s var(--tr-spring);}
 .joaf-logo:hover img{transform:scale(1.06);}
@@ -156,7 +156,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 .ch-video-wrap{position:relative;width:100%;padding-top:56.25%;overflow:hidden;}
 .ch-video-wrap video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block;}
 .ch-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(13,13,26,.62) 0%,rgba(13,13,26,.05) 30%,rgba(13,13,26,.05) 60%,rgba(13,13,26,.92) 100%);z-index:1;pointer-events:none;}
-.ch-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:24px 20px 28px;background:linear-gradient(to bottom,rgba(13,13,26,.95),rgba(13,13,26,.88));}
+.ch-content{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:0 20px 36px;}
 @media(min-width:768px){
   .cinematic-hero{height:100vh;min-height:560px;overflow:hidden;}
   .ch-video-wrap{position:absolute;inset:0;padding-top:0;overflow:visible;}
@@ -440,16 +440,16 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 .joaf-mobile-right{
   display:flex;flex-direction:column;justify-content:center;
   align-items:flex-end;text-align:right;
-  flex:1;min-width:0;padding:0 6px 0 8px;
+  flex:1;min-width:0;padding:0 4px 0 6px;overflow:hidden;
 }
 .joaf-mobile-chtag{
-  display:inline-flex;align-items:center;gap:5px;
+  display:inline-flex;align-items:center;gap:4px;
   background:rgba(144,22,31,.9);color:#fff;
-  font-size:13px;font-weight:800;letter-spacing:.3px;
-  text-transform:uppercase;padding:3px 10px;
-  border-radius:50px;margin-bottom:4px;
+  font-size:clamp(9px,2.8vw,13px);font-weight:800;letter-spacing:.2px;
+  text-transform:uppercase;padding:2px 8px;
+  border-radius:50px;margin-bottom:3px;
   border:1px solid rgba(255,255,255,.2);
-  white-space:nowrap;
+  max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .joaf-mobile-chtag-dot{
   width:5px;height:5px;border-radius:50%;
@@ -457,25 +457,19 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
   animation:glow-pulse 1.5s ease infinite;
 }
 .joaf-mobile-herotitle{
-  font-size:9px;font-weight:900;color:var(--brand);
-  line-height:1.2;
+  font-size:clamp(7px,2.2vw,9px);font-weight:900;color:var(--brand);
+  line-height:1.25;max-width:100%;
 }
 .joaf-mobile-herop{
-  font-size:8px;color:var(--muted);
-  font-weight:600;line-height:1.3;margin-top:2px;
+  font-size:clamp(6px,1.8vw,8px);color:var(--muted);
+  font-weight:600;line-height:1.3;margin-top:1px;max-width:100%;
 }
 @media(min-width:768px){.joaf-mobile-right{display:none!important;}}
 /* Mobile hero — tag+title+p in header, only buttons+badges on video */
+
+/* Mobile: ch-tag + h1 + p hidden in hero (shown in header right side) */
 @media(max-width:767px){
-  .cinematic-hero{overflow:visible;}
-  .ch-video-wrap{padding-top:75%;}
-  .ch-content{justify-content:flex-end!important;padding-bottom:16px!important;}
   .ch-tag{display:none!important;}
   #hero-title,.ch-content h1{display:none!important;}
-  .ch-content p{display:none!important;}
-  .hero-cta{margin-bottom:8px!important;gap:7px!important;}
-  .hero-cta a{padding:9px 16px!important;font-size:12.5px!important;}
-  .hero-badges{gap:5px!important;}
-  .hero-badge{font-size:10px!important;padding:4px 9px!important;}
-  .scroll-hint{display:none!important;}
+  .ch-content>p{display:none!important;}
 }
