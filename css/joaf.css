@@ -156,7 +156,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   #main-menu ul li:last-child a{border-bottom:none;}
 }
 @media(min-width:768px){
-
+}
 
 /* ============================================================
    TICKER
@@ -193,8 +193,10 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
    HERO — VIDEO
    ============================================================ */
 .hs-item.video-hero{
-  position:relative;width:100%;height:100vh;
-  min-height:520px;overflow:hidden;background:var(--dark);
+  position:relative;width:100%;
+  background:var(--dark);overflow:hidden;
+  /* Desktop: full viewport height */
+  height:100vh;min-height:520px;
 }
 /* Override stylec7c3 red overlay */
 .hs-item.video-hero::before{
@@ -211,11 +213,32 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;cursor:none;}
   pointer-events:none;
 }
 .hero-video{
+  /* Desktop: cover fill */
   position:absolute;top:0;left:0;
   width:100%;height:100%;
   object-fit:cover;object-position:center center;
   z-index:0;pointer-events:none;display:block;
   -webkit-transform:translateZ(0);transform:translateZ(0);
+}
+/* Mobile: show full portrait video */
+@media(max-width:767px){
+  .hs-item.video-hero{
+    height:auto!important;min-height:unset!important;
+    padding-bottom:0;
+  }
+  .hero-video{
+    position:relative!important;top:auto!important;left:auto!important;
+    width:100%!important;height:auto!important;
+    object-fit:unset!important;display:block!important;
+  }
+  .hs-item.video-hero::before,
+  .hs-item.video-hero::after{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+  }
+  .hs-content{
+    position:absolute!important;
+    top:0;left:0;width:100%;height:100%;
+  }
 }
 .hs-content{
   position:relative;z-index:2;
