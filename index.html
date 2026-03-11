@@ -172,19 +172,51 @@
     <div class="container">
       <div class="section-heading joaf-reveal-flip">
         <h2 id="movement-title">জনমত গঠন ও রাজনৈতিক আন্দোলন</h2>
+        <p>দেশজুড়ে সত্যের পক্ষে, গুজবের বিরুদ্ধে — আমাদের কার্যক্রম</p>
       </div>
-      <div class="row">
-        <div class="col-md-10 mx-auto joaf-reveal">
-          <ul class="movement-list">
-            <li>জোয়াফ রিউমার স্টপার (JOAF Rumor Stopper) — অনলাইনে ভুল তথ্য রোধে কাজ করবে।</li>
-            <li>জোয়াফ কোয়ালিশন (JOAF Coalition) — সকল রাজনৈতিক দলের প্রতিনিধি, তৃতীয় লিঙ্গ ও সমাজকর্মীদের নিয়ে একটি প্ল্যাটফর্ম।</li>
-            <li>জোয়াফ এডভাইজারি টিম (JOAF Advisory Team) — অভিজ্ঞ ও সমাজের বিশিষ্ট ব্যক্তিদের সমন্বয়ে।</li>
-            <li>ডিভিশনাল টিম (Divisional Teams) — দেশের ৮টি বিভাগে জোয়াফের আলাদা টিম থাকবে।</li>
-            <li>বরিশাল থেকে খুলনা, চট্টগ্রাম থেকে ময়মনসিংহ — দেশ ছাড়িয়ে এখন যুক্তরাষ্ট্র ও ইউরোপেও আমাদের প্রতিনিধিত্ব।</li>
-            <li>আমরা — একদল চিন্তাশীল নাগরিক। আমরা — দেশের পক্ষে, গুজবের বিরুদ্ধে।</li>
-            <li>আসুন, আপনিও যুক্ত হোন — নিজের এলাকার WhatsApp গ্রুপে।</li>
-            <li>কারণ ইতিহাস একবার ফিরে আসে… যারা প্রস্তুত থাকে, তারাই নেতৃত্ব দেয়।</li>
-          </ul>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:0s">
+          <div class="movement-card">
+            <div class="movement-icon">🛡️</div>
+            <h4>JOAF Rumor Stopper</h4>
+            <p>জোয়াফ রিউমার স্টপার — অনলাইনে ভুল তথ্য রোধে কাজ করবে।</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:.08s">
+          <div class="movement-card">
+            <div class="movement-icon">🤝</div>
+            <h4>JOAF Coalition</h4>
+            <p>সকল রাজনৈতিক দলের প্রতিনিধি, তৃতীয় লিঙ্গ ও সমাজকর্মীদের নিয়ে একটি সমন্বিত প্ল্যাটফর্ম।</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:.16s">
+          <div class="movement-card">
+            <div class="movement-icon">🎓</div>
+            <h4>JOAF Advisory Team</h4>
+            <p>অভিজ্ঞ ও সমাজের বিশিষ্ট ব্যক্তিদের সমন্বয়ে গঠিত পরামর্শক প্যানেল।</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:.24s">
+          <div class="movement-card">
+            <div class="movement-icon">🗺️</div>
+            <h4>Divisional Teams</h4>
+            <p>দেশের ৮টি বিভাগে জোয়াফের আলাদা টিম — বরিশাল থেকে ময়মনসিংহ পর্যন্ত।</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:.32s">
+          <div class="movement-card">
+            <div class="movement-icon">🌍</div>
+            <h4>আন্তর্জাতিক প্রতিনিধিত্ব</h4>
+            <p>দেশ ছাড়িয়ে যুক্তরাষ্ট্র ও ইউরোপেও আমাদের সক্রিয় প্রতিনিধিত্ব রয়েছে।</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:.40s">
+          <div class="movement-card movement-card-cta">
+            <div class="movement-icon">📲</div>
+            <h4>যুক্ত হোন আজই</h4>
+            <p>কারণ ইতিহাস একবার ফিরে আসে — যারা প্রস্তুত থাকে, তারাই নেতৃত্ব দেয়।</p>
+            <a href="/community.html" class="movement-join-btn">WhatsApp গ্রুপে যোগ দিন →</a>
+          </div>
         </div>
       </div>
     </div>
@@ -403,8 +435,23 @@ window.addEventListener('load', () => {
 (function renderNucleus() {
   const grid = document.getElementById('nucleus-grid');
   if (!grid) return;
-  grid.innerHTML = JOAF.nucleus.map((m, i) => `
-    <div class="col-6 col-md-4 col-lg-3 gallery-item ${m.roleClass} joaf-reveal" style="transition-delay:${(i%4)*0.1}s">
+
+  // Map role text → CSS filter class
+  function getRoleClass(role) {
+    if (!role) return 'other';
+    const r = role;
+    if (r.includes('সভাপতি')) return 'president';
+    if (r.includes('সাধারণ সম্পাদক')) return 'secretary';
+    if (r.includes('সিনিয়র যুগ্ম')) return 'senior-coordinator';
+    if (r.includes('যুগ্ম মূখ্য')) return 'coordinator';
+    if (r.includes('মূখ্য সংগঠক')) return 'chief-organizer';
+    return 'other';
+  }
+
+  grid.innerHTML = JOAF.nucleus.map((m, i) => {
+    const rc = m.roleClass || getRoleClass(m.role);
+    return `
+    <div class="col-6 col-md-4 col-lg-3 gallery-item ${rc} joaf-reveal" style="transition-delay:${(i%4)*0.1}s">
       <div class="member-card">
         <img class="member-card-img" src="${m.img}" alt="${m.name}"
              onerror="this.src='/logoc7c3.png'" loading="lazy">
@@ -415,14 +462,14 @@ window.addEventListener('load', () => {
             <a href="${m.facebook}" target="_blank" rel="noopener" class="btn-fb">
               <i class="zmdi zmdi-facebook"></i> Profile
             </a>
-            <a href="${m.profilePage}" class="btn-bio">
+            <a href="${m.profilePage || '#'}" class="btn-bio">
               <i class="zmdi zmdi-info"></i> জীবনবৃত্তান্ত
             </a>
           </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
   initGalleryFilter();
 })();
 

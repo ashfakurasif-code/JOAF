@@ -159,8 +159,9 @@ const JOAFComponents = {
 
   // ── Scroll animations ────────────────────────────────────
   initAnimations() {
+    const REVEAL_SEL = '.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom';
     if (!('IntersectionObserver' in window)) {
-      document.querySelectorAll('.joaf-reveal,.joaf-reveal-left,.joaf-reveal-scale')
+      document.querySelectorAll(REVEAL_SEL)
         .forEach(el => el.classList.add('visible'));
       return;
     }
@@ -172,7 +173,7 @@ const JOAFComponents = {
         }
       });
     }, { threshold: 0.06 });
-    document.querySelectorAll('.joaf-reveal,.joaf-reveal-left,.joaf-reveal-scale')
+    document.querySelectorAll(REVEAL_SEL)
       .forEach(el => obs.observe(el));
   },
 
