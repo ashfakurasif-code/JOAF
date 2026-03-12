@@ -209,7 +209,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 .scroll-hint i{color:rgba(255,255,255,.55);font-size:28px;}
 
 /* MUTE BUTTON */
-.mute-toggle{position:absolute!important;bottom:20px!important;right:18px!important;z-index:100!important;width:48px!important;height:48px!important;border-radius:50%!important;background:rgba(0,0,0,.55)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;border:2px solid rgba(255,255,255,.35)!important;color:#fff!important;font-size:20px!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:all .25s!important;-webkit-tap-highlight-color:transparent!important;pointer-events:auto!important;visibility:visible!important;opacity:1!important;line-height:1!important;padding:0!important;}
+.mute-toggle{position:absolute!important;bottom:20px!important;left:18px!important;z-index:100!important;width:48px!important;height:48px!important;border-radius:50%!important;background:rgba(0,0,0,.55)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;border:2px solid rgba(255,255,255,.35)!important;color:#fff!important;font-size:20px!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:all .25s!important;-webkit-tap-highlight-color:transparent!important;pointer-events:auto!important;visibility:visible!important;opacity:1!important;line-height:1!important;padding:0!important;}
 .mute-toggle:hover{background:rgba(0,0,0,.82)!important;transform:scale(1.12)!important;border-color:rgba(255,255,255,.6)!important;}
 .mute-toggle:active{transform:scale(.9)!important;}
 
@@ -404,7 +404,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
   .hero-cta{gap:8px;}
   .hero-cta a{padding:11px 20px;font-size:13px;}
   .hero-badge{font-size:10.5px;}
-  .mute-toggle{bottom:14px!important;right:14px!important;width:42px!important;height:42px!important;font-size:18px!important;}
+  .mute-toggle{bottom:14px!important;left:14px!important;width:42px!important;height:42px!important;font-size:18px!important;}
   .stat-number{font-size:1.75rem;}
   .section-heading{margin-bottom:30px;text-align:center;}
   .section-heading h2{font-size:1.45rem;}

@@ -155,7 +155,27 @@ const JOAFComponents = {
   startClock() {
     const loc=document.getElementById('hm-loc'),date=document.getElementById('hm-date'),time=document.getElementById('hm-time');
     if(!date&&!time)return;
-    if(loc){fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{loc.innerHTML=`<i class="zmdi zmdi-pin"></i> ${BanglaUtil.toCity(d.city||'Dhaka')}`;}).catch(()=>{});}
+    if(loc){
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        const tzCity = {
+          'Asia/Dhaka':'ঢাকা','Asia/Chittagong':'চট্টগ্রাম',
+          'Asia/Kolkata':'কলকাতা','Europe/Berlin':'বার্লিন',
+          'Europe/London':'লন্ডন','America/New_York':'নিউ ইয়র্ক',
+          'America/Toronto':'টরন্টো','Australia/Sydney':'সিডনি',
+          'Asia/Dubai':'দুবাই','Asia/Riyadh':'রিয়াদ',
+          'America/Los_Angeles':'লস অ্যাঞ্জেলেস',
+          'Europe/Paris':'প্যারিস','Asia/Singapore':'সিঙ্গাপুর',
+          'Asia/Tokyo':'টোকিও','Asia/Karachi':'করাচি',
+          'Europe/Amsterdam':'আমস্টারডাম','Europe/Stockholm':'স্টকহোম',
+          'America/Chicago':'শিকাগো','Asia/Kuala_Lumpur':'কুয়ালালামপুর'
+        };
+        const city = tzCity[tz] || tz.split('/').pop().replace(/_/g,' ');
+        loc.innerHTML = `<i class="zmdi zmdi-pin"></i> ${city}`;
+      } catch(e) {
+        loc.innerHTML = `<i class="zmdi zmdi-pin"></i> ঢাকা`;
+      }
+    }
     const tick=()=>{const n=new Date();if(date)date.innerHTML=`<i class="zmdi zmdi-calendar"></i> ${BanglaUtil.formatDate(n)}`;if(time)time.innerHTML=`<i class="zmdi zmdi-time"></i> ${BanglaUtil.formatTime(n)}`;};
     tick();setInterval(tick,1000);
   },
