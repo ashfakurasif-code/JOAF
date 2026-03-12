@@ -735,3 +735,5 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 .joaf-mnav--open .joaf-mnav-panel {
   transform: translateX(0) !important;
 }
+
+@media(max-width:767px){.hero-cta{display:none!important;}}
