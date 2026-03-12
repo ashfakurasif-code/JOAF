@@ -404,7 +404,7 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
   .hero-cta{gap:8px;}
   .hero-cta a{padding:11px 20px;font-size:13px;}
   .hero-badge{font-size:10.5px;}
-  .mute-toggle{bottom:14px!important;left:14px!important;width:42px!important;height:42px!important;font-size:18px!important;}
+  .mute-toggle{bottom:54px!important;left:1px!important;width:42px!important;height:42px!important;font-size:18px!important;}
   .stat-number{font-size:1.75rem;}
   .section-heading{margin-bottom:30px;text-align:center;}
   .section-heading h2{font-size:1.45rem;}
