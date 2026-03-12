@@ -397,7 +397,13 @@
 const GROQ_KEY = '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';
 // ─────────────────────────────────────────────────────────────
 
-const GROQ_MODEL  = 'llama-3.3-70b-versatile';
+const GROQ_MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-70b-versatile',
+  'llama3-70b-8192',
+  'mixtral-8x7b-32768',
+  'gemma2-9b-it',
+];
 const POLLS_COUNT = 30;
 const STREAK_GOAL = 30;
 const REWARD_AMT  = 50; // ৳
@@ -733,17 +739,23 @@ async function genPolls() {
 - ঠিক ৩০টি প্রশ্ন`;
 
   try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method:  'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_KEY },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [{ role:'user', content:prompt }],
-        temperature: 0.85,
-        max_tokens:  4500
-      })
-    });
-    const data = await r.json();
+    let data = null;
+    for (const model of GROQ_MODELS) {
+      try {
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method:  'POST',
+          headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_KEY },
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role:'user', content:prompt }],
+            temperature: 0.85,
+            max_tokens:  4500
+          })
+        });
+        if (r.ok) { data = await r.json(); break; }
+      } catch(e) { continue; }
+    }
+    if (!data) throw new Error('All models failed');
     let txt = data.choices?.[0]?.message?.content || '';
     // Strip markdown fences
     txt = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
