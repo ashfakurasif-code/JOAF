@@ -735,9 +735,3 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 .joaf-mnav--open .joaf-mnav-panel {
   transform: translateX(0) !important;
 }
-
-/* Hide hero CTA buttons on mobile — shown in header instead */
-@media (max-width: 767px) {
-  .hero-cta { display: none !important; }
-  .hero-badges { display: none !important; }
-}

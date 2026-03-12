@@ -60,7 +60,7 @@ const JOAFComponents = {
                   <i class="zmdi zmdi-account-add"></i><span>সদস্য হোন</span>
                 </a>
                 <a href="/#about-area" class="joaf-cta-pill joaf-cta-about">
-                  <i class="zmdi zmdi-info"></i><span>সম্পর্কে</span>
+                  <i class="zmdi zmdi-info"></i><span>আমাদের সম্পর্কে</span>
                 </a>
               </div>
             </div>
