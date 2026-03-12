@@ -1,4 +1,4 @@
-// JOAF Components v8.0
+// JOAF Components v9.0
 // ✅ Mute: never pause, just flip .muted — works on all mobile browsers
 // ✅ Header: scroll-aware glass effect
 // ✅ Member cards: mouse-tracking 3D tilt on desktop
@@ -39,29 +39,43 @@ const JOAFComponents = {
       <div class="joaf-header-main">
         <div class="container">
           <div class="joaf-header-row">
-            <div class="joaf-header-brand">
-              <a href="/" class="joaf-logo" aria-label="JOAF হোম">
-                <img src="${s.logo}?v=${s.version}" alt="${s.abbr}">
-              </a>
-              <button class="joaf-hamburger d-md-none" id="joafHamBtn"
-                aria-label="মেনু" aria-expanded="false" aria-controls="joafMobileNav">
-                <span class="joaf-hamburger-bar"></span>
-                <span class="joaf-hamburger-bar"></span>
-                <span class="joaf-hamburger-bar"></span>
-              </button>
+            <!-- LEFT: Logo only -->
+            <a href="/" class="joaf-logo" aria-label="JOAF হোম">
+              <img src="${s.logo}?v=${s.version}" alt="${s.abbr}">
+            </a>
+
+            <!-- CENTER (mobile only): pill tag + tagline — replaces hamburger -->
+            <div class="joaf-mob-center d-md-none">
+              <div class="joaf-mob-pill"><span class="joaf-mob-pill-dot"></span>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</div>
+              <div class="joaf-mob-tagline">দেশ আগে, দল পরে — আমরা ফিরে এসেছি।</div>
             </div>
-            <!-- Mobile right side — ch-tag + hero title in header white space -->
-            <div class="joaf-mobile-right d-md-none">
-              <div class="joaf-mobile-chtag"><span class="joaf-mobile-chtag-dot"></span>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</div>
-              <div class="joaf-mobile-herop">দেশ আগে, দল পরে — আমরা ফিরে এসেছি।<br>এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।</div>
+
+            <!-- RIGHT: Desktop nav | Mobile: CTA pill buttons -->
+            <div class="joaf-header-right">
+              <nav class="joaf-desktop-nav d-none d-md-flex" id="main-menu" role="navigation" aria-label="প্রধান নেভিগেশন">
+                <ul>${navItems}</ul>
+              </nav>
+              <div class="joaf-mob-cta d-flex d-md-none">
+                <a href="/membership.html" class="joaf-cta-pill joaf-cta-join">
+                  <i class="zmdi zmdi-account-add"></i><span>সদস্য হোন</span>
+                </a>
+                <a href="/#about-area" class="joaf-cta-pill joaf-cta-about">
+                  <i class="zmdi zmdi-info"></i><span>সম্পর্কে</span>
+                </a>
+              </div>
             </div>
-            <nav class="joaf-desktop-nav d-none d-md-flex" id="main-menu" role="navigation" aria-label="প্রধান নেভিগেশন">
-              <ul>${navItems}</ul>
-            </nav>
           </div>
         </div>
       </div>
     </header>
+
+    <!-- FLOATING HAMBURGER — fixed bottom-left, always visible on mobile -->
+    <button class="joaf-fab-ham d-md-none" id="joafHamBtn"
+      aria-label="মেনু খুলুন" aria-expanded="false" aria-controls="joafMobileNav">
+      <span class="joaf-fab-bar"></span>
+      <span class="joaf-fab-bar"></span>
+      <span class="joaf-fab-bar"></span>
+    </button>
 
     <div class="joaf-mobile-nav" id="joafMobileNav" aria-hidden="true" role="dialog" aria-label="মোবাইল নেভিগেশন">
       <div class="joaf-mnav-backdrop" id="joafMNavBackdrop"></div>
@@ -212,7 +226,7 @@ const JOAFComponents = {
     const doOpen=()=>{
       if(open)return;open=true;
       navEl.classList.add('joaf-mnav--open');navEl.setAttribute('aria-hidden','false');
-      ham.setAttribute('aria-expanded','true');ham.classList.add('joaf-hamburger--open');
+      ham.setAttribute('aria-expanded','true');ham.classList.add('joaf-fab--open');
       document.body.style.overflow='hidden';document.body.style.touchAction='none';
       setTimeout(()=>{items.forEach(el=>{el.style.transform='translateY(0) scale(1)';el.style.opacity='1';});},60);
       window._joafClose=doClose;
@@ -220,7 +234,7 @@ const JOAFComponents = {
     const doClose=()=>{
       if(!open)return;open=false;
       items.forEach(el=>{el.style.transform='translateY(20px) scale(.96)';el.style.opacity='0';});
-      ham.classList.remove('joaf-hamburger--open');ham.setAttribute('aria-expanded','false');
+      ham.classList.remove('joaf-fab--open');ham.setAttribute('aria-expanded','false');
       setTimeout(()=>{navEl.classList.remove('joaf-mnav--open');navEl.setAttribute('aria-hidden','true');document.body.style.overflow='';document.body.style.touchAction='';},180);
       window._joafClose=null;
     };

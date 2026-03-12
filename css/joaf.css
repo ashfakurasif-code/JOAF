@@ -479,3 +479,256 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
   .hero-badge{font-size:10px!important;padding:4px 8px!important;}
 
 }
+
+/* ============================================================
+   v9.0 — FLOATING HAM + HEADER CTA PILLS + CENTER PILL-TAG
+   ============================================================ */
+
+/* ── 1. CENTER block: pill-tag + tagline (replaces hamburger) ── */
+.joaf-mob-center {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* The red pill tag */
+.joaf-mob-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--brand);
+  color: #fff;
+  font-size: clamp(9px, 2.6vw, 12px);
+  font-weight: 800;
+  letter-spacing: .3px;
+  padding: 3px 10px;
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,.25);
+  margin-bottom: 3px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: fit-content;
+}
+.joaf-mob-pill-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  flex-shrink: 0;
+  animation: glow-pulse 1.5s ease infinite;
+}
+
+/* The two-line tagline text */
+.joaf-mob-tagline {
+  font-size: clamp(8px, 2vw, 10.5px);
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hide on desktop */
+@media (min-width: 768px) {
+  .joaf-mob-center { display: none !important; }
+}
+
+/* ── 2. RIGHT side: desktop nav stays, mobile gets CTA pills ── */
+.joaf-header-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Mobile CTA pills container */
+.joaf-mob-cta {
+  display: flex !important;
+  gap: 5px;
+  align-items: center;
+}
+
+/* Pill button base */
+.joaf-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 11px;
+  border-radius: 50px;
+  font-size: clamp(9px, 2.5vw, 12px);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all .3s var(--tr-spring);
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1;
+}
+.joaf-cta-pill i { font-size: 14px; }
+.joaf-cta-pill span { display: inline; }
+
+/* Green — সদস্য হোন */
+.joaf-cta-join {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff !important;
+  box-shadow: 0 3px 10px var(--accent-glow);
+}
+.joaf-cta-join:hover, .joaf-cta-join:active {
+  transform: scale(1.06);
+  color: #fff !important;
+  box-shadow: 0 5px 16px var(--accent-glow);
+}
+
+/* Outline — সম্পর্কে */
+.joaf-cta-about {
+  background: transparent;
+  color: var(--brand) !important;
+  border: 1.5px solid rgba(144,22,31,.35);
+}
+.joaf-cta-about:hover, .joaf-cta-about:active {
+  background: var(--brand);
+  color: #fff !important;
+  border-color: var(--brand);
+}
+
+/* Hide mobile CTA on desktop */
+@media (min-width: 768px) {
+  .joaf-mob-cta { display: none !important; }
+}
+
+/* ── 3. FLOATING HAMBURGER — fixed bottom-left ─────────────── */
+.joaf-fab-ham {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--brand), var(--brand2));
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0;
+  box-shadow:
+    0 6px 20px var(--brand-glow),
+    0 2px 8px rgba(0,0,0,.3),
+    inset 0 1px 0 rgba(255,255,255,.18);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .3s var(--tr-spring), box-shadow .3s ease;
+  /* Subtle pulse to attract attention */
+  animation: fab-ham-pulse 3s ease infinite;
+}
+
+@keyframes fab-ham-pulse {
+  0%, 100% {
+    box-shadow: 0 6px 20px var(--brand-glow), 0 2px 8px rgba(0,0,0,.3);
+  }
+  50% {
+    box-shadow: 0 6px 24px var(--brand-glow), 0 0 0 8px rgba(144,22,31,.1), 0 2px 8px rgba(0,0,0,.3);
+  }
+}
+
+.joaf-fab-ham:active {
+  transform: translateX(-50%) scale(.88);
+  transition: transform .1s;
+  animation: none;
+}
+
+/* The three bars */
+.joaf-fab-bar {
+  display: block;
+  width: 22px;
+  height: 2.5px;
+  background: #fff;
+  border-radius: 2px;
+  transform-origin: center;
+  transition:
+    transform .35s cubic-bezier(.34,1.56,.64,1),
+    opacity .22s ease,
+    width .25s ease;
+}
+
+/* Open (X) state */
+.joaf-fab--open .joaf-fab-bar:nth-child(1) {
+  transform: translateY(7.5px) rotate(45deg);
+}
+.joaf-fab--open .joaf-fab-bar:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+.joaf-fab--open .joaf-fab-bar:nth-child(3) {
+  transform: translateY(-7.5px) rotate(-45deg);
+}
+
+/* Hide on desktop */
+@media (min-width: 768px) {
+  .joaf-fab-ham { display: none !important; }
+}
+
+/* ── 4. Mobile hero: tag+title+text hidden (shown in header) ─ */
+@media (max-width: 767px) {
+  .ch-tag { display: none !important; }
+  #hero-title, .ch-content h1 { display: none !important; }
+  .ch-content > p { display: none !important; }
+  .ch-content {
+    padding: 0 14px 20px !important;
+    justify-content: flex-end !important;
+  }
+  .hero-cta {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+  .hero-cta a {
+    padding: 11px 32px !important;
+    font-size: 13.5px !important;
+    min-width: 175px;
+    justify-content: center;
+  }
+  .hero-badges {
+    gap: 5px !important;
+    justify-content: center !important;
+  }
+  .hero-badge { font-size: 10px !important; padding: 4px 9px !important; }
+}
+
+/* ── 5. Header row on mobile — clean 3-column layout ─────── */
+@media (max-width: 767px) {
+  .joaf-header-row {
+    gap: 4px;
+    min-height: 58px;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .joaf-logo img { max-width: 50px !important; padding: 2px 0; }
+  .joaf-header-top { padding: 4px 0; }
+  .joaf-header-meta span { font-size: 10px; gap: 3px; }
+}
+
+/* ── 6. Scroll-to-top: stay above floating ham ────────────── */
+@media (max-width: 767px) {
+  /* scroll-top is inline-styled at bottom:76px, that's fine */
+  /* WhatsApp float not shown on mobile */
+}
+
+/* ── 7. Mobile nav panel slides from LEFT (near ham button) ── */
+.joaf-mnav-panel {
+  left: 0 !important;
+  right: auto !important;
+  transform: translateX(-105%) !important;
+  border-radius: 0 20px 20px 0 !important;
+}
+.joaf-mnav--open .joaf-mnav-panel {
+  transform: translateX(0) !important;
+}
