@@ -660,9 +660,19 @@ function recordVote(pid, oi) {
 
 // ── Groq API poll generation ──────────────────────────────────
 function getCacheKey() {
-  // Changes every 12 hours: session 0 (00:00-11:59) or session 1 (12:00-23:59)
-  const session = Math.floor(new Date().getHours() / 12);
-  return `polls_${today()}_s${session}`;
+  // True 12-hour window from last generation time
+  const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+  const lastGen = LS.get('polls_last_gen') || 0;
+  const now = Date.now();
+  if (!lastGen || (now - lastGen) >= TWELVE_HOURS) {
+    // New session — save timestamp, use new key
+    const key = `polls_${now}`;
+    LS.set('polls_last_gen', now);
+    LS.set('polls_current_key', key);
+    return key;
+  }
+  // Still within 12 hours — return same key
+  return LS.get('polls_current_key') || `polls_${lastGen}`;
 }
 
 const FALLBACK_POLLS = [
