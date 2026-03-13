@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>রক্তদাতা — JOAF</title>
+<meta name="description" content="জরুরি রক্তের প্রয়োজন? JOAF রক্তদাতা নেটওয়ার্কে খুঁজুন।">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="stylesheet" href="/css/joaf.css?v=9.4">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+<style>
+:root { --red:#90161f; --green:#075e55; --gold:#c9a227; --bg:#f8f9fa; }
+body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1a1a2e; }
+.hero { background: linear-gradient(135deg, #90161f, #c0392b); color: #fff; padding: 30px 16px 20px; text-align: center; }
+.hero h1 { font-size: 24px; font-weight: 900; margin-bottom: 6px; }
+.hero p { font-size: 13px; opacity: .85; }
+.blood-types { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 16px; }
+.bt { padding: 10px 18px; border-radius: 50px; border: 2px solid #ddd; background: #fff; font-size: 14px; font-weight: 800; cursor: pointer; transition: .2s; color: #333; }
+.bt.active, .bt:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.section { padding: 0 16px 16px; }
+.card { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+.card-top { display: flex; align-items: center; gap: 12px; }
+.blood-badge { width: 48px; height: 48px; border-radius: 50%; background: var(--red); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 900; flex-shrink: 0; }
+.donor-name { font-size: 15px; font-weight: 800; color: #1a1a2e; }
+.donor-meta { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.donor-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn-call { flex: 1; padding: 10px; background: var(--green); color: #fff; border: none; border-radius: 50px; font-size: 13px; font-weight: 800; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
+.btn-msg { flex: 1; padding: 10px; background: #25d366; color: #fff; border: none; border-radius: 50px; font-size: 13px; font-weight: 800; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
+.fab { position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--red); color: #fff; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(144,22,31,.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-end; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 24px 24px 0 0; padding: 24px 20px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal h3 { font-size: 18px; font-weight: 900; margin-bottom: 16px; color: #1a1a2e; }
+.form-group { margin-bottom: 14px; }
+.form-group label { font-size: 13px; font-weight: 700; color: #374151; display: block; margin-bottom: 6px; }
+.form-group input, .form-group select { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; font-family: inherit; outline: none; }
+.form-group input:focus, .form-group select:focus { border-color: var(--red); }
+.btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--red), #c0392b); color: #fff; border: none; border-radius: 50px; font-size: 15px; font-weight: 900; font-family: inherit; cursor: pointer; margin-top: 8px; }
+.filter-bar { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; }
+.filter-bar::-webkit-scrollbar { display: none; }
+.district-select { flex: 1; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 50px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+.empty { text-align: center; padding: 40px 20px; color: #9ca3af; }
+.empty i { font-size: 48px; display: block; margin-bottom: 12px; }
+.last-donated { font-size: 11px; color: #ef4444; font-weight: 700; margin-top: 4px; }
+.available { font-size: 11px; color: #10b981; font-weight: 700; margin-top: 4px; }
+.stats-bar { display: flex; gap: 10px; padding: 12px 16px; }
+.stat { flex: 1; background: #fff; border-radius: 12px; padding: 12px 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.stat-num { font-size: 20px; font-weight: 900; color: var(--red); }
+.stat-label { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.search-box { padding: 0 16px 8px; }
+.search-box input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 50px; font-size: 14px; font-family: inherit; outline: none; }
+.search-box input:focus { border-color: var(--red); }
+</style>
+</head>
+<body>
+
+<div id="joaf-preloader" style="position:fixed;inset:0;background:#0d0d1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999">
+  <img src="/logoc7c3.png" style="width:70px;margin-bottom:16px">
+  <p style="color:#c9a227;font-family:sans-serif;font-size:14px">রক্তদাতা লোড হচ্ছে...</p>
+</div>
+
+<div id="joaf-header"></div>
+
+<div class="hero">
+  <h1>🩸 রক্তদাতা নেটওয়ার্ক</h1>
+  <p>জরুরি মুহূর্তে পাশে আছি — রক্তের প্রয়োজনে এখনই খুঁজুন</p>
+</div>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat"><div class="stat-num" id="totalDonors">...</div><div class="stat-label">মোট দাতা</div></div>
+  <div class="stat"><div class="stat-num" id="availableDonors">...</div><div class="stat-label">এখন পাওয়া যাবে</div></div>
+  <div class="stat"><div class="stat-num" id="totalDistricts">...</div><div class="stat-label">জেলা</div></div>
+</div>
+
+<!-- Blood type filter -->
+<div class="blood-types" id="bloodFilter">
+  <button class="bt active" data-type="all">সব</button>
+  <button class="bt" data-type="A+">A+</button>
+  <button class="bt" data-type="A-">A-</button>
+  <button class="bt" data-type="B+">B+</button>
+  <button class="bt" data-type="B-">B-</button>
+  <button class="bt" data-type="AB+">AB+</button>
+  <button class="bt" data-type="AB-">AB-</button>
+  <button class="bt" data-type="O+">O+</button>
+  <button class="bt" data-type="O-">O-</button>
+</div>
+
+<!-- District + Search -->
+<div class="filter-bar">
+  <select class="district-select" id="districtFilter">
+    <option value="">সব জেলা</option>
+  </select>
+</div>
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="নাম বা এলাকা দিয়ে খুঁজুন...">
+</div>
+
+<!-- Donors list -->
+<div class="section" id="donorsList"></div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" title="রক্তদাতা হিসেবে নিবন্ধন করুন">+</button>
+
+<!-- Register Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>🩸 রক্তদাতা হিসেবে নিবন্ধন</h3>
+    <div class="form-group">
+      <label>আপনার নাম *</label>
+      <input type="text" id="f_name" placeholder="পূর্ণ নাম লিখুন">
+    </div>
+    <div class="form-group">
+      <label>মোবাইল নম্বর *</label>
+      <input type="tel" id="f_phone" placeholder="01XXXXXXXXX">
+    </div>
+    <div class="form-group">
+      <label>রক্তের গ্রুপ *</label>
+      <select id="f_blood">
+        <option value="">বেছে নিন</option>
+        <option>A+</option><option>A-</option>
+        <option>B+</option><option>B-</option>
+        <option>AB+</option><option>AB-</option>
+        <option>O+</option><option>O-</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>জেলা *</label>
+      <select id="f_district"></select>
+    </div>
+    <div class="form-group">
+      <label>উপজেলা / এলাকা</label>
+      <input type="text" id="f_area" placeholder="আপনার উপজেলা বা এলাকা">
+    </div>
+    <div class="form-group">
+      <label>শেষ রক্তদানের তারিখ (যদি থাকে)</label>
+      <input type="date" id="f_lastDonate">
+    </div>
+    <button class="btn-submit" id="submitBtn">✅ নিবন্ধন করুন</button>
+    <button style="width:100%;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;color:#6b7280;margin-top:8px;cursor:pointer" onclick="closeModal()">বাতিল করুন</button>
+  </div>
+</div>
+
+<div id="joaf-footer"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/data.js?v=9.4"></script>
+<script src="/js/components.js?v=9.4"></script>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
+  authDomain: "joaf-app-45753.firebaseapp.com",
+  projectId: "joaf-app-45753",
+  storageBucket: "joaf-app-45753.firebasestorage.app",
+  messagingSenderId: "472362223214",
+  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const DISTRICTS = ["ঢাকা","চট্টগ্রাম","রাজশাহী","খুলনা","বরিশাল","সিলেট","রংপুর","ময়মনসিংহ","কুমিল্লা","নারায়ণগঞ্জ","গাজীপুর","টাঙ্গাইল","ফরিদপুর","যশোর","নোয়াখালী","বগুড়া","দিনাজপুর","রংপুর","পাবনা","নরসিংদী","মানিকগঞ্জ","মুন্সীগঞ্জ","শরীয়তপুর","মাদারীপুর","গোপালগঞ্জ","কিশোরগঞ্জ","নেত্রকোনা","জামালপুর","শেরপুর","ব্রাহ্মণবাড়িয়া","চাঁদপুর","ফেনী","লক্ষ্মীপুর","কক্সবাজার","বান্দরবান","রাঙ্গামাটি","খাগড়াছড়ি","হবিগঞ্জ","মৌলভীবাজার","সুনামগঞ্জ","নওগাঁ","চাঁপাইনবাবগঞ্জ","নাটোর","সিরাজগঞ্জ","জয়পুরহাট","সাতক্ষীরা","ঝিনাইদহ","মাগুরা","নড়াইল","বাগেরহাট","মেহেরপুর","চুয়াডাঙ্গা","কুষ্টিয়া","ঝালকাঠি","পটুয়াখালী","পিরোজপুর","ভোলা","বরগুনা","লালমনিরহাট","নীলফামারী","গাইবান্ধা","কুড়িগ্রাম","পঞ্চগড়","ঠাকুরগাঁও"];
+
+// Populate district dropdowns
+const dSel = document.getElementById('districtFilter');
+const fDSel = document.getElementById('f_district');
+DISTRICTS.sort().forEach(d => {
+  dSel.innerHTML += `<option value="${d}">${d}</option>`;
+  fDSel.innerHTML += `<option value="${d}">${d}</option>`;
+});
+
+let allDonors = [];
+let activeBlood = 'all';
+
+// Load donors
+async function loadDonors() {
+  try {
+    const q = query(collection(db, 'donors'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    allDonors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateStats();
+    renderDonors();
+  } catch(e) {
+    console.error(e);
+  }
+  document.getElementById('joaf-preloader').style.display = 'none';
+}
+
+function updateStats() {
+  const now = new Date();
+  const available = allDonors.filter(d => {
+    if (!d.lastDonate) return true;
+    const diff = (now - new Date(d.lastDonate)) / (1000*60*60*24);
+    return diff >= 90;
+  });
+  const districts = [...new Set(allDonors.map(d => d.district))];
+  document.getElementById('totalDonors').textContent = allDonors.length;
+  document.getElementById('availableDonors').textContent = available.length;
+  document.getElementById('totalDistricts').textContent = districts.length;
+}
+
+function renderDonors() {
+  const blood = activeBlood;
+  const district = document.getElementById('districtFilter').value;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+
+  let filtered = allDonors.filter(d => {
+    if (blood !== 'all' && d.blood !== blood) return false;
+    if (district && d.district !== district) return false;
+    if (search && !d.name?.toLowerCase().includes(search) && !d.area?.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  const list = document.getElementById('donorsList');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty"><i class="zmdi zmdi-account-off"></i><p>এই এলাকায় কোনো দাতা পাওয়া যায়নি<br><small>আপনি নিবন্ধন করুন!</small></p></div>`;
+    return;
+  }
+
+  const now = new Date();
+  list.innerHTML = filtered.map(d => {
+    const available = !d.lastDonate || (now - new Date(d.lastDonate)) / (1000*60*60*24) >= 90;
+    const statusHtml = available
+      ? `<div class="available">✅ এখন দিতে পারবেন</div>`
+      : `<div class="last-donated">⏳ শেষ দান: ${d.lastDonate}</div>`;
+    return `
+    <div class="card">
+      <div class="card-top">
+        <div class="blood-badge">${d.blood}</div>
+        <div>
+          <div class="donor-name">${d.name}</div>
+          <div class="donor-meta"><i class="zmdi zmdi-pin"></i> ${d.district}${d.area ? ' — ' + d.area : ''}</div>
+          ${statusHtml}
+        </div>
+      </div>
+      <div class="donor-actions">
+        <a href="tel:${d.phone}" class="btn-call"><i class="zmdi zmdi-phone"></i> কল করুন</a>
+        <a href="https://wa.me/88${d.phone}" target="_blank" class="btn-msg"><i class="zmdi zmdi-whatsapp"></i> WhatsApp</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Filters
+document.getElementById('bloodFilter').addEventListener('click', e => {
+  const btn = e.target.closest('.bt');
+  if (!btn) return;
+  document.querySelectorAll('.bt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeBlood = btn.dataset.type;
+  renderDonors();
+});
+
+document.getElementById('districtFilter').addEventListener('change', renderDonors);
+document.getElementById('searchInput').addEventListener('input', renderDonors);
+
+// Modal
+window.closeModal = () => document.getElementById('modalOverlay').classList.remove('open');
+document.getElementById('fabBtn').addEventListener('click', () => document.getElementById('modalOverlay').classList.add('open'));
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === document.getElementById('modalOverlay')) closeModal(); });
+
+// Submit
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const name = document.getElementById('f_name').value.trim();
+  const phone = document.getElementById('f_phone').value.trim();
+  const blood = document.getElementById('f_blood').value;
+  const district = document.getElementById('f_district').value;
+  const area = document.getElementById('f_area').value.trim();
+  const lastDonate = document.getElementById('f_lastDonate').value;
+
+  if (!name || !phone || !blood || !district) {
+    alert('নাম, মোবাইল, রক্তের গ্রুপ ও জেলা আবশ্যক।');
+    return;
+  }
+  if (!/^01[3-9]\d{8}$/.test(phone)) {
+    alert('সঠিক মোবাইল নম্বর দিন।');
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'নিবন্ধন হচ্ছে...';
+  btn.disabled = true;
+
+  try {
+    await addDoc(collection(db, 'donors'), { name, phone, blood, district, area, lastDonate, createdAt: serverTimestamp() });
+    alert('✅ সফলভাবে নিবন্ধন হয়েছে! আপনাকে ধন্যবাদ।');
+    closeModal();
+    loadDonors();
+  } catch(e) {
+    alert('সমস্যা হয়েছে, আবার চেষ্টা করুন।');
+  }
+  btn.textContent = '✅ নিবন্ধন করুন';
+  btn.disabled = false;
+});
+
+loadDonors();
+</script>
+
+<script>
+// SW register
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(console.error);
+}
+// Hide preloader fallback
+setTimeout(() => { document.getElementById('joaf-preloader').style.display = 'none'; }, 3000);
+</script>
+</body>
+</html>

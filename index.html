@@ -659,9 +659,9 @@
           <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;height:100%">
             <h4 style="color:var(--gold);font-weight:900;margin-bottom:22px;font-size:1rem;letter-spacing:1px;text-transform:uppercase">📞 যোগাযোগের উপায়</h4>
 
-            <a href="mailto:info@julyforum.com" class="contact-method-row" style="text-decoration:none">
+            <a href="mailto:joafforum@gmail.com" class="contact-method-row" style="text-decoration:none">
               <div class="contact-icon" style="background:linear-gradient(135deg,#90161f,#b91c1c)"><i class="zmdi zmdi-email"></i></div>
-              <div><div class="contact-label">ইমেইল</div><div class="contact-value">info@julyforum.com</div></div>
+              <div><div class="contact-label">ইমেইল</div><div class="contact-value">joafforum@gmail.com</div></div>
             </a>
             <a href="https://chat.whatsapp.com/DjABAy1NNQMEtSW3wh8bXg" target="_blank" rel="noopener" class="contact-method-row" style="text-decoration:none">
               <div class="contact-icon" style="background:linear-gradient(135deg,#25d366,#128c7e)"><i class="zmdi zmdi-whatsapp"></i></div>
@@ -893,6 +893,48 @@ function initFilter() {
 })();
 
 // components.js handles all video/mute logic
+</script>
+
+<!-- PWA Install Prompt -->
+<div id="pwa-prompt" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:400px;background:#1a1a2e;color:#fff;border-radius:20px;padding:16px 20px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,.4);border:1px solid rgba(201,162,39,.3)">
+  <div style="display:flex;align-items:center;gap:12px">
+    <img src="/logoc7c3.png" style="width:48px;height:48px;border-radius:12px">
+    <div style="flex:1">
+      <div style="font-weight:900;font-size:14px;margin-bottom:2px">JOAF অ্যাপ ইনস্টল করুন</div>
+      <div style="font-size:12px;color:#aaa">হোম স্ক্রিনে রাখুন — সহজে খুলুন</div>
+    </div>
+    <button onclick="document.getElementById('pwa-prompt').style.display='none'" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;padding:4px">✕</button>
+  </div>
+  <button id="pwa-install-btn" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer">📲 এখনই ইনস্টল করুন</button>
+</div>
+
+<script>
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(console.error);
+}
+
+// PWA Install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => {
+    document.getElementById('pwa-prompt').style.display = 'block';
+  }, 5000);
+});
+
+document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('pwa-prompt').style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwa-prompt').style.display = 'none';
+});
 </script>
 </body>
 </html>

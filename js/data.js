@@ -39,6 +39,8 @@ const JOAF = {
     { label: "🗳️ জনমত",         href: "/joaf-polls.html",        id: "polls"      },
     { label: "🤝 কমিউনিটি",      href: "/community.html",         id: "community"  },
     { label: "💡 আমরা কে",       href: "/#about-area",            id: "about"      },
+    { label: "🩸 রক্তদাতা",       href: "/rokto.html",             id: "rokto"      },
+    { label: "🚨 জরুরি সতর্কতা", href: "/alert.html",             id: "alert"      },
     { label: "✊ যোগ দিন",       href: "/membership.html",        id: "membership" },
     { label: "💚 সহযোগিতা",      href: "/donate.html",            id: "donate"     },
     { label: "📬 যোগাযোগ",       href: "/#contact-area",          id: "contact"    },

@@ -114,6 +114,16 @@
   to = "/privacy"
   status = 301
 
+[[redirects]]
+  from = "/rokto.html"
+  to = "/rokto"
+  status = 301
+
+[[redirects]]
+  from = "/alert.html"
+  to = "/alert"
+  status = 301
+
 # ── Community case fix ───────────────────────────────────────
 [[redirects]]
   from = "/Community.html"

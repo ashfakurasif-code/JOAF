@@ -1,1 +1,31 @@
-{"name":"","short_name":"","icons":[{"src":"/android-chrome-192x192.png","sizes":"192x192","type":"image/png"},{"src":"/android-chrome-512x512.png","sizes":"512x512","type":"image/png"}],"theme_color":"#ffffff","background_color":"#ffffff","display":"standalone"}
+{
+  "name": "জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম",
+  "short_name": "JOAF",
+  "description": "বাংলাদেশের মানুষের জন্য — রক্ত, সেবা, সতর্কতা এক জায়গায়",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d1a",
+  "theme_color": "#90161f",
+  "lang": "bn",
+  "icons": [
+    { "src": "/logoc7c3.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logoc7c3.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["social", "news", "health"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "রক্ত দরকার",
+      "short_name": "রক্ত",
+      "url": "/rokto.html",
+      "icons": [{ "src": "/logoc7c3.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "জরুরি সতর্কতা",
+      "short_name": "Alert",
+      "url": "/alert.html",
+      "icons": [{ "src": "/logoc7c3.png", "sizes": "192x192" }]
+    }
+  ]
+}

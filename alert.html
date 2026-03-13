@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>জরুরি সতর্কতা — JOAF</title>
+<link rel="manifest" href="/site.webmanifest">
+<link rel="stylesheet" href="/css/joaf.css?v=9.4">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+<style>
+:root{--red:#90161f;--green:#075e55;--gold:#c9a227;}
+body{font-family:'SolaimanLipi',sans-serif;background:#f8f9fa;color:#1a1a2e;}
+.hero{background:linear-gradient(135deg,#1a1a2e,#c0392b);color:#fff;padding:30px 16px 20px;text-align:center;}
+.hero h1{font-size:22px;font-weight:900;margin-bottom:6px;}
+.hero p{font-size:13px;opacity:.85;}
+.alert-types{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;}
+.alert-types::-webkit-scrollbar{display:none;}
+.at{padding:8px 16px;border-radius:50px;border:2px solid #ddd;background:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.2s;}
+.at.active,.at:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.alert-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);border-left:4px solid var(--red);}
+.alert-card.fire{border-color:#f97316;}
+.alert-card.flood{border-color:#3b82f6;}
+.alert-card.crime{border-color:#8b5cf6;}
+.alert-card.medical{border-color:#ef4444;}
+.alert-card.other{border-color:#6b7280;}
+.alert-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.alert-icon{font-size:24px;}
+.alert-type-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:50px;background:#fee2e2;color:#991b1b;}
+.alert-type-badge.fire{background:#ffedd5;color:#c2410c;}
+.alert-type-badge.flood{background:#dbeafe;color:#1d4ed8;}
+.alert-type-badge.crime{background:#ede9fe;color:#6d28d9;}
+.alert-type-badge.other{background:#f3f4f6;color:#374151;}
+.alert-title{font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:4px;}
+.alert-desc{font-size:13px;color:#4b5563;line-height:1.5;margin-bottom:8px;}
+.alert-meta{font-size:11px;color:#9ca3af;display:flex;gap:12px;flex-wrap:wrap;}
+.alert-img{width:100%;border-radius:12px;margin-top:10px;max-height:200px;object-fit:cover;}
+.fab{position:fixed;bottom:80px;right:20px;background:var(--red);color:#fff;border:none;border-radius:50px;padding:14px 20px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(144,22,31,.4);z-index:100;display:flex;align-items:center;gap:8px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:flex-end;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal h3{font-size:18px;font-weight:900;margin-bottom:16px;}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.type-btn{padding:12px;border:2px solid #e5e7eb;border-radius:12px;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:.2s;}
+.type-btn.selected{border-color:var(--red);background:#fff5f5;color:var(--red);}
+.form-group{margin-bottom:14px;}
+.form-group label{font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:6px;}
+.form-group input,.form-group textarea{width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:12px;font-size:14px;font-family:inherit;outline:none;resize:vertical;}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--red);}
+.photo-upload{border:2px dashed #e5e7eb;border-radius:12px;padding:20px;text-align:center;cursor:pointer;color:#6b7280;font-size:13px;}
+.photo-upload:hover{border-color:var(--red);color:var(--red);}
+.photo-preview{width:100%;border-radius:12px;margin-top:8px;display:none;}
+.gps-btn{width:100%;padding:12px;background:#f3f4f6;border:2px solid #e5e7eb;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:#374151;}
+.gps-btn.got{background:#dcfce7;border-color:#10b981;color:#065f46;}
+.btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--red),#c0392b);color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
+.section{padding:0 16px 16px;}
+.empty{text-align:center;padding:40px 20px;color:#9ca3af;}
+.live-badge{display:inline-flex;align-items:center;gap:4px;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:800;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#ef4444;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+</style>
+</head>
+<body>
+
+<div id="joaf-preloader" style="position:fixed;inset:0;background:#0d0d1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999">
+  <img src="/logoc7c3.png" style="width:70px;margin-bottom:16px">
+  <p style="color:#c9a227;font-family:sans-serif;font-size:14px">সতর্কতা লোড হচ্ছে...</p>
+</div>
+
+<div id="joaf-header"></div>
+
+<div class="hero">
+  <h1>🚨 জরুরি সতর্কতা</h1>
+  <p>আপনার এলাকার যেকোনো বিপদ সবাইকে জানান — তাৎক্ষণিক</p>
+  <div style="margin-top:10px">
+    <span class="live-badge"><span class="live-dot"></span> লাইভ আপডেট</span>
+  </div>
+</div>
+
+<!-- Type filter -->
+<div class="alert-types" id="alertFilter">
+  <button class="at active" data-type="all">সব</button>
+  <button class="at" data-type="fire">🔥 আগুন</button>
+  <button class="at" data-type="flood">🌊 বন্যা</button>
+  <button class="at" data-type="crime">⚠️ অপরাধ</button>
+  <button class="at" data-type="medical">🏥 মেডিকেল</button>
+  <button class="at" data-type="other">📢 অন্যান্য</button>
+</div>
+
+<div class="section" id="alertsList"></div>
+
+<button class="fab" id="fabBtn">🚨 সতর্কতা দিন</button>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>🚨 জরুরি সতর্কতা পাঠান</h3>
+
+    <div class="type-grid" id="typeGrid">
+      <button class="type-btn" data-type="fire">🔥 আগুন</button>
+      <button class="type-btn" data-type="flood">🌊 বন্যা/জলাবদ্ধতা</button>
+      <button class="type-btn" data-type="crime">⚠️ অপরাধ/ধর্ষণ</button>
+      <button class="type-btn" data-type="medical">🏥 মেডিকেল জরুরি</button>
+      <button class="type-btn" data-type="accident">🚗 দুর্ঘটনা</button>
+      <button class="type-btn selected" data-type="other">📢 অন্যান্য</button>
+    </div>
+
+    <div class="form-group">
+      <label>শিরোনাম *</label>
+      <input type="text" id="f_title" placeholder="সংক্ষেপে বলুন কী হয়েছে">
+    </div>
+    <div class="form-group">
+      <label>বিস্তারিত বলুন *</label>
+      <textarea id="f_desc" rows="3" placeholder="কী হয়েছে, কোথায় হয়েছে বিস্তারিত লিখুন..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>এলাকা *</label>
+      <input type="text" id="f_location" placeholder="গ্রাম/মহল্লা, উপজেলা, জেলা">
+    </div>
+    <div class="form-group">
+      <label>আপনার নাম (ঐচ্ছিক)</label>
+      <input type="text" id="f_reporter" placeholder="নাম না দিলেও চলবে">
+    </div>
+    <div class="form-group">
+      <label>ছবি যোগ করুন (ঐচ্ছিক)</label>
+      <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+        📷 ছবি তুলুন বা গ্যালারি থেকে বেছে নিন
+      </div>
+      <input type="file" id="photoInput" accept="image/*" style="display:none">
+      <img id="photoPreview" class="photo-preview">
+    </div>
+    <div class="form-group">
+      <button class="gps-btn" id="gpsBtn" onclick="getGPS()">
+        📍 GPS লোকেশন যোগ করুন
+      </button>
+    </div>
+    <button class="btn-submit" id="submitBtn">🚨 সতর্কতা পাঠান</button>
+    <button style="width:100%;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;color:#6b7280;margin-top:8px;cursor:pointer" onclick="closeModal()">বাতিল করুন</button>
+  </div>
+</div>
+
+<div id="joaf-footer"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/data.js?v=9.4"></script>
+<script src="/js/components.js?v=9.4"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+const app = initializeApp({
+  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
+  authDomain: "joaf-app-45753.firebaseapp.com",
+  projectId: "joaf-app-45753",
+  storageBucket: "joaf-app-45753.firebasestorage.app",
+  messagingSenderId: "472362223214",
+  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
+});
+const db = getFirestore(app);
+
+
+const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',accident:'🚗',other:'📢'};
+const TYPE_LABELS = {fire:'আগুন',flood:'বন্যা',crime:'অপরাধ',medical:'মেডিকেল',accident:'দুর্ঘটনা',other:'অন্যান্য'};
+
+let activeType = 'all';
+let selectedType = 'other';
+let gpsData = null;
+let photoFile = null;
+
+// Real-time listener
+const q = query(collection(db, 'alerts'), orderBy('createdAt', 'desc'));
+onSnapshot(q, snap => {
+  window._alerts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderAlerts();
+  document.getElementById('joaf-preloader').style.display = 'none';
+});
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = Math.floor((new Date() - d) / 1000);
+  if (diff < 60) return diff + ' সেকেন্ড আগে';
+  if (diff < 3600) return Math.floor(diff/60) + ' মিনিট আগে';
+  if (diff < 86400) return Math.floor(diff/3600) + ' ঘণ্টা আগে';
+  return Math.floor(diff/86400) + ' দিন আগে';
+}
+
+function renderAlerts() {
+  const list = document.getElementById('alertsList');
+  let alerts = window._alerts || [];
+  if (activeType !== 'all') alerts = alerts.filter(a => a.type === activeType);
+  if (!alerts.length) {
+    list.innerHTML = `<div class="empty"><p style="font-size:40px">✅</p><p>এই মুহূর্তে কোনো সতর্কতা নেই<br><small>আপনার এলাকায় কিছু হলে জানান</small></p></div>`;
+    return;
+  }
+  list.innerHTML = alerts.map(a => `
+    <div class="alert-card ${a.type}">
+      <div class="alert-header">
+        <span class="alert-icon">${TYPE_ICONS[a.type]||'📢'}</span>
+        <span class="alert-type-badge ${a.type}">${TYPE_LABELS[a.type]||'অন্যান্য'}</span>
+      </div>
+      <div class="alert-title">${a.title}</div>
+      <div class="alert-desc">${a.description}</div>
+      ${a.imageUrl ? `<img src="${a.imageUrl}" class="alert-img" loading="lazy">` : ''}
+      <div class="alert-meta">
+        <span>📍 ${a.location}</span>
+        ${a.reporter ? `<span>👤 ${a.reporter}</span>` : ''}
+        <span>🕐 ${timeAgo(a.createdAt)}</span>
+        ${a.lat ? `<a href="https://maps.google.com/?q=${a.lat},${a.lng}" target="_blank" style="color:var(--red);font-weight:700">🗺️ মানচিত্রে দেখুন</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// Filter
+document.getElementById('alertFilter').addEventListener('click', e => {
+  const btn = e.target.closest('.at');
+  if (!btn) return;
+  document.querySelectorAll('.at').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeType = btn.dataset.type;
+  renderAlerts();
+});
+
+// Type select in modal
+document.getElementById('typeGrid').addEventListener('click', e => {
+  const btn = e.target.closest('.type-btn');
+  if (!btn) return;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedType = btn.dataset.type;
+});
+
+// Photo
+document.getElementById('photoInput').addEventListener('change', e => {
+  photoFile = e.target.files[0];
+  if (photoFile) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const prev = document.getElementById('photoPreview');
+      prev.src = ev.target.result;
+      prev.style.display = 'block';
+    };
+    reader.readAsDataURL(photoFile);
+  }
+});
+
+// GPS
+window.getGPS = () => {
+  const btn = document.getElementById('gpsBtn');
+  btn.textContent = '⏳ লোকেশন নেওয়া হচ্ছে...';
+  navigator.geolocation.getCurrentPosition(pos => {
+    gpsData = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    btn.textContent = '✅ লোকেশন পাওয়া গেছে';
+    btn.classList.add('got');
+  }, () => {
+    btn.textContent = '❌ লোকেশন পাওয়া যায়নি';
+  });
+};
+
+// Modal
+window.closeModal = () => document.getElementById('modalOverlay').classList.remove('open');
+document.getElementById('fabBtn').addEventListener('click', () => document.getElementById('modalOverlay').classList.add('open'));
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === document.getElementById('modalOverlay')) closeModal(); });
+
+// Submit
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const title = document.getElementById('f_title').value.trim();
+  const description = document.getElementById('f_desc').value.trim();
+  const location = document.getElementById('f_location').value.trim();
+  const reporter = document.getElementById('f_reporter').value.trim();
+
+  if (!title || !description || !location) {
+    alert('শিরোনাম, বিবরণ ও এলাকা আবশ্যক।');
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'পাঠানো হচ্ছে...';
+  btn.disabled = true;
+
+  try {
+    let imageUrl = null;
+    if (photoFile) {
+      const formData = new FormData();
+      formData.append('file', photoFile);
+      formData.append('upload_preset', 'kf483px5');
+      formData.append('cloud_name', 'dou71pfe1');
+      const res = await fetch('https://api.cloudinary.com/v1_1/dou71pfe1/image/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      imageUrl = data.secure_url;
+    }
+
+    await addDoc(collection(db, 'alerts'), {
+      title, description, location, reporter,
+      type: selectedType, imageUrl,
+      lat: gpsData?.lat || null,
+      lng: gpsData?.lng || null,
+      createdAt: serverTimestamp()
+    });
+
+    alert('✅ সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
+    closeModal();
+    document.getElementById('f_title').value = '';
+    document.getElementById('f_desc').value = '';
+    document.getElementById('f_location').value = '';
+    document.getElementById('f_reporter').value = '';
+    document.getElementById('photoPreview').style.display = 'none';
+    gpsData = null;
+    photoFile = null;
+  } catch(e) {
+    alert('সমস্যা হয়েছে, আবার চেষ্টা করুন।');
+    console.error(e);
+  }
+
+  btn.textContent = '🚨 সতর্কতা পাঠান';
+  btn.disabled = false;
+});
+
+setTimeout(() => { document.getElementById('joaf-preloader').style.display = 'none'; }, 3000);
+</script>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
+</script>
+</body>
+</html>
