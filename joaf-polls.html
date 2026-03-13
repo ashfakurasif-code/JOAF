@@ -606,7 +606,7 @@ function claimReward() {
   const unclaimed = (CU.cycles||0) - (CU.claimedCycles||0);
   if (unclaimed <= 0) return;
   const amount = unclaimed * REWARD_AMT;
-  const msg = `🎉 অভিনন্দন ${CU.name}!\n\nআপনি ${bn(unclaimed)} চক্র সম্পন্ন করেছেন।\nমোট: ৳${bn(amount)}\n\nপুরস্কার পেতে ইমেইল করুন:\njoafforum@gmail.com\n\nবিষয়: জনরায় পুরস্কার - ${CU.phone}`;
+  const msg = `🎉 অভিনন্দন ${CU.name}!\n\nআপনি ${bn(unclaimed)} চক্র সম্পন্ন করেছেন।\nমোট: ৳${bn(amount)}\n\nপুরস্কার পেতে ইমেইল করুন:\ninfo@julyforum.com\n\nবিষয়: জনরায় পুরস্কার - ${CU.phone}`;
   alert(msg);
   // Mark as claimed
   CU.claimedCycles = CU.cycles;

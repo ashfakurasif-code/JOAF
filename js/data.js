@@ -11,7 +11,7 @@ const JOAF = {
     abbr: "JOAF",
     tagline: "দেশ আগে, দল পরে",
     tagline2: "আমরা ফিরে এসেছি। এবার ভবিষ্যৎ গড়ার দায়িত্ব নিয়েই।",
-    email: "joafforum@gmail.com",
+    email: "info@julyforum.com",
     address: "রোড-৯, দক্ষিণ বনশ্রী, ঢাকা-১২১৯",
     logo: "/logoc7c3.png",
     favicon: "/favicon.ico",
