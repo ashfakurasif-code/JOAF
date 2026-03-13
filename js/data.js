@@ -49,7 +49,7 @@ const JOAF = {
   // whatsapp: "#" মানে link এখনো নেই
   communityGroups: [
     // মূল হাব
-    { cat:"main",   name:"ঘোষণা",                       meta:"কমিউনিটিতে স্বাগতম!",           cover:"নোটিশ",              whatsapp:"https://chat.whatsapp.com/DjABAy1NNQMEtSW3wh8bXg" },
+    { cat:"main",   name:"ঘোষণা",                       meta:"কমিউনিটিতে স্বাগতম!",           cover:"নোটিশ",              whatsapp:"https://chat.whatsapp.com/LksryV0rnTQ92jHpnQi2nH" },
     { cat:"main",   name:"জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম", meta:"বাংলাদেশ — মূল আলোচনা গ্রুপ", cover:"মূল গ্রুপ",          whatsapp:"https://chat.whatsapp.com/DjABAy1NNQMEtSW3wh8bXg" },
     { cat:"main",   name:"JOAF অ্যাডমিনিস্ট্রেশন",      meta:"অ্যাডমিন/কোর টিম",              cover:"অ্যাডমিন",           whatsapp:"https://chat.whatsapp.com/D1MZlzgTWOX60VnmjjnmGG" },
     // আঞ্চলিক — বাংলাদেশ
