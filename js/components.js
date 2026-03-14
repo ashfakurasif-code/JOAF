@@ -477,7 +477,10 @@ const JOAFComponents = {
           </div>
           <div class="joaf-alert-fg">
             <label>এলাকা *</label>
-            <input type="text" id="joaf-f-location" placeholder="গ্রাম/মহল্লা, উপজেলা, জেলা">
+            <div style="position:relative">
+              <input type="text" id="joaf-f-location" placeholder="গ্রাম/মহল্লা, উপজেলা, জেলা" autocomplete="off">
+              <div id="joaf-loc-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid #90161f;border-top:none;border-radius:0 0 10px 10px;z-index:999999;max-height:180px;overflow-y:auto;"></div>
+            </div>
           </div>
           <div class="joaf-alert-fg">
             <label>আপনার নাম (ঐচ্ছিক)</label>
@@ -625,6 +628,35 @@ const JOAFComponents = {
         document.getElementById('joaf-global-alert-modal').classList.add('open');
       });
 
+      // Location suggestion for alert form
+      const alertLocInput = document.getElementById('joaf-f-location');
+      const alertLocSug = document.getElementById('joaf-loc-suggestions');
+      if (alertLocInput && alertLocSug) {
+        alertLocInput.addEventListener('input', function() {
+          const q = this.value.trim().toLowerCase();
+          if (!q || q.length < 2) { alertLocSug.style.display='none'; return; }
+          const matches = [];
+          if (window.bnSearch) {
+            // Get all keys from ALL_MAP via bn-search
+            const allMap = window._bnAllMap || {};
+            Object.entries(allMap).forEach(([en, bn]) => {
+              if (en.startsWith(q) || bn.includes(q)) matches.push(bn);
+            });
+          }
+          // Also check common locations
+          const LOCS = ['ঢাকা','চট্টগ্রাম','সিলেট','রাজশাহী','খুলনা','বরিশাল','রংপুর','ময়মনসিংহ','গাজীপুর','নারায়ণগঞ্জ','কুমিল্লা','মিরপুর','উত্তরা','মোহাম্মদপুর','ধানমন্ডি','গুলশান','বনানী','রামপুরা','মালিবাগ','যাত্রাবাড়ী','ভোলা','লালমোহন','ফরিদপুর','যশোর','বগুড়া','দিনাজপুর','পাবনা','সিরাজগঞ্জ','নাটোর','রাজশাহী সদর','খুলনা সদর','বরিশাল সদর'];
+          LOCS.forEach(loc => { if (loc.includes(this.value.trim())) matches.push(loc); });
+          const unique = [...new Set(matches)].slice(0, 8);
+          if (!unique.length) { alertLocSug.style.display='none'; return; }
+          alertLocSug.innerHTML = unique.map(m => 
+            '<div style="padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #f3f4f6;" ' +
+            'onmousedown="document.getElementById(\'joaf-f-location\').value=\''+m+'\';document.getElementById(\'joaf-loc-suggestions\').style.display=\'none\'">'+m+'</div>'
+          ).join('');
+          alertLocSug.style.display='block';
+        });
+        alertLocInput.addEventListener('blur', () => setTimeout(() => alertLocSug.style.display='none', 200));
+      }
+
       document.getElementById('joaf-global-alert-modal').addEventListener('click', e => {
         if (e.target === document.getElementById('joaf-global-alert-modal'))
           document.getElementById('joaf-global-alert-modal').classList.remove('open');
@@ -761,3 +793,16 @@ function _joafInit(){
   JOAFComponents.init(page);
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',_joafInit);}else{_joafInit();}
+
+// Auto cache-bust for dynamic JS files
+(function() {
+  const bust = Date.now();
+  const files = ['/js/bn-search.js', '/js/data.js'];
+  files.forEach(src => {
+    // Check if already loaded with bust
+    if (document.querySelector(`script[src^="${src}"]`)) return;
+    const s = document.createElement('script');
+    s.src = src + '?cb=' + bust;
+    document.head.appendChild(s);
+  });
+})();
