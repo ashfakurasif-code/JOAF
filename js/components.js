@@ -482,6 +482,7 @@ const JOAFComponents = {
     const mazeEl = document.getElementById('joaf-maze-nav');
     if (mazeEl) {
       mazeEl.outerHTML = this.renderMazeNav();
+      this.initMazeNav();
     }
 
     // Global Alert FAB + Modal — all pages
@@ -1086,6 +1087,70 @@ const JOAFComponents = {
       }
     };
     <\/script>`;
+  },
+
+  initMazeNav() {
+    if (window.joafMaze) return;
+    window.joafMaze = {
+      stack: ['home'],
+      tree: {
+        home:     {label:'🏠 হোম',           color:'#6b7280', parent:null},
+        andolon:  {label:'🔥 আন্দোলন',        color:'#dc2626', parent:'home'},
+        seva:     {label:'🆘 সেবা',           color:'#2563eb', parent:'home'},
+        shujo:    {label:'🌱 সুযোগ',          color:'#16a34a', parent:'home'},
+        joaf:     {label:'🌐 JOAF',           color:'#9333ea', parent:'home'},
+        hospital: {label:'🏥 হাসপাতাল',       color:'#0d9488', parent:'seva'},
+        legal:    {label:'⚖️ আইনি সহায়তা',   color:'#d97706', parent:'seva'},
+      },
+      go(id, isBack=false) {
+        document.querySelectorAll('.jlayer').forEach(l=>l.classList.remove('active','jback'));
+        const el = document.getElementById('jL-'+(id==='home'?'0':id));
+        if (!el) return;
+        if (isBack) el.classList.add('jback');
+        el.classList.add('active');
+        if (isBack) { this.stack.pop(); }
+        else { this.stack.push(id); }
+        this.renderBC();
+      },
+      goBack() {
+        if (this.stack.length<=1) return;
+        const prev = this.stack[this.stack.length-2];
+        this.go(prev, true);
+      },
+      goHome() {
+        this.stack=['home'];
+        document.querySelectorAll('.jlayer').forEach(l=>l.classList.remove('active','jback'));
+        const h=document.getElementById('jL-0');
+        if(h){h.classList.add('jback','active');}
+        const bc=document.getElementById('joaf-bc');
+        if(bc) bc.innerHTML='';
+      },
+      goTo(idx) {
+        const target=this.stack[idx];
+        this.stack=this.stack.slice(0,idx+1);
+        document.querySelectorAll('.jlayer').forEach(l=>l.classList.remove('active','jback'));
+        const el=document.getElementById('jL-'+(target==='home'?'0':target));
+        if(el){el.classList.add('jback','active');}
+        this.renderBC();
+      },
+      renderBC() {
+        const bc=document.getElementById('joaf-bc');
+        if (!bc) return;
+        if (this.stack.length<=1){bc.innerHTML='';return;}
+        let h=`<button class="jbc-back" onclick="joafMaze.goBack()">‹ ফিরে যান</button>`;
+        h+=`<button class="jbc-home" onclick="joafMaze.goHome()">🏠</button>`;
+        for(let i=1;i<this.stack.length;i++){
+          const n=this.tree[this.stack[i]];if(!n)continue;
+          h+=`<span class="jbc-sep">›</span>`;
+          if(i<this.stack.length-1){
+            h+=`<button class="jbc-item" style="background:${n.color}" onclick="joafMaze.goTo(${i})">${n.label}</button>`;
+          } else {
+            h+=`<span class="jbc-item jbc-cur" style="background:${n.color}">${n.label}</span>`;
+          }
+        }
+        bc.innerHTML=h;
+      }
+    };
   },
 
   renderStats() {
