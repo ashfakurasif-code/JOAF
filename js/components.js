@@ -568,9 +568,7 @@ const JOAFComponents = {
         document.body.appendChild(rkBtn);
       } else {
         // অন্য page এ — বামে FAB দেখাও
-        if (bfabEl) {
-          bfabEl.style.display = 'flex';
-          bfabEl.addEventListener('click', () => document.getElementById('joaf-blood-reg-modal').classList.add('open'));
+        if (fabEl) fabEl.addEventListener('click', () => window.location.href = '/rokto.html');
         }
       }
 
