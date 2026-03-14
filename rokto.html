@@ -128,7 +128,7 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="/js/plugins.js"></script>
 <script src="/js/data.js?v=9.11"></script>
-<script src="/js/components.js?v=9.14"></script>
+<script src="/js/components.js?v=9.15"></script>
 <script src="/js/main.js"></script>
 <script src="/js/bn-search.js?v=2.3"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
@@ -207,7 +207,7 @@ window.renderDonors = function renderDonors() {
 
   const list = document.getElementById('donorsList');
   if (!filtered.length) {
-    list.innerHTML = `<div class="empty"><i class="zmdi zmdi-account-off"></i><p>এই এলাকায় কোনো দাতা পাওয়া যায়নি<br><small>আপনি নিবন্ধন করুন!</small></p></div>`;
+    list.innerHTML = `<div class="empty"><i class="zmdi zmdi-account-off"></i><p>এই এলাকায় কোনো দাতা পাওয়া যায়নি<br><small>আপনি রক্ত নিবন্ধন করুন!</small></p></div>`;
     return;
   }
 

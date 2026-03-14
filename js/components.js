@@ -519,7 +519,7 @@ const JOAFComponents = {
       .jbr-fg input:focus,.jbr-fg select:focus{border-color:#075e55;}
       .jbr-submit{width:100%;padding:13px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
       </style>
-      <button id="joaf-blood-fab" style="display:none">🩸 নিবন্ধন করুন</button>
+      <button id="joaf-blood-fab" style="display:none">🩸 রক্ত নিবন্ধন করুন</button>
       <div id="joaf-blood-reg-modal">
         <div class="jbr-inner">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
