@@ -506,7 +506,7 @@ const JOAFComponents = {
       bloodWrap.id = 'joaf-blood-modal-wrap';
       bloodWrap.innerHTML = `
       <style>
-      #joaf-blood-fab{position:fixed!important;bottom:140px!important;left:16px!important;background:linear-gradient(135deg,#075e55,#0a7a6e)!important;color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;}
+      #joaf-blood-fab{position:fixed!important;bottom:140px!important;left:16px!important;background:linear-gradient(135deg,#075e55,#0a7a6e)!important;color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;align-items:center;gap:6px;white-space:nowrap;}
       #joaf-blood-reg-modal{display:none;position:fixed!important;inset:0!important;background:rgba(0,0,0,.6);z-index:99999!important;align-items:flex-end;}
       #joaf-blood-reg-modal.open{display:flex!important;}
       .jbr-inner{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
