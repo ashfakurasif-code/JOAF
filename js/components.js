@@ -234,7 +234,7 @@ const JOAFComponents = {
   },
 
   // ── Mobile nav ───────────────────────────────────────────
-  initMobileNav() {
+  initMobileNav() { window._joafNavInited = true;
     const ham=document.getElementById('joafHamBtn');
     const panel=document.getElementById('joafMNavPanel');
     const backdrop=document.getElementById('joafMNavBackdrop');

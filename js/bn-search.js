@@ -86,13 +86,24 @@ const ALL_MAP = {...DISTRICTS, ...INTL};
 
 // Check if query matches a continent group
 function continentMatch(query, groupName) {
+  if (!groupName) return false;
   const gName = groupName.toLowerCase();
+  const q = query.toLowerCase().trim();
+  
   for (const [group, countries] of Object.entries(CONTINENT_MAP)) {
-    if (gName.includes(group.replace('joaf ','')) || gName === group) {
-      if (countries.some(c => c.startsWith(query) || query.startsWith(c) || c === query)) {
-        return true;
-      }
-    }
+    const groupKey = group.replace('joaf ','');
+    // Check if this group matches the groupName
+    const isMatch = gName.includes(groupKey) || gName.includes(group);
+    if (!isMatch) continue;
+    
+    // Check if query matches any country in this group
+    if (countries.some(country => {
+      return country === q || 
+             country.startsWith(q) || 
+             q.startsWith(country) ||
+             country.includes(q) ||
+             q.includes(country);
+    })) return true;
   }
   return false;
 }

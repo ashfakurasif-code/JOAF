@@ -52,6 +52,11 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
 .search-box { padding: 0 16px 8px; }
 .search-box input { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 50px; font-size: 14px; font-family: inherit; outline: none; }
 .search-box input:focus { border-color: var(--red); }
+.search-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 2px solid var(--red); border-top: none; border-radius: 0 0 12px 12px; z-index: 100; max-height: 200px; overflow-y: auto; display: none; }
+.search-suggestions.show { display: block; }
+.suggestion-item { padding: 10px 16px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f3f4f6; }
+.suggestion-item:hover { background: #fff5f5; color: var(--red); }
+.search-wrap { position: relative; }
 </style>
 </head>
 <body data-page="home">
@@ -95,7 +100,10 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
   </select>
 </div>
 <div class="search-box">
-  <input type="text" id="searchInput" placeholder="নাম বা এলাকা দিয়ে খুঁজুন...">
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="নাম বা এলাকা দিয়ে খুঁজুন..." autocomplete="off">
+    <div class="search-suggestions" id="searchSuggestions"></div>
+  </div>
 </div>
 
 <!-- Donors list -->
@@ -264,6 +272,45 @@ document.getElementById('bloodFilter').addEventListener('click', e => {
   renderDonors();
 });
 
+// Search suggestions
+const SUGGESTIONS_BD = ['ঢাকা','চট্টগ্রাম','সিলেট','রাজশাহী','খুলনা','বরিশাল','রংপুর','ময়মনসিংহ','কুমিল্লা','নারায়ণগঞ্জ','গাজীপুর','টাঙ্গাইল','ফরিদপুর','যশোর','নোয়াখালী','বগুড়া','দিনাজপুর','পাবনা','নরসিংদী','মানিকগঞ্জ','মুন্সীগঞ্জ','শরীয়তপুর','মাদারীপুর','গোপালগঞ্জ','কিশোরগঞ্জ','নেত্রকোনা','জামালপুর','শেরপুর','ব্রাহ্মণবাড়িয়া','চাঁদপুর','ফেনী','লক্ষ্মীপুর','কক্সবাজার','বান্দরবান','রাঙ্গামাটি','খাগড়াছড়ি','হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','নওগাঁ','চাঁপাইনবাবগঞ্জ','নাটোর','সিরাজগঞ্জ','জয়পুরহাট','সাতক্ষীরা','ঝিনাইদহ','মাগুরা','নড়াইল','বাগেরহাট','মেহেরপুর','চুয়াডাঙ্গা','কুষ্টিয়া','ঝালকাঠি','পটুয়াখালী','পিরোজপুর','ভোলা','বরগুনা','লালমনিরহাট','নীলফামারী','গাইবান্ধা','কুড়িগ্রাম','পঞ্চগড়','ঠাকুরগাঁও'];
+
+const searchInput = document.getElementById('searchInput');
+const suggestBox = document.getElementById('searchSuggestions');
+
+searchInput.addEventListener('input', function() {
+  const q = this.value.trim();
+  renderDonors();
+  if (!q) { suggestBox.classList.remove('show'); return; }
+  
+  // Find matching suggestions from donors + districts
+  const donorNames = allDonors.map(d => d.name).filter(Boolean);
+  const donorAreas = allDonors.map(d => d.area).filter(Boolean);
+  const all = [...new Set([...SUGGESTIONS_BD, ...donorNames, ...donorAreas])];
+  
+  const matches = all.filter(s => 
+    s.toLowerCase().includes(q.toLowerCase()) || 
+    (window.bnSearch && window.bnSearch(q, s))
+  ).slice(0, 6);
+  
+  if (!matches.length) { suggestBox.classList.remove('show'); return; }
+  
+  suggestBox.innerHTML = matches.map(m => 
+    `<div class="suggestion-item" onclick="selectSuggestion('${m}')">${m}</div>`
+  ).join('');
+  suggestBox.classList.add('show');
+});
+
+window.selectSuggestion = function(val) {
+  searchInput.value = val;
+  suggestBox.classList.remove('show');
+  renderDonors();
+};
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) suggestBox.classList.remove('show');
+});
+
 document.getElementById('districtFilter').addEventListener('change', renderDonors);
 document.getElementById('searchInput').addEventListener('input', renderDonors);
 
@@ -310,12 +357,14 @@ loadDonors();
 </script>
 
 <script>
-// Init JOAF Components
-window.addEventListener('load', function() {
+// Init JOAF — called immediately since scripts are before this
+(function tryInit() {
   if (typeof JOAFComponents !== 'undefined') {
     JOAFComponents.init('home');
+  } else {
+    setTimeout(tryInit, 50);
   }
-});
+})();
 </script>
 
 <script>

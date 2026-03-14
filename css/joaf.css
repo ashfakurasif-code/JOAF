@@ -78,7 +78,7 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .joaf-header-main{padding:0;}
 .joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;}
 .joaf-header-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.joaf-logo img{max-width:95px;height:auto;display:block;padding:4px 0;transition:transform .35s var(--tr-spring);}
+.joaf-logo img{max-width:95px;height:auto;display:block;padding:4px 0;}
 .joaf-logo:hover img{transform:scale(1.06);}
 
 /* DESKTOP NAV */
@@ -740,9 +740,9 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 
 /* Logo pulse */
 .joaf-logo img {
-  animation: logo-pulse 2.5s ease-in-out infinite;
+  animation: logo-pulse 2.5s ease-in-out infinite !important;
 }
 @keyframes logo-pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.07); }
+  50% { transform: scale(1.08); }
 }
