@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ডাক্তার খুঁজুন — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="hospital">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.doc-hero{background:linear-gradient(135deg,#134e4a,#0d9488);padding:36px 0 24px;color:#fff;text-align:center;}
+.doc-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.search-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.search-row input,.search-row select{padding:11px 14px;border:2px solid #e5e7eb;border-radius:50px;font-size:13px;font-family:inherit;outline:none;background:#fff;}
+.search-row input{flex:1;min-width:160px;}
+.search-row input:focus,.search-row select:focus{border-color:#0d9488;}
+.spec-tabs{display:flex;gap:7px;overflow-x:auto;padding:6px 0 10px;scrollbar-width:none;}
+.spec-tab{flex-shrink:0;padding:6px 13px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.spec-tab.active{background:#0d9488;color:#fff;border-color:#0d9488;}
+.doc-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;border:1.5px solid #f0f0f0;display:flex;gap:12px;}
+.doc-avatar{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#e0f7f4,#b2dfdb);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.doc-name{font-size:14px;font-weight:900;color:#1a1a2e;margin-bottom:2px;}
+.doc-spec{font-size:12px;color:#0d9488;font-weight:700;margin-bottom:3px;}
+.doc-hosp{font-size:11px;color:#6b7280;margin-bottom:5px;}
+.doc-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.doc-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px;background:#f0fdf4;color:#166534;}
+.doc-tag.avail{background:#dcfce7;color:#166534;}
+.doc-tag.busy{background:#fee2e2;color:#991b1b;}
+.doc-actions{display:flex;gap:7px;margin-top:10px;}
+.doc-btn{flex:1;padding:8px;border-radius:50px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.doc-call{background:#0d9488;color:#fff;}
+.doc-appt{background:#f0fdf4;color:#065f46;border:1.5px solid #86efac;}
+</style>
+<div class="doc-hero"><div class="container">
+  <h1>👨‍⚕️ ডাক্তার খুঁজুন</h1>
+  <p>বিশেষজ্ঞ চিকিৎসক — আপনার জেলায়</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="search-row">
+    <input id="docSearch" placeholder="ডাক্তারের নাম বা বিশেষত্ব..." oninput="filterDocs()">
+    <select id="distFilter" onchange="filterDocs()">
+      <option value="">সব জেলা</option>
+      <option>ঢাকা</option><option>চট্টগ্রাম</option><option>রাজশাহী</option>
+      <option>খুলনা</option><option>সিলেট</option><option>বরিশাল</option>
+    </select>
+  </div>
+  <div class="spec-tabs" id="specTabs"></div>
+  <div id="docList"></div>
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const DOCS=[
+  {name:'ডা. মো. রফিকুল ইসলাম',spec:'হৃদরোগ বিশেষজ্ঞ',hosp:'ঢাকা মেডিকেল কলেজ',dist:'ঢাকা',phone:'01711-000001',icon:'❤️',avail:true,specs:['হৃদরোগ']},
+  {name:'ডা. ফারহানা বেগম',spec:'শিশু রোগ বিশেষজ্ঞ',hosp:'শিশু হাসপাতাল',dist:'ঢাকা',phone:'01712-000002',icon:'👶',avail:true,specs:['শিশু রোগ']},
+  {name:'ডা. আবদুল করিম',spec:'অর্থোপেডিক সার্জন',hosp:'স্কয়ার হাসপাতাল',dist:'ঢাকা',phone:'01713-000003',icon:'🦴',avail:false,specs:['হাড় ও জয়েন্ট']},
+  {name:'ডা. সুমাইয়া খানম',spec:'গাইনি ও প্রসূতি',hosp:'ঢাকা মেডিকেল',dist:'ঢাকা',phone:'01714-000004',icon:'👩‍⚕️',avail:true,specs:['গাইনি']},
+  {name:'ডা. কামরুল হাসান',spec:'নিউরোলজিস্ট',hosp:'BSMMU',dist:'ঢাকা',phone:'01715-000005',icon:'🧠',avail:true,specs:['নিউরোলজি']},
+  {name:'ডা. রেজাউল করিম',spec:'চক্ষু বিশেষজ্ঞ',hosp:'চট্টগ্রাম মেডিকেল',dist:'চট্টগ্রাম',phone:'01716-000006',icon:'👁️',avail:true,specs:['চক্ষু']},
+  {name:'ডা. নাসরিন আক্তার',spec:'চর্মরোগ বিশেষজ্ঞ',hosp:'রাজশাহী মেডিকেল',dist:'রাজশাহী',phone:'01717-000007',icon:'🧬',avail:false,specs:['চর্মরোগ']},
+  {name:'ডা. শফিকুল ইসলাম',spec:'দন্তচিকিৎসক',hosp:'BIRDEM',dist:'ঢাকা',phone:'01718-000008',icon:'🦷',avail:true,specs:['দাঁত']},
+  {name:'ডা. মাহমুদা বেগম',spec:'ডায়াবেটিস বিশেষজ্ঞ',hosp:'BIRDEM',dist:'ঢাকা',phone:'01719-000009',icon:'💉',avail:true,specs:['ডায়াবেটিস']},
+  {name:'ডা. তানভীর আহমেদ',spec:'কিডনি রোগ বিশেষজ্ঞ',hosp:'ন্যাশনাল কিডনি',dist:'ঢাকা',phone:'01720-000010',icon:'🫘',avail:true,specs:['কিডনি']},
+];
+const SPECS=['সব','হৃদরোগ','শিশু রোগ','গাইনি','নিউরোলজি','চক্ষু','হাড় ও জয়েন্ট','চর্মরোগ','দাঁত','ডায়াবেটিস','কিডনি'];
+let activeSpec='সব';
+
+function renderTabs(){
+  document.getElementById('specTabs').innerHTML=SPECS.map(s=>
+    `<button class="spec-tab${s===activeSpec?' active':''}" onclick="setSpec('${s}')">${s}</button>`
+  ).join('');
+}
+function setSpec(s){activeSpec=s;filterDocs();}
+function filterDocs(){
+  renderTabs();
+  const q=document.getElementById('docSearch').value.toLowerCase();
+  const d=document.getElementById('distFilter').value;
+  const filtered=DOCS.filter(doc=>{
+    const mQ=!q||doc.name.toLowerCase().includes(q)||doc.spec.toLowerCase().includes(q);
+    const mD=!d||doc.dist===d;
+    const mS=activeSpec==='সব'||doc.specs.includes(activeSpec);
+    return mQ&&mD&&mS;
+  });
+  document.getElementById('docList').innerHTML=filtered.length?filtered.map(doc=>`
+    <div class="doc-card">
+      <div class="doc-avatar">${doc.icon}</div>
+      <div style="flex:1">
+        <div class="doc-name">${doc.name}</div>
+        <div class="doc-spec">${doc.spec}</div>
+        <div class="doc-hosp">🏥 ${doc.hosp} · 📍 ${doc.dist}</div>
+        <div class="doc-tags"><span class="doc-tag ${doc.avail?'avail':'busy'}">${doc.avail?'✅ পাওয়া যাচ্ছে':'❌ ব্যস্ত'}</span></div>
+        <div class="doc-actions">
+          <button class="doc-btn doc-call" onclick="location.href='tel:${doc.phone}'">📞 কল করুন</button>
+          <button class="doc-btn doc-appt" onclick="alert('অ্যাপয়েন্টমেন্ট সিস্টেম শীঘ্রই আসছে')">📅 অ্যাপয়েন্টমেন্ট</button>
+        </div>
+      </div>
+    </div>`).join(''):'<div style="text-align:center;padding:40px;color:#9ca3af;">কোনো ডাক্তার পাওয়া যায়নি</div>';
+}
+renderTabs();filterDocs();
+</script></body></html>

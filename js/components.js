@@ -924,10 +924,12 @@ const JOAFComponents = {
             <div class="jlayer" id="jL-andolon">
               <div class="jsec-head jc-red"><span>🔥</span><div><div class="jsec-name">আন্দোলন</div><div class="jsec-sub">জুলাই চেতনার কেন্দ্র</div></div></div>
               <div class="jgrid-3">
-                <a href="/joaf-polls.html" class="jstile jbr-red"><span class="jsi">✊</span><span class="jsn">জুলাই যোদ্ধা</span></a>
-                <a href="/joaf-polls.html" class="jstile jbr-red"><span class="jsi">🏛️</span><span class="jsn">নেতা ট্র্যাকার</span></a>
-                <a href="/joaf-polls.html" class="jstile jbr-red"><span class="jsi">🚫</span><span class="jsn">দুর্নীতি রিপোর্ট</span></a>
+                <a href="/july-warriors.html" class="jstile jbr-red"><span class="jsi">✊</span><span class="jsn">জুলাই যোদ্ধা</span></a>
+                <a href="/leader-tracker.html" class="jstile jbr-red"><span class="jsi">🏛️</span><span class="jsn">নেতা ট্র্যাকার</span></a>
+                <a href="/legal.html" class="jstile jbr-red"><span class="jsi">🚫</span><span class="jsn">দুর্নীতি রিপোর্ট</span></a>
                 <a href="/joaf-polls.html" class="jstile jbr-red"><span class="jsi">🗳️</span><span class="jsn">জনমত জরিপ</span></a>
+                <a href="/july-family.html" class="jstile jbr-red"><span class="jsi">🩹</span><span class="jsn">পরিবার সহায়</span></a>
+                <a href="/voter.html" class="jstile jbr-red"><span class="jsi">🗳️</span><span class="jsn">ভোটার তথ্য</span></a>
               </div>
             </div>
 
@@ -939,8 +941,12 @@ const JOAFComponents = {
                 <a href="/alert.html" class="jstile jbr-blue"><span class="jsi">🚨</span><span class="jsn">জরুরি সতর্কতা</span></a>
                 <a href="/bajar.html" class="jstile jbr-blue"><span class="jsi">🛒</span><span class="jsn">বাজার দর</span></a>
                 <a href="/weather.html" class="jstile jbr-blue"><span class="jsi">🌦️</span><span class="jsn">আবহাওয়া</span></a>
-                <div class="jstile jbr-teal" onclick="joafMaze.go('hospital')" ondblclick="location.href='/hospital.html'"><span class="jsi">🏥</span><span class="jsn">হাসপাতাল</span><span class="jsa">›</span></div>
-                <div class="jstile jbr-amber" onclick="joafMaze.go('legal')" ondblclick="location.href='/legal.html'"><span class="jsi">⚖️</span><span class="jsn">আইনি সহায়তা</span><span class="jsa">›</span></div>
+                <a href="/hospital.html" class="jstile jbr-teal"><span class="jsi">🏥</span><span class="jsn">হাসপাতাল</span></a>
+                <a href="/doctor.html" class="jstile jbr-teal"><span class="jsi">👨‍⚕️</span><span class="jsn">ডাক্তার</span></a>
+                <a href="/medicine.html" class="jstile jbr-blue"><span class="jsi">💊</span><span class="jsn">ওষুধের দাম</span></a>
+                <a href="/legal.html" class="jstile jbr-amber"><span class="jsi">⚖️</span><span class="jsn">আইনি সহায়তা</span></a>
+                <a href="/food-aid.html" class="jstile jbr-amber"><span class="jsi">🍱</span><span class="jsn">খাদ্য সহায়তা</span></a>
+                <a href="/july-family.html" class="jstile jbr-red"><span class="jsi">🩹</span><span class="jsn">জুলাই পরিবার</span></a>
               </div>
             </div>
 
@@ -971,9 +977,9 @@ const JOAFComponents = {
                 <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">💼</span><span class="jsn">চাকরি</span></a>
                 <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">🎓</span><span class="jsn">বৃত্তি</span></a>
                 <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">🔧</span><span class="jsn">কারিগর</span></a>
-                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">🌾</span><span class="jsn">কৃষি তথ্য</span></a>
-                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">👩‍💼</span><span class="jsn">নারী উদ্যোক্তা</span></a>
-                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">🚀</span><span class="jsn">যুব উদ্যোক্তা</span></a>
+                <a href="/agriculture.html" class="jstile jbr-green"><span class="jsi">🌾</span><span class="jsn">কৃষি তথ্য</span></a>
+                <a href="/women-entrepreneur.html" class="jstile jbr-green"><span class="jsi">👩‍💼</span><span class="jsn">নারী উদ্যোক্তা</span></a>
+                <a href="/youth-startup.html" class="jstile jbr-green"><span class="jsi">🚀</span><span class="jsn">যুব উদ্যোক্তা</span></a>
               </div>
             </div>
 
@@ -985,6 +991,10 @@ const JOAFComponents = {
                 <a href="/news.html" class="jstile jbr-purple"><span class="jsi">📰</span><span class="jsn">সংবাদ</span></a>
                 <a href="/events.html" class="jstile jbr-purple"><span class="jsi">📅</span><span class="jsn">অনুষ্ঠান</span></a>
                 <a href="/joaf-polls.html" class="jstile jbr-purple"><span class="jsi">🗳️</span><span class="jsn">জনমত</span></a>
+                <a href="/july-warriors.html" class="jstile jbr-purple"><span class="jsi">✊</span><span class="jsn">জুলাই যোদ্ধা</span></a>
+                <a href="/leader-tracker.html" class="jstile jbr-purple"><span class="jsi">🏛️</span><span class="jsn">নেতা ট্র্যাকার</span></a>
+                <a href="/live.html" class="jstile jbr-purple"><span class="jsi">📡</span><span class="jsn">লাইভ</span></a>
+                <a href="/forum.html" class="jstile jbr-purple"><span class="jsi">💬</span><span class="jsn">ফোরাম</span></a>
                 <a href="/membership.html" class="jstile jbr-purple"><span class="jsi">🤝</span><span class="jsn">যোগ দিন</span></a>
                 <a href="/donate.html" class="jstile jbr-purple"><span class="jsi">💚</span><span class="jsn">সহযোগিতা</span></a>
               </div>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ভোটার তথ্য — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="andolon">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.voter-hero{background:linear-gradient(135deg,#1e3a5f,#1d4ed8);padding:36px 0 24px;color:#fff;text-align:center;}
+.voter-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.right-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:14px;}
+.right-card h4{font-size:15px;font-weight:900;margin-bottom:14px;color:#1a1a2e;display:flex;align-items:center;gap:8px;}
+.right-item{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;}
+.right-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.right-text{font-size:13px;color:#374151;line-height:1.6;}
+.right-text strong{color:#1d4ed8;}
+.check-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:14px;padding:16px;margin-bottom:14px;border:1.5px solid #93c5fd;}
+.check-card h4{font-size:14px;font-weight:800;color:#1e40af;margin-bottom:10px;}
+.f-inp{width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;margin-bottom:10px;outline:none;box-sizing:border-box;}
+.f-inp:focus{border-color:#1d4ed8;}
+.f-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1e3a5f,#1d4ed8);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;}
+.watch-card{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px;margin-bottom:14px;border:1.5px solid #fbbf24;}
+.watch-card h4{font-size:14px;font-weight:800;color:#92400e;margin-bottom:10px;}
+.watch-item{display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:#78350f;line-height:1.5;}
+.nid-steps{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.07);}
+.nid-steps h4{font-size:14px;font-weight:800;margin-bottom:12px;color:#1a1a2e;}
+.nid-step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+.nid-num{width:26px;height:26px;border-radius:50%;background:#1d4ed8;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;}
+.nid-text{font-size:12px;color:#374151;line-height:1.5;padding-top:4px;}
+</style>
+<div class="voter-hero"><div class="container">
+  <h1>🗳️ ভোটার তথ্য ও অধিকার</h1>
+  <p>আপনার ভোটাধিকার সম্পর্কে জানুন</p>
+</div></div>
+<section class="section"><div class="container">
+
+  <div class="check-card">
+    <h4>🔍 ভোটার তালিকায় নাম যাচাই করুন</h4>
+    <input class="f-inp" id="nidNum" placeholder="জাতীয় পরিচয়পত্র নম্বর">
+    <input class="f-inp" id="dob" placeholder="জন্ম তারিখ (YYYY-MM-DD)" type="date">
+    <button class="f-btn" onclick="window.open('https://services.nidw.gov.bd/voter_center','_blank')">🔍 অনুসন্ধান করুন (EC Website)</button>
+  </div>
+
+  <div class="right-card">
+    <h4>✊ আপনার ভোটাধিকার</h4>
+    <div class="right-item"><div class="right-icon">🗳️</div><div class="right-text"><strong>স্বাধীনভাবে ভোট দেওয়ার অধিকার</strong> — কেউ আপনাকে ভোট দিতে বাধ্য করতে পারবে না বা আটকাতে পারবে না।</div></div>
+    <div class="right-item"><div class="right-icon">🤫</div><div class="right-text"><strong>গোপন ব্যালটের অধিকার</strong> — আপনি কাকে ভোট দিয়েছেন তা কেউ জানতে পারবে না।</div></div>
+    <div class="right-item"><div class="right-icon">⚖️</div><div class="right-text"><strong>নিরপেক্ষ নির্বাচনের অধিকার</strong> — অভিযোগ থাকলে নির্বাচন কমিশনে জানান।</div></div>
+    <div class="right-item"><div class="right-icon">📋</div><div class="right-text"><strong>প্রার্থীর তথ্য জানার অধিকার</strong> — হলফনামা দেখার অধিকার সবার আছে।</div></div>
+  </div>
+
+  <div class="watch-card">
+    <h4>⚠️ ভোটে কারচুপি রুখুন</h4>
+    <div class="watch-item"><span>🔴</span><span>কেন্দ্রে ভিড় করা বা ভোটার ভয় দেখানো — অবিলম্বে প্রিজাইডিং অফিসারকে জানান</span></div>
+    <div class="watch-item"><span>🔴</span><span>ব্যালট বাক্স ছিনতাই — ৯৯৯ নম্বরে কল করুন</span></div>
+    <div class="watch-item"><span>🔴</span><span>ভোট কেনা-বেচা — নির্বাচন কমিশনে অভিযোগ করুন: ১০০</span></div>
+    <div class="watch-item"><span>📞</span><span>নির্বাচন কমিশন হেল্পলাইন: <strong>100</strong></span></div>
+  </div>
+
+  <div class="nid-steps">
+    <h4>📝 ভোটার নিবন্ধন করবেন কীভাবে?</h4>
+    <div class="nid-step"><div class="nid-num">১</div><div class="nid-text">বয়স ১৮ বছর পূর্ণ হলে নিবন্ধনের যোগ্য</div></div>
+    <div class="nid-step"><div class="nid-num">২</div><div class="nid-text">নিকটস্থ উপজেলা নির্বাচন অফিসে যান অথবা services.nidw.gov.bd-তে অনলাইনে আবেদন করুন</div></div>
+    <div class="nid-step"><div class="nid-num">৩</div><div class="nid-text">জন্ম নিবন্ধন, নাগরিকত্বের প্রমাণ ও ছবি সাথে নিন</div></div>
+    <div class="nid-step"><div class="nid-num">৪</div><div class="nid-text">বায়োমেট্রিক তথ্য (আঙুলের ছাপ ও ছবি) দিন</div></div>
+    <div class="nid-step"><div class="nid-num">৫</div><div class="nid-text">NID Card পাবেন ও ভোটার তালিকায় নাম উঠবে</div></div>
+  </div>
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+</body></html>

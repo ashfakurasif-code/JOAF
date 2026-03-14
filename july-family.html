@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>জুলাই পরিবার সহায় — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="andolon">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.jf-hero{background:linear-gradient(135deg,#7f1d1d,#dc2626);padding:40px 0 30px;color:#fff;text-align:center;}
+.jf-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;margin-bottom:8px;}
+.jf-hero p{font-size:14px;opacity:.85;line-height:1.6;}
+.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;}
+.stat-box{background:#fff;border-radius:14px;padding:14px 10px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.07);}
+.stat-num{font-size:22px;font-weight:900;color:#dc2626;display:block;}
+.stat-lbl{font-size:11px;color:#6b7280;margin-top:3px;}
+.family-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;border-left:4px solid #dc2626;}
+.fam-name{font-size:14px;font-weight:900;color:#1a1a2e;margin-bottom:3px;}
+.fam-dist{font-size:12px;color:#dc2626;font-weight:700;margin-bottom:5px;}
+.fam-story{font-size:12px;color:#374151;line-height:1.6;margin-bottom:10px;}
+.fam-status{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;}
+.status-helped{background:#dcfce7;color:#166534;}
+.status-need{background:#fee2e2;color:#991b1b;}
+.help-btn{padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:50px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.register-form{background:#fff;border-radius:18px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+.register-form h3{font-size:16px;font-weight:900;margin-bottom:14px;color:#1a1a2e;}
+.f-inp{width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;margin-bottom:10px;outline:none;box-sizing:border-box;}
+.f-inp:focus{border-color:#dc2626;}
+.f-btn{width:100%;padding:13px;background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;}
+.tab-bar{display:flex;gap:0;background:#f3f4f6;border-radius:50px;padding:4px;margin-bottom:18px;}
+.tab-btn{flex:1;padding:10px;border:none;border-radius:50px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#6b7280;transition:.2s;}
+.tab-btn.active{background:#fff;color:#dc2626;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+</style>
+<div class="jf-hero"><div class="container">
+  <h1>🩹 জুলাই পরিবার সহায়</h1>
+  <p>আন্দোলনে শহীদ ও আহতদের পরিবারের পাশে<br>JOAF সবসময় আছে</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="stat-strip">
+    <div class="stat-box"><span class="stat-num">৮৫৪</span><div class="stat-lbl">শহীদ পরিবার</div></div>
+    <div class="stat-box"><span class="stat-num">৪২০+</span><div class="stat-lbl">আহত যোদ্ধা</div></div>
+    <div class="stat-box"><span class="stat-num">৩১২</span><div class="stat-lbl">সহায়তা পেয়েছেন</div></div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('families',this)">👨‍👩‍👧 পরিবার তালিকা</button>
+    <button class="tab-btn" onclick="setTab('register',this)">📝 নিবন্ধন</button>
+    <button class="tab-btn" onclick="setTab('help',this)">❤️ সহায়তা করুন</button>
+  </div>
+  <div id="tab-families">
+    <div id="familyList"></div>
+  </div>
+  <div id="tab-register" style="display:none">
+    <div class="register-form">
+      <h3>📝 পরিবার নিবন্ধন</h3>
+      <input class="f-inp" placeholder="শহীদ/আহতের নাম">
+      <input class="f-inp" placeholder="পরিবারের যোগাযোগ নম্বর">
+      <select class="f-inp"><option>জেলা</option><option>ঢাকা</option><option>চট্টগ্রাম</option><option>রাজশাহী</option><option>খুলনা</option><option>সিলেট</option><option>বরিশাল</option><option>রংপুর</option><option>ময়মনসিংহ</option></select>
+      <select class="f-inp"><option>ধরন</option><option>শহীদ পরিবার</option><option>আহত যোদ্ধা</option></select>
+      <textarea class="f-inp" rows="3" placeholder="সংক্ষিপ্ত বিবরণ"></textarea>
+      <button class="f-btn" onclick="alert('নিবন্ধন সম্পন্ন হয়েছে। আমরা যাচাই করে যোগাযোগ করব।')">📤 নিবন্ধন করুন</button>
+    </div>
+  </div>
+  <div id="tab-help" style="display:none">
+    <div class="register-form">
+      <h3>❤️ সহায়তার হাত বাড়ান</h3>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px;line-height:1.7;">জুলাই আন্দোলনে যারা সর্বোচ্চ ত্যাগ করেছেন তাদের পরিবারের পাশে দাঁড়ান।</p>
+      <select class="f-inp"><option>সহায়তার ধরন</option><option>আর্থিক সহায়তা</option><option>চিকিৎসা সহায়তা</option><option>শিক্ষা বৃত্তি</option><option>কর্মসংস্থান</option></select>
+      <input class="f-inp" placeholder="আপনার নাম ও নম্বর">
+      <button class="f-btn" style="background:linear-gradient(135deg,#14532d,#16a34a);" onclick="window.location.href='/donate.html'">💚 সহযোগিতা পেজে যান</button>
+    </div>
+  </div>
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const FAMILIES=[
+  {name:'আবু সাঈদের পরিবার',dist:'রংপুর',story:'রংপুরে পুলিশের গুলিতে শহীদ আবু সাঈদের পরিবার সহায়তার অপেক্ষায়।',status:'need'},
+  {name:'মুগ্ধের পরিবার',dist:'ঢাকা',story:'জুলাই আন্দোলনে শহীদ মুগ্ধের পরিবারকে JOAF আর্থিক সহায়তা প্রদান করেছে।',status:'helped'},
+  {name:'ফারুক হোসেনের পরিবার',dist:'চট্টগ্রাম',story:'আন্দোলনে গুলিবিদ্ধ হয়ে পঙ্গু ফারুক চিকিৎসার খরচ বহন করতে পারছেন না।',status:'need'},
+  {name:'রিয়া গোমেজের পরিবার',dist:'ঢাকা',story:'শহীদ রিয়ার পরিবারকে বৃত্তি প্রদানের ব্যবস্থা করা হয়েছে।',status:'helped'},
+];
+document.getElementById('familyList').innerHTML=FAMILIES.map(f=>`
+  <div class="family-card">
+    <div class="fam-name">${f.name}</div>
+    <div class="fam-dist">📍 ${f.dist}</div>
+    <div class="fam-story">${f.story}</div>
+    <span class="fam-status ${f.status==='helped'?'status-helped':'status-need'}">${f.status==='helped'?'✅ সহায়তা পেয়েছেন':'🙏 সহায়তা প্রয়োজন'}</span>
+    ${f.status==='need'?'<br><button class="help-btn" style="margin-top:8px;" onclick="document.querySelectorAll(\'.tab-btn\')[2].click();setTab(\'help\',document.querySelectorAll(\'.tab-btn\')[2])">❤️ সহায়তা করুন</button>':''}
+  </div>`).join('');
+function setTab(tab,btn){
+  ['families','register','help'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script></body></html>

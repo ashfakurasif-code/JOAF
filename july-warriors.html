@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>জুলাই যোদ্ধা — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="andolon">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.jw-hero{background:linear-gradient(135deg,#7f1d1d,#dc2626);padding:40px 0 30px;color:#fff;text-align:center;}
+.jw-hero h1{font-size:clamp(1.5rem,4vw,2.2rem);font-weight:900;}
+.jw-hero p{font-size:14px;opacity:.85;margin-top:8px;line-height:1.6;}
+.search-row{display:flex;gap:8px;margin-bottom:14px;}
+.search-row input,.search-row select{padding:11px 14px;border:2px solid #e5e7eb;border-radius:50px;font-size:13px;font-family:inherit;outline:none;background:#fff;}
+.search-row input{flex:1;}
+.search-row input:focus,.search-row select:focus{border-color:#dc2626;}
+.warrior-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;display:flex;gap:14px;border:1.5px solid #f0f0f0;}
+.warrior-avatar{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#fee2e2,#fecaca);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.warrior-name{font-size:15px;font-weight:900;color:#1a1a2e;margin-bottom:3px;}
+.warrior-role{font-size:12px;color:#dc2626;font-weight:700;margin-bottom:4px;}
+.warrior-dist{font-size:11px;color:#6b7280;margin-bottom:6px;}
+.warrior-story{font-size:12px;color:#374151;line-height:1.5;}
+.warrior-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;margin-top:6px;}
+.badge-shahid{background:#fee2e2;color:#991b1b;}
+.badge-ahat{background:#fff7ed;color:#c2410c;}
+.badge-active{background:#dcfce7;color:#166534;}
+.register-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 20px rgba(0,0,0,.1);margin-top:20px;}
+.register-card h3{font-size:16px;font-weight:900;margin-bottom:14px;color:#1a1a2e;}
+.f-inp{width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;margin-bottom:10px;outline:none;box-sizing:border-box;}
+.f-inp:focus{border-color:#dc2626;}
+.f-btn{width:100%;padding:13px;background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;}
+.tab-bar{display:flex;gap:0;background:#f3f4f6;border-radius:50px;padding:4px;margin-bottom:18px;}
+.tab-btn{flex:1;padding:10px;border:none;border-radius:50px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#6b7280;transition:.2s;}
+.tab-btn.active{background:#fff;color:#dc2626;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.counter-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.ctr-box{background:#fff;border-radius:14px;padding:14px 10px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.07);}
+.ctr-num{font-size:20px;font-weight:900;color:#dc2626;display:block;}
+.ctr-lbl{font-size:10px;color:#6b7280;margin-top:2px;}
+</style>
+<div class="jw-hero"><div class="container">
+  <h1>✊ জুলাই যোদ্ধা</h1>
+  <p>যারা দেশের জন্য লড়াই করেছেন<br>তাদের গল্প চিরকাল বেঁচে থাকবে</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="counter-strip">
+    <div class="ctr-box"><span class="ctr-num">৮৫৪</span><div class="ctr-lbl">শহীদ</div></div>
+    <div class="ctr-box"><span class="ctr-num">৪,৫০০+</span><div class="ctr-lbl">আহত</div></div>
+    <div class="ctr-box"><span class="ctr-num">৩৬</span><div class="ctr-lbl">দেশ</div></div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('directory',this)">📋 Directory</button>
+    <button class="tab-btn" onclick="setTab('stories',this)">📖 গল্প</button>
+    <button class="tab-btn" onclick="setTab('register',this)">📝 নিবন্ধন</button>
+  </div>
+  <div id="tab-directory">
+    <div class="search-row">
+      <input id="wSearch" placeholder="নাম বা জেলা..." oninput="filterWarriors()">
+      <select id="wFilter" onchange="filterWarriors()">
+        <option value="">সব</option>
+        <option value="shahid">শহীদ</option>
+        <option value="ahat">আহত</option>
+        <option value="active">সক্রিয়</option>
+      </select>
+    </div>
+    <div id="warriorList"></div>
+  </div>
+  <div id="tab-stories" style="display:none">
+    <div id="storyList"></div>
+  </div>
+  <div id="tab-register" style="display:none">
+    <div class="register-card">
+      <h3>📝 জুলাই যোদ্ধা নিবন্ধন</h3>
+      <input class="f-inp" placeholder="পূর্ণ নাম">
+      <input class="f-inp" placeholder="মোবাইল নম্বর">
+      <select class="f-inp"><option>জেলা বেছে নিন</option><option>ঢাকা</option><option>চট্টগ্রাম</option><option>রাজশাহী</option><option>খুলনা</option><option>সিলেট</option><option>বরিশাল</option><option>রংপুর</option><option>ময়মনসিংহ</option></select>
+      <select class="f-inp"><option>ভূমিকা</option><option>শহীদ পরিবার</option><option>আহত যোদ্ধা</option><option>সক্রিয় অংশগ্রহণকারী</option><option>সমর্থনকারী</option></select>
+      <textarea class="f-inp" rows="4" placeholder="আপনার/পরিবারের জুলাই আন্দোলনের অভিজ্ঞতা লিখুন..."></textarea>
+      <button class="f-btn" onclick="alert('নিবন্ধন সম্পন্ন হয়েছে। আমরা যাচাই করে directory-তে যোগ করব।')">✊ নিবন্ধন করুন</button>
+    </div>
+  </div>
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const WARRIORS=[
+  {name:'আবু সাঈদ',role:'শহীদ',dist:'রংপুর',icon:'👤',type:'shahid',story:'রংপুরে বুক পেতে দাঁড়ানো অকুতোভয় তরুণ। ১৬ জুলাই ২০২৪ শহীদ।'},
+  {name:'মীর মাহফুজুর রহমান মুগ্ধ',role:'শহীদ',dist:'ঢাকা',icon:'👤',type:'shahid',story:'রাস্তায় দাঁড়িয়ে আন্দোলনে অংশ নেওয়া সাহসী তরুণ।'},
+  {name:'ফারুক হোসেন',role:'আহত যোদ্ধা',dist:'চট্টগ্রাম',icon:'👤',type:'ahat',story:'পায়ে গুলিবিদ্ধ হয়েও দমে যাননি।'},
+  {name:'রাহেলা বেগম',role:'সক্রিয় যোদ্ধা',dist:'ঢাকা',icon:'👩',type:'active',story:'ঢাকার রাস্তায় শত বাধা উপেক্ষা করে আন্দোলনে নেতৃত্ব দিয়েছেন।'},
+  {name:'কামাল হোসেন',role:'আহত যোদ্ধা',dist:'রাজশাহী',icon:'👤',type:'ahat',story:'মাথায় আঘাত পেয়ে হাসপাতালে ভর্তি হয়েছিলেন।'},
+];
+const STORIES=[
+  {title:'বুক পেতে দাঁড়ানো আবু সাঈদ',body:'১৬ জুলাই রংপুরে আবু সাঈদ দুই হাত প্রসারিত করে পুলিশের সামনে দাঁড়িয়েছিলেন। সেই মুহূর্তটি বাংলাদেশের ইতিহাসে অমর হয়ে আছে।',date:'জুলাই ২০২৪'},
+  {title:'মায়ের কোলে ফেরেনি ছেলে',body:'ঢাকার মিরপুর থেকে আসা ২০ বছরের তরুণ রাশেদ। মায়ের কাছে ফেরার কথা ছিল সন্ধ্যায়। আর কখনো ফেরেনি।',date:'জুলাই ২০২৪'},
+];
+function filterWarriors(){
+  const q=document.getElementById('wSearch').value.toLowerCase();
+  const f=document.getElementById('wFilter').value;
+  const list=WARRIORS.filter(w=>(!q||w.name.includes(q)||w.dist.includes(q))&&(!f||w.type===f));
+  document.getElementById('warriorList').innerHTML=list.length?list.map(w=>`
+    <div class="warrior-card">
+      <div class="warrior-avatar">${w.icon}</div>
+      <div style="flex:1">
+        <div class="warrior-name">${w.name}</div>
+        <div class="warrior-role">${w.role}</div>
+        <div class="warrior-dist">📍 ${w.dist}</div>
+        <div class="warrior-story">${w.story}</div>
+        <span class="warrior-badge ${w.type==='shahid'?'badge-shahid':w.type==='ahat'?'badge-ahat':'badge-active'}">${w.type==='shahid'?'🩸 শহীদ':w.type==='ahat'?'🩹 আহত':'✊ সক্রিয়'}</span>
+      </div>
+    </div>`).join(''):'<div style="text-align:center;padding:40px;color:#9ca3af;">কোনো তথ্য পাওয়া যায়নি</div>';
+}
+document.getElementById('storyList').innerHTML=STORIES.map(s=>`
+  <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:12px;border-left:4px solid #dc2626;">
+    <div style="font-size:15px;font-weight:900;color:#1a1a2e;margin-bottom:6px;">${s.title}</div>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">${s.date}</div>
+    <div style="font-size:13px;color:#374151;line-height:1.6;">${s.body}</div>
+  </div>`).join('');
+function setTab(tab,btn){
+  ['directory','stories','register'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+filterWarriors();
+</script></body></html>

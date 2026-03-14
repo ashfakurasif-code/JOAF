@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>কৃষি তথ্যসেবা — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="shujo">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.agri-hero{background:linear-gradient(135deg,#14532d,#16a34a);padding:36px 0 24px;color:#fff;text-align:center;}
+.agri-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.month-strip{display:flex;gap:6px;overflow-x:auto;padding:6px 0 12px;scrollbar-width:none;}
+.month-btn{flex-shrink:0;padding:7px 14px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.month-btn.active{background:#16a34a;color:#fff;border-color:#16a34a;}
+.crop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+.crop-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.07);border:1.5px solid #f0fdf4;}
+.crop-icon{font-size:28px;margin-bottom:6px;}
+.crop-name{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:3px;}
+.crop-action{font-size:11px;color:#16a34a;font-weight:700;}
+.crop-detail{font-size:11px;color:#6b7280;margin-top:3px;line-height:1.4;}
+.tip-section{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:14px;}
+.tip-section h4{font-size:14px;font-weight:800;margin-bottom:12px;color:#1a1a2e;}
+.tip-item{display:flex;gap:8px;margin-bottom:10px;font-size:13px;color:#374151;line-height:1.5;}
+.helpline-card{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:14px;padding:14px;border:1.5px solid #86efac;margin-bottom:14px;}
+.helpline-card h4{font-size:14px;font-weight:800;color:#166534;margin-bottom:10px;}
+.hl-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #dcfce7;}
+.hl-row:last-child{border:none;}
+.hl-name{font-size:13px;color:#374151;}
+.hl-btn{padding:6px 14px;background:#16a34a;color:#fff;border:none;border-radius:50px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.notif-btn{width:100%;padding:12px;background:linear-gradient(135deg,#14532d,#16a34a);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:20px;}
+</style>
+<div class="agri-hero"><div class="container">
+  <h1>🌾 কৃষি তথ্যসেবা</h1>
+  <p>কোন মাসে কী করবেন — সহজ ভাষায়</p>
+</div></div>
+<section class="section"><div class="container">
+  <button class="notif-btn" onclick="requestAgriNotif()">🔔 মাসিক কৃষি পরামর্শ notification পান</button>
+
+  <div class="month-strip" id="monthStrip"></div>
+  <div id="cropSection"></div>
+
+  <div class="tip-section">
+    <h4>💡 সারের সঠিক ব্যবহার</h4>
+    <div class="tip-item"><span>✅</span><span>ইউরিয়া — কান্ড ও পাতা বাড়াতে। ফুল আসার আগে দিন।</span></div>
+    <div class="tip-item"><span>✅</span><span>টিএসপি — শিকড় ও ফুল-ফল বাড়াতে। রোপণের সময় দিন।</span></div>
+    <div class="tip-item"><span>✅</span><span>এমওপি — রোগ প্রতিরোধ ও মান ভালো রাখতে।</span></div>
+    <div class="tip-item"><span>⚠️</span><span>অতিরিক্ত সার ক্ষতিকর — মাটি পরীক্ষা করে দিন।</span></div>
+  </div>
+
+  <div class="helpline-card">
+    <h4>📞 কৃষি হেল্পলাইন</h4>
+    <div class="hl-row"><span class="hl-name">কৃষি তথ্য সার্ভিস</span><button class="hl-btn" onclick="location.href='tel:16123'">📞 16123</button></div>
+    <div class="hl-row"><span class="hl-name">কৃষি সম্প্রসারণ অধিদপ্তর</span><button class="hl-btn" onclick="location.href='tel:02-9131661'">📞 কল</button></div>
+    <div class="hl-row"><span class="hl-name">BARC কৃষি গবেষণা</span><button class="hl-btn" onclick="location.href='tel:02-9144842'">📞 কল</button></div>
+  </div>
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const MONTHS=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const CROPS={
+  'জানুয়ারি':[{icon:'🌾',name:'বোরো ধান',action:'রোপণ করুন',detail:'জমি প্রস্তুত করুন, চারা রোপণ শুরু'},{icon:'🥦',name:'সরিষা',action:'সংগ্রহ করুন',detail:'পাকা সরিষা কেটে নিন'},{icon:'🥕',name:'গাজর',action:'সংগ্রহ করুন',detail:'শীতকালীন গাজর তোলার সময়'}],
+  'ফেব্রুয়ারি':[{icon:'🌾',name:'বোরো ধান',action:'পরিচর্যা করুন',detail:'সার দিন, সেচ নিশ্চিত করুন'},{icon:'🌽',name:'ভুট্টা',action:'রোপণ করুন',detail:'উপযুক্ত সময় শুরু'},{icon:'🍅',name:'টমেটো',action:'সংগ্রহ করুন',detail:'শীতকালীন টমেটো তোলার সময়'}],
+  'মার্চ':[{icon:'🌾',name:'বোরো ধান',action:'পরিচর্যা করুন',detail:'শীষ বের হওয়ার সময়, সেচ বাড়ান'},{icon:'🥭',name:'আম',action:'পরিচর্যা করুন',detail:'মুকুল আসছে, রোগ প্রতিরোধ করুন'},{icon:'🌶️',name:'মরিচ',action:'রোপণ করুন',detail:'গ্রীষ্মকালীন মরিচ লাগানোর সময়'}],
+  'এপ্রিল':[{icon:'🌾',name:'বোরো ধান',action:'সংগ্রহ করুন',detail:'পাকা ধান কাটার সময় এসেছে'},{icon:'🥭',name:'আম',action:'পরিচর্যা করুন',detail:'ছোট আম পড়া রোধ করুন'},{icon:'🫛',name:'কুমড়া',action:'রোপণ করুন',detail:'গ্রীষ্মকালীন সবজি শুরু'}],
+  'মে':[{icon:'🌾',name:'আউশ ধান',action:'রোপণ করুন',detail:'বীজতলা তৈরি করুন'},{icon:'🥭',name:'আম',action:'সংগ্রহ করুন',detail:'আম পাকার মৌসুম শুরু'},{icon:'🐟',name:'মাছ চাষ',action:'পোনা ছাড়ুন',detail:'পুকুরে মাছের পোনা ছাড়ার সময়'}],
+  'জুন':[{icon:'🌾',name:'আমন ধান',action:'বীজতলা করুন',detail:'বর্ষার আগে বীজতলা তৈরি'},{icon:'🌿',name:'পাট',action:'রোপণ করুন',detail:'পাট লাগানোর সেরা সময়'},{icon:'🥬',name:'লাউ',action:'রোপণ করুন',detail:'মাচা তৈরি করুন'}],
+  'জুলাই':[{icon:'🌾',name:'আমন ধান',action:'রোপণ করুন',detail:'বর্ষার পানিতে চারা লাগান'},{icon:'🌿',name:'পাট',action:'পরিচর্যা করুন',detail:'নিড়ানি ও সার দিন'},{icon:'🐟',name:'মাছ চাষ',action:'পরিচর্যা করুন',detail:'বর্ষায় বন্যার বিরুদ্ধে সতর্ক'}],
+  'আগস্ট':[{icon:'🌿',name:'পাট',action:'সংগ্রহ করুন',detail:'পাট কাটার সময়, জাগ দিন'},{icon:'🌾',name:'আমন ধান',action:'পরিচর্যা করুন',detail:'সার ও রোগ নিয়ন্ত্রণ'},{icon:'🥬',name:'শাকসবজি',action:'রোপণ করুন',detail:'শীতকালীন সবজির বীজতলা শুরু'}],
+  'সেপ্টেম্বর':[{icon:'🌾',name:'আমন ধান',action:'পরিচর্যা করুন',detail:'শীষ বের হওয়ার সময়'},{icon:'🥦',name:'ফুলকপি',action:'চারা রোপণ',detail:'শীতকালীন সবজি লাগান'},{icon:'🧅',name:'পেঁয়াজ',action:'বীজতলা করুন',detail:'আগাম পেঁয়াজের বীজতলা'}],
+  'অক্টোবর':[{icon:'🌾',name:'আমন ধান',action:'সংগ্রহ করুন',detail:'আগাম জাত কাটার সময়'},{icon:'🥦',name:'শীতকালীন সবজি',action:'রোপণ করুন',detail:'বাঁধাকপি, ফুলকপি, ব্রকলি'},{icon:'🥔',name:'আলু',action:'রোপণ করুন',detail:'আলু লাগানোর শ্রেষ্ঠ সময়'}],
+  'নভেম্বর':[{icon:'🌾',name:'আমন ধান',action:'সংগ্রহ করুন',detail:'সব আমন ধান কাটুন'},{icon:'🥦',name:'সরিষা',action:'রোপণ করুন',detail:'রবি মৌসুমের সরিষা লাগান'},{icon:'🥕',name:'গাজর',action:'রোপণ করুন',detail:'শীতকালীন গাজর লাগান'}],
+  'ডিসেম্বর':[{icon:'🥔',name:'আলু',action:'পরিচর্যা করুন',detail:'সার ও সেচ নিশ্চিত করুন'},{icon:'🌾',name:'বোরো ধান',action:'বীজতলা করুন',detail:'বোরো মৌসুমের প্রস্তুতি'},{icon:'🥦',name:'শাকসবজি',action:'সংগ্রহ করুন',detail:'শীতকালীন সবজি তোলা শুরু'}],
+};
+const curMonth=new Date().getMonth();
+let activeMonth=MONTHS[curMonth];
+document.getElementById('monthStrip').innerHTML=MONTHS.map((m,i)=>
+  `<button class="month-btn${m===activeMonth?' active':''}" onclick="setMonth('${m}',this)">${m}</button>`
+).join('');
+function setMonth(m,btn){
+  activeMonth=m;
+  document.querySelectorAll('.month-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCrops();
+}
+function renderCrops(){
+  const crops=CROPS[activeMonth]||[];
+  document.getElementById('cropSection').innerHTML=`
+    <h3 style="font-size:15px;font-weight:900;margin-bottom:12px;color:#1a1a2e;">${activeMonth} মাসে করণীয়</h3>
+    <div class="crop-grid">${crops.map(c=>`
+      <div class="crop-card">
+        <div class="crop-icon">${c.icon}</div>
+        <div class="crop-name">${c.name}</div>
+        <div class="crop-action">→ ${c.action}</div>
+        <div class="crop-detail">${c.detail}</div>
+      </div>`).join('')}
+    </div>`;
+}
+function requestAgriNotif(){
+  if(!('Notification' in window)) return;
+  Notification.requestPermission().then(p=>{
+    if(p==='granted') navigator.serviceWorker.ready.then(r=>r.showNotification('🌾 কৃষি Alert চালু!',{body:'মাসিক কৃষি পরামর্শ পাবেন।',icon:'/logoc7c3.png'}));
+  });
+}
+renderCrops();
+</script></body></html>

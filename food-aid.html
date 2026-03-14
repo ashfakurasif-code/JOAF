@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>খাদ্য সহায়তা — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="seva">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.food-hero{background:linear-gradient(135deg,#78350f,#ea580c);padding:36px 0 24px;color:#fff;text-align:center;}
+.food-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.request-form{background:#fff;border-radius:18px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.1);margin-bottom:20px;}
+.request-form h3{font-size:16px;font-weight:900;margin-bottom:16px;color:#1a1a2e;}
+.f-inp{width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;margin-bottom:10px;outline:none;box-sizing:border-box;}
+.f-inp:focus{border-color:#ea580c;}
+.f-btn{width:100%;padding:13px;background:linear-gradient(135deg,#78350f,#ea580c);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;}
+.center-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;border:1.5px solid #f0f0f0;}
+.center-name{font-size:14px;font-weight:800;color:#1a1a2e;margin-bottom:3px;}
+.center-org{font-size:12px;color:#ea580c;font-weight:700;margin-bottom:4px;}
+.center-dist{font-size:11px;color:#6b7280;margin-bottom:8px;}
+.center-status{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;}
+.status-open{background:#dcfce7;color:#166534;}
+.status-limited{background:#fef3c7;color:#92400e;}
+.center-btn{padding:8px 16px;background:#ea580c;color:#fff;border:none;border-radius:50px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;}
+.tab-bar{display:flex;gap:0;background:#f3f4f6;border-radius:50px;padding:4px;margin-bottom:18px;}
+.tab-btn{flex:1;padding:10px;border:none;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#6b7280;transition:.2s;}
+.tab-btn.active{background:#fff;color:#ea580c;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+</style>
+<div class="food-hero"><div class="container">
+  <h1>🍱 খাদ্য সহায়তা</h1>
+  <p>দুর্যোগে ও সংকটে — আমরা পাশে আছি</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('request',this)">🙏 সহায়তা চান</button>
+    <button class="tab-btn" onclick="setTab('centers',this)">📍 কেন্দ্রসমূহ</button>
+    <button class="tab-btn" onclick="setTab('donate',this)">❤️ সহায়তা করুন</button>
+  </div>
+
+  <div id="tab-request">
+    <div class="request-form">
+      <h3>🙏 খাদ্য সহায়তার অনুরোধ</h3>
+      <input class="f-inp" id="rName" placeholder="আপনার নাম">
+      <input class="f-inp" id="rPhone" placeholder="মোবাইল নম্বর">
+      <select class="f-inp" id="rDist">
+        <option>জেলা বেছে নিন</option>
+        <option>ঢাকা</option><option>চট্টগ্রাম</option><option>রাজশাহী</option>
+        <option>খুলনা</option><option>সিলেট</option><option>বরিশাল</option>
+        <option>রংপুর</option><option>ময়মনসিংহ</option>
+      </select>
+      <select class="f-inp" id="rType">
+        <option>সংকটের ধরন</option>
+        <option>বন্যা</option><option>ঝড়</option><option>অগ্নিকাণ্ড</option>
+        <option>অসুস্থতা/চিকিৎসা ব্যয়</option><option>দারিদ্র্য</option><option>অন্যান্য</option>
+      </select>
+      <input class="f-inp" id="rFamily" placeholder="পরিবারের সদস্য সংখ্যা">
+      <textarea class="f-inp" rows="3" id="rNote" placeholder="বিস্তারিত (ঐচ্ছিক)"></textarea>
+      <button class="f-btn" onclick="submitRequest()">📤 অনুরোধ পাঠান</button>
+    </div>
+  </div>
+
+  <div id="tab-centers" style="display:none">
+    <div id="centerList"></div>
+  </div>
+
+  <div id="tab-donate" style="display:none">
+    <div class="request-form">
+      <h3>❤️ খাদ্য সহায়তায় অংশ নিন</h3>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px;line-height:1.7;">আপনার একটু সাহায্যে একটি পরিবার বাঁচতে পারে। JOAF-এর মাধ্যমে সরাসরি অসহায় মানুষের কাছে পৌঁছে দেওয়া হবে।</p>
+      <input class="f-inp" placeholder="আপনার নাম">
+      <input class="f-inp" placeholder="মোবাইল নম্বর">
+      <select class="f-inp">
+        <option>সহায়তার পরিমাণ</option>
+        <option>৫০০ টাকা — ১ পরিবার ১ সপ্তাহ</option>
+        <option>১০০০ টাকা — ১ পরিবার ২ সপ্তাহ</option>
+        <option>৫০০০ টাকা — ৫ পরিবার</option>
+        <option>নিজে নির্ধারণ করব</option>
+      </select>
+      <button class="f-btn" style="background:linear-gradient(135deg,#14532d,#16a34a);" onclick="window.location.href='/donate.html'">💚 সহযোগিতা পেজে যান</button>
+    </div>
+  </div>
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const CENTERS=[
+  {name:'ঢাকা সিটি রিলিফ সেন্টার',org:'ঢাকা সিটি কর্পোরেশন',dist:'ঢাকা',status:'open',phone:'02-9554680',address:'নগর ভবন, ঢাকা'},
+  {name:'BRAC Food Aid Center',org:'ব্র্যাক',dist:'ঢাকা',status:'open',phone:'02-9881265',address:'BRAC Centre, ঢাকা'},
+  {name:'রেড ক্রিসেন্ট রিলিফ',org:'বাংলাদেশ রেড ক্রিসেন্ট',dist:'চট্টগ্রাম',status:'limited',phone:'031-619090',address:'চট্টগ্রাম'},
+  {name:'ইসলামিক রিলিফ',org:'Islamic Relief BD',dist:'সিলেট',status:'open',phone:'0821-716600',address:'সিলেট'},
+  {name:'কেয়ার বাংলাদেশ',org:'CARE Bangladesh',dist:'খুলনা',status:'open',phone:'041-720510',address:'খুলনা'},
+  {name:'জেলা ত্রাণ ও পুনর্বাসন',org:'সরকারি',dist:'রাজশাহী',status:'open',phone:'0721-775300',address:'রাজশাহী জেলা প্রশাসন'},
+];
+document.getElementById('centerList').innerHTML=CENTERS.map(c=>`
+  <div class="center-card">
+    <div class="center-name">${c.name}</div>
+    <div class="center-org">${c.org}</div>
+    <div class="center-dist">📍 ${c.dist} · ${c.address}</div>
+    <span class="center-status ${c.status==='open'?'status-open':'status-limited'}">${c.status==='open'?'✅ সক্রিয়':'⚠️ সীমিত'}</span>
+    <br>
+    <button class="center-btn" onclick="location.href='tel:${c.phone}'">📞 ${c.phone}</button>
+  </div>`).join('');
+
+function setTab(tab,btn){
+  ['request','centers','donate'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function submitRequest(){
+  const name=document.getElementById('rName').value.trim();
+  const phone=document.getElementById('rPhone').value.trim();
+  if(!name||!phone){alert('নাম ও মোবাইল নম্বর দিন');return;}
+  alert('✅ আপনার অনুরোধ গ্রহণ করা হয়েছে। আমরা ২৪ ঘন্টার মধ্যে যোগাযোগ করব।');
+}
+</script></body></html>

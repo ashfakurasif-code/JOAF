@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ওষুধের দাম — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="seva">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.med-hero{background:linear-gradient(135deg,#1e3a5f,#0369a1);padding:36px 0 24px;color:#fff;text-align:center;}
+.med-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.search-box{display:flex;gap:8px;margin-bottom:12px;}
+.search-box input{flex:1;padding:12px 16px;border:2px solid #e5e7eb;border-radius:50px;font-size:14px;font-family:inherit;outline:none;}
+.search-box input:focus{border-color:#0369a1;}
+.cat-tabs{display:flex;gap:7px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none;}
+.cat-tab{flex-shrink:0;padding:6px 13px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.cat-tab.active{background:#0369a1;color:#fff;border-color:#0369a1;}
+.med-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:10px;border:1.5px solid #f0f0f0;}
+.med-name{font-size:14px;font-weight:900;color:#1a1a2e;margin-bottom:2px;}
+.med-generic{font-size:11px;color:#0369a1;font-weight:700;margin-bottom:5px;}
+.med-prices{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.med-brand{font-size:13px;color:#374151;}
+.med-brand span{font-weight:900;color:#1a1a2e;}
+.med-generic-price{font-size:13px;color:#166534;}
+.med-generic-price span{font-weight:900;}
+.med-save{font-size:11px;font-weight:700;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:50px;}
+.tip-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:14px;padding:14px;margin-bottom:16px;border:1.5px solid #93c5fd;}
+.tip-card h4{font-size:13px;font-weight:800;color:#1e40af;margin-bottom:8px;}
+.tip-item{font-size:12px;color:#1e3a8a;margin-bottom:5px;display:flex;gap:6px;}
+</style>
+<div class="med-hero"><div class="container">
+  <h1>💊 ওষুধের দাম</h1>
+  <p>Generic বিকল্পে সাশ্রয় করুন</p>
+</div></div>
+<section class="section"><div class="container">
+  <div class="tip-card">
+    <h4>💡 স্বাস্থ্যসম্মত সাশ্রয়ের টিপস</h4>
+    <div class="tip-item"><span>✅</span><span>Generic ওষুধ brand-এর মতোই কার্যকর — দাম কম</span></div>
+    <div class="tip-item"><span>✅</span><span>ডাক্তারকে generic নাম লিখতে বলুন</span></div>
+    <div class="tip-item"><span>✅</span><span>Essential Drug Company (EDC) ও Gonoshasthaya-র ওষুধ সস্তা</span></div>
+    <div class="tip-item"><span>⚠️</span><span>নিজে নিজে ওষুধ না খেয়ে ডাক্তারের পরামর্শ নিন</span></div>
+  </div>
+  <div class="search-box">
+    <input id="medSearch" placeholder="ওষুধের নাম বা রোগ..." oninput="filterMeds()">
+  </div>
+  <div class="cat-tabs" id="catTabs"></div>
+  <div id="medList"></div>
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const MEDS=[
+  {name:'Napa / Ace',generic:'Paracetamol 500mg',cat:'জ্বর ও ব্যথা',brandPrice:1.5,genericPrice:0.5,use:'জ্বর, মাথাব্যথা, সর্দি'},
+  {name:'Seclo / Omeprazole',generic:'Omeprazole 20mg',cat:'গ্যাস্ট্রিক',brandPrice:5,genericPrice:2,use:'গ্যাস্ট্রিক, বুক জ্বালা'},
+  {name:'Amodis / Metronidazole',generic:'Metronidazole 400mg',cat:'পেটের রোগ',brandPrice:3,genericPrice:1,use:'পেটের সংক্রমণ, ডায়রিয়া'},
+  {name:'Fimoxyl / Amoxicillin',generic:'Amoxicillin 500mg',cat:'অ্যান্টিবায়োটিক',brandPrice:8,genericPrice:3,use:'ব্যাকটেরিয়াজনিত সংক্রমণ'},
+  {name:'Atova / Atorvastatin',generic:'Atorvastatin 10mg',cat:'হৃদরোগ',brandPrice:12,genericPrice:4,use:'কোলেস্টেরল নিয়ন্ত্রণ'},
+  {name:'Losarco / Losartan',generic:'Losartan 50mg',cat:'উচ্চ রক্তচাপ',brandPrice:10,genericPrice:3.5,use:'উচ্চ রক্তচাপ'},
+  {name:'Metformin / Glucomin',generic:'Metformin 500mg',cat:'ডায়াবেটিস',brandPrice:4,genericPrice:1.5,use:'টাইপ ২ ডায়াবেটিস'},
+  {name:'Cetirizine / Alercet',generic:'Cetirizine 10mg',cat:'অ্যালার্জি',brandPrice:5,genericPrice:1.5,use:'অ্যালার্জি, চুলকানি'},
+  {name:'Calcium + D3',generic:'Calcium Carbonate 500mg',cat:'ভিটামিন',brandPrice:8,genericPrice:3,use:'হাড়ের শক্তি'},
+  {name:'ORS / Saline',generic:'Oral Rehydration Salt',cat:'পেটের রোগ',brandPrice:15,genericPrice:5,use:'ডায়রিয়া, পানিশূন্যতা'},
+];
+const CATS=['সব','জ্বর ও ব্যথা','গ্যাস্ট্রিক','পেটের রোগ','অ্যান্টিবায়োটিক','হৃদরোগ','উচ্চ রক্তচাপ','ডায়াবেটিস','অ্যালার্জি','ভিটামিন'];
+let activeCat='সব';
+function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
+function renderTabs(){
+  document.getElementById('catTabs').innerHTML=CATS.map(c=>
+    `<button class="cat-tab${c===activeCat?' active':''}" onclick="setCat('${c}')">${c}</button>`
+  ).join('');
+}
+function setCat(c){activeCat=c;filterMeds();}
+function filterMeds(){
+  renderTabs();
+  const q=document.getElementById('medSearch').value.toLowerCase();
+  const list=MEDS.filter(m=>{
+    const mQ=!q||m.name.toLowerCase().includes(q)||m.generic.toLowerCase().includes(q)||m.use.includes(q);
+    const mC=activeCat==='সব'||m.cat===activeCat;
+    return mQ&&mC;
+  });
+  const save=m=>Math.round((1-m.genericPrice/m.brandPrice)*100);
+  document.getElementById('medList').innerHTML=list.length?list.map(m=>`
+    <div class="med-card">
+      <div class="med-name">${m.name}</div>
+      <div class="med-generic">Generic: ${m.generic}</div>
+      <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">ব্যবহার: ${m.use}</div>
+      <div class="med-prices">
+        <div class="med-brand">Brand: <span>৳${bn(m.brandPrice)}/টি</span></div>
+        <div class="med-generic-price">Generic: <span>৳${bn(m.genericPrice)}/টি</span></div>
+        <span class="med-save">${bn(save(m))}% সাশ্রয়</span>
+      </div>
+    </div>`).join(''):'<div style="text-align:center;padding:40px;color:#9ca3af;">কোনো ওষুধ পাওয়া যায়নি</div>';
+}
+renderTabs();filterMeds();
+</script></body></html>

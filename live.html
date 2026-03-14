@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>লাইভ সম্প্রচার — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="joaf">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.live-hero{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:28px 0 20px;color:#fff;text-align:center;}
+.live-hero h1{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;}
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:#dc2626;color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:50px;margin-bottom:10px;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink .8s ease infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.player-wrap{background:#000;border-radius:14px;overflow:hidden;margin-bottom:14px;aspect-ratio:16/9;position:relative;}
+.player-wrap iframe{width:100%;height:100%;border:none;}
+.channel-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none;}
+.ch-tab{flex-shrink:0;padding:8px 14px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.ch-tab.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+.video-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.video-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.07);cursor:pointer;transition:transform .15s;}
+.video-card:hover{transform:translateY(-2px);}
+.video-thumb{background:#1a1a2e;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:32px;}
+.video-body{padding:10px 10px 12px;}
+.video-title{font-size:12px;font-weight:700;color:#1a1a2e;line-height:1.4;margin-bottom:4px;}
+.video-ch{font-size:10px;color:#6b7280;}
+.notif-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin:12px 0;}
+</style>
+<div class="live-hero"><div class="container">
+  <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+  <h1>📡 লাইভ সম্প্রচার</h1>
+</div></div>
+<section class="section"><div class="container">
+  <div class="channel-tabs" id="chTabs"></div>
+  <div class="player-wrap" id="playerWrap">
+    <iframe id="mainPlayer" src="" allowfullscreen allow="autoplay"></iframe>
+  </div>
+  <button class="notif-btn" onclick="requestLiveNotif()">🔔 JOAF Live শুরু হলে notification পান</button>
+  <h3 style="font-size:15px;font-weight:900;margin-bottom:12px;color:#1a1a2e;">📺 সাম্প্রতিক ভিডিও</h3>
+  <div class="video-grid" id="videoGrid"></div>
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const CHANNELS=[
+  {name:'JOAF Live',id:'julyforum',yt:'UCxxxxxx',icon:'🔥',embedId:''},
+  {name:'Jamuna TV',id:'jamuna',yt:'UCxxxxxx',icon:'📺',embedId:'8cHQxRbp0PA'},
+  {name:'Somoy TV',id:'somoy',yt:'UCxxxxxx',icon:'📡',embedId:'3ZRBN-U4aAU'},
+  {name:'Channel 24',id:'ch24',yt:'UCxxxxxx',icon:'🎬',embedId:'Zp8R6UDfxo4'},
+];
+const VIDEOS=[
+  {title:'জুলাই আন্দোলনের এক বছর',ch:'JOAF',icon:'🔥',id:''},
+  {title:'বাংলাদেশের রাজনৈতিক পরিস্থিতি',ch:'Jamuna TV',icon:'📺',id:'8cHQxRbp0PA'},
+  {title:'অর্থনীতির হালচাল',ch:'Somoy TV',icon:'📡',id:'3ZRBN-U4aAU'},
+  {title:'নতুন নির্বাচন কমিশন',ch:'Channel 24',icon:'🎬',id:'Zp8R6UDfxo4'},
+];
+let activeCh='jamuna';
+function renderTabs(){
+  document.getElementById('chTabs').innerHTML=CHANNELS.map(c=>
+    `<button class="ch-tab${c.id===activeCh?' active':''}" onclick="setCh('${c.id}')">${c.icon} ${c.name}</button>`).join('');
+}
+function setCh(id){
+  activeCh=id;
+  renderTabs();
+  const ch=CHANNELS.find(c=>c.id===id);
+  if(ch&&ch.embedId){
+    document.getElementById('mainPlayer').src=`https://www.youtube.com/embed/${ch.embedId}?autoplay=0`;
+  } else {
+    document.getElementById('mainPlayer').src='';
+  }
+}
+document.getElementById('videoGrid').innerHTML=VIDEOS.map(v=>`
+  <div class="video-card" onclick="${v.id?`document.getElementById('mainPlayer').src='https://www.youtube.com/embed/${v.id}'`:''}">
+    <div class="video-thumb">${v.icon}</div>
+    <div class="video-body">
+      <div class="video-title">${v.title}</div>
+      <div class="video-ch">${v.ch}</div>
+    </div>
+  </div>`).join('');
+function requestLiveNotif(){
+  if(!('Notification' in window)) return;
+  Notification.requestPermission().then(p=>{
+    if(p==='granted') navigator.serviceWorker.ready.then(r=>r.showNotification('📡 Live Alert চালু!',{body:'JOAF Live শুরু হলে জানানো হবে।',icon:'/logoc7c3.png'}));
+  });
+}
+renderTabs();setCh('jamuna');
+</script></body></html>
