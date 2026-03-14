@@ -478,15 +478,10 @@ const JOAFComponents = {
     const fp = document.getElementById('joaf-footer');
     if (fp) fp.outerHTML = this.renderFooter();
 
-    // 3b. Inject maze nav — only on homepage
+    // 3b. Inject maze nav into placeholder
     const mazeEl = document.getElementById('joaf-maze-nav');
-    if (!mazeEl) {
-      const statsBar = document.getElementById('stats-bar');
-      if (statsBar) {
-        const div = document.createElement('div');
-        div.innerHTML = this.renderMazeNav();
-        statsBar.insertAdjacentElement('afterend', div.firstElementChild);
-      }
+    if (mazeEl) {
+      mazeEl.outerHTML = this.renderMazeNav();
     }
 
     // Global Alert FAB + Modal — all pages
