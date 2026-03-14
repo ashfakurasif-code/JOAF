@@ -433,7 +433,7 @@ const JOAFComponents = {
     if (!document.getElementById('joaf-global-alert-modal')) {
       const html = `
       <style>
-      #joaf-alert-fab{position:fixed!important;bottom:80px!important;left:0px!important;transform:none!important;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(144,22,31,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;}
+      #joaf-alert-fab{position:fixed!important;bottom:80px!important;left:16px!important;transform:none!important;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(144,22,31,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;}
       #joaf-global-alert-modal{display:none;position:fixed!important;inset:0!important;background:rgba(0,0,0,.6);z-index:99999!important;align-items:flex-end;}
       #joaf-global-alert-modal.open{display:flex;}
       .joaf-alert-modal-inner{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
@@ -509,7 +509,6 @@ const JOAFComponents = {
       bloodWrap.id = 'joaf-blood-modal-wrap';
       bloodWrap.innerHTML = `
       <style>
-      #joaf-blood-fab{position:fixed!important;bottom:140px!important;left:0px!important;background:linear-gradient(135deg,#075e55,#0a7a6e)!important;color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;align-items:center;gap:6px;white-space:nowrap;}
       #joaf-blood-reg-modal{display:none;position:fixed!important;inset:0!important;background:rgba(0,0,0,.6);z-index:99999!important;align-items:flex-end;}
       #joaf-blood-reg-modal.open{display:flex!important;}
       .jbr-inner{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
@@ -519,7 +518,7 @@ const JOAFComponents = {
       .jbr-fg input:focus,.jbr-fg select:focus{border-color:#075e55;}
       .jbr-submit{width:100%;padding:13px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
       </style>
-      <button id="joaf-blood-fab" style="display:none">🩸 রক্ত নিবন্ধন করুন</button>
+      <button id="joaf-blood-fab">🩸 নিবন্ধন করুন</button>
       <div id="joaf-blood-reg-modal">
         <div class="jbr-inner">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -793,6 +792,109 @@ function _joafInit(){
   JOAFComponents.init(page);
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',_joafInit);}else{_joafInit();}
+
+// ── Push Notification Send ──────────────────────────
+async function joafSendAlertNotification(data) {
+  // Show local notification to current user
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification(data.title, {
+      body: data.body,
+      icon: '/logoc7c3.png',
+      image: data.image,
+      data: { url: data.url },
+      vibrate: [200,100,200],
+      requireInteraction: true
+    });
+  }
+
+  // Also save to Firebase so other users see it on next visit
+  try {
+    const {getApps, initializeApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const {getFirestore, collection, addDoc, serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+    const db = getFirestore(fbApp);
+    await addDoc(collection(db, 'notifications'), {
+      ...data,
+      createdAt: serverTimestamp()
+    });
+  } catch(e) {}
+}
+
+// ── Admin Email via EmailJS ──────────────────────────
+async function joafSendAdminEmail(data) {
+  try {
+    // Load EmailJS
+    if (!window.emailjs) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+      emailjs.init('YOUR_EMAILJS_PUBLIC_KEY');
+    }
+
+    // Emergency services by type
+    const emergencyEmails = {
+      'আগুন': 'fire@julyforum.com',
+      'বন্যা': 'disaster@julyforum.com',
+      'অপরাধ': 'law@julyforum.com',
+      'মেডিকেল': 'medical@julyforum.com',
+      'দুর্ঘটনা': 'accident@julyforum.com',
+    };
+
+    await emailjs.send('joaf_service', 'joaf_alert_template', {
+      to_email: 'info@julyforum.com',
+      alert_type: data.type || 'অন্যান্য',
+      alert_title: data.title,
+      alert_desc: data.desc,
+      alert_location: data.location,
+      alert_photo: data.photo || 'কোনো ছবি নেই',
+      reporter: data.reporter || 'অজ্ঞাত',
+      emergency_contact: emergencyEmails[data.type] || '',
+      site_url: 'https://julyforum.com/alert.html'
+    });
+  } catch(e) { console.log('Email send failed:', e); }
+}
+
+// ── Push Notification Subscription ──────────────────
+const JOAF_VAPID = 'BCSwlS-ZLtznZGUGaDil3TQzT5GMmqeIAVyDNmimf5Z7IokRwk1xWDtatjALnGNhufdgq9UVZNnHcbnzXq7JcXE';
+
+async function joafSubscribePush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) return existing;
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: JOAF_VAPID
+    });
+
+    // Save subscription to Firebase
+    const {initializeApp, getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const {getFirestore, collection, addDoc, serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+    const db = getFirestore(fbApp);
+    await addDoc(collection(db, 'push_subscriptions'), {
+      subscription: JSON.stringify(sub),
+      createdAt: serverTimestamp(),
+      userAgent: navigator.userAgent.substring(0, 100)
+    });
+    return sub;
+  } catch(e) { console.log('Push subscription failed:', e); }
+}
+
+// Subscribe after 3 seconds
+setTimeout(() => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    joafSubscribePush();
+  } else if (Notification.permission === 'granted') {
+    joafSubscribePush();
+  }
+}, 3000);
 
 // Auto cache-bust for dynamic JS files
 (function() {

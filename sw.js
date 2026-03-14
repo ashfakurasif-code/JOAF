@@ -1,5 +1,5 @@
-// JOAF Service Worker v1.0
-const CACHE = 'joaf-v1';
+// JOAF Service Worker v2.0
+const CACHE = 'joaf-v2';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE = [
@@ -34,31 +34,42 @@ self.addEventListener('fetch', e => {
     return;
   }
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-      if (res && res.status === 200 && e.request.url.startsWith(self.location.origin)) {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-      }
-      return res;
-    }))
+    caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
 
-// Push notifications
+// ── Push Notification ──────────────────────────────
 self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : { title: 'JOAF', body: 'নতুন আপডেট' };
-  e.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/logoc7c3.png',
-      badge: '/logoc7c3.png',
-      vibrate: [200, 100, 200],
-      data: { url: data.url || '/' }
-    })
-  );
+  let data = {};
+  try { data = e.data.json(); } catch(err) { data = { title: 'JOAF সতর্কতা', body: e.data ? e.data.text() : '' }; }
+
+  const title = data.title || '🚨 JOAF জরুরি সতর্কতা';
+  const options = {
+    body: data.body || 'নতুন সতর্কতা এসেছে',
+    icon: '/logoc7c3.png',
+    badge: '/logoc7c3.png',
+    image: data.image || null,
+    data: { url: data.url || '/alert.html' },
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
+    actions: [
+      { action: 'view', title: '👁️ দেখুন' },
+      { action: 'close', title: '✕ বন্ধ করুন' }
+    ]
+  };
+
+  e.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(clients.openWindow(e.notification.data.url));
+  const url = (e.notification.data && e.notification.data.url) || '/alert.html';
+  if (e.action === 'close') return;
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cls => {
+      const c = cls.find(c => c.url.includes(url));
+      if (c) return c.focus();
+      return clients.openWindow(url);
+    })
+  );
 });
