@@ -27,6 +27,17 @@ const MAP = {
   'barguna':'বরগুনা','lalmonirhat':'লালমনিরহাট','nilphamari':'নীলফামারী',
   'gaibandha':'গাইবান্ধা','kurigram':'কুড়িগ্রাম','panchagarh':'পঞ্চগড়',
   'thakurgaon':'ঠাকুরগাঁও',
+  // আন্তর্জাতিক
+  'australia':'অস্ট্রেলিয়া','usa':'যুক্তরাষ্ট্র','uk':'যুক্তরাজ্য',
+  'canada':'কানাডা','europe':'ইউরোপ','germany':'জার্মানি',
+  'berlin':'বার্লিন','london':'লন্ডন','newyork':'নিউ ইয়র্ক',
+  'new york':'নিউ ইয়র্ক','toronto':'টরন্টো','sydney':'সিডনি',
+  'malaysia':'মালয়েশিয়া','singapore':'সিঙ্গাপুর','dubai':'দুবাই',
+  'saudi':'সৌদি','riyadh':'রিয়াদ','qatar':'কাতার','kuwait':'কুয়েত',
+  'bahrain':'বাহরাইন','oman':'ওমান','uae':'সংযুক্ত আরব আমিরাত',
+  'italy':'ইতালি','france':'ফ্রান্স','spain':'স্পেন','japan':'জাপান',
+  'korea':'কোরিয়া','china':'চীন','india':'ভারত','pakistan':'পাকিস্তান',
+  'middleeast':'মধ্যপ্রাচ্য','middle east':'মধ্যপ্রাচ্য','asia':'এশিয়া',
   // Blood groups
   'a+':'A+','a-':'A-','b+':'B+','b-':'B-','ab+':'AB+','ab-':'AB-','o+':'O+','o-':'O-',
   // Common words

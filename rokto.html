@@ -151,13 +151,7 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
 <script src="/js/main.js"></script>
 <script src="/js/bn-search.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  if (typeof JOAFComponents !== 'undefined') {
-    JOAFComponents.init('home');
-  }
-});
-</script>
+
 
 <!-- Firebase -->
 <script type="module">
@@ -311,6 +305,15 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 });
 
 loadDonors();
+</script>
+
+<script>
+// Init JOAF Components
+window.addEventListener('load', function() {
+  if (typeof JOAFComponents !== 'undefined') {
+    JOAFComponents.init('home');
+  }
+});
 </script>
 
 <script>

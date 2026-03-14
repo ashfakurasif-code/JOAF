@@ -90,12 +90,15 @@ body{font-family:'SolaimanLipi',sans-serif;background:#f8f9fa;color:#1a1a2e;}
 
 <div class="section" id="alertsList"></div>
 
-<button class="fab" id="fabBtn">🚨 সতর্কতা দিন</button>
+<button class="fab" id="fabBtn" style="display:flex!important">🚨 সতর্কতা দিন</button>
 
 <!-- Modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <h3>🚨 জরুরি সতর্কতা পাঠান</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0">🚨 জরুরি সতর্কতা পাঠান</h3>
+      <button onclick="closeModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#6b7280;padding:4px;line-height:1">✕</button>
+    </div>
 
     <div class="type-grid" id="typeGrid">
       <button class="type-btn" data-type="fire">🔥 আগুন</button>
@@ -148,13 +151,7 @@ body{font-family:'SolaimanLipi',sans-serif;background:#f8f9fa;color:#1a1a2e;}
 <script src="/js/components.js?v=9.4"></script>
 <script src="/js/main.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  if (typeof JOAFComponents !== 'undefined') {
-    JOAFComponents.init('home');
-  }
-});
-</script>
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -212,11 +209,11 @@ function renderAlerts() {
         <span class="alert-icon">${TYPE_ICONS[a.type]||'📢'}</span>
         <span class="alert-type-badge ${a.type}">${TYPE_LABELS[a.type]||'অন্যান্য'}</span>
       </div>
-      <div class="alert-title">${a.title}</div>
-      <div class="alert-desc">${a.description}</div>
+      <div class="alert-title">${a.title||'শিরোনাম নেই'}</div>
+      <div class="alert-desc">${a.description||a.desc||''}</div>
       ${a.imageUrl ? `<img src="${a.imageUrl}" class="alert-img" loading="lazy">` : ''}
       <div class="alert-meta">
-        <span>📍 ${a.location}</span>
+        <span>📍 ${a.location||a.area||'অজানা স্থান'}</span>
         ${a.reporter ? `<span>👤 ${a.reporter}</span>` : ''}
         <span>🕐 ${timeAgo(a.createdAt)}</span>
         ${a.lat ? `<a href="https://maps.google.com/?q=${a.lat},${a.lng}" target="_blank" style="color:var(--red);font-weight:700">🗺️ মানচিত্রে দেখুন</a>` : ''}

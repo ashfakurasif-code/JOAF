@@ -427,6 +427,166 @@ const JOAFComponents = {
     const fp = document.getElementById('joaf-footer');
     if (fp) fp.outerHTML = this.renderFooter();
 
+    // Global Alert FAB + Modal — all pages
+    if (!document.getElementById('joaf-global-alert-modal')) {
+      const html = `
+      <style>
+      #joaf-alert-fab{position:fixed;bottom:80px;left:16px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(144,22,31,.4);z-index:998;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+      #joaf-global-alert-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-end;}
+      #joaf-global-alert-modal.open{display:flex;}
+      .joaf-alert-modal-inner{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
+      .joaf-alert-modal-inner h3{font-size:17px;font-weight:900;margin:0;}
+      .joaf-alert-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;}
+      .joaf-at-btn{padding:10px;border:2px solid #e5e7eb;border-radius:10px;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:.2s;}
+      .joaf-at-btn.sel{border-color:#90161f;background:#fff5f5;color:#90161f;}
+      .joaf-alert-fg{margin-bottom:12px;}
+      .joaf-alert-fg label{font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;}
+      .joaf-alert-fg input,.joaf-alert-fg textarea{width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;}
+      .joaf-alert-fg input:focus,.joaf-alert-fg textarea:focus{border-color:#90161f;}
+      .joaf-photo-up{border:2px dashed #e5e7eb;border-radius:10px;padding:16px;text-align:center;cursor:pointer;color:#6b7280;font-size:12px;}
+      .joaf-gps-btn{width:100%;padding:10px;background:#f3f4f6;border:2px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+      .joaf-gps-btn.got{background:#dcfce7;border-color:#10b981;color:#065f46;}
+      .joaf-submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
+      </style>
+
+      <button id="joaf-alert-fab">🚨 সতর্কতা দিন</button>
+
+      <div id="joaf-global-alert-modal">
+        <div class="joaf-alert-modal-inner">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3>🚨 জরুরি সতর্কতা পাঠান</h3>
+            <button onclick="document.getElementById('joaf-global-alert-modal').classList.remove('open')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280">✕</button>
+          </div>
+          <div class="joaf-alert-type-grid" id="joaf-at-grid">
+            <button class="joaf-at-btn" data-type="fire">🔥 আগুন</button>
+            <button class="joaf-at-btn" data-type="flood">🌊 বন্যা</button>
+            <button class="joaf-at-btn" data-type="crime">⚠️ অপরাধ</button>
+            <button class="joaf-at-btn" data-type="medical">🏥 মেডিকেল</button>
+            <button class="joaf-at-btn" data-type="accident">🚗 দুর্ঘটনা</button>
+            <button class="joaf-at-btn sel" data-type="other">📢 অন্যান্য</button>
+          </div>
+          <div class="joaf-alert-fg">
+            <label>শিরোনাম *</label>
+            <input type="text" id="joaf-f-title" placeholder="সংক্ষেপে বলুন কী হয়েছে">
+          </div>
+          <div class="joaf-alert-fg">
+            <label>বিস্তারিত *</label>
+            <textarea id="joaf-f-desc" rows="3" placeholder="কী হয়েছে বিস্তারিত লিখুন..."></textarea>
+          </div>
+          <div class="joaf-alert-fg">
+            <label>এলাকা *</label>
+            <input type="text" id="joaf-f-location" placeholder="গ্রাম/মহল্লা, উপজেলা, জেলা">
+          </div>
+          <div class="joaf-alert-fg">
+            <label>আপনার নাম (ঐচ্ছিক)</label>
+            <input type="text" id="joaf-f-reporter" placeholder="নাম না দিলেও চলবে">
+          </div>
+          <div class="joaf-alert-fg">
+            <div class="joaf-photo-up" onclick="document.getElementById('joaf-photo-input').click()">📷 ছবি যোগ করুন (ঐচ্ছিক)</div>
+            <input type="file" id="joaf-photo-input" accept="image/*" style="display:none">
+            <img id="joaf-photo-preview" style="display:none;width:100%;border-radius:10px;margin-top:8px">
+          </div>
+          <div class="joaf-alert-fg">
+            <button class="joaf-gps-btn" id="joaf-gps-btn">📍 GPS লোকেশন যোগ করুন</button>
+          </div>
+          <button class="joaf-submit-btn" id="joaf-alert-submit">🚨 সতর্কতা পাঠান</button>
+          <button style="width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:13px;color:#6b7280;margin-top:6px;cursor:pointer" onclick="document.getElementById('joaf-global-alert-modal').classList.remove('open')">বাতিল করুন</button>
+        </div>
+      </div>`;
+
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      document.body.appendChild(div);
+
+      let _selType = 'other', _gps = null, _photo = null;
+
+      document.getElementById('joaf-alert-fab').addEventListener('click', () => {
+        document.getElementById('joaf-global-alert-modal').classList.add('open');
+      });
+
+      document.getElementById('joaf-global-alert-modal').addEventListener('click', e => {
+        if (e.target === document.getElementById('joaf-global-alert-modal'))
+          document.getElementById('joaf-global-alert-modal').classList.remove('open');
+      });
+
+      document.getElementById('joaf-at-grid').addEventListener('click', e => {
+        const btn = e.target.closest('.joaf-at-btn');
+        if (!btn) return;
+        document.querySelectorAll('.joaf-at-btn').forEach(b => b.classList.remove('sel'));
+        btn.classList.add('sel');
+        _selType = btn.dataset.type;
+      });
+
+      document.getElementById('joaf-photo-input').addEventListener('change', e => {
+        _photo = e.target.files[0];
+        if (_photo) {
+          const r = new FileReader();
+          r.onload = ev => {
+            const p = document.getElementById('joaf-photo-preview');
+            p.src = ev.target.result; p.style.display = 'block';
+          };
+          r.readAsDataURL(_photo);
+        }
+      });
+
+      document.getElementById('joaf-gps-btn').addEventListener('click', () => {
+        const btn = document.getElementById('joaf-gps-btn');
+        btn.textContent = '⏳ লোকেশন নেওয়া হচ্ছে...';
+        navigator.geolocation.getCurrentPosition(pos => {
+          _gps = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+          btn.textContent = '✅ লোকেশন পাওয়া গেছে';
+          btn.classList.add('got');
+        }, () => { btn.textContent = '❌ পাওয়া যায়নি'; });
+      });
+
+      document.getElementById('joaf-alert-submit').addEventListener('click', async () => {
+        const title = document.getElementById('joaf-f-title').value.trim();
+        const desc = document.getElementById('joaf-f-desc').value.trim();
+        const location = document.getElementById('joaf-f-location').value.trim();
+        const reporter = document.getElementById('joaf-f-reporter').value.trim();
+
+        if (!title || !desc || !location) { alert('শিরোনাম, বিবরণ ও এলাকা আবশ্যক।'); return; }
+
+        const btn = document.getElementById('joaf-alert-submit');
+        btn.textContent = 'পাঠানো হচ্ছে...'; btn.disabled = true;
+
+        try {
+          let imageUrl = null;
+          if (_photo) {
+            const fd = new FormData();
+            fd.append('file', _photo);
+            fd.append('upload_preset', 'kf483px5');
+            const res = await fetch('https://api.cloudinary.com/v1_1/dou71pfe1/image/upload', {method:'POST', body:fd});
+            const d = await res.json();
+            imageUrl = d.secure_url;
+          }
+
+          const {initializeApp, getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+          const {getFirestore, collection, addDoc, serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+          const fbApp = getApps().length ? getApps()[0] : initializeApp({
+            apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
+            authDomain:'joaf-app-45753.firebaseapp.com',
+            projectId:'joaf-app-45753',
+            storageBucket:'joaf-app-45753.firebasestorage.app',
+            messagingSenderId:'472362223214',
+            appId:'1:472362223214:web:9186a4f90dc608bae4487f'
+          });
+          const db = getFirestore(fbApp);
+          await addDoc(collection(db,'alerts'), {title, description:desc, location, reporter, type:_selType, imageUrl, lat:_gps?.lat||null, lng:_gps?.lng||null, createdAt:serverTimestamp()});
+
+          alert('✅ সতর্কতা পাঠানো হয়েছে!');
+          document.getElementById('joaf-global-alert-modal').classList.remove('open');
+          ['joaf-f-title','joaf-f-desc','joaf-f-location','joaf-f-reporter'].forEach(id => document.getElementById(id).value='');
+          document.getElementById('joaf-photo-preview').style.display='none';
+          _gps=null; _photo=null;
+        } catch(e) {
+          alert('সমস্যা হয়েছে, আবার চেষ্টা করুন।');
+          console.error(e);
+        }
+        btn.textContent='🚨 সতর্কতা পাঠান'; btn.disabled=false;
+      });
+    }
+
     // 4. Init UI — after DOM injections complete
     this.startClock();
     this.initScrollHeader();
