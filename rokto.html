@@ -120,7 +120,7 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="/js/plugins.js"></script>
 <script src="/js/data.js?v=9.6"></script>
-<script src="/js/components.js?v=9.7"></script>
+<script src="/js/components.js?v=9.6"></script>
 <script src="/js/main.js"></script>
 <script src="/js/bn-search.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
@@ -145,13 +145,13 @@ const db = getFirestore(app);
 
 const DISTRICTS = ["ঢাকা","চট্টগ্রাম","রাজশাহী","খুলনা","বরিশাল","সিলেট","রংপুর","ময়মনসিংহ","কুমিল্লা","নারায়ণগঞ্জ","গাজীপুর","টাঙ্গাইল","ফরিদপুর","যশোর","নোয়াখালী","বগুড়া","দিনাজপুর","রংপুর","পাবনা","নরসিংদী","মানিকগঞ্জ","মুন্সীগঞ্জ","শরীয়তপুর","মাদারীপুর","গোপালগঞ্জ","কিশোরগঞ্জ","নেত্রকোনা","জামালপুর","শেরপুর","ব্রাহ্মণবাড়িয়া","চাঁদপুর","ফেনী","লক্ষ্মীপুর","কক্সবাজার","বান্দরবান","রাঙ্গামাটি","খাগড়াছড়ি","হবিগঞ্জ","মৌলভীবাজার","সুনামগঞ্জ","নওগাঁ","চাঁপাইনবাবগঞ্জ","নাটোর","সিরাজগঞ্জ","জয়পুরহাট","সাতক্ষীরা","ঝিনাইদহ","মাগুরা","নড়াইল","বাগেরহাট","মেহেরপুর","চুয়াডাঙ্গা","কুষ্টিয়া","ঝালকাঠি","পটুয়াখালী","পিরোজপুর","ভোলা","বরগুনা","লালমনিরহাট","নীলফামারী","গাইবান্ধা","কুড়িগ্রাম","পঞ্চগড়","ঠাকুরগাঁও"];
 
-// Populate district dropdowns
+// Populate district dropdown
 const dSel = document.getElementById('districtFilter');
-const fDSel = document.getElementById('f_district');
-DISTRICTS.sort().forEach(d => {
-  dSel.innerHTML += `<option value="${d}">${d}</option>`;
-  fDSel.innerHTML += `<option value="${d}">${d}</option>`;
-});
+if (dSel) {
+  DISTRICTS.sort().forEach(d => {
+    dSel.innerHTML += `<option value="${d}">${d}</option>`;
+  });
+}
 
 let allDonors = [];
 let activeBlood = 'all';
