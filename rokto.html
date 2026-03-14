@@ -30,8 +30,8 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
 .btn-call { flex: 1; padding: 10px; background: var(--green); color: #fff; border: none; border-radius: 50px; font-size: 13px; font-weight: 800; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
 .btn-msg { flex: 1; padding: 10px; background: #25d366; color: #fff; border: none; border-radius: 50px; font-size: 13px; font-weight: 800; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
 
-.modal-overlay { display: none; position: fixed !important; inset: 0 !important; background: rgba(0,0,0,.5); z-index: 99998 !important; align-items: flex-end; }
-.modal-overlay.open { display: flex; }
+.modal-overlay { display: none; position: fixed !important; inset: 0 !important; background: rgba(0,0,0,.5); z-index: 999999 !important; align-items: flex-end; }
+.modal-overlay.open { display: flex !important; }
 .modal { background: #fff; border-radius: 24px 24px 0 0; padding: 24px 20px; width: 100%; max-height: 90vh; overflow-y: auto; }
 .modal h3 { font-size: 18px; font-weight: 900; margin-bottom: 16px; color: #1a1a2e; }
 .form-group { margin-bottom: 14px; }
@@ -111,7 +111,7 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
 <div class="section" id="donorsList"></div>
 
 <!-- FAB -->
-<button id="fabBtn" style="position:fixed!important;bottom:80px!important;right:16px!important;width:56px!important;height:56px!important;background:#075e55;color:#fff;border:none;border-radius:50%!important;font-size:28px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9991!important;display:flex!important;align-items:center;justify-content:center;">+</button>
+<button id="fabBtn" style="position:fixed!important;bottom:80px!important;right:16px!important;background:#075e55;color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9991!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;">+🩸 রক্ত দিন</button>
 
 <!-- Register Modal -->
 <div class="modal-overlay" id="modalOverlay">
