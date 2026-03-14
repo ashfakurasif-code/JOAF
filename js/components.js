@@ -500,15 +500,85 @@ const JOAFComponents = {
       div.innerHTML = html;
       document.body.appendChild(div);
 
-      // Blood donor FAB — hide on rokto.html
+      // Blood FAB
       const isRoktoPage = window.location.pathname.includes('rokto');
+      const isAlertPage = window.location.pathname.includes('alert');
+
       if (!isRoktoPage) {
-        const bfab = document.createElement('button');
-        bfab.id = 'joaf-blood-fab';
-        bfab.innerHTML = '🩸 রক্ত দিন';
-        bfab.style.cssText = 'position:fixed!important;bottom:140px!important;left:16px!important;transform:none!important;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;';
-        bfab.addEventListener('click', () => { window.location.href = '/rokto.html'; });
-        document.body.appendChild(bfab);
+        // 🩸 রক্ত নিবন্ধন popup — all pages except rokto
+        const bloodModal = document.createElement('div');
+        bloodModal.id = 'joaf-blood-modal-wrap';
+        bloodModal.innerHTML = \`
+        <style>
+        #joaf-blood-fab{position:fixed!important;bottom:140px!important;left:16px!important;transform:none!important;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;}
+        #joaf-blood-modal{display:none;position:fixed!important;inset:0!important;background:rgba(0,0,0,.6);z-index:99999!important;align-items:flex-end;}
+        #joaf-blood-modal.open{display:flex;}
+        .joaf-blood-inner{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
+        .joaf-blood-fg{margin-bottom:12px;}
+        .joaf-blood-fg label{font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;}
+        .joaf-blood-fg input,.joaf-blood-fg select{width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;}
+        .joaf-blood-fg input:focus,.joaf-blood-fg select:focus{border-color:#075e55;}
+        .joaf-blood-submit{width:100%;padding:13px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
+        </style>
+        <button id="joaf-blood-fab">🩸 রক্ত নিবন্ধন</button>
+        <div id="joaf-blood-modal">
+          <div class="joaf-blood-inner">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <h3 style="margin:0;font-size:17px;font-weight:900">🩸 রক্তদাতা নিবন্ধন</h3>
+              <button onclick="document.getElementById('joaf-blood-modal').classList.remove('open')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280">✕</button>
+            </div>
+            <div class="joaf-blood-fg"><label>আপনার নাম *</label><input type="text" id="jb-name" placeholder="পূর্ণ নাম লিখুন"></div>
+            <div class="joaf-blood-fg"><label>মোবাইল নম্বর *</label><input type="tel" id="jb-phone" placeholder="01XXXXXXXXX"></div>
+            <div class="joaf-blood-fg"><label>রক্তের গ্রুপ *</label>
+              <select id="jb-blood"><option value="">বেছে নিন</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+            </div>
+            <div class="joaf-blood-fg"><label>জেলা *</label>
+              <select id="jb-district"><option value="">জেলা বেছে নিন</option></select>
+            </div>
+            <div class="joaf-blood-fg"><label>উপজেলা / এলাকা</label><input type="text" id="jb-area" placeholder="আপনার উপজেলা বা এলাকা"></div>
+            <div class="joaf-blood-fg"><label>শেষ রক্তদানের তারিখ (যদি থাকে)</label><input type="date" id="jb-lastdonate"></div>
+            <button class="joaf-blood-submit" id="jb-submit">✅ নিবন্ধন করুন</button>
+            <button style="width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:13px;color:#6b7280;margin-top:6px;cursor:pointer" onclick="document.getElementById('joaf-blood-modal').classList.remove('open')">বাতিল করুন</button>
+          </div>
+        </div>\`;
+        document.body.appendChild(bloodModal);
+
+        // Populate districts
+        const DISTS = ['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ','কুমিল্লা','নারায়ণগঞ্জ','গাজীপুর','টাঙ্গাইল','ফরিদপুর','যশোর','নোয়াখালী','বগুড়া','দিনাজপুর','পাবনা','নরসিংদী','মানিকগঞ্জ','মুন্সীগঞ্জ','শরীয়তপুর','মাদারীপুর','গোপালগঞ্জ','কিশোরগঞ্জ','নেত্রকোনা','জামালপুর','শেরপুর','ব্রাহ্মণবাড়িয়া','চাঁদপুর','ফেনী','লক্ষ্মীপুর','কক্সবাজার','বান্দরবান','রাঙ্গামাটি','খাগড়াছড়ি','হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','নওগাঁ','চাঁপাইনবাবগঞ্জ','নাটোর','সিরাজগঞ্জ','জয়পুরহাট','সাতক্ষীরা','ঝিনাইদহ','মাগুরা','নড়াইল','বাগেরহাট','মেহেরপুর','চুয়াডাঙ্গা','কুষ্টিয়া','ঝালকাঠি','পটুয়াখালী','পিরোজপুর','ভোলা','বরগুনা','লালমনিরহাট','নীলফামারী','গাইবান্ধা','কুড়িগ্রাম','পঞ্চগড়','ঠাকুরগাঁও'];
+        const dSel = document.getElementById('jb-district');
+        if (dSel) DISTS.sort().forEach(d => { const o = document.createElement('option'); o.value=d; o.textContent=d; dSel.appendChild(o); });
+
+        document.getElementById('joaf-blood-fab').addEventListener('click', () => {
+          document.getElementById('joaf-blood-modal').classList.add('open');
+        });
+        document.getElementById('joaf-blood-modal').addEventListener('click', e => {
+          if (e.target === document.getElementById('joaf-blood-modal'))
+            document.getElementById('joaf-blood-modal').classList.remove('open');
+        });
+
+        document.getElementById('jb-submit').addEventListener('click', async () => {
+          const name = document.getElementById('jb-name').value.trim();
+          const phone = document.getElementById('jb-phone').value.trim();
+          const blood = document.getElementById('jb-blood').value;
+          const district = document.getElementById('jb-district').value;
+          const area = document.getElementById('jb-area').value.trim();
+          const lastDonate = document.getElementById('jb-lastdonate').value;
+          if (!name||!phone||!blood||!district) { alert('নাম, মোবাইল, রক্তের গ্রুপ ও জেলা আবশ্যক।'); return; }
+          if (!/^01[3-9]\d{8}$/.test(phone)) { alert('সঠিক মোবাইল নম্বর দিন।'); return; }
+          const btn = document.getElementById('jb-submit');
+          btn.textContent='নিবন্ধন হচ্ছে...'; btn.disabled=true;
+          try {
+            const {initializeApp,getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+            const {getFirestore,collection,addDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753',storageBucket:'joaf-app-45753.firebasestorage.app',messagingSenderId:'472362223216',appId:'1:472362223214:web:9186a4f90dc608bae4487f'});
+            const db = getFirestore(fbApp);
+            await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,createdAt:serverTimestamp()});
+            alert('✅ সফলভাবে নিবন্ধন হয়েছে! আপনাকে ধন্যবাদ।');
+            document.getElementById('joaf-blood-modal').classList.remove('open');
+            ['jb-name','jb-phone','jb-area'].forEach(id=>document.getElementById(id).value='');
+          } catch(e) { alert('সমস্যা হয়েছে, আবার চেষ্টা করুন।'); console.error(e); }
+          btn.textContent='✅ নিবন্ধন করুন'; btn.disabled=false;
+        });
       }
 
       let _selType = 'other', _gps = null, _photo = null;
