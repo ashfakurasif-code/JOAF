@@ -111,46 +111,7 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
 <div class="section" id="donorsList"></div>
 
 <!-- FAB -->
-<button id="fabBtn" style="position:fixed!important;bottom:80px!important;right:16px!important;background:#075e55;color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9991!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;">+🩸 রক্ত দিন</button>
 
-<!-- Register Modal -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h3>🩸 রক্তদাতা হিসেবে নিবন্ধন</h3>
-    <div class="form-group">
-      <label>আপনার নাম *</label>
-      <input type="text" id="f_name" placeholder="পূর্ণ নাম লিখুন">
-    </div>
-    <div class="form-group">
-      <label>মোবাইল নম্বর *</label>
-      <input type="tel" id="f_phone" placeholder="01XXXXXXXXX">
-    </div>
-    <div class="form-group">
-      <label>রক্তের গ্রুপ *</label>
-      <select id="f_blood">
-        <option value="">বেছে নিন</option>
-        <option>A+</option><option>A-</option>
-        <option>B+</option><option>B-</option>
-        <option>AB+</option><option>AB-</option>
-        <option>O+</option><option>O-</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>জেলা *</label>
-      <select id="f_district"></select>
-    </div>
-    <div class="form-group">
-      <label>উপজেলা / এলাকা</label>
-      <input type="text" id="f_area" placeholder="আপনার উপজেলা বা এলাকা">
-    </div>
-    <div class="form-group">
-      <label>শেষ রক্তদানের তারিখ (যদি থাকে)</label>
-      <input type="date" id="f_lastDonate">
-    </div>
-    <button class="btn-submit" id="submitBtn">✅ নিবন্ধন করুন</button>
-    <button style="width:100%;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;color:#6b7280;margin-top:8px;cursor:pointer" onclick="closeModal()">বাতিল করুন</button>
-  </div>
-</div>
 
 </div>
 <div id="joaf-footer"></div>
@@ -159,7 +120,7 @@ body { font-family: 'SolaimanLipi', sans-serif; background: var(--bg); color: #1
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="/js/plugins.js"></script>
 <script src="/js/data.js?v=9.6"></script>
-<script src="/js/components.js?v=9.7"></script>
+<script src="/js/components.js?v=9.6"></script>
 <script src="/js/main.js"></script>
 <script src="/js/bn-search.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
@@ -317,9 +278,7 @@ document.getElementById('districtFilter').addEventListener('change', renderDonor
 document.getElementById('searchInput').addEventListener('input', renderDonors);
 
 // Modal
-window.closeModal = () => document.getElementById('modalOverlay').classList.remove('open');
-document.getElementById('fabBtn').addEventListener('click', () => document.getElementById('modalOverlay').classList.add('open'));
-document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === document.getElementById('modalOverlay')) closeModal(); });
+
 
 // Submit
 document.getElementById('submitBtn').addEventListener('click', async () => {

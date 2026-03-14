@@ -500,15 +500,92 @@ const JOAFComponents = {
       div.innerHTML = html;
       document.body.appendChild(div);
 
-      // Blood FAB — simple link to rokto page
-      if (!window.location.pathname.includes('rokto')) {
-        const bfab = document.createElement('a');
-        bfab.id = 'joaf-blood-fab';
-        bfab.href = '/rokto.html';
-        bfab.innerHTML = '🩸 রক্ত নিবন্ধন করুন';
-        bfab.style.cssText = 'position:fixed!important;bottom:140px!important;left:16px!important;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;text-decoration:none;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;';
-        document.body.appendChild(bfab);
+      // Blood FAB + Modal
+      const isRoktoPage = window.location.pathname.includes('rokto');
+      const bloodWrap = document.createElement('div');
+      bloodWrap.id = 'joaf-blood-modal-wrap';
+      bloodWrap.innerHTML = \`
+      <style>
+      #joaf-blood-fab{position:fixed!important;bottom:140px!important;left:16px!important;background:linear-gradient(135deg,#075e55,#0a7a6e)!important;color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;}
+      #joaf-blood-reg-modal{display:none;position:fixed!important;inset:0!important;background:rgba(0,0,0,.6);z-index:99999!important;align-items:flex-end;}
+      #joaf-blood-reg-modal.open{display:flex!important;}
+      .jbr-inner{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
+      .jbr-fg{margin-bottom:12px;}
+      .jbr-fg label{font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;}
+      .jbr-fg input,.jbr-fg select{width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;}
+      .jbr-fg input:focus,.jbr-fg select:focus{border-color:#075e55;}
+      .jbr-submit{width:100%;padding:13px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
+      </style>
+      \${isRoktoPage ? '' : '<button id="joaf-blood-fab">+🩸 রক্ত দিন</button>'}
+      <div id="joaf-blood-reg-modal">
+        <div class="jbr-inner">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="margin:0;font-size:17px;font-weight:900">🩸 রক্তদাতা নিবন্ধন</h3>
+            <button onclick="document.getElementById('joaf-blood-reg-modal').classList.remove('open')" style="background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280">✕</button>
+          </div>
+          <div class="jbr-fg"><label>আপনার নাম *</label><input type="text" id="jbr-name" placeholder="পূর্ণ নাম লিখুন"></div>
+          <div class="jbr-fg"><label>মোবাইল নম্বর *</label><input type="tel" id="jbr-phone" placeholder="01XXXXXXXXX"></div>
+          <div class="jbr-fg"><label>রক্তের গ্রুপ *</label>
+            <select id="jbr-blood"><option value="">বেছে নিন</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+          </div>
+          <div class="jbr-fg"><label>জেলা *</label>
+            <select id="jbr-district"><option value="">জেলা বেছে নিন</option></select>
+          </div>
+          <div class="jbr-fg"><label>উপজেলা / এলাকা</label><input type="text" id="jbr-area" placeholder="আপনার উপজেলা বা এলাকা"></div>
+          <div class="jbr-fg"><label>শেষ রক্তদানের তারিখ (যদি থাকে)</label><input type="date" id="jbr-lastdonate"></div>
+          <button class="jbr-submit" id="jbr-submit">✅ নিবন্ধন করুন</button>
+          <button style="width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:13px;color:#6b7280;margin-top:6px;cursor:pointer" onclick="document.getElementById('joaf-blood-reg-modal').classList.remove('open')">বাতিল করুন</button>
+        </div>
+      </div>\`;
+      document.body.appendChild(bloodWrap);
+
+      // Populate districts
+      const JBR_DISTS = ['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ','কুমিল্লা','নারায়ণগঞ্জ','গাজীপুর','টাঙ্গাইল','ফরিদপুর','যশোর','নোয়াখালী','বগুড়া','দিনাজপুর','পাবনা','নরসিংদী','মানিকগঞ্জ','মুন্সীগঞ্জ','শরীয়তপুর','মাদারীপুর','গোপালগঞ্জ','কিশোরগঞ্জ','নেত্রকোনা','জামালপুর','শেরপুর','ব্রাহ্মণবাড়িয়া','চাঁদপুর','ফেনী','লক্ষ্মীপুর','কক্সবাজার','বান্দরবান','রাঙ্গামাটি','খাগড়াছড়ি','হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','নওগাঁ','চাঁপাইনবাবগঞ্জ','নাটোর','সিরাজগঞ্জ','জয়পুরহাট','সাতক্ষীরা','ঝিনাইদহ','মাগুরা','নড়াইল','বাগেরহাট','মেহেরপুর','চুয়াডাঙ্গা','কুষ্টিয়া','ঝালকাঠি','পটুয়াখালী','পিরোজপুর','ভোলা','বরগুনা','লালমনিরহাট','নীলফামারী','গাইবান্ধা','কুড়িগ্রাম','পঞ্চগড়','ঠাকুরগাঁও'];
+      const jbrDSel = document.getElementById('jbr-district');
+      if (jbrDSel) JBR_DISTS.sort().forEach(d => { const o=document.createElement('option'); o.value=d; o.textContent=d; jbrDSel.appendChild(o); });
+
+      // Open modal — for rokto page use dedicated button, for others use FAB
+      if (isRoktoPage) {
+        // Add button inside rokto page
+        const rkBtn = document.createElement('button');
+        rkBtn.id = 'rokto-reg-btn';
+        rkBtn.innerHTML = '+🩸 রক্ত দিন';
+        rkBtn.style.cssText = 'position:fixed!important;bottom:80px!important;right:16px!important;background:linear-gradient(135deg,#075e55,#0a7a6e)!important;color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9991!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;';
+        rkBtn.addEventListener('click', () => document.getElementById('joaf-blood-reg-modal').classList.add('open'));
+        document.body.appendChild(rkBtn);
+      } else {
+        const fabEl = document.getElementById('joaf-blood-fab');
+        if (fabEl) fabEl.addEventListener('click', () => document.getElementById('joaf-blood-reg-modal').classList.add('open'));
       }
+
+      document.getElementById('joaf-blood-reg-modal').addEventListener('click', e => {
+        if (e.target === document.getElementById('joaf-blood-reg-modal'))
+          document.getElementById('joaf-blood-reg-modal').classList.remove('open');
+      });
+
+      document.getElementById('jbr-submit').addEventListener('click', async () => {
+        const name = document.getElementById('jbr-name').value.trim();
+        const phone = document.getElementById('jbr-phone').value.trim();
+        const blood = document.getElementById('jbr-blood').value;
+        const district = document.getElementById('jbr-district').value;
+        const area = document.getElementById('jbr-area').value.trim();
+        const lastDonate = document.getElementById('jbr-lastdonate').value;
+        if (!name||!phone||!blood||!district) { alert('নাম, মোবাইল, রক্তের গ্রুপ ও জেলা আবশ্যক।'); return; }
+        if (!/^01[3-9]\d{8}$/.test(phone)) { alert('সঠিক মোবাইল নম্বর দিন।'); return; }
+        const btn = document.getElementById('jbr-submit');
+        btn.textContent='নিবন্ধন হচ্ছে...'; btn.disabled=true;
+        try {
+          const {initializeApp,getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+          const {getFirestore,collection,addDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+          const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753',storageBucket:'joaf-app-45753.firebasestorage.app',messagingSenderId:'472362223214',appId:'1:472362223214:web:9186a4f90dc608bae4487f'});
+          const db = getFirestore(fbApp);
+          await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,createdAt:serverTimestamp()});
+          alert('✅ সফলভাবে নিবন্ধন হয়েছে! আপনাকে ধন্যবাদ।');
+          document.getElementById('joaf-blood-reg-modal').classList.remove('open');
+          ['jbr-name','jbr-phone','jbr-area'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+        } catch(e) { alert('সমস্যা হয়েছে, আবার চেষ্টা করুন।'); console.error(e); }
+        btn.textContent='✅ নিবন্ধন করুন'; btn.disabled=false;
+      });
       let _selType = 'other', _gps = null, _photo = null;
 
       const alertFabEl = document.getElementById('joaf-alert-fab'); if(alertFabEl) alertFabEl.addEventListener('click', () => {
