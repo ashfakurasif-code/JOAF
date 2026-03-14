@@ -451,7 +451,7 @@ const JOAFComponents = {
       .joaf-submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
       </style>
 
-      <button id="joaf-alert-fab">🚨 সতর্কতা দিন</button>
+      ${window.location.pathname.includes('alert') ? '' : '<button id="joaf-alert-fab">🚨 সতর্কতা দিন</button>'}
 
       <div id="joaf-global-alert-modal">
         <div class="joaf-alert-modal-inner">
@@ -500,17 +500,20 @@ const JOAFComponents = {
       div.innerHTML = html;
       document.body.appendChild(div);
 
-      // Blood donor FAB
+      // Blood donor FAB — hide on rokto.html
+      const isRoktoPage = window.location.pathname.includes('rokto');
+      if (!isRoktoPage) {
         const bfab = document.createElement('button');
         bfab.id = 'joaf-blood-fab';
         bfab.innerHTML = '🩸 রক্ত দিন';
         bfab.style.cssText = 'position:fixed!important;bottom:140px!important;left:16px!important;transform:none!important;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;';
         bfab.addEventListener('click', () => { window.location.href = '/rokto.html'; });
         document.body.appendChild(bfab);
+      }
 
       let _selType = 'other', _gps = null, _photo = null;
 
-      document.getElementById('joaf-alert-fab').addEventListener('click', () => {
+      const alertFabEl = document.getElementById('joaf-alert-fab'); if(alertFabEl) alertFabEl.addEventListener('click', () => {
         document.getElementById('joaf-global-alert-modal').classList.add('open');
       });
 
