@@ -832,7 +832,7 @@ async function joafSendAdminEmail(data) {
         s.onload = res; s.onerror = rej;
         document.head.appendChild(s);
       });
-      emailjs.init('YOUR_EMAILJS_PUBLIC_KEY');
+      emailjs.init('FmIBBVHHHu8qEL38O');
     }
 
     // Emergency services by type
@@ -844,7 +844,7 @@ async function joafSendAdminEmail(data) {
       'দুর্ঘটনা': 'accident@julyforum.com',
     };
 
-    await emailjs.send('joaf_service', 'joaf_alert_template', {
+    await emailjs.send('service_1x9gz1r', 'template_qlcgmz6', {
       to_email: 'info@julyforum.com',
       alert_type: data.type || 'অন্যান্য',
       alert_title: data.title,
@@ -887,14 +887,27 @@ async function joafSubscribePush() {
   } catch(e) { console.log('Push subscription failed:', e); }
 }
 
-// Subscribe after 3 seconds
-setTimeout(() => {
-  if ('Notification' in window && Notification.permission === 'default') {
-    joafSubscribePush();
+// Request notification permission and subscribe
+async function joafRequestNotification() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  
+  if (Notification.permission === 'default') {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') joafSubscribePush();
   } else if (Notification.permission === 'granted') {
     joafSubscribePush();
   }
-}, 3000);
+}
+
+// Ask after 5 seconds on first visit
+setTimeout(() => {
+  if (!localStorage.getItem('joaf_notif_asked')) {
+    localStorage.setItem('joaf_notif_asked', '1');
+    joafRequestNotification();
+  } else if (Notification.permission === 'granted') {
+    joafSubscribePush();
+  }
+}, 5000);
 
 // Auto cache-bust for dynamic JS files
 (function() {
