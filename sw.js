@@ -1,6 +1,6 @@
 // JOAF Service Worker v3.0
 // ⚠️ নতুন deploy দিলে CACHE version বাড়াও: joaf-v5 → joaf-v6
-const CACHE = 'joaf-v7';
+const CACHE = 'joaf-v8';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE = [
