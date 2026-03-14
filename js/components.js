@@ -481,8 +481,8 @@ const JOAFComponents = {
     // 3b. Inject maze nav into placeholder
     const mazeEl = document.getElementById('joaf-maze-nav');
     if (mazeEl) {
-      mazeEl.outerHTML = this.renderMazeNav();
-      this.initMazeNav();
+      this.initMazeNav(); // define joafMaze FIRST
+      mazeEl.outerHTML = this.renderMazeNav(); // then inject HTML
     }
 
     // Global Alert FAB + Modal — all pages
