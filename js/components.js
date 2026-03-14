@@ -504,7 +504,7 @@ const JOAFComponents = {
       const isRoktoPage = window.location.pathname.includes('rokto');
       const bloodWrap = document.createElement('div');
       bloodWrap.id = 'joaf-blood-modal-wrap';
-      bloodWrap.innerHTML = \`
+      bloodWrap.innerHTML = `
       <style>
       #joaf-blood-fab{position:fixed!important;bottom:140px!important;left:16px!important;background:linear-gradient(135deg,#075e55,#0a7a6e)!important;color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;}
       #joaf-blood-reg-modal{display:none;position:fixed!important;inset:0!important;background:rgba(0,0,0,.6);z-index:99999!important;align-items:flex-end;}
@@ -536,7 +536,7 @@ const JOAFComponents = {
           <button class="jbr-submit" id="jbr-submit">✅ নিবন্ধন করুন</button>
           <button style="width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:13px;color:#6b7280;margin-top:6px;cursor:pointer" onclick="document.getElementById('joaf-blood-reg-modal').classList.remove('open')">বাতিল করুন</button>
         </div>
-      </div>\`;
+      </div>`;
       document.body.appendChild(bloodWrap);
 
       // Populate districts
