@@ -115,15 +115,28 @@ window.bnSearch = function(query, text, groupName) {
   const t = text.toLowerCase();
   const g = (groupName || text).toLowerCase();
 
-  // Direct match
+  // Direct match (handles English text in area field)
   if (t.includes(q)) return true;
+
+  // English query → check if text contains the English word directly
+  // e.g. area="bhola bazar" and query="bhola" → match
+  if (t.split(/[\s,.-]+/).some(word => word.startsWith(q) || q.startsWith(word))) return true;
+
+  // Reverse: Bengali text matches English query via transliteration
+  // e.g. query="bhola", text="ভোলা" → match via ALL_MAP
+  const bn = ALL_MAP[q];
+  if (bn && t.includes(bn.toLowerCase())) return true;
+  
+  // Also check: query is Bengali, text is English
+  // e.g. query="ভোলা", check if ALL_MAP has reverse match
+  for (const [en, bnWord] of Object.entries(ALL_MAP)) {
+    if (bnWord.toLowerCase() === q && t.includes(en)) return true;
+  }
 
   // Continent match — e.g. "malaysia" → JOAF Asia
   if (groupName && continentMatch(q, groupName)) return true;
 
-  // Transliteration match
-  const bn = ALL_MAP[q];
-  if (bn && t.includes(bn.toLowerCase())) return true;
+  // Additional partial transliteration
 
   // Partial match
   for (const [en, bnWord] of Object.entries(ALL_MAP)) {
