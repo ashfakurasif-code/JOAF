@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>সংবাদ ও Breaking News — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head>
+<body data-page="media">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div>
+<div id="joaf-ticker"></div>
+
+<style>
+.news-hero{background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:36px 0 24px;color:#fff;text-align:center;}
+.news-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.news-hero p{font-size:13px;opacity:.8;margin-top:6px;}
+.breaking-bar{background:#dc2626;color:#fff;padding:10px 0;overflow:hidden;}
+.breaking-inner{display:flex;align-items:center;gap:12px;}
+.breaking-tag{background:#fff;color:#dc2626;font-size:11px;font-weight:900;padding:3px 10px;border-radius:50px;flex-shrink:0;}
+.breaking-text{font-size:13px;font-weight:700;white-space:nowrap;animation:bscroll 20s linear infinite;}
+@keyframes bscroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+.src-tabs{display:flex;gap:8px;overflow-x:auto;padding:14px 0 6px;scrollbar-width:none;}
+.src-tab{flex-shrink:0;padding:7px 14px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.src-tab.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+.news-card{background:#fff;border-radius:16px;padding:0;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:14px;border:1.5px solid #f0f0f0;display:flex;gap:0;cursor:pointer;transition:transform .15s;}
+.news-card:hover{transform:translateY(-2px);}
+.news-img{width:100px;min-height:90px;background:#e5e7eb;flex-shrink:0;object-fit:cover;}
+.news-img-placeholder{width:100px;min-height:90px;background:linear-gradient(135deg,#e5e7eb,#d1d5db);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;}
+.news-body{padding:12px;flex:1;}
+.news-src{font-size:10px;font-weight:700;color:#2563eb;margin-bottom:4px;}
+.news-title{font-size:13px;font-weight:800;color:#1a1a2e;line-height:1.4;margin-bottom:5px;}
+.news-time{font-size:10px;color:#9ca3af;}
+.news-breaking-badge{display:inline-block;background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:50px;margin-bottom:4px;}
+.load-more{width:100%;padding:12px;background:#f8fafc;border:1.5px solid #e5e7eb;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;}
+.notif-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:14px;padding:16px;margin-bottom:16px;border:1.5px solid #93c5fd;}
+.notif-card h4{font-size:14px;font-weight:800;color:#1e40af;margin-bottom:4px;}
+.notif-card p{font-size:12px;color:#1e3a8a;}
+.notif-btn{padding:9px 20px;background:#2563eb;color:#fff;border:none;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;}
+.loading-news{text-align:center;padding:40px;color:#9ca3af;font-size:14px;}
+</style>
+
+<div class="news-hero">
+  <div class="container">
+    <h1>📰 সর্বশেষ সংবাদ</h1>
+    <p>বাংলাদেশের শীর্ষ সংবাদমাধ্যম থেকে সরাসরি</p>
+  </div>
+</div>
+
+<div class="breaking-bar">
+  <div class="container">
+    <div class="breaking-inner">
+      <span class="breaking-tag">🔴 LIVE</span>
+      <span class="breaking-text" id="breakingText">সর্বশেষ খবর লোড হচ্ছে...</span>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div class="notif-card">
+      <h4>🚨 Breaking News সবার আগে পান</h4>
+      <p>TV-র আগে আপনার ফোনে আসবে — push notification চালু করুন।</p>
+      <button class="notif-btn" onclick="requestNewsNotif()">🔔 চালু করুন</button>
+    </div>
+
+    <div class="src-tabs" id="srcTabs"></div>
+    <div id="newsContainer"><div class="loading-news">⏳ সংবাদ লোড হচ্ছে...</div></div>
+
+  </div>
+</section>
+
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+
+<script>
+// News sources with RSS feeds (via rss2json free API)
+const SOURCES = [
+  {id:'all',    name:'সব সংবাদ',   icon:'📰'},
+  {id:'proto',  name:'প্রথম আলো',   icon:'🗞️', rss:'https://www.prothomalo.com/feed'},
+  {id:'bd24',   name:'BD News 24',  icon:'📡', rss:'https://bdnews24.com/bangladesh/feed'},
+  {id:'daily',  name:'Daily Star',  icon:'⭐', rss:'https://www.thedailystar.net/rss.xml'},
+  {id:'jugantor',name:'যুগান্তর',   icon:'📜', rss:'https://www.jugantor.com/feed/rss.xml'},
+  {id:'kaler',  name:'কালের কণ্ঠ', icon:'🔔', rss:'https://www.kalerkantho.com/rss.xml'},
+];
+
+let activeSrc = 'all';
+let allNews = [];
+
+const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
+
+function timeAgo(dateStr){
+  const diff = (Date.now() - new Date(dateStr)) / 60000;
+  if(diff<1) return 'এইমাত্র';
+  if(diff<60) return bn(Math.floor(diff))+' মিনিট আগে';
+  if(diff<1440) return bn(Math.floor(diff/60))+' ঘন্টা আগে';
+  return bn(Math.floor(diff/1440))+' দিন আগে';
+}
+
+function renderTabs(){
+  document.getElementById('srcTabs').innerHTML = SOURCES.map(s=>
+    `<button class="src-tab${s.id===activeSrc?' active':''}" onclick="setSrc('${s.id}')">${s.icon} ${s.name}</button>`
+  ).join('');
+}
+
+function setSrc(id){
+  activeSrc=id;
+  renderTabs();
+  renderNews();
+}
+
+function renderNews(){
+  const news = activeSrc==='all' ? allNews :
+    allNews.filter(n=>n.srcId===activeSrc);
+  const el = document.getElementById('newsContainer');
+  if(!news.length){el.innerHTML='<div class="loading-news">সংবাদ পাওয়া যাচ্ছে না</div>';return;}
+  el.innerHTML = news.slice(0,20).map(n=>`
+    <div class="news-card" onclick="window.open('${n.link}','_blank')">
+      <div class="news-img-placeholder">${n.srcIcon}</div>
+      <div class="news-body">
+        ${n.isBreaking?'<span class="news-breaking-badge">🔴 Breaking</span>':''}
+        <div class="news-src">${n.srcName}</div>
+        <div class="news-title">${n.title}</div>
+        <div class="news-time">${timeAgo(n.pubDate)}</div>
+      </div>
+    </div>`).join('') +
+    `<button class="load-more" onclick="loadMore()">আরো সংবাদ দেখুন ▼</button>`;
+}
+
+async function fetchSource(src){
+  try{
+    const res = await fetch(RSS2JSON + encodeURIComponent(src.rss) + '&count=15');
+    const data = await res.json();
+    if(data.status==='ok'){
+      return data.items.map(item=>({
+        title: item.title,
+        link: item.link,
+        pubDate: item.pubDate,
+        srcId: src.id,
+        srcName: src.name,
+        srcIcon: src.icon,
+        isBreaking: item.title.toLowerCase().includes('breaking') || item.title.includes('জরুরি')
+      }));
+    }
+  }catch(e){}
+  return [];
+}
+
+async function loadAllNews(){
+  const srcs = SOURCES.filter(s=>s.id!=='all');
+  const results = await Promise.allSettled(srcs.map(s=>fetchSource(s)));
+  allNews = results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
+  allNews.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
+
+  // Breaking news ticker
+  const breaking = allNews.filter(n=>n.isBreaking).slice(0,3);
+  if(breaking.length){
+    document.getElementById('breakingText').textContent =
+      breaking.map(n=>n.title).join(' ◆ ');
+  } else if(allNews.length){
+    document.getElementById('breakingText').textContent =
+      allNews.slice(0,3).map(n=>n.title).join(' ◆ ');
+  }
+
+  renderNews();
+}
+
+function loadMore(){
+  const news = activeSrc==='all'?allNews:allNews.filter(n=>n.srcId===activeSrc);
+  const el=document.getElementById('newsContainer');
+  const current=el.querySelectorAll('.news-card').length;
+  const more=news.slice(current,current+10).map(n=>`
+    <div class="news-card" onclick="window.open('${n.link}','_blank')">
+      <div class="news-img-placeholder">${n.srcIcon}</div>
+      <div class="news-body">
+        ${n.isBreaking?'<span class="news-breaking-badge">🔴 Breaking</span>':''}
+        <div class="news-src">${n.srcName}</div>
+        <div class="news-title">${n.title}</div>
+        <div class="news-time">${timeAgo(n.pubDate)}</div>
+      </div>
+    </div>`).join('');
+  el.querySelector('.load-more').insertAdjacentHTML('beforebegin',more);
+}
+
+function requestNewsNotif(){
+  if(!('Notification' in window)) return;
+  Notification.requestPermission().then(p=>{
+    if(p==='granted'){
+      navigator.serviceWorker.ready.then(r=>r.showNotification('✅ Breaking News Alert চালু!',{
+        body:'সর্বশেষ সংবাদ সবার আগে পাবেন।',icon:'/logoc7c3.png'
+      }));
+    }
+  });
+}
+
+renderTabs();
+loadAllNews();
+</script>
+</body>
+</html>

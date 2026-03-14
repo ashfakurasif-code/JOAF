@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>বাজার দর — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head>
+<body data-page="bajar">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div>
+<div id="joaf-ticker"></div>
+
+<style>
+.bajar-hero{background:linear-gradient(135deg,#14532d,#16a34a);padding:40px 0 30px;color:#fff;text-align:center;}
+.bajar-hero h1{font-size:clamp(1.5rem,4vw,2.2rem);font-weight:900;margin-bottom:8px;}
+.bajar-hero p{font-size:14px;opacity:.85;}
+.bajar-updated{font-size:11px;opacity:.7;margin-top:6px;}
+.cat-tabs{display:flex;gap:8px;overflow-x:auto;padding:16px 0 8px;scrollbar-width:none;}
+.cat-tabs::-webkit-scrollbar{display:none;}
+.cat-tab{flex-shrink:0;padding:7px 16px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit;}
+.cat-tab.active{background:#16a34a;color:#fff;border-color:#16a34a;}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px 0;}
+.price-card{background:#fff;border-radius:16px;padding:16px 12px;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1.5px solid #f0f0f0;transition:transform .15s;}
+.price-card:hover{transform:translateY(-2px);}
+.price-icon{font-size:32px;margin-bottom:8px;}
+.price-name{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:6px;}
+.price-main{font-size:20px;font-weight:900;color:#16a34a;}
+.price-unit{font-size:10px;color:#9ca3af;margin-left:2px;}
+.price-range{font-size:11px;color:#6b7280;margin-top:3px;}
+.price-trend{font-size:11px;margin-top:4px;font-weight:700;}
+.trend-up{color:#dc2626;}
+.trend-down{color:#16a34a;}
+.trend-same{color:#9ca3af;}
+.alert-box{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px 16px;margin-bottom:16px;border:1.5px solid #fbbf24;}
+.alert-box h4{font-size:14px;font-weight:800;color:#92400e;margin-bottom:4px;}
+.alert-box p{font-size:12px;color:#78350f;}
+.notif-btn{width:100%;padding:12px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:16px;}
+</style>
+
+<div class="bajar-hero">
+  <div class="container">
+    <h1>🛒 আজকের বাজার দর</h1>
+    <p>ঢাকা, চট্টগ্রাম ও সারাদেশের গড় বাজার মূল্য</p>
+    <div class="bajar-updated" id="bajarUpdated">আজ সকাল ৮:০০ তে আপডেট হয়েছে</div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div class="alert-box">
+      <h4>🔔 দৈনিক বাজার দর নোটিফিকেশন পান</h4>
+      <p>প্রতিদিন সকালে আপনার ফোনে বাজার দর পাঠানো হবে — একদম বিনামূল্যে।</p>
+      <button class="notif-btn" onclick="requestBajarNotif()">✅ চালু করুন</button>
+    </div>
+
+    <div class="cat-tabs" id="catTabs"></div>
+    <div class="price-grid" id="priceGrid"></div>
+
+  </div>
+</section>
+
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+
+<script>
+const BAJAR_DATA = {
+  চাল: [
+    {name:'মিনিকেট চাল',icon:'🌾',price:72,unit:'কেজি',min:68,max:78,trend:'up'},
+    {name:'নাজিরশাইল',icon:'🌾',price:85,unit:'কেজি',min:80,max:90,trend:'same'},
+    {name:'বাসমতি',icon:'🌾',price:110,unit:'কেজি',min:105,max:120,trend:'down'},
+    {name:'মোটা চাল',icon:'🌾',price:52,unit:'কেজি',min:48,max:56,trend:'up'},
+    {name:'আতপ চাল',icon:'🌾',price:65,unit:'কেজি',min:60,max:70,trend:'same'},
+    {name:'পাইজাম চাল',icon:'🌾',price:58,unit:'কেজি',min:55,max:62,trend:'down'},
+  ],
+  ডাল: [
+    {name:'মসুর ডাল',icon:'🟡',price:130,unit:'কেজি',min:120,max:140,trend:'up'},
+    {name:'মুগ ডাল',icon:'🟢',price:150,unit:'কেজি',min:140,max:165,trend:'same'},
+    {name:'ছোলা',icon:'🟤',price:95,unit:'কেজি',min:88,max:105,trend:'down'},
+    {name:'খেসারি ডাল',icon:'🟡',price:80,unit:'কেজি',min:75,max:88,trend:'same'},
+  ],
+  সবজি: [
+    {name:'আলু',icon:'🥔',price:35,unit:'কেজি',min:30,max:42,trend:'down'},
+    {name:'পেঁয়াজ',icon:'🧅',price:65,unit:'কেজি',min:55,max:75,trend:'up'},
+    {name:'টমেটো',icon:'🍅',price:45,unit:'কেজি',min:38,max:55,trend:'same'},
+    {name:'বেগুন',icon:'🍆',price:50,unit:'কেজি',min:40,max:62,trend:'down'},
+    {name:'করলা',icon:'🥒',price:60,unit:'কেজি',min:50,max:72,trend:'same'},
+    {name:'ফুলকপি',icon:'🥦',price:40,unit:'পিস',min:35,max:50,trend:'down'},
+    {name:'লাউ',icon:'🎃',price:45,unit:'পিস',min:38,max:55,trend:'same'},
+    {name:'শিম',icon:'🫘',price:70,unit:'কেজি',min:60,max:80,trend:'up'},
+  ],
+  মাছ: [
+    {name:'রুই মাছ',icon:'🐟',price:280,unit:'কেজি',min:250,max:320,trend:'same'},
+    {name:'কাতলা',icon:'🐠',price:320,unit:'কেজি',min:280,max:360,trend:'up'},
+    {name:'ইলিশ (ছোট)',icon:'🐡',price:800,unit:'কেজি',min:700,max:950,trend:'up'},
+    {name:'পাঙাশ',icon:'🐟',price:160,unit:'কেজি',min:140,max:180,trend:'down'},
+    {name:'তেলাপিয়া',icon:'🐠',price:180,unit:'কেজি',min:160,max:200,trend:'same'},
+    {name:'চিংড়ি',icon:'🦐',price:600,unit:'কেজি',min:550,max:680,trend:'up'},
+  ],
+  মাংস: [
+    {name:'গরুর মাংস',icon:'🥩',price:750,unit:'কেজি',min:700,max:800,trend:'up'},
+    {name:'খাসির মাংস',icon:'🍖',price:950,unit:'কেজি',min:900,max:1000,trend:'same'},
+    {name:'ব্রয়লার মুরগি',icon:'🍗',price:195,unit:'কেজি',min:180,max:210,trend:'down'},
+    {name:'দেশি মুরগি',icon:'🐔',price:450,unit:'কেজি',min:400,max:500,trend:'same'},
+  ],
+  তেল: [
+    {name:'সয়াবিন তেল',icon:'🫙',price:175,unit:'লিটার',min:168,max:182,trend:'same'},
+    {name:'পাম অয়েল',icon:'🫙',price:145,unit:'লিটার',min:138,max:152,trend:'down'},
+    {name:'সরিষার তেল',icon:'🫙',price:220,unit:'লিটার',min:210,max:235,trend:'up'},
+  ],
+  মসলা: [
+    {name:'রসুন',icon:'🧄',price:220,unit:'কেজি',min:200,max:250,trend:'up'},
+    {name:'আদা',icon:'🫚',price:180,unit:'কেজি',min:160,max:200,trend:'same'},
+    {name:'হলুদ',icon:'🟡',price:280,unit:'কেজি',min:260,max:300,trend:'same'},
+    {name:'মরিচ গুঁড়া',icon:'🌶️',price:320,unit:'কেজি',min:300,max:350,trend:'up'},
+  ],
+  ডিম: [
+    {name:'ফার্মের ডিম',icon:'🥚',price:145,unit:'ডজন',min:138,max:155,trend:'same'},
+    {name:'দেশি ডিম',icon:'🥚',price:220,unit:'ডজন',min:200,max:240,trend:'up'},
+    {name:'হাঁসের ডিম',icon:'🥚',price:200,unit:'ডজন',min:185,max:215,trend:'same'},
+  ],
+};
+
+const cats = Object.keys(BAJAR_DATA);
+let activeCat = cats[0];
+
+function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
+
+function renderTabs(){
+  document.getElementById('catTabs').innerHTML = cats.map(c=>
+    `<button class="cat-tab${c===activeCat?' active':''}" onclick="setCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setCat(c){
+  activeCat=c;
+  renderTabs();
+  renderPrices();
+}
+
+function renderPrices(){
+  const items = BAJAR_DATA[activeCat]||[];
+  const trendIcon = t => t==='up'?'▲ বাড়ছে':t==='down'?'▼ কমছে':'→ স্থিতিশীল';
+  const trendCls  = t => t==='up'?'trend-up':t==='down'?'trend-down':'trend-same';
+  document.getElementById('priceGrid').innerHTML = items.map(it=>`
+    <div class="price-card">
+      <div class="price-icon">${it.icon}</div>
+      <div class="price-name">${it.name}</div>
+      <div class="price-main">৳${bn(it.price)}<span class="price-unit">/${it.unit}</span></div>
+      <div class="price-range">৳${bn(it.min)} – ৳${bn(it.max)}</div>
+      <div class="price-trend ${trendCls(it.trend)}">${trendIcon(it.trend)}</div>
+    </div>`).join('');
+}
+
+function requestBajarNotif(){
+  if(!('Notification' in window)){alert('আপনার ব্রাউজার notification সাপোর্ট করে না');return;}
+  Notification.requestPermission().then(p=>{
+    if(p==='granted'){
+      navigator.serviceWorker.ready.then(r=>r.showNotification('✅ চালু হয়েছে!',{
+        body:'প্রতিদিন সকালে বাজার দর পাবেন।',icon:'/logoc7c3.png',badge:'/logoc7c3.png'
+      }));
+      localStorage.setItem('joaf-bajar-notif','1');
+    }
+  });
+}
+
+// update date
+const now = new Date();
+document.getElementById('bajarUpdated').textContent =
+  `আজ ${['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'][now.getDay()]} সকাল আপডেট`;
+
+renderTabs();
+renderPrices();
+</script>
+</body>
+</html>

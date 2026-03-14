@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>আইনি সহায়তা — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="legal">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.legal-hero{background:linear-gradient(135deg,#78350f,#d97706);padding:36px 0 24px;color:#fff;text-align:center;}
+.legal-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.rights-card{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:16px;padding:16px;margin-bottom:14px;border:1.5px solid #fbbf24;}
+.rights-card h4{font-size:14px;font-weight:800;color:#92400e;margin-bottom:10px;}
+.right-item{display:flex;gap:8px;margin-bottom:8px;font-size:13px;color:#374151;line-height:1.5;}
+.thana-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:10px;border:1.5px solid #f0f0f0;}
+.thana-name{font-size:14px;font-weight:800;color:#1a1a2e;}
+.thana-dist{font-size:12px;color:#6b7280;margin-bottom:8px;}
+.thana-btn{padding:8px 16px;background:#d97706;color:#fff;border:none;border-radius:50px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.legal-num{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-radius:14px;padding:14px;margin-bottom:14px;border:1.5px solid #fca5a5;}
+.legal-num h4{font-size:14px;font-weight:800;color:#991b1b;margin-bottom:10px;}
+.num-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.num-btn{padding:10px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.report-form{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.report-form h4{font-size:15px;font-weight:900;margin-bottom:14px;color:#1a1a2e;}
+.f-inp{width:100%;padding:11px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;margin-bottom:10px;outline:none;box-sizing:border-box;}
+.f-inp:focus{border-color:#d97706;}
+.f-btn{width:100%;padding:12px;background:linear-gradient(135deg,#78350f,#d97706);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;}
+</style>
+<div class="legal-hero"><div class="container">
+  <h1>⚖️ আইনি সহায়তা</h1>
+  <p>আপনার আইনি অধিকার জানুন — বিনামূল্যে</p>
+</div></div>
+<section class="section"><div class="container">
+
+  <div class="legal-num">
+    <h4>🆘 জরুরি আইনি নম্বর</h4>
+    <div class="num-grid">
+      <button class="num-btn" onclick="location.href='tel:999'">📞 999 পুলিশ</button>
+      <button class="num-btn" onclick="location.href='tel:16430'">⚖️ 16430 লিগ্যাল এইড</button>
+      <button class="num-btn" onclick="location.href='tel:10921'">👩 10921 নারী হেল্পলাইন</button>
+      <button class="num-btn" onclick="location.href='tel:1098'">👶 1098 শিশু হেল্পলাইন</button>
+    </div>
+  </div>
+
+  <div class="rights-card">
+    <h4>📋 আপনার মৌলিক অধিকার</h4>
+    <div class="right-item"><span>✅</span><span>গ্রেফতার হলে ২৪ ঘন্টার মধ্যে আদালতে হাজির করতে হবে</span></div>
+    <div class="right-item"><span>✅</span><span>আইনজীবীর সাথে কথা বলার অধিকার আছে</span></div>
+    <div class="right-item"><span>✅</span><span>নিজের বিরুদ্ধে সাক্ষ্য দিতে বাধ্য নন</span></div>
+    <div class="right-item"><span>✅</span><span>বিনামূল্যে সরকারি আইনজীবী পাওয়ার অধিকার</span></div>
+    <div class="right-item"><span>✅</span><span>নির্যাতন ও অমানবিক আচরণ থেকে সুরক্ষা</span></div>
+  </div>
+
+  <h3 style="font-size:16px;font-weight:900;margin-bottom:12px;color:#1a1a2e;">🚔 জেলা থানার নম্বর</h3>
+  <div id="thanaList"></div>
+
+  <div class="report-form" style="margin-top:20px;">
+    <h4>🚫 দুর্নীতি / অবিচার রিপোর্ট করুন</h4>
+    <select class="f-inp"><option>বিষয় নির্বাচন করুন</option><option>পুলিশি হয়রানি</option><option>দুর্নীতি</option><option>নির্যাতন</option><option>জমি বিরোধ</option><option>পারিবারিক সহিংসতা</option><option>অন্যান্য</option></select>
+    <input class="f-inp" placeholder="আপনার জেলা">
+    <textarea class="f-inp" rows="4" placeholder="বিস্তারিত লিখুন (পরিচয় গোপন রাখা হবে)"></textarea>
+    <button class="f-btn" onclick="submitReport()">📤 রিপোর্ট পাঠান</button>
+  </div>
+
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const THANAS=[
+  {name:'রমনা থানা',dist:'ঢাকা',phone:'02-9330175'},{name:'মতিঝিল থানা',dist:'ঢাকা',phone:'02-9552462'},
+  {name:'চট্টগ্রাম কোতোয়ালি',dist:'চট্টগ্রাম',phone:'031-612968'},{name:'রাজশাহী কোতোয়ালি',dist:'রাজশাহী',phone:'0721-772024'},
+  {name:'খুলনা সদর থানা',dist:'খুলনা',phone:'041-720440'},{name:'সিলেট কোতোয়ালি',dist:'সিলেট',phone:'0821-715151'},
+];
+document.getElementById('thanaList').innerHTML=THANAS.map(t=>`
+  <div class="thana-card">
+    <div class="thana-name">${t.name}</div>
+    <div class="thana-dist">📍 ${t.dist}</div>
+    <button class="thana-btn" onclick="location.href='tel:${t.phone}'">📞 ${t.phone}</button>
+  </div>`).join('');
+function submitReport(){alert('আপনার রিপোর্ট গ্রহণ করা হয়েছে। আমরা যাচাই করে ব্যবস্থা নেব।');}
+</script></body></html>

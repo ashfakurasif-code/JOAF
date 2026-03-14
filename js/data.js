@@ -1,6 +1,5 @@
-// JOAF Data v5.1 — cache bust: 20260311
+// JOAF Data v6.0 — cache bust: 20260312
 // ============================================================
-// JOAF Central Data v4.0
 // ✅ এই একটা ফাইল বদলালে সব জায়গায় আপডেট হবে
 // ============================================================
 
@@ -18,7 +17,7 @@ const JOAF = {
     baseUrl: "https://julyforum.com",
     fbAppId: "1114707634145642",
     gaId: "G-QV3CFV7R98",
-    version: "5.1.0",
+    version: "6.0.0",
     social: {
       facebook: "https://www.facebook.com/julyforum",
       twitter: "https://twitter.com/julyforum",
@@ -26,35 +25,89 @@ const JOAF = {
       youtube: "",
       whatsapp: "https://chat.whatsapp.com/DjABAy1NNQMEtSW3wh8bXg"
     },
-    // Google Apps Script form submission endpoint
     formAction: "https://script.google.com/macros/s/AKfycbx_08UMe8YyqoQ8qWxzzwRZqt-VChzFkihLs1_5Gwr31B9SPIp08MjshlyIL2ieVm2r/exec"
   },
 
-  // ── নেভিগেশন ──────────────────────────────────────────────
-  // এখানে বদলালে সব pages এ nav আপডেট হবে
+  // ── নেভিগেশন — priority অনুযায়ী সাজানো ──────────────────
   nav: [
-    { label: "🏠 মূলপাতা",      href: "/",                       id: "home"       },
-    { label: "📅 অনুষ্ঠান",      href: "/events.html",            id: "events"     },
-    { label: "📰 সংবাদ",         href: "/media-news.html",        id: "media"      },
-    { label: "🗳️ জনমত",         href: "/joaf-polls.html",        id: "polls"      },
-    { label: "🤝 কমিউনিটি",      href: "/community.html",         id: "community"  },
-    { label: "💡 আমরা কে",       href: "/#about-area",            id: "about"      },
-    { label: "🩸 রক্তদাতা",       href: "/rokto.html",             id: "rokto"      },
-    { label: "🚨 জরুরি সতর্কতা", href: "/alert.html",             id: "alert"      },
-    { label: "✊ যোগ দিন",       href: "/membership.html",        id: "membership" },
-    { label: "💚 সহযোগিতা",      href: "/donate.html",            id: "donate"     },
-    { label: "📬 যোগাযোগ",       href: "/#contact-area",          id: "contact"    },
+    { label: "🏠 মূলপাতা",       href: "/",                    id: "home"      },
+    { label: "🔥 আন্দোলন",        href: "/#andolon",            id: "andolon",
+      dropdown: [
+        { label: "✊ জুলাই যোদ্ধা",     href: "/#andolon"          },
+        { label: "🏛️ নেতা ট্র্যাকার",  href: "/#andolon"          },
+        { label: "🚫 দুর্নীতি রিপোর্ট", href: "/#andolon"          },
+        { label: "🗳️ জনমত জরিপ",       href: "/joaf-polls.html"   },
+      ]
+    },
+    { label: "🆘 সেবা",           href: "/rokto.html",          id: "seva",
+      dropdown: [
+        { label: "🩸 রক্তদাতা",         href: "/rokto.html"        },
+        { label: "🚨 জরুরি সতর্কতা",    href: "/alert.html"        },
+        { label: "🛒 বাজার দর",         href: "/#bajar"            },
+        { label: "🌦️ আবহাওয়া",         href: "/#weather"          },
+      ]
+    },
+    { label: "🌱 সুযোগ",          href: "/#shujo",             id: "shujo",
+      dropdown: [
+        { label: "💼 চাকরি",            href: "/#shujo"            },
+        { label: "🎓 বৃত্তি",            href: "/#shujo"            },
+        { label: "🔧 কারিগর",           href: "/#shujo"            },
+      ]
+    },
+    { label: "🌐 JOAF",           href: "/community.html",     id: "joaf",
+      dropdown: [
+        { label: "👥 কমিউনিটি",         href: "/community.html"    },
+        { label: "📰 সংবাদ",            href: "/media-news.html"   },
+        { label: "📅 অনুষ্ঠান",         href: "/events.html"       },
+        { label: "💡 আমরা কে",          href: "/#about-area"       },
+        { label: "🤝 যোগ দিন",          href: "/membership.html"   },
+        { label: "💚 সহযোগিতা",         href: "/donate.html"       },
+        { label: "📬 যোগাযোগ",          href: "/#contact-area"     },
+      ]
+    },
   ],
 
+  // ── Push Notification messages — আকর্ষণীয় বাংলায় ──────────
+  pushMessages: {
+    welcome:    { title: "🔥 JOAF-এ স্বাগতম!", body: "আপনি এখন বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চের অংশ। Breaking news সবার আগে পাবেন — শুধু আপনি।" },
+    breakingNews: { title: "🚨 ব্রেকিং নিউজ", body: "এইমাত্র একটি গুরুত্বপূর্ণ খবর এসেছে। এখনই দেখুন।" },
+    dailyBajar: { title: "🛒 আজকের বাজার দর", body: "চাল, ডাল, সবজির দাম আপডেট হয়েছে। জানুন কোথায় কত সস্তা।" },
+    weather:    { title: "🌦️ আবহাওয়া সতর্কতা", body: "আজ আপনার এলাকায় বিশেষ আবহাওয়া পূর্বাভাস রয়েছে। কৃষক ও জেলেরা সতর্ক থাকুন।" },
+    poll:       { title: "🗳️ আজকের জনমত", body: "৩০টি প্রশ্নে ভোট দিন, streak বজায় রাখুন — পুরস্কার আপনার জন্য অপেক্ষা করছে!" },
+    streak:     { title: "🔥 Streak মিস করবেন না!", body: "আজকের ভোট এখনো বাকি। এখনই দিন — streak ভাঙলে আবার শুরু থেকে গুনতে হবে।" },
+    blood:      { title: "🩸 জরুরি রক্ত দরকার!", body: "আপনার এলাকায় কেউ রক্তের জন্য অনুরোধ করেছেন। একটু সাহায্য করুন — একটি জীবন বাঁচান।" },
+    alert:      { title: "🚨 জরুরি সতর্কতা!", body: "আপনার এলাকায় একটি জরুরি পরিস্থিতি জানানো হয়েছে। এখনই দেখুন।" },
+    news:       { title: "📢 নতুন প্রেস রিলিজ", body: "JOAF-এর পক্ষ থেকে একটি গুরুত্বপূর্ণ বিবৃতি প্রকাশিত হয়েছে।" },
+    reward:     { title: "🎉 পুরস্কার অর্জন!", body: "অভিনন্দন! আপনি ৩০ দিনের streak সম্পন্ন করেছেন। পুরস্কার দাবি করুন এখনই।" },
+  },
+
+  // ── PWA Install prompt message ─────────────────────────────
+  pwaPrompt: {
+    title: "📲 JOAF অ্যাপ ইনস্টল করুন",
+    body: "Breaking news সবার আগে পান। বাজার দর, আবহাওয়া, রক্তদাতা — সব এক জায়গায়। ইনস্টল করুন, বিনামূল্যে।",
+    install: "ইনস্টল করুন",
+    later: "পরে"
+  },
+
+  // ── Notification permission prompt ─────────────────────────
+  notifPrompt: {
+    title: "🔔 সবার আগে খবর পান",
+    points: [
+      "🚨 Breaking news — TV-র আগে আপনার ফোনে",
+      "🛒 প্রতিদিন সকালে বাজার দর",
+      "🩸 আপনার এলাকায় রক্তের প্রয়োজন হলে",
+      "🌦️ কৃষক ও জেলেদের জন্য আবহাওয়া সতর্কতা",
+      "🔥 Streak reminder — পুরস্কার মিস করবেন না",
+    ],
+    allow: "✅ চালু করুন — বিনামূল্যে",
+    skip: "এখন না"
+  },
+
   // ── কমিউনিটি গ্রুপ ────────────────────────────────────────
-  // এখানে নতুন group যোগ করুন — community.html auto-update হবে
-  // whatsapp: "#" মানে link এখনো নেই
   communityGroups: [
-    // মূল হাব
     { cat:"main",   name:"ঘোষণা",                       meta:"কমিউনিটিতে স্বাগতম!",           cover:"নোটিশ",              whatsapp:"https://chat.whatsapp.com/LksryV0rnTQ92jHpnQi2nH" },
     { cat:"main",   name:"জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম", meta:"বাংলাদেশ — মূল আলোচনা গ্রুপ", cover:"মূল গ্রুপ",          whatsapp:"https://chat.whatsapp.com/DjABAy1NNQMEtSW3wh8bXg" },
     { cat:"main",   name:"JOAF অ্যাডমিনিস্ট্রেশন",      meta:"অ্যাডমিন/কোর টিম",              cover:"অ্যাডমিন",           whatsapp:"https://chat.whatsapp.com/D1MZlzgTWOX60VnmjjnmGG" },
-    // আঞ্চলিক — বাংলাদেশ
     { cat:"regional", name:"JOAF রংপুর",      meta:"রংপুর বিভাগ",       lat:25.7468, lng:89.2517,  whatsapp:"https://chat.whatsapp.com/IJpRYzN1SDyEzg0vUXKrA4" },
     { cat:"regional", name:"JOAF রাজশাহী",    meta:"রাজশাহী বিভাগ",     lat:24.3740, lng:88.6011,  whatsapp:"https://chat.whatsapp.com/Jwg49EBt2NoCfCepl15Zpx" },
     { cat:"regional", name:"JOAF বরিশাল",     meta:"বরিশাল বিভাগ",      lat:22.7050, lng:90.3700,  whatsapp:"https://chat.whatsapp.com/L3DDPArvbrJAOmykNEwwUy"  },
@@ -67,14 +120,13 @@ const JOAF = {
     { cat:"regional", name:"JOAF জামালপুর",   meta:"জামালপুর জেলা",     lat:24.9196, lng:89.9481,  whatsapp:"https://chat.whatsapp.com/Bssk1EgjT57CP3vux8E28h" },
     { cat:"regional", name:"JOAF মাদারীপুর",  meta:"মাদারীপুর জেলা",    lat:23.1710, lng:90.2094,  whatsapp:"https://chat.whatsapp.com/EBHEG1YieBR8FGFNEwvuzH" },
     { cat:"regional", name:"JOAF কুমিল্লা",   meta:"কুমিল্লা জেলা",     lat:23.4619, lng:91.1809,  whatsapp:"https://chat.whatsapp.com/CrXlPd2Q3MU82PGwb58eGX" },
-    // আন্তর্জাতিক
+    { cat:"regional", name:"JOAF যশোর",       meta:"যশোর জেলা",         lat:23.1667, lng:89.2167,   whatsapp:"https://chat.whatsapp.com/ECv9p3fedWL5tlSR7fRl6W" },
     { cat:"intl", name:"JOAF অস্ট্রেলিয়া",  meta:"অস্ট্রেলিয়া অধ্যায়",  lat:-25.2744, lng:133.7751, whatsapp:"https://chat.whatsapp.com/HlXTBTaycyNK7VLncC1Xze" },
     { cat:"intl", name:"JOAF কানাডা",        meta:"কানাডা অধ্যায়",        lat:56.1304,  lng:-106.3468,whatsapp:"https://chat.whatsapp.com/Jut5PlN6YShFgBLyuvh4fb" },
     { cat:"intl", name:"JOAF যুক্তরাষ্ট্র",  meta:"যুক্তরাষ্ট্র অধ্যায়",  lat:37.0902,  lng:-95.7129, whatsapp:"https://chat.whatsapp.com/F6jFxnu4cJb0zdWsmSUesM" },
     { cat:"intl", name:"JOAF ইউরোপ",         meta:"ইউরোপ অধ্যায়",         lat:54.5260,  lng:15.2551,  whatsapp:"https://chat.whatsapp.com/F4Pt9TERXBHHHtqW9lI8Vw" },
     { cat:"intl", name:"JOAF এশিয়া",         meta:"এশিয়া অধ্যায়",         lat:34.0479,  lng:100.6197, whatsapp:"https://chat.whatsapp.com/Kf5gLqptBWU8DKtJ9adHYY" },
     { cat:"intl", name:"JOAF মধ্যপ্রাচ্য",    meta:"মধ্যপ্রাচ্য অধ্যায়",    lat:24.7743,  lng:46.7386,  whatsapp:"https://chat.whatsapp.com/L9XMR9U4XcbBWRGKPIJX8R" },
-    // বিশেষায়িত
     { cat:"special", name:"JO গুজব প্রতিরোধ টিম", meta:"ফ্যাক্ট-চেকিং",          cover:"গুজব প্রতিরোধ",     whatsapp:"https://chat.whatsapp.com/IGkg2NNZCYoGzuSpqzUQWq" },
     { cat:"special", name:"JOAF মিডিয়া টিম",       meta:"মিডিয়া/প্রেস",           cover:"মিডিয়া টিম",        whatsapp:"https://chat.whatsapp.com/JRlOXeTphEr4OHGHjrDh9D" },
     { cat:"special", name:"JOAF জোট",                meta:"সম্মিলিত প্ল্যাটফর্ম",   cover:"জোট",               whatsapp:"https://chat.whatsapp.com/FpiaCUfbMbW4ef9JPssZUy" },
@@ -83,11 +135,8 @@ const JOAF = {
     { cat:"special", name:"JOAF প্রিমিয়াম সদস্য",   meta:"প্রিমিয়াম সাপোর্টার",   cover:"প্রিমিয়াম",          whatsapp:"https://chat.whatsapp.com/D1MZlzgTWOX60VnmjjnmGG" },
     { cat:"special", name:"Justice For Hadi",           meta:"হাদির জন্য ন্যায়বিচার",     cover:"Justice For Hadi",  whatsapp:"https://chat.whatsapp.com/CIiza2Z9IdM4H2gJUWMObY" },
     { cat:"main",    name:"জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম-২.০", meta:"JOAF ২.০",              cover:"Forum-2.0",         whatsapp:"https://chat.whatsapp.com/Fnh6tjfUgdx7xMxyD9583z" },
-    { cat:"regional", name:"JOAF যশোর",               meta:"যশোর জেলা",             lat:23.1667, lng:89.2167,   whatsapp:"https://chat.whatsapp.com/ECv9p3fedWL5tlSR7fRl6W" },
-    // সম্প্রসারণ
   ],
 
-  // ── নিউক্লিয়াস ────────────────────────────────────────────
   nucleus: [
     { id:"farhana-sharmin-shuchi",    name:"ফারহানা শারমিন শুচি",        role:"সভাপতি",                         img:"/img/farhana-sharmin-shuchi.jpg",    facebook:"https://www.facebook.com/share/15yL2rq5XL/" },
     { id:"shirin-chowdhury",          name:"শিরিন চৌধুরী",               role:"সাধারণ সম্পাদক",                 img:"/img/shirin-chowdhury.jpg",          facebook:"https://www.facebook.com/share/15yL2rq5XL/" },
@@ -125,158 +174,35 @@ const JOAF = {
     { id:"sadik",                     name:"সাদিক",                        party:"সমাজতান্ত্রিক ছাত্র ফ্রন্ট",  img:"/members/sadik.png",                    facebook:"#" },
   ],
 
-
-  // জেলার center coordinates
   districtCoords: {
-    'ঢাকা':       {lat:23.8103, lng:90.4125},
-    'চট্টগ্রাম':  {lat:22.3569, lng:91.7832},
-    'রাজশাহী':    {lat:24.3745, lng:88.6042},
-    'খুলনা':      {lat:22.8456, lng:89.5403},
-    'বরিশাল':     {lat:22.7010, lng:90.3535},
-    'সিলেট':      {lat:24.8949, lng:91.8687},
-    'রংপুর':      {lat:25.7439, lng:89.2752},
-    'ময়মনসিংহ':  {lat:24.7471, lng:90.4203},
-    'কুমিল্লা':   {lat:23.4607, lng:91.1809},
-    'নারায়ণগঞ্জ':{lat:23.6238, lng:90.4996},
-    'গাজীপুর':    {lat:23.9999, lng:90.4203},
-    'টাঙ্গাইল':   {lat:24.2513, lng:89.9167},
-    'ফরিদপুর':    {lat:23.6070, lng:89.8429},
-    'যশোর':       {lat:23.1667, lng:89.2167},
-    'নোয়াখালী':  {lat:22.8696, lng:91.0995},
-    'বগুড়া':      {lat:24.8465, lng:89.3773},
-    'দিনাজপুর':   {lat:25.6279, lng:88.6331},
-    'পাবনা':      {lat:24.0064, lng:89.2372},
-    'নরসিংদী':    {lat:23.9220, lng:90.7176},
-    'মানিকগঞ্জ':  {lat:23.8643, lng:90.0049},
-    'মুন্সীগঞ্জ':  {lat:23.5422, lng:90.5305},
-    'শরীয়তপুর':  {lat:23.2223, lng:90.4348},
-    'মাদারীপুর':  {lat:23.1710, lng:90.2094},
-    'গোপালগঞ্জ':  {lat:23.0047, lng:89.8267},
-    'কিশোরগঞ্জ':  {lat:24.4449, lng:90.7822},
-    'নেত্রকোনা':  {lat:24.8820, lng:90.7279},
-    'জামালপুর':   {lat:24.9196, lng:89.9481},
-    'শেরপুর':     {lat:25.0194, lng:90.0149},
-    'ব্রাহ্মণবাড়িয়া':{lat:23.9570, lng:91.1115},
-    'চাঁদপুর':    {lat:23.2332, lng:90.6713},
-    'ফেনী':       {lat:23.0159, lng:91.3976},
-    'লক্ষ্মীপুর':  {lat:22.9424, lng:90.8412},
-    'কক্সবাজার':  {lat:21.4272, lng:92.0058},
-    'বান্দরবান':   {lat:22.1953, lng:92.2184},
-    'রাঙ্গামাটি':  {lat:22.6552, lng:92.1526},
-    'খাগড়াছড়ি':  {lat:23.1193, lng:91.9847},
-    'হবিগঞ্জ':    {lat:24.3745, lng:91.4156},
-    'মৌলভীবাজার': {lat:24.4829, lng:91.7774},
-    'সুনামগঞ্জ':  {lat:25.0658, lng:91.3950},
-    'নওগাঁ':      {lat:24.8036, lng:88.9318},
-    'চাঁপাইনবাবগঞ্জ':{lat:24.5965, lng:88.2760},
-    'নাটোর':      {lat:24.4103, lng:88.9956},
-    'সিরাজগঞ্জ':  {lat:24.4534, lng:89.7006},
-    'জয়পুরহাট':  {lat:25.0971, lng:89.0227},
-    'সাতক্ষীরা':  {lat:22.3155, lng:89.1118},
-    'ঝিনাইদহ':    {lat:23.1754, lng:89.1713},
-    'মাগুরা':     {lat:23.4873, lng:89.4193},
-    'নড়াইল':     {lat:23.1724, lng:89.5120},
-    'বাগেরহাট':   {lat:22.6602, lng:89.7854},
-    'মেহেরপুর':   {lat:23.7621, lng:88.6318},
-    'চুয়াডাঙ্গা':  {lat:23.6401, lng:88.8418},
-    'কুষ্টিয়া':   {lat:23.9014, lng:89.1226},
-    'ঝালকাঠি':    {lat:22.6440, lng:90.1987},
-    'পটুয়াখালী':  {lat:22.3596, lng:90.3296},
-    'পিরোজপুর':   {lat:22.5841, lng:89.9661},
-    'ভোলা':       {lat:22.6855, lng:90.6448},
-    'বরগুনা':     {lat:22.1500, lng:90.1124},
-    'লালমনিরহাট': {lat:25.9923, lng:89.2847},
-    'নীলফামারী':  {lat:25.9316, lng:88.8560},
-    'গাইবান্ধা':  {lat:25.3288, lng:89.5286},
-    'কুড়িগ্রাম':  {lat:25.8074, lng:89.6363},
-    'পঞ্চগড়':    {lat:26.3411, lng:88.5542},
-    'ঠাকুরগাঁও':  {lat:26.0316, lng:88.4616},
+    'ঢাকা':{lat:23.8103,lng:90.4125},'চট্টগ্রাম':{lat:22.3569,lng:91.7832},'রাজশাহী':{lat:24.3745,lng:88.6042},'খুলনা':{lat:22.8456,lng:89.5403},'বরিশাল':{lat:22.7010,lng:90.3535},'সিলেট':{lat:24.8949,lng:91.8687},'রংপুর':{lat:25.7439,lng:89.2752},'ময়মনসিংহ':{lat:24.7471,lng:90.4203},'কুমিল্লা':{lat:23.4607,lng:91.1809},'নারায়ণগঞ্জ':{lat:23.6238,lng:90.4996},'গাজীপুর':{lat:23.9999,lng:90.4203},'টাঙ্গাইল':{lat:24.2513,lng:89.9167},'ফরিদপুর':{lat:23.6070,lng:89.8429},'যশোর':{lat:23.1667,lng:89.2167},'নোয়াখালী':{lat:22.8696,lng:91.0995},'বগুড়া':{lat:24.8465,lng:89.3773},'দিনাজপুর':{lat:25.6279,lng:88.6331},'পাবনা':{lat:24.0064,lng:89.2372},'নরসিংদী':{lat:23.9220,lng:90.7176},'মানিকগঞ্জ':{lat:23.8643,lng:90.0049},'মুন্সীগঞ্জ':{lat:23.5422,lng:90.5305},'শরীয়তপুর':{lat:23.2223,lng:90.4348},'মাদারীপুর':{lat:23.1710,lng:90.2094},'গোপালগঞ্জ':{lat:23.0047,lng:89.8267},'কিশোরগঞ্জ':{lat:24.4449,lng:90.7822},'নেত্রকোনা':{lat:24.8820,lng:90.7279},'জামালপুর':{lat:24.9196,lng:89.9481},'শেরপুর':{lat:25.0194,lng:90.0149},'ব্রাহ্মণবাড়িয়া':{lat:23.9570,lng:91.1115},'চাঁদপুর':{lat:23.2332,lng:90.6713},'ফেনী':{lat:23.0159,lng:91.3976},'লক্ষ্মীপুর':{lat:22.9424,lng:90.8412},'কক্সবাজার':{lat:21.4272,lng:92.0058},'বান্দরবান':{lat:22.1953,lng:92.2184},'রাঙ্গামাটি':{lat:22.6552,lng:92.1526},'খাগড়াছড়ি':{lat:23.1193,lng:91.9847},'হবিগঞ্জ':{lat:24.3745,lng:91.4156},'মৌলভীবাজার':{lat:24.4829,lng:91.7774},'সুনামগঞ্জ':{lat:25.0658,lng:91.3950},'নওগাঁ':{lat:24.8036,lng:88.9318},'চাঁপাইনবাবগঞ্জ':{lat:24.5965,lng:88.2760},'নাটোর':{lat:24.4103,lng:88.9956},'সিরাজগঞ্জ':{lat:24.4534,lng:89.7006},'জয়পুরহাট':{lat:25.0971,lng:89.0227},'সাতক্ষীরা':{lat:22.3155,lng:89.1118},'ঝিনাইদহ':{lat:23.1754,lng:89.1713},'মাগুরা':{lat:23.4873,lng:89.4193},'নড়াইল':{lat:23.1724,lng:89.5120},'বাগেরহাট':{lat:22.6602,lng:89.7854},'মেহেরপুর':{lat:23.7621,lng:88.6318},'চুয়াডাঙ্গা':{lat:23.6401,lng:88.8418},'কুষ্টিয়া':{lat:23.9014,lng:89.1226},'ঝালকাঠি':{lat:22.6440,lng:90.1987},'পটুয়াখালী':{lat:22.3596,lng:90.3296},'পিরোজপুর':{lat:22.5841,lng:89.9661},'ভোলা':{lat:22.6855,lng:90.6448},'বরগুনা':{lat:22.1500,lng:90.1124},'লালমনিরহাট':{lat:25.9923,lng:89.2847},'নীলফামারী':{lat:25.9316,lng:88.8560},'গাইবান্ধা':{lat:25.3288,lng:89.5286},'কুড়িগ্রাম':{lat:25.8074,lng:89.6363},'পঞ্চগড়':{lat:26.3411,lng:88.5542},'ঠাকুরগাঁও':{lat:26.0316,lng:88.4616},
   },
-  // ── প্রেস রিলিজ ───────────────────────────────────────────
-  // নতুন press release যোগ করতে এখানে শুধু একটা object যোগ করুন
-  // তারপর /press-releases/ ফোল্ডারে ওই slug নামে একটা .txt ফাইল রাখুন
-  // সিস্টেম auto-generate করবে বাকি সব
+
   pressReleases: [
-    {
-      id: 1,
-      slug: "press-release-1",
-      title: "JOAF আনুষ্ঠানিক যাত্রা শুরু",
-      date: "2025-05-09",
-      img: "/img/press-release-1.jpg",
-      summary: "জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম (জোয়াফ) আনুষ্ঠানিকভাবে তাদের কার্যক্রম শুরু করার ঘোষণা দিয়েছে।"
-    },
-    {
-      id: 2,
-      slug: "press-release-2",
-      title: "JOAF দ্বিতীয় প্রেস রিলিজ",
-      date: "2025-05-20",
-      img: "/img/press-release-2.jpg",
-      summary: "জোয়াফের দ্বিতীয় প্রেস রিলিজ।"
-    },
-    {
-      id: 3,
-      slug: "press-release-3",
-      title: "JOAF তৃতীয় প্রেস রিলিজ",
-      date: "2025-06-01",
-      img: "/img/press-release-3.jpg",
-      summary: "জোয়াফের তৃতীয় প্রেস রিলিজ।"
-    },
-    {
-      id: 4,
-      slug: "press-release-4",
-      title: "JOAF চতুর্থ প্রেস রিলিজ",
-      date: "2025-06-15",
-      img: "/img/press-release-4.jpg",
-      summary: "জোয়াফের চতুর্থ প্রেস রিলিজ।"
-    },
-    {
-      id: 5,
-      slug: "press-release-5",
-      title: "JOAF পঞ্চম প্রেস রিলিজ",
-      date: "2025-07-01",
-      img: "/img/press-release-5.jpg",
-      summary: "জোয়াফের পঞ্চম প্রেস রিলিজ।"
-    },
-    {
-      id: 6,
-      slug: "press-release-6",
-      title: "JOAF ষষ্ঠ প্রেস রিলিজ",
-      date: "2025-07-15",
-      img: "/img/press-release-6.jpg",
-      summary: "জোয়াফের ষষ্ঠ প্রেস রিলিজ।"
-    },
-    {
-      id: 7,
-      slug: "press-release-7",
-      title: "JOAF সপ্তম প্রেস রিলিজ",
-      date: "2025-08-01",
-      img: "/img/press-release-7.jpg",
-      summary: "জোয়াফের সপ্তম প্রেস রিলিজ।"
-    },
-    {
-      id: 8,
-      slug: "press-release-8",
-      title: "JOAF অষ্টম প্রেস রিলিজ",
-      date: "2025-08-20",
-      img: "/img/press-release-8.jpg",
-      summary: "জোয়াফের অষ্টম প্রেস রিলিজ।"
-    },
+    { id:1, slug:"press-release-1", title:"JOAF আনুষ্ঠানিক যাত্রা শুরু",   date:"2025-05-09", img:"/img/press-release-1.jpg", summary:"জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম (জোয়াফ) আনুষ্ঠানিকভাবে তাদের কার্যক্রম শুরু করার ঘোষণা দিয়েছে।" },
+    { id:2, slug:"press-release-2", title:"JOAF দ্বিতীয় প্রেস রিলিজ",      date:"2025-05-20", img:"/img/press-release-2.jpg", summary:"জোয়াফের দ্বিতীয় প্রেস রিলিজ।" },
+    { id:3, slug:"press-release-3", title:"JOAF তৃতীয় প্রেস রিলিজ",        date:"2025-06-01", img:"/img/press-release-3.jpg", summary:"জোয়াফের তৃতীয় প্রেস রিলিজ।" },
+    { id:4, slug:"press-release-4", title:"JOAF চতুর্থ প্রেস রিলিজ",        date:"2025-06-15", img:"/img/press-release-4.jpg", summary:"জোয়াফের চতুর্থ প্রেস রিলিজ।" },
+    { id:5, slug:"press-release-5", title:"JOAF পঞ্চম প্রেস রিলিজ",         date:"2025-07-01", img:"/img/press-release-5.jpg", summary:"জোয়াফের পঞ্চম প্রেস রিলিজ।" },
+    { id:6, slug:"press-release-6", title:"JOAF ষষ্ঠ প্রেস রিলিজ",          date:"2025-07-15", img:"/img/press-release-6.jpg", summary:"জোয়াফের ষষ্ঠ প্রেস রিলিজ।" },
+    { id:7, slug:"press-release-7", title:"JOAF সপ্তম প্রেস রিলিজ",         date:"2025-08-01", img:"/img/press-release-7.jpg", summary:"জোয়াফের সপ্তম প্রেস রিলিজ।" },
+    { id:8, slug:"press-release-8", title:"JOAF অষ্টম প্রেস রিলিজ",         date:"2025-08-20", img:"/img/press-release-8.jpg", summary:"জোয়াফের অষ্টম প্রেস রিলিজ।" },
   ],
 
   stats: [
-    { number: "৮+",      label: "বিভাগ" },
-    { number: "৫০+",     label: "জেলা প্রতিনিধি" },
-    { number: "১০,০০০+", label: "সক্রিয় সদস্য" },
-    { number: "২+",      label: "আন্তর্জাতিক শাখা" },
+    { number:"৮+",      label:"বিভাগ" },
+    { number:"৫০+",     label:"জেলা প্রতিনিধি" },
+    { number:"১০,০০০+", label:"সক্রিয় সদস্য" },
+    { number:"২+",      label:"আন্তর্জাতিক শাখা" },
   ],
 
   ticker: [
-    { text: "🗳️ জনমত জরিপ — আপনার মতামত দিন",       href: "/joaf-polls.html"      },
-    { text: "📄 আর্থিক বিবরণী প্রকাশিত হয়েছে",        href: "/financial-report.html" },
-    { text: "✊ সদস্যতা গ্রহণ চলছে — এখনই যোগ দিন",  href: "/membership.html"       },
-    { text: "📢 নতুন প্রেস রিলিজ প্রকাশিত হয়েছে",     href: "/press-releases/press-release-8.html" },
-    { text: "🤝 কমিউনিটি গ্রুপে যোগ দিন",             href: "/community.html"        },
-    { text: "💚 আমাদের সহযোগিতা করুন",                href: "/donate.html"           },
+    { text:"🚨 Breaking — সর্বশেষ খবর এখনই দেখুন",          href:"/news.html"      },
+    { text:"🗳️ জনমত জরিপ — আজকের ভোট দিন, পুরস্কার জিতুন", href:"/joaf-polls.html"      },
+    { text:"🩸 রক্ত দরকার? এখনই খুঁজুন",                    href:"/rokto.html"           },
+    { text:"📄 আর্থিক বিবরণী প্রকাশিত হয়েছে",               href:"/financial-report.html"},
+    { text:"✊ সদস্যতা গ্রহণ চলছে — এখনই যোগ দিন",          href:"/membership.html"      },
+    { text:"🤝 কমিউনিটি গ্রুপে যোগ দিন",                    href:"/community.html"       },
   ]
 };
 

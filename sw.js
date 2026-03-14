@@ -1,5 +1,6 @@
-// JOAF Service Worker v2.0
-const CACHE = 'joaf-v2';
+// JOAF Service Worker v3.0
+// ⚠️ নতুন deploy দিলে CACHE version বাড়াও: joaf-v3 → joaf-v4
+const CACHE = 'joaf-v5';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE = [
@@ -8,8 +9,12 @@ const PRECACHE = [
   '/css/joaf.css',
   '/js/data.js',
   '/js/components.js',
+  '/js/main.js',
   '/logoc7c3.png',
-  '/offline.html'
+  '/offline.html',
+  '/rokto.html',
+  '/alert.html',
+  '/joaf-polls.html',
 ];
 
 self.addEventListener('install', e => {
@@ -28,9 +33,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(OFFLINE_URL))
-    );
+    e.respondWith(fetch(e.request).catch(() => caches.match(OFFLINE_URL)));
     return;
   }
   e.respondWith(
@@ -38,22 +41,32 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// ── Push Notification ──────────────────────────────
+// ── Push Notification ──────────────────────────────────────
 self.addEventListener('push', e => {
   let data = {};
-  try { data = e.data.json(); } catch(err) { data = { title: 'JOAF সতর্কতা', body: e.data ? e.data.text() : '' }; }
+  try { data = e.data.json(); } catch(err) {
+    data = { title: '🔥 JOAF', body: e.data ? e.data.text() : 'নতুন আপডেট' };
+  }
 
-  const title = data.title || '🚨 JOAF জরুরি সতর্কতা';
+  // notification type অনুযায়ী icon/badge/color
+  const typeIcons = {
+    breaking: '🚨', blood: '🩸', bajar: '🛒',
+    weather: '🌦️', poll: '🗳️', alert: '🚨', reward: '🎉'
+  };
+
+  const title = data.title || '🔥 JOAF সংবাদ';
   const options = {
-    body: data.body || 'নতুন সতর্কতা এসেছে',
+    body: data.body || 'নতুন আপডেট এসেছে — এখনই দেখুন',
     icon: '/logoc7c3.png',
     badge: '/logoc7c3.png',
     image: data.image || null,
-    data: { url: data.url || '/alert.html' },
-    vibrate: [200, 100, 200],
-    requireInteraction: true,
+    data: { url: data.url || '/' },
+    vibrate: [200, 100, 200, 100, 200],
+    requireInteraction: data.type === 'breaking' || data.type === 'blood',
+    tag: data.tag || 'joaf-notif',
+    renotify: true,
     actions: [
-      { action: 'view', title: '👁️ দেখুন' },
+      { action: 'view',  title: '👁️ দেখুন' },
       { action: 'close', title: '✕ বন্ধ করুন' }
     ]
   };
@@ -63,8 +76,8 @@ self.addEventListener('push', e => {
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || '/alert.html';
   if (e.action === 'close') return;
+  const url = (e.notification.data && e.notification.data.url) || '/';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cls => {
       const c = cls.find(c => c.url.includes(url));
@@ -73,3 +86,23 @@ self.addEventListener('notificationclick', e => {
     })
   );
 });
+
+// ── Background Sync (push subscription save) ──────────────
+self.addEventListener('sync', e => {
+  if (e.tag === 'sync-subscription') {
+    e.waitUntil(syncSubscription());
+  }
+});
+
+async function syncSubscription() {
+  try {
+    const sub = await self.registration.pushManager.getSubscription();
+    if (sub) {
+      await fetch('/api/save-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sub)
+      });
+    }
+  } catch(e) { console.log('sync failed', e); }
+}

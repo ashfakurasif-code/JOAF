@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>হাসপাতাল ও স্বাস্থ্যসেবা — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head>
+<body data-page="hospital">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div>
+<div id="joaf-ticker"></div>
+<style>
+.hosp-hero{background:linear-gradient(135deg,#134e4a,#0d9488);padding:36px 0 24px;color:#fff;text-align:center;}
+.hosp-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.search-bar{display:flex;gap:8px;margin:16px 0;}
+.search-bar input{flex:1;padding:12px 16px;border-radius:50px;border:2px solid #e5e7eb;font-size:14px;font-family:inherit;outline:none;}
+.search-bar input:focus{border-color:#0d9488;}
+.search-bar select{padding:12px 14px;border-radius:50px;border:2px solid #e5e7eb;font-size:13px;font-family:inherit;outline:none;background:#fff;}
+.cat-tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0;scrollbar-width:none;}
+.cat-tab{flex-shrink:0;padding:7px 14px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.cat-tab.active{background:#0d9488;color:#fff;border-color:#0d9488;}
+.hosp-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;border:1.5px solid #f0f0f0;}
+.hosp-top{display:flex;align-items:flex-start;gap:12px;}
+.hosp-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#e0f7f4,#b2dfdb);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.hosp-name{font-size:15px;font-weight:900;color:#1a1a2e;margin-bottom:3px;}
+.hosp-dist{font-size:12px;color:#6b7280;margin-bottom:5px;}
+.hosp-type{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px;background:#e0f7f4;color:#065f46;}
+.hosp-beds{font-size:11px;color:#6b7280;margin-left:6px;}
+.hosp-actions{display:flex;gap:8px;margin-top:12px;}
+.hosp-btn{flex:1;padding:9px;border-radius:50px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
+.hosp-call{background:#16a34a;color:#fff;}
+.hosp-map{background:#2563eb;color:#fff;}
+.hosp-info{background:#f3f4f6;color:#374151;}
+.emergency-strip{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-radius:14px;padding:14px;margin-bottom:16px;border:1.5px solid #fca5a5;}
+.emergency-strip h4{font-size:14px;font-weight:800;color:#991b1b;margin-bottom:8px;}
+.emergency-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.emergency-btn{padding:10px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+</style>
+
+<div class="hosp-hero">
+  <div class="container">
+    <h1>🏥 হাসপাতাল ও স্বাস্থ্যসেবা</h1>
+    <p>৬৪ জেলায় সরকারি ও বেসরকারি হাসপাতাল</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div class="emergency-strip">
+      <h4>🚨 জরুরি নম্বরসমূহ</h4>
+      <div class="emergency-grid">
+        <button class="emergency-btn" onclick="location.href='tel:999'">📞 999 — পুলিশ</button>
+        <button class="emergency-btn" onclick="location.href='tel:199'">🚒 199 — ফায়ার</button>
+        <button class="emergency-btn" onclick="location.href='tel:16000'">🏥 16000 — স্বাস্থ্য</button>
+        <button class="emergency-btn" onclick="location.href='tel:10922'">🚑 10922 — DGHS</button>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="hospSearch" placeholder="হাসপাতালের নাম বা জেলা..." oninput="filterHosp()">
+      <select id="distFilter" onchange="filterHosp()">
+        <option value="">সব জেলা</option>
+        <option>ঢাকা</option><option>চট্টগ্রাম</option><option>রাজশাহী</option>
+        <option>খুলনা</option><option>বরিশাল</option><option>সিলেট</option>
+        <option>রংপুর</option><option>ময়মনসিংহ</option>
+      </select>
+    </div>
+
+    <div class="cat-tabs" id="catTabs"></div>
+    <div id="hospList"></div>
+  </div>
+</section>
+
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const HOSPITALS = [
+  {name:'ঢাকা মেডিকেল কলেজ হাসপাতাল',dist:'ঢাকা',type:'সরকারি',beds:2600,phone:'01779-053186',icon:'🏥',lat:23.7267,lng:90.3987,cats:['সরকারি','মেডিকেল কলেজ']},
+  {name:'জাতীয় হৃদরোগ ইনস্টিটিউট',dist:'ঢাকা',type:'সরকারি',beds:450,phone:'02-9126083',icon:'❤️',lat:23.7533,lng:90.3756,cats:['সরকারি','বিশেষায়িত']},
+  {name:'স্যার সলিমুল্লাহ মেডিকেল',dist:'ঢাকা',type:'সরকারি',beds:800,phone:'02-7314576',icon:'🏥',lat:23.7099,lng:90.4105,cats:['সরকারি','মেডিকেল কলেজ']},
+  {name:'শিশু হাসপাতাল ঢাকা',dist:'ঢাকা',type:'সরকারি',beds:650,phone:'02-9118478',icon:'👶',lat:23.7540,lng:90.3803,cats:['সরকারি','শিশু']},
+  {name:'স্কয়ার হাসপাতাল',dist:'ঢাকা',type:'বেসরকারি',beds:400,phone:'10616',icon:'🏥',lat:23.7552,lng:90.3741,cats:['বেসরকারি']},
+  {name:'ইউনাইটেড হাসপাতাল',dist:'ঢাকা',type:'বেসরকারি',beds:350,phone:'10666',icon:'🏥',lat:23.7973,lng:90.4138,cats:['বেসরকারি']},
+  {name:'চট্টগ্রাম মেডিকেল কলেজ',dist:'চট্টগ্রাম',type:'সরকারি',beds:1300,phone:'031-619070',icon:'🏥',lat:22.3569,lng:91.7832,cats:['সরকারি','মেডিকেল কলেজ']},
+  {name:'রাজশাহী মেডিকেল কলেজ',dist:'রাজশাহী',type:'সরকারি',beds:1000,phone:'0721-772150',icon:'🏥',lat:24.3745,lng:88.6042,cats:['সরকারি','মেডিকেল কলেজ']},
+  {name:'খুলনা মেডিকেল কলেজ',dist:'খুলনা',type:'সরকারি',beds:800,phone:'041-760011',icon:'🏥',lat:22.8456,lng:89.5403,cats:['সরকারি','মেডিকেল কলেজ']},
+  {name:'সিলেট ওসমানী মেডিকেল',dist:'সিলেট',type:'সরকারি',beds:1000,phone:'0821-716475',icon:'🏥',lat:24.8949,lng:91.8687,cats:['সরকারি','মেডিকেল কলেজ']},
+  {name:'ময়মনসিংহ মেডিকেল কলেজ',dist:'ময়মনসিংহ',type:'সরকারি',beds:1200,phone:'091-66247',icon:'🏥',lat:24.7471,lng:90.4203,cats:['সরকারি','মেডিকেল কলেজ']},
+  {name:'রংপুর মেডিকেল কলেজ',dist:'রংপুর',type:'সরকারি',beds:700,phone:'0521-65095',icon:'🏥',lat:25.7439,lng:89.2752,cats:['সরকারি','মেডিকেল কলেজ']},
+  {name:'বরিশাল শেরেবাংলা মেডিকেল',dist:'বরিশাল',type:'সরকারি',beds:600,phone:'0431-62614',icon:'🏥',lat:22.7010,lng:90.3535,cats:['সরকারি','মেডিকেল কলেজ']},
+];
+
+const CATS = ['সব','সরকারি','বেসরকারি','মেডিকেল কলেজ','বিশেষায়িত','শিশু'];
+let activeCat='সব', filtered=[...HOSPITALS];
+
+function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
+
+function renderTabs(){
+  document.getElementById('catTabs').innerHTML=CATS.map(c=>
+    `<button class="cat-tab${c===activeCat?' active':''}" onclick="setCat('${c}')">${c}</button>`
+  ).join('');
+}
+function setCat(c){activeCat=c;filterHosp();}
+
+function filterHosp(){
+  const q=document.getElementById('hospSearch').value.toLowerCase();
+  const d=document.getElementById('distFilter').value;
+  renderTabs();
+  filtered=HOSPITALS.filter(h=>{
+    const matchQ=!q||h.name.toLowerCase().includes(q)||h.dist.includes(q);
+    const matchD=!d||h.dist===d;
+    const matchC=activeCat==='সব'||h.cats.includes(activeCat);
+    return matchQ&&matchD&&matchC;
+  });
+  renderList();
+}
+
+function renderList(){
+  const el=document.getElementById('hospList');
+  if(!filtered.length){el.innerHTML='<div style="text-align:center;padding:40px;color:#9ca3af;">কোনো হাসপাতাল পাওয়া যায়নি</div>';return;}
+  el.innerHTML=filtered.map(h=>`
+    <div class="hosp-card">
+      <div class="hosp-top">
+        <div class="hosp-icon">${h.icon}</div>
+        <div style="flex:1">
+          <div class="hosp-name">${h.name}</div>
+          <div class="hosp-dist">📍 ${h.dist}</div>
+          <div><span class="hosp-type">${h.type}</span><span class="hosp-beds">শয্যা: ${bn(h.beds)}+</span></div>
+        </div>
+      </div>
+      <div class="hosp-actions">
+        <button class="hosp-btn hosp-call" onclick="location.href='tel:${h.phone}'">📞 কল করুন</button>
+        <button class="hosp-btn hosp-map" onclick="window.open('https://maps.google.com?q=${h.lat},${h.lng}','_blank')">🗺️ মানচিত্র</button>
+      </div>
+    </div>`).join('');
+}
+
+renderTabs();
+renderList();
+</script>
+</body>
+</html>

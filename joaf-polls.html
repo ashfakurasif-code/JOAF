@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
   <link rel="stylesheet" href="/css/pluginsc7c3.css">
   <link rel="stylesheet" href="/css/stylec7c3.css">
-  <link rel="stylesheet" href="/css/joaf.css?v=9.6">
+  <link rel="stylesheet" href="/css/joaf.css?v=6.2">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
   <style>
@@ -226,24 +226,46 @@
               <div class="panel-card-top"></div>
               <div class="panel-body">
                 <div class="login-title">📱 প্রবেশ করুন</div>
-                <div class="login-sub">ভোট সংরক্ষণ ও পুরস্কারের জন্য নাম ও নম্বর দিন</div>
+                <div class="login-sub">পুরস্কার পেতে লগইন করুন — অথবা Guest হিসেবে দেখুন</div>
+
+                <!-- Facebook Login -->
+                <button class="login-btn login-fb" onclick="doFbLogin()" style="background:linear-gradient(135deg,#1877f2,#0d5fcf);margin-bottom:8px;">
+                  <i class="zmdi zmdi-facebook"></i> Facebook দিয়ে প্রবেশ করুন
+                </button>
+
+                <div style="text-align:center;font-size:11px;color:#9ca3af;margin:8px 0;">— অথবা মোবাইল নম্বর দিয়ে —</div>
+
                 <input type="text" id="lName" class="f-inp" placeholder="আপনার নাম লিখুন">
                 <input type="tel" id="lPhone" class="f-inp" placeholder="মোবাইল নম্বর (01XXXXXXXXX)">
-                <!-- Optional profile photo URL -->
-                <input type="url" id="lPhoto" class="f-inp" placeholder="প্রোফাইল ছবির লিঙ্ক (ঐচ্ছিক)">
                 <button class="login-btn" onclick="doLogin()">
                   <i class="zmdi zmdi-check-circle"></i> প্রবেশ করুন
                 </button>
+
+                <div style="text-align:center;margin-top:8px;">
+                  <button onclick="doGuestLogin()" style="background:none;border:none;font-size:12px;color:#9ca3af;cursor:pointer;font-family:inherit;text-decoration:underline;">👤 Guest হিসেবে দেখুন (পুরস্কার নেই)</button>
+                </div>
                 <p class="login-note">তথ্য শুধু পুরস্কারের জন্য ব্যবহৃত হবে। তৃতীয় পক্ষকে দেওয়া হবে না।</p>
               </div>
             </div>
             <div class="reward-card joaf-reveal">
-              <h4>🎁 কীভাবে ৫০ টাকা পাবেন?</h4>
-              <div class="reward-row"><span>🗓️</span><span>প্রতিদিন সব <strong>৩০টি</strong> প্রশ্নে ভোট দিন</span></div>
-              <div class="reward-row"><span>📅</span><span>টানা <strong>৩০ দিন</strong> ধারাবাহিকভাবে করুন</span></div>
-              <div class="reward-row"><span>💸</span><span>মোবাইলে <strong>৫০ টাকা রিচার্জ</strong> পাবেন</span></div>
-              <div class="reward-row"><span>⚠️</span><span>একদিন মিস করলে আবার শুরু করতে হবে</span></div>
-              <div class="reward-row"><span>♾️</span><span>প্রতি ৩০ দিন পর পুনরায় শুরু করা যাবে</span></div>
+              <h4>🎁 পুরস্কারের নিয়ম</h4>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+                <div style="background:#f0fdf4;border-radius:10px;padding:10px 12px;border-left:4px solid #16a34a;">
+                  <div style="font-size:13px;font-weight:800;color:#166534;">ধাপ ১ — প্রতিদিন</div>
+                  <div style="font-size:12px;color:#374151;margin-top:3px;">৩০টি প্রশ্নে ভোট দিন</div>
+                </div>
+                <div style="background:#fff7ed;border-radius:10px;padding:10px 12px;border-left:4px solid #d97706;">
+                  <div style="font-size:13px;font-weight:800;color:#92400e;">ধাপ ২ — টানা ৩০ দিন</div>
+                  <div style="font-size:12px;color:#374151;margin-top:3px;">একদিনও মিস করা যাবে না</div>
+                </div>
+                <div style="background:#fef2f2;border-radius:10px;padding:10px 12px;border-left:4px solid #dc2626;">
+                  <div style="font-size:13px;font-weight:800;color:#991b1b;">পুরস্কার</div>
+                  <div style="font-size:12px;color:#374151;margin-top:3px;">৳৫০ মোবাইল রিচার্জ — প্রতি ৩০ দিনে</div>
+                </div>
+                <div style="background:#f8fafc;border-radius:10px;padding:8px 12px;font-size:11px;color:#6b7280;text-align:center;">
+                  ⚠️ মিস করলে আবার ১ দিন থেকে শুরু হবে
+                </div>
+              </div>
             </div>
           </div>
 
@@ -383,8 +405,8 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="/js/plugins.js"></script>
-<script src="/js/data.js?v=9.11"></script>
-<script src="/js/components.js?v=9.19"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script>
 // ============================================================
@@ -442,23 +464,76 @@ const myVote   = pid => CU ? (CU.votes?.[today()]?.[pid] ?? null) : null;
 function doLogin() {
   const name  = document.getElementById('lName').value.trim();
   const phone = document.getElementById('lPhone').value.trim();
-  const photo = document.getElementById('lPhoto').value.trim();
   if (!name || name.length < 2) { alert('নাম লিখুন (কমপক্ষে ২ অক্ষর)'); return; }
   if (!phone.match(/^01[3-9]\d{8}$/)) { alert('সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন'); return; }
-
   const uid = 'u' + phone.replace(/\D/g,'');
   let u = LS.get(uid) || {
-    id: uid, name, phone, photo: photo||'',
-    streak: 0, maxStreak: 0,
-    lastVote: null, voteDays: [],
-    totalVotes: 0, cycles: 0,
-    claimedCycles: 0, votes: {}
+    id: uid, name, phone, photo:'',
+    streak:0, maxStreak:0, lastVote:null, voteDays:[],
+    totalVotes:0, cycles:0, claimedCycles:0, votes:{}, taka:0
   };
-  u.name  = name;
-  u.phone = phone;
-  if (photo) u.photo = photo;
-  LS.set(uid, u);
-  LS.set('cu', uid);
+  u.name = name; u.phone = phone;
+  LS.set(uid, u); LS.set('cu', uid);
+  loadUser(uid);
+}
+
+function doFbLogin() {
+  // Facebook SDK login
+  if (typeof FB === 'undefined') {
+    // Load FB SDK
+    window.fbAsyncInit = function() {
+      FB.init({ appId: '1114707634145642', cookie:true, xfbml:true, version:'v18.0' });
+      FB.login(function(res) {
+        if (res.authResponse) {
+          FB.api('/me', {fields:'name,picture.width(200)'}, function(me) {
+            const uid = 'fb_' + me.id;
+            let u = LS.get(uid) || {
+              id:uid, name:me.name, phone:'', photo:me.picture?.data?.url||'',
+              streak:0, maxStreak:0, lastVote:null, voteDays:[],
+              totalVotes:0, cycles:0, claimedCycles:0, votes:{}, taka:0,
+              fbVerified:true
+            };
+            u.name = me.name;
+            if (me.picture?.data?.url) u.photo = me.picture.data.url;
+            u.fbVerified = true;
+            LS.set(uid, u); LS.set('cu', uid);
+            loadUser(uid);
+          });
+        }
+      }, {scope:'public_profile'});
+    };
+    const s = document.createElement('script');
+    s.src = 'https://connect.facebook.net/bn_BD/sdk.js';
+    document.head.appendChild(s);
+  } else {
+    FB.login(function(res) {
+      if (res.authResponse) {
+        FB.api('/me', {fields:'name,picture.width(200)'}, function(me) {
+          const uid = 'fb_' + me.id;
+          let u = LS.get(uid) || {
+            id:uid, name:me.name, phone:'', photo:me.picture?.data?.url||'',
+            streak:0, maxStreak:0, lastVote:null, voteDays:[],
+            totalVotes:0, cycles:0, claimedCycles:0, votes:{}, taka:0,
+            fbVerified:true
+          };
+          u.name = me.name; u.fbVerified = true;
+          LS.set(uid, u); LS.set('cu', uid);
+          loadUser(uid);
+        });
+      }
+    }, {scope:'public_profile'});
+  }
+}
+
+function doGuestLogin() {
+  const uid = 'guest_' + Date.now();
+  const u = {
+    id:uid, name:'অতিথি', phone:'', photo:'',
+    streak:0, maxStreak:0, lastVote:null, voteDays:[],
+    totalVotes:0, cycles:0, claimedCycles:0, votes:{}, taka:0,
+    isGuest:true
+  };
+  LS.set(uid, u); LS.set('cu', uid);
   loadUser(uid);
 }
 
@@ -529,6 +604,19 @@ function refreshDash() {
   document.getElementById('todayCount').textContent  = bn(tv) + '/' + bn(POLLS_COUNT);
   document.getElementById('todayBar').style.width    = tp + '%';
   document.getElementById('todayDone').style.display = tv >= POLLS_COUNT ? 'block' : 'none';
+
+  // taka display
+  const taka = (u.cycles||0) * REWARD_AMT;
+  const takaEl = document.getElementById('dTaka');
+  if (takaEl) takaEl.textContent = '৳' + bn(taka);
+
+  // guest warning
+  const gw = document.getElementById('guestWarn');
+  if (gw) gw.style.display = u.isGuest ? 'block' : 'none';
+
+  // fb verified badge
+  const nameEl = document.getElementById('dName');
+  if (nameEl && u.fbVerified) nameEl.innerHTML = u.name + ' <span style="font-size:10px;background:#1877f2;color:#fff;border-radius:50px;padding:1px 6px;">✓ Facebook</span>';
 }
 
 // ── Streak Calendar ───────────────────────────────────────────

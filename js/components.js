@@ -12,17 +12,44 @@ const JOAFComponents = {
     const s = JOAF.site;
     const navItems = JOAF.nav.map(item => {
       const active = item.id === activePage ? 'active' : '';
+      if (item.dropdown) {
+        const subs = item.dropdown.map(s =>
+          `<li><a href="${s.href}">${s.label}</a></li>`
+        ).join('');
+        return `<li class="has-dropdown ${active}">
+          <a href="${item.href}"${active?' aria-current="page"':''}>${item.label} <span class="nav-caret">▾</span></a>
+          <ul class="nav-dropdown">${subs}</ul>
+        </li>`;
+      }
       return `<li class="${active}"><a href="${item.href}"${active?' aria-current="page"':''}>${item.label}</a></li>`;
     }).join('');
 
-    const mobileItems = JOAF.nav.map((item, idx) => {
+    let mnavIdx = 0;
+    const mobileItems = JOAF.nav.map(item => {
       const isActive = item.id === activePage;
-      return `<li class="mnav-item" style="transform:translateY(20px) scale(.96);opacity:0;transition:transform .38s cubic-bezier(.34,1.4,.64,1) ${idx*.055}s,opacity .35s ease ${idx*.055}s">
+      const delay = mnavIdx * 0.055;
+      mnavIdx++;
+      const style = `transform:translateY(20px) scale(.96);opacity:0;transition:transform .38s cubic-bezier(.34,1.4,.64,1) ${delay}s,opacity .35s ease ${delay}s`;
+
+      let subs = '';
+      if (item.dropdown) {
+        subs = item.dropdown.map(s => {
+          const d2 = mnavIdx * 0.055; mnavIdx++;
+          return `<li class="mnav-item mnav-sub" style="transform:translateY(20px) scale(.96);opacity:0;transition:transform .38s cubic-bezier(.34,1.4,.64,1) ${d2}s,opacity .35s ease ${d2}s">
+            <a href="${s.href}" class="mnav-link mnav-link--sub" onclick="if(window._joafClose)window._joafClose()">
+              <span class="mnav-label">${s.label}</span>
+              <span class="mnav-arrow">›</span>
+            </a>
+          </li>`;
+        }).join('');
+      }
+
+      return `<li class="mnav-item${item.dropdown?' mnav-has-sub':''}" style="${style}">
         <a href="${item.href}" class="mnav-link${isActive?' mnav-link--active':''}" onclick="if(window._joafClose)window._joafClose()">
           <span class="mnav-label">${item.label}</span>
-          <span class="mnav-arrow">›</span>
+          <span class="mnav-arrow">${item.dropdown ? '▾' : '›'}</span>
         </a>
-      </li>`;
+      </li>${subs}`;
     }).join('');
 
     return `
@@ -427,6 +454,17 @@ const JOAFComponents = {
     const fp = document.getElementById('joaf-footer');
     if (fp) fp.outerHTML = this.renderFooter();
 
+    // 3b. Inject maze nav — only on homepage
+    const mazeEl = document.getElementById('joaf-maze-nav');
+    if (!mazeEl) {
+      const statsBar = document.getElementById('stats-bar');
+      if (statsBar) {
+        const div = document.createElement('div');
+        div.innerHTML = this.renderMazeNav();
+        statsBar.insertAdjacentElement('afterend', div.firstElementChild);
+      }
+    }
+
     // Global Alert FAB + Modal — all pages
     // Remove existing first to re-inject fresh
     ['joaf-global-alert-modal','joaf-alert-fab','joaf-blood-fab','joaf-blood-modal-wrap'].forEach(id => { const el = document.getElementById(id); if(el) el.remove(); });
@@ -764,6 +802,260 @@ const JOAFComponents = {
       this.initHeroParticles();
       this.initAnimations();
     }, 400);
+
+    // 8. PWA install prompt
+    setTimeout(() => this.initPWAPrompt(), 2000);
+
+    // 9. Push notification permission prompt
+    setTimeout(() => this.initPushPrompt(), 3500);
+  },
+
+  // ── PWA Install Prompt ────────────────────────────────────
+  initPWAPrompt() {
+    if (localStorage.getItem('joaf-pwa-dismissed')) return;
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    const p = JOAF.pwaPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      window._deferredPWA = e;
+      const el = document.createElement('div');
+      el.id = 'joaf-pwa-prompt';
+      el.innerHTML = `
+        <div style="position:fixed;bottom:0;left:0;right:0;z-index:99998;background:#0d0d1a;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,.4);">
+          <img src="/logoc7c3.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:900;margin-bottom:3px;">${p.title}</div>
+            <div style="font-size:11px;color:#9ca3af;line-height:1.4;">${p.body}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+            <button onclick="window._deferredPWA&&window._deferredPWA.prompt();document.getElementById('joaf-pwa-prompt').remove();" style="background:#90161f;color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap;">${p.install}</button>
+            <button onclick="localStorage.setItem('joaf-pwa-dismissed','1');document.getElementById('joaf-pwa-prompt').remove();" style="background:transparent;color:#6b7280;border:none;font-size:11px;font-family:inherit;cursor:pointer;">${p.later}</button>
+          </div>
+        </div>`;
+      document.body.appendChild(el);
+    });
+  },
+
+  // ── Push Notification Permission Prompt ───────────────────
+  initPushPrompt() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') return;
+    if (Notification.permission === 'denied') return;
+    if (localStorage.getItem('joaf-push-dismissed')) return;
+    const p = JOAF.notifPrompt;
+    const el = document.createElement('div');
+    el.id = 'joaf-push-prompt';
+    el.innerHTML = `
+      <div style="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:flex;align-items:flex-end;">
+        <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;width:100%;max-width:480px;margin:0 auto;">
+          <div style="font-size:20px;font-weight:900;color:#0d0d1a;margin-bottom:6px;">${p.title}</div>
+          <div style="margin:14px 0;">
+            ${p.points.map(pt=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;font-size:14px;color:#374151;line-height:1.5;">${pt}</div>`).join('')}
+          </div>
+          <button id="joaf-push-allow" style="width:100%;padding:14px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer;margin-bottom:10px;">${p.allow}</button>
+          <button id="joaf-push-skip" style="width:100%;padding:10px;background:transparent;color:#9ca3af;border:none;font-size:13px;font-family:inherit;cursor:pointer;">${p.skip}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+
+    document.getElementById('joaf-push-allow').onclick = async () => {
+      el.remove();
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          // Send welcome push
+          const reg = await navigator.serviceWorker.ready;
+          const msg = JOAF.pushMessages.welcome;
+          reg.showNotification(msg.title, {
+            body: msg.body,
+            icon: '/logoc7c3.png',
+            badge: '/logoc7c3.png',
+            vibrate: [200,100,200],
+            data: { url: '/' }
+          });
+        }
+      } catch(e) {}
+    };
+    document.getElementById('joaf-push-skip').onclick = () => {
+      localStorage.setItem('joaf-push-dismissed','1');
+      el.remove();
+    };
+  },
+
+  renderMazeNav() {
+    return `
+    <section class="joaf-maze-section section" id="joaf-maze-nav" aria-label="সেবা নেভিগেশন">
+      <div class="container">
+        <div class="joaf-maze-wrap">
+          <div class="joaf-bc" id="joaf-bc"></div>
+          <div class="joaf-screen" id="joaf-screen">
+
+            <!-- L0 হোম -->
+            <div class="jlayer active" id="jL-0">
+              <div class="jgrid-2">
+                <div class="jtile jc-red" onclick="joafMaze.go('andolon')">
+                  <span class="jtile-icon">🔥</span>
+                  <div class="jtile-name">আন্দোলন</div>
+                  <div class="jtile-sub">৪টি সেবা</div>
+                  <div class="jtile-arr">›</div>
+                </div>
+                <div class="jtile jc-blue" onclick="joafMaze.go('seva')">
+                  <span class="jtile-icon">🆘</span>
+                  <div class="jtile-name">সেবা</div>
+                  <div class="jtile-sub">৬টি সেবা</div>
+                  <div class="jtile-arr">›</div>
+                </div>
+                <div class="jtile jc-green" onclick="joafMaze.go('shujo')">
+                  <span class="jtile-icon">🌱</span>
+                  <div class="jtile-name">সুযোগ</div>
+                  <div class="jtile-sub">৬টি সেবা</div>
+                  <div class="jtile-arr">›</div>
+                </div>
+                <div class="jtile jc-purple" onclick="joafMaze.go('joaf')">
+                  <span class="jtile-icon">🌐</span>
+                  <div class="jtile-name">JOAF</div>
+                  <div class="jtile-sub">৬টি সেবা</div>
+                  <div class="jtile-arr">›</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- L1 আন্দোলন -->
+            <div class="jlayer" id="jL-andolon">
+              <div class="jsec-head jc-red"><span>🔥</span><div><div class="jsec-name">আন্দোলন</div><div class="jsec-sub">জুলাই চেতনার কেন্দ্র</div></div></div>
+              <div class="jgrid-3">
+                <a href="/joaf-polls.html" class="jstile jbr-red"><span class="jsi">✊</span><span class="jsn">জুলাই যোদ্ধা</span></a>
+                <a href="/joaf-polls.html" class="jstile jbr-red"><span class="jsi">🏛️</span><span class="jsn">নেতা ট্র্যাকার</span></a>
+                <a href="/joaf-polls.html" class="jstile jbr-red"><span class="jsi">🚫</span><span class="jsn">দুর্নীতি রিপোর্ট</span></a>
+                <a href="/joaf-polls.html" class="jstile jbr-red"><span class="jsi">🗳️</span><span class="jsn">জনমত জরিপ</span></a>
+              </div>
+            </div>
+
+            <!-- L1 সেবা -->
+            <div class="jlayer" id="jL-seva">
+              <div class="jsec-head jc-blue"><span>🆘</span><div><div class="jsec-name">সেবা</div><div class="jsec-sub">জরুরি সহায়তা</div></div></div>
+              <div class="jgrid-3">
+                <a href="/rokto.html" class="jstile jbr-blue"><span class="jsi">🩸</span><span class="jsn">রক্তদাতা</span></a>
+                <a href="/alert.html" class="jstile jbr-blue"><span class="jsi">🚨</span><span class="jsn">জরুরি সতর্কতা</span></a>
+                <a href="/bajar.html" class="jstile jbr-blue"><span class="jsi">🛒</span><span class="jsn">বাজার দর</span></a>
+                <a href="/weather.html" class="jstile jbr-blue"><span class="jsi">🌦️</span><span class="jsn">আবহাওয়া</span></a>
+                <div class="jstile jbr-teal" onclick="joafMaze.go('hospital')" ondblclick="location.href='/hospital.html'"><span class="jsi">🏥</span><span class="jsn">হাসপাতাল</span><span class="jsa">›</span></div>
+                <div class="jstile jbr-amber" onclick="joafMaze.go('legal')" ondblclick="location.href='/legal.html'"><span class="jsi">⚖️</span><span class="jsn">আইনি সহায়তা</span><span class="jsa">›</span></div>
+              </div>
+            </div>
+
+            <!-- L2 হাসপাতাল -->
+            <div class="jlayer" id="jL-hospital">
+              <div class="jsec-head jc-teal"><span>🏥</span><div><div class="jsec-name">হাসপাতাল ও স্বাস্থ্য</div><div class="jsec-sub">শীঘ্রই আসছে</div></div></div>
+              <div class="jgrid-3">
+                <a href="#" class="jstile jbr-teal"><span class="jsi">🏥</span><span class="jsn">হাসপাতাল খুঁজুন</span></a>
+                <a href="#" class="jstile jbr-teal"><span class="jsi">👨‍⚕️</span><span class="jsn">ডাক্তার</span></a>
+                <a href="#" class="jstile jbr-teal"><span class="jsi">💊</span><span class="jsn">ওষুধের দাম</span></a>
+              </div>
+            </div>
+
+            <!-- L2 আইন -->
+            <div class="jlayer" id="jL-legal">
+              <div class="jsec-head jc-amber"><span>⚖️</span><div><div class="jsec-name">আইনি সহায়তা</div><div class="jsec-sub">শীঘ্রই আসছে</div></div></div>
+              <div class="jgrid-3">
+                <a href="#" class="jstile jbr-amber"><span class="jsi">⚖️</span><span class="jsn">আইনজীবী</span></a>
+                <a href="#" class="jstile jbr-amber"><span class="jsi">🚔</span><span class="jsn">থানা নম্বর</span></a>
+                <a href="#" class="jstile jbr-amber"><span class="jsi">📋</span><span class="jsn">আইনি তথ্য</span></a>
+              </div>
+            </div>
+
+            <!-- L1 সুযোগ -->
+            <div class="jlayer" id="jL-shujo">
+              <div class="jsec-head jc-green"><span>🌱</span><div><div class="jsec-name">সুযোগ</div><div class="jsec-sub">আপনার ভবিষ্যৎ গড়ুন</div></div></div>
+              <div class="jgrid-3">
+                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">💼</span><span class="jsn">চাকরি</span></a>
+                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">🎓</span><span class="jsn">বৃত্তি</span></a>
+                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">🔧</span><span class="jsn">কারিগর</span></a>
+                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">🌾</span><span class="jsn">কৃষি তথ্য</span></a>
+                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">👩‍💼</span><span class="jsn">নারী উদ্যোক্তা</span></a>
+                <a href="/jobs.html" class="jstile jbr-green"><span class="jsi">🚀</span><span class="jsn">যুব উদ্যোক্তা</span></a>
+              </div>
+            </div>
+
+            <!-- L1 JOAF -->
+            <div class="jlayer" id="jL-joaf">
+              <div class="jsec-head jc-purple"><span>🌐</span><div><div class="jsec-name">JOAF</div><div class="jsec-sub">আমাদের প্ল্যাটফর্ম</div></div></div>
+              <div class="jgrid-3">
+                <a href="/community.html" class="jstile jbr-purple"><span class="jsi">👥</span><span class="jsn">কমিউনিটি</span></a>
+                <a href="/news.html" class="jstile jbr-purple"><span class="jsi">📰</span><span class="jsn">সংবাদ</span></a>
+                <a href="/events.html" class="jstile jbr-purple"><span class="jsi">📅</span><span class="jsn">অনুষ্ঠান</span></a>
+                <a href="/joaf-polls.html" class="jstile jbr-purple"><span class="jsi">🗳️</span><span class="jsn">জনমত</span></a>
+                <a href="/membership.html" class="jstile jbr-purple"><span class="jsi">🤝</span><span class="jsn">যোগ দিন</span></a>
+                <a href="/donate.html" class="jstile jbr-purple"><span class="jsi">💚</span><span class="jsn">সহযোগিতা</span></a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+    const joafMaze = {
+      stack: ['home'],
+      tree: {
+        home:     {label:'🏠 হোম',           color:'#6b7280', parent:null},
+        andolon:  {label:'🔥 আন্দোলন',        color:'#dc2626', parent:'home'},
+        seva:     {label:'🆘 সেবা',           color:'#2563eb', parent:'home'},
+        shujo:    {label:'🌱 সুযোগ',          color:'#16a34a', parent:'home'},
+        joaf:     {label:'🌐 JOAF',           color:'#9333ea', parent:'home'},
+        hospital: {label:'🏥 হাসপাতাল',       color:'#0d9488', parent:'seva'},
+        legal:    {label:'⚖️ আইনি সহায়তা',   color:'#d97706', parent:'seva'},
+      },
+      go(id, isBack=false) {
+        document.querySelectorAll('.jlayer').forEach(l=>l.classList.remove('active','jback'));
+        const el = document.getElementById('jL-'+(id==='home'?'0':id));
+        if (!el) return;
+        if (isBack) el.classList.add('jback');
+        el.classList.add('active');
+        if (isBack) { this.stack.pop(); }
+        else { this.stack.push(id); }
+        this.renderBC();
+      },
+      goBack() {
+        if (this.stack.length<=1) return;
+        const prev = this.stack[this.stack.length-2];
+        this.go(prev, true);
+      },
+      goHome() {
+        this.stack=['home'];
+        document.querySelectorAll('.jlayer').forEach(l=>l.classList.remove('active','jback'));
+        const h=document.getElementById('jL-0');
+        h.classList.add('jback','active');
+        document.getElementById('joaf-bc').innerHTML='';
+      },
+      goTo(idx) {
+        const target=this.stack[idx];
+        this.stack=this.stack.slice(0,idx+1);
+        document.querySelectorAll('.jlayer').forEach(l=>l.classList.remove('active','jback'));
+        const el=document.getElementById('jL-'+(target==='home'?'0':target));
+        if(el){el.classList.add('jback','active');}
+        this.renderBC();
+      },
+      renderBC() {
+        const bc=document.getElementById('joaf-bc');
+        if (!bc) return;
+        if (this.stack.length<=1){bc.innerHTML='';return;}
+        let h=\`<button class="jbc-back" onclick="joafMaze.goBack()">‹ ফিরে যান</button>\`;
+        h+=\`<button class="jbc-home" onclick="joafMaze.goHome()">🏠</button>\`;
+        for(let i=1;i<this.stack.length;i++){
+          const n=this.tree[this.stack[i]];if(!n)continue;
+          h+=\`<span class="jbc-sep">›</span>\`;
+          if(i<this.stack.length-1){
+            h+=\`<button class="jbc-item" style="background:\${n.color}" onclick="joafMaze.goTo(\${i})">\${n.label}</button>\`;
+          } else {
+            h+=\`<span class="jbc-item jbc-cur" style="background:\${n.color}">\${n.label}</span>\`;
+          }
+        }
+        bc.innerHTML=h;
+      }
+    };
+    <\/script>`;
   },
 
   renderStats() {

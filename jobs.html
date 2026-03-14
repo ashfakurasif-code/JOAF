@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="bn"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>চাকরি ও বৃত্তি — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.2">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head><body data-page="shujo">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div><div id="joaf-ticker"></div>
+<style>
+.jobs-hero{background:linear-gradient(135deg,#14532d,#16a34a);padding:36px 0 24px;color:#fff;text-align:center;}
+.jobs-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.tab-bar{display:flex;gap:0;background:#f3f4f6;border-radius:50px;padding:4px;margin-bottom:20px;}
+.tab-btn{flex:1;padding:10px;border:none;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#6b7280;transition:.2s;}
+.tab-btn.active{background:#fff;color:#16a34a;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.job-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;border:1.5px solid #f0f0f0;}
+.job-top{display:flex;gap:12px;align-items:flex-start;}
+.job-logo{width:48px;height:48px;border-radius:12px;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.job-title{font-size:14px;font-weight:800;color:#1a1a2e;margin-bottom:3px;}
+.job-org{font-size:12px;color:#6b7280;margin-bottom:5px;}
+.job-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.job-tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;background:#f3f4f6;color:#374151;}
+.job-tag.gov{background:#dbeafe;color:#1e40af;}
+.job-tag.urgent{background:#fee2e2;color:#991b1b;}
+.job-deadline{font-size:11px;color:#dc2626;font-weight:700;margin-top:6px;}
+.apply-btn{display:block;width:100%;padding:10px;background:linear-gradient(135deg,#14532d,#16a34a);color:#fff;border:none;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:12px;text-align:center;text-decoration:none;}
+.schol-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:12px;border-left:4px solid #7c3aed;}
+.schol-name{font-size:14px;font-weight:800;color:#1a1a2e;margin-bottom:4px;}
+.schol-org{font-size:12px;color:#7c3aed;margin-bottom:6px;}
+.schol-amount{font-size:20px;font-weight:900;color:#16a34a;}
+.schol-detail{font-size:12px;color:#6b7280;margin-top:4px;}
+.notif-btn{width:100%;padding:12px;background:linear-gradient(135deg,#14532d,#16a34a);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:20px;}
+</style>
+<div class="jobs-hero"><div class="container">
+  <h1>💼 চাকরি ও বৃত্তি</h1>
+  <p>সরকারি ও বেসরকারি সুযোগ — আপনার জন্য</p>
+</div></div>
+<section class="section"><div class="container">
+
+  <button class="notif-btn" onclick="requestJobNotif()">🔔 নতুন চাকরি/বৃত্তির notification চালু করুন</button>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="setTab('jobs',this)">💼 চাকরি</button>
+    <button class="tab-btn" onclick="setTab('schol',this)">🎓 বৃত্তি</button>
+    <button class="tab-btn" onclick="setTab('karigor',this)">🔧 কারিগর</button>
+  </div>
+
+  <div id="tab-jobs"></div>
+  <div id="tab-schol" style="display:none"></div>
+  <div id="tab-karigor" style="display:none"></div>
+
+</div></section>
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.2"></script>
+<script src="/js/components.js?v=6.2"></script>
+<script>
+const JOBS=[
+  {title:'অফিস সহকারী',org:'বাংলাদেশ সরকার',icon:'🏛️',type:['gov'],deadline:'৩১ মার্চ ২০২৬',seats:'৫০০+',link:'https://bpsc.gov.bd'},
+  {title:'ফিল্ড অর্গানাইজার',org:'JOAF',icon:'✊',type:['urgent'],deadline:'১৫ মার্চ ২০২৬',seats:'২০',link:'/membership.html'},
+  {title:'নার্স',org:'স্বাস্থ্য অধিদপ্তর',icon:'👨‍⚕️',type:['gov'],deadline:'৩০ এপ্রিল ২০২৬',seats:'১০০০+',link:'https://dghs.gov.bd'},
+  {title:'কম্পিউটার অপারেটর',org:'বিভিন্ন ব্যাংক',icon:'💻',type:[],deadline:'চলমান',seats:'বিভিন্ন',link:'https://jobs.bdjobs.com'},
+  {title:'প্রাথমিক শিক্ষক',org:'প্রাথমিক শিক্ষা অধিদপ্তর',icon:'📚',type:['gov'],deadline:'মে ২০২৬',seats:'৩৫০০+',link:'https://dpe.gov.bd'},
+  {title:'ডেটা এন্ট্রি অপারেটর',org:'বিভিন্ন প্রতিষ্ঠান',icon:'⌨️',type:[],deadline:'চলমান',seats:'একাধিক',link:'https://jobs.bdjobs.com'},
+];
+
+const SCHOLS=[
+  {name:'প্রধানমন্ত্রী বৃত্তি',org:'শিক্ষা মন্ত্রণালয়',amount:'৳১,০০০/মাস',detail:'SSC/HSC পাস — মেধাবী ছাত্রছাত্রী',link:'https://shed.gov.bd'},
+  {name:'উপবৃত্তি',org:'মাধ্যমিক শিক্ষা অধিদপ্তর',amount:'৳৩,০০০/বছর',detail:'৬ষ্ঠ-১২শ শ্রেণি',link:'https://dshe.gov.bd'},
+  {name:'BUET বৃত্তি',org:'বাংলাদেশ প্রকৌশল বিশ্ববিদ্যালয়',amount:'৳২,৫০০/মাস',detail:'প্রকৌশল শিক্ষার্থী',link:'https://buet.ac.bd'},
+  {name:'ব্র্যাক বৃত্তি',org:'ব্র্যাক ফাউন্ডেশন',amount:'৳৫,০০০/মাস',detail:'মেধাবী ও অসচ্ছল শিক্ষার্থী',link:'https://brac.net'},
+];
+
+const KARIGOR=[
+  {title:'ইলেকট্রিশিয়ান',org:'ঢাকা',icon:'⚡',phone:'01700-000001',detail:'বাসাবাড়ি ও কারখানার কাজ'},
+  {title:'প্লাম্বার',org:'ঢাকা',icon:'🔧',phone:'01700-000002',detail:'পানির লাইন, ফিটিং'},
+  {title:'রাজমিস্ত্রি',org:'চট্টগ্রাম',icon:'🧱',phone:'01700-000003',detail:'নির্মাণ কাজ'},
+  {title:'এসি মেকানিক',org:'ঢাকা',icon:'❄️',phone:'01700-000004',detail:'এসি সার্ভিসিং ও মেরামত'},
+  {title:'কাঠমিস্ত্রি',org:'রাজশাহী',icon:'🪚',phone:'01700-000005',detail:'ফার্নিচার তৈরি ও মেরামত'},
+  {title:'দর্জি',org:'সিলেট',icon:'🧵',phone:'01700-000006',detail:'পোশাক তৈরি ও সেলাই'},
+];
+
+function setTab(tab, btn){
+  ['jobs','schol','karigor'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+document.getElementById('tab-jobs').innerHTML=JOBS.map(j=>`
+  <div class="job-card">
+    <div class="job-top">
+      <div class="job-logo">${j.icon}</div>
+      <div style="flex:1">
+        <div class="job-title">${j.title}</div>
+        <div class="job-org">${j.org}</div>
+        <div class="job-tags">${j.type.map(t=>`<span class="job-tag ${t}">${t==='gov'?'সরকারি':t==='urgent'?'জরুরি':t}</span>`).join('')}<span class="job-tag">আসন: ${j.seats}</span></div>
+        <div class="job-deadline">⏰ শেষ তারিখ: ${j.deadline}</div>
+      </div>
+    </div>
+    <a href="${j.link}" target="_blank" class="apply-btn">আবেদন করুন →</a>
+  </div>`).join('');
+
+document.getElementById('tab-schol').innerHTML=SCHOLS.map(s=>`
+  <div class="schol-card">
+    <div class="schol-name">${s.name}</div>
+    <div class="schol-org">${s.org}</div>
+    <div class="schol-amount">${s.amount}</div>
+    <div class="schol-detail">${s.detail}</div>
+    <a href="${s.link}" target="_blank" class="apply-btn" style="background:linear-gradient(135deg,#3b0764,#7c3aed);">বিস্তারিত দেখুন →</a>
+  </div>`).join('');
+
+document.getElementById('tab-karigor').innerHTML=KARIGOR.map(k=>`
+  <div class="job-card">
+    <div class="job-top">
+      <div class="job-logo">${k.icon}</div>
+      <div style="flex:1">
+        <div class="job-title">${k.title}</div>
+        <div class="job-org">📍 ${k.org}</div>
+        <div class="job-tags"><span class="job-tag">${k.detail}</span></div>
+      </div>
+    </div>
+    <button class="apply-btn" onclick="location.href='tel:${k.phone}'" style="display:block;width:100%;text-align:center;">📞 কল করুন</button>
+  </div>`).join('');
+
+function requestJobNotif(){
+  if(!('Notification' in window)) return;
+  Notification.requestPermission().then(p=>{
+    if(p==='granted') navigator.serviceWorker.ready.then(r=>r.showNotification('💼 Job Alert চালু!',{body:'নতুন চাকরি ও বৃত্তি পাবেন সবার আগে।',icon:'/logoc7c3.png'}));
+  });
+}
+</script></body></html>
