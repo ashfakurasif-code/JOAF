@@ -70,12 +70,12 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .float-anim{animation:float 3.5s ease-in-out infinite;}
 
 /* HEADER */
-.joaf-header{position:sticky;top:0;z-index:2000;background:rgba(255,255,255,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:2px solid transparent;box-shadow:0 2px 20px rgba(0,0,0,.08);transition:all .35s ease;}
+.joaf-header{position:sticky;top:0;z-index:2000;background:rgba(255,255,255,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:2px solid transparent;box-shadow:0 2px 20px rgba(0,0,0,.08);transition:all .35s ease;;overflow:visible;}
 .joaf-header.scrolled{background:rgba(255,255,255,.99);border-bottom-color:var(--brand);box-shadow:0 4px 32px rgba(0,0,0,.13);}
 .joaf-header-top{background:linear-gradient(135deg,var(--dark),var(--dark2));padding:5px 0;}
 .joaf-header-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;}
 .joaf-header-meta span{color:rgba(255,255,255,.8);font-size:12px;display:flex;align-items:center;gap:5px;}
-.joaf-header-main{padding:0;}
+.joaf-header-main{padding:0;overflow:visible;}
 .joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;}
 .joaf-header-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .joaf-logo img{max-width:95px;height:auto;display:block;padding:4px 0;}
@@ -861,3 +861,12 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .jbr-teal{border-color:#0d9488!important;}.jbr-teal:hover{background:rgba(13,148,136,.07)!important;}
 .jbr-amber{border-color:#d97706!important;}.jbr-amber:hover{background:rgba(217,119,6,.07)!important;}
 
+/* Dropdown — hover on desktop, click on touch */
+.has-dropdown{position:relative;}
+.has-dropdown>.nav-dropdown{pointer-events:none;}
+.has-dropdown:hover>.nav-dropdown,
+.has-dropdown.open>.nav-dropdown{
+  opacity:1!important;visibility:visible!important;
+  pointer-events:auto!important;
+  transform:translateX(-50%) translateY(0)!important;
+}

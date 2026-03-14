@@ -1,6 +1,6 @@
 // JOAF Service Worker v3.0
-// ⚠️ নতুন deploy দিলে CACHE version বাড়াও: joaf-v3 → joaf-v4
-const CACHE = 'joaf-v5';
+// ⚠️ নতুন deploy দিলে CACHE version বাড়াও: joaf-v5 → joaf-v6
+const CACHE = 'joaf-v6';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE = [
@@ -15,6 +15,25 @@ const PRECACHE = [
   '/rokto.html',
   '/alert.html',
   '/joaf-polls.html',
+  '/bajar.html',
+  '/news.html',
+  '/hospital.html',
+  '/doctor.html',
+  '/legal.html',
+  '/food-aid.html',
+  '/medicine.html',
+  '/weather.html',
+  '/jobs.html',
+  '/freelance.html',
+  '/agriculture.html',
+  '/voter.html',
+  '/july-warriors.html',
+  '/july-family.html',
+  '/leader-tracker.html',
+  '/live.html',
+  '/forum.html',
+  '/women-entrepreneur.html',
+  '/youth-startup.html',
 ];
 
 self.addEventListener('install', e => {

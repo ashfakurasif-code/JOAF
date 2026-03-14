@@ -208,6 +208,30 @@ const JOAFComponents = {
   },
 
   // ── Scroll-aware header ──────────────────────────────────
+  initDropdowns() {
+    document.querySelectorAll('.has-dropdown').forEach(li => {
+      const link = li.querySelector(':scope > a');
+      if (!link) return;
+      link.addEventListener('click', e => {
+        // If has dropdown, toggle on click (don't navigate)
+        if (window.innerWidth >= 768) {
+          e.preventDefault();
+          li.classList.toggle('open');
+          // Close others
+          document.querySelectorAll('.has-dropdown').forEach(other => {
+            if (other !== li) other.classList.remove('open');
+          });
+        }
+      });
+    });
+    // Close on outside click
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.has-dropdown')) {
+        document.querySelectorAll('.has-dropdown').forEach(li => li.classList.remove('open'));
+      }
+    });
+  },
+
   initScrollHeader() {
     const hdr = document.querySelector('.joaf-header');
     if (!hdr) return;
@@ -781,6 +805,7 @@ const JOAFComponents = {
     // 4. Init UI — after DOM injections complete
     this.startClock();
     this.initScrollHeader();
+    setTimeout(() => this.initDropdowns(), 100);
     this.initMobileNav();
     this.initMuteButton();
     this.addScrollTop();
