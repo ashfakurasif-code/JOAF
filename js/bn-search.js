@@ -131,6 +131,19 @@ window.bnSearch = function(query, text, groupName) {
   // e.g. query="ভোলা", check if ALL_MAP has reverse match
   for (const [en, bnWord] of Object.entries(ALL_MAP)) {
     if (bnWord.toLowerCase() === q && t.includes(en)) return true;
+    // partial Bengali match e.g. "ভোলা সদর" contains "ভোলা"
+    if (bnWord.toLowerCase().includes(q) && t.includes(en)) return true;
+    // partial English in text e.g. text="bhola bazar" query="ভোলা"
+    if (bnWord.toLowerCase() === q && t.split(/[\s,.-]+/).some(w => en.startsWith(w) || w.startsWith(en))) return true;
+  }
+  
+  // Bengali query → search Bengali text directly (already done via t.includes)
+  // Bengali query → also try each word
+  const qWords = q.split(/[\s,.-]+/).filter(w => w.length >= 2);
+  for (const qw of qWords) {
+    if (t.includes(qw)) return true;
+    const bnVal = ALL_MAP[qw];
+    if (bnVal && t.includes(bnVal.toLowerCase())) return true;
   }
 
   // Continent match — e.g. "malaysia" → JOAF Asia
