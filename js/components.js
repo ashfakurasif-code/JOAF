@@ -890,24 +890,73 @@ async function joafSubscribePush() {
 // Request notification permission and subscribe
 async function joafRequestNotification() {
   if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if (Notification.permission === 'denied') return;
   
   if (Notification.permission === 'default') {
-    const perm = await Notification.requestPermission();
-    if (perm === 'granted') joafSubscribePush();
+    // Show custom prompt first
+    _joafShowNotifPrompt();
   } else if (Notification.permission === 'granted') {
     joafSubscribePush();
   }
 }
 
-// Ask after 5 seconds on first visit
+function _joafShowNotifPrompt() {
+  if (document.getElementById('joaf-notif-prompt')) return;
+  
+  const el = document.createElement('div');
+  el.id = 'joaf-notif-prompt';
+  el.innerHTML = `
+    <style>
+    #joaf-notif-prompt{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:420px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:999999;padding:18px 20px;font-family:inherit;}
+    #joaf-notif-prompt h4{margin:0 0 6px;font-size:15px;color:#1a1a1a;display:flex;align-items:center;gap:8px;}
+    #joaf-notif-prompt ul{margin:8px 0 14px 0;padding-left:18px;font-size:12px;color:#374151;line-height:1.8;}
+    #joaf-notif-prompt .jnp-btns{display:flex;gap:8px;}
+    #joaf-notif-prompt .jnp-allow{flex:1;padding:10px;background:#90161f;color:#fff;border:none;border-radius:50px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;}
+    #joaf-notif-prompt .jnp-later{padding:10px 16px;background:#f3f4f6;color:#374151;border:none;border-radius:50px;font-size:13px;font-family:inherit;cursor:pointer;}
+    </style>
+    <h4>🔔 সতর্কতার নোটিফিকেশন চালু করুন</h4>
+    <ul>
+      <li>আপনার এলাকায় <b>আগুন, বন্যা বা দুর্ঘটনা</b> হলে সাথে সাথে জানবেন</li>
+      <li><b>জরুরি রক্তের</b> প্রয়োজনে তাৎক্ষণিক alert পাবেন</li>
+      <li>JOAF এর গুরুত্বপূর্ণ ঘোষণা <b>মিস করবেন না</b></li>
+      <li>সম্পূর্ণ <b>বিনামূল্যে</b>, যেকোনো সময় বন্ধ করা যাবে</li>
+    </ul>
+    <div class="jnp-btns">
+      <button class="jnp-allow" onclick="window._joafAllowNotif()">🔔 হ্যাঁ, চালু করুন</button>
+      <button class="jnp-later" onclick="window._joafLaterNotif()">পরে</button>
+    </div>
+  `;
+  document.body.appendChild(el);
+}
+
+window._joafAllowNotif = async () => {
+  document.getElementById('joaf-notif-prompt')?.remove();
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') joafSubscribePush();
+  localStorage.setItem('joaf_notif_asked', Date.now().toString());
+};
+
+window._joafLaterNotif = () => {
+  document.getElementById('joaf-notif-prompt')?.remove();
+  // Ask again after 30 seconds
+  setTimeout(_joafShowNotifPrompt, 30000);
+};
+
+// Ask after 5 seconds
 setTimeout(() => {
-  if (!localStorage.getItem('joaf_notif_asked')) {
-    localStorage.setItem('joaf_notif_asked', '1');
-    joafRequestNotification();
-  } else if (Notification.permission === 'granted') {
+  if (Notification.permission === 'granted') {
     joafSubscribePush();
+  } else if (Notification.permission === 'default') {
+    joafRequestNotification();
   }
 }, 5000);
+
+// Keep asking every 30 seconds until accepted or denied
+setInterval(() => {
+  if (Notification.permission === 'default' && !document.getElementById('joaf-notif-prompt')) {
+    _joafShowNotifPrompt();
+  }
+}, 30000);
 
 // Auto cache-bust for dynamic JS files
 (function() {
