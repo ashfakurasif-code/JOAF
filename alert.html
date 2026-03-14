@@ -2,9 +2,11 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>জরুরি সতর্কতা — JOAF</title>
 <link rel="manifest" href="/site.webmanifest">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/stylec7c3.css">
 <link rel="stylesheet" href="/css/joaf.css?v=9.4">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
 <style>
@@ -59,7 +61,7 @@ body{font-family:'SolaimanLipi',sans-serif;background:#f8f9fa;color:#1a1a2e;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 </style>
 </head>
-<body>
+<body data-page="home" style="overflow-x:hidden">
 
 <div id="joaf-preloader" style="position:fixed;inset:0;background:#0d0d1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999">
   <img src="/logoc7c3.png" style="width:70px;margin-bottom:16px">
@@ -141,8 +143,18 @@ body{font-family:'SolaimanLipi',sans-serif;background:#f8f9fa;color:#1a1a2e;}
 <div id="joaf-footer"></div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/plugins.js"></script>
 <script src="/js/data.js?v=9.4"></script>
 <script src="/js/components.js?v=9.4"></script>
+<script src="/js/main.js"></script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof JOAFComponents !== 'undefined') {
+    JOAFComponents.init('home');
+  }
+});
+</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";

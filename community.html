@@ -241,6 +241,7 @@
 <script src="/js/data.js?v=9.0.1"></script>
 <script src="/js/components.js?v=9.0.1"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
+<script src="/js/bn-search.js"></script>
 <script>
 const CAT_LABELS={main:'মূল হাব',regional:'আঞ্চলিক',intl:'আন্তর্জাতিক',special:'বিশেষায়িত',expand:'সম্প্রসারণ'};
 const CAT_ICONS={main:'🏛️',regional:'📍',intl:'🌍',special:'⭐',expand:'🚀'};
@@ -312,7 +313,7 @@ function renderCards(){
   const q=searchQuery.trim().toLowerCase();
   const filtered=JOAF.communityGroups.filter(g=>{
     const catOk=activeFilter==='all'||g.cat===activeFilter;
-    const qOk=!q||g.name.toLowerCase().includes(q)||(g.meta||'').toLowerCase().includes(q);
+    const qOk=!q||window.bnSearch(q,g.name)||window.bnSearch(q,g.meta||'')||window.bnSearch(q,g.cat||'');
     return catOk&&qOk;
   });
   document.getElementById('resultCount').innerHTML='<strong>'+filtered.length+'</strong>টি গ্রুপ পাওয়া গেছে';

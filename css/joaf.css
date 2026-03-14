@@ -737,3 +737,12 @@ body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
 }
 
 @media(max-width:767px){.hero-cta{display:none!important;}}
+
+/* Logo pulse */
+.joaf-logo img {
+  animation: logo-pulse 2.5s ease-in-out infinite;
+}
+@keyframes logo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
