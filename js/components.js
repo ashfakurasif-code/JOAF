@@ -429,7 +429,7 @@ const JOAFComponents = {
 
     // Global Alert FAB + Modal — all pages
     // Remove existing first to re-inject fresh
-    ['joaf-global-alert-modal','joaf-alert-fab','joaf-blood-fab'].forEach(id => { const el = document.getElementById(id); if(el) el.parentElement?.remove(); });
+    ['joaf-global-alert-modal','joaf-alert-fab','joaf-blood-fab','joaf-blood-modal-wrap'].forEach(id => { const el = document.getElementById(id); if(el) el.remove(); });
     if (!document.getElementById('joaf-global-alert-modal')) {
       const html = `
       <style>
@@ -451,7 +451,7 @@ const JOAFComponents = {
       .joaf-submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
       </style>
 
-      ${window.location.pathname.includes('alert') ? '' : '<button id="joaf-alert-fab">🚨 সতর্কতা দিন</button>'}
+      <button id="joaf-alert-fab">🚨 সতর্কতা দিন</button>
 
       <div id="joaf-global-alert-modal">
         <div class="joaf-alert-modal-inner">
