@@ -516,7 +516,7 @@ const JOAFComponents = {
       .jbr-fg input:focus,.jbr-fg select:focus{border-color:#075e55;}
       .jbr-submit{width:100%;padding:13px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
       </style>
-      \${isRoktoPage ? '' : '<button id="joaf-blood-fab">+🩸 রক্ত দিন</button>'}
+      <button id="joaf-blood-fab" style="display:none">+🩸 রক্ত দিন</button>
       <div id="joaf-blood-reg-modal">
         <div class="jbr-inner">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -544,9 +544,14 @@ const JOAFComponents = {
       const jbrDSel = document.getElementById('jbr-district');
       if (jbrDSel) JBR_DISTS.sort().forEach(d => { const o=document.createElement('option'); o.value=d; o.textContent=d; jbrDSel.appendChild(o); });
 
-      // Open modal — for rokto page use dedicated button, for others use FAB
+      // rokto page এ: ডানে +🩸 বাটন (registration form খুলবে)
+      // অন্য page এ: বামে 🩸 নিবন্ধন popup বাটন
+
+      const bfabEl = document.getElementById('joaf-blood-fab');
+
       if (isRoktoPage) {
-        // Add button inside rokto page
+        // rokto page এ — FAB hide করো, ডানে আলাদা বাটন দাও
+        if (bfabEl) bfabEl.style.display = 'none';
         const rkBtn = document.createElement('button');
         rkBtn.id = 'rokto-reg-btn';
         rkBtn.innerHTML = '+🩸 রক্ত দিন';
@@ -554,8 +559,11 @@ const JOAFComponents = {
         rkBtn.addEventListener('click', () => document.getElementById('joaf-blood-reg-modal').classList.add('open'));
         document.body.appendChild(rkBtn);
       } else {
-        const fabEl = document.getElementById('joaf-blood-fab');
-        if (fabEl) fabEl.addEventListener('click', () => document.getElementById('joaf-blood-reg-modal').classList.add('open'));
+        // অন্য page এ — বামে FAB দেখাও
+        if (bfabEl) {
+          bfabEl.style.display = 'flex';
+          bfabEl.addEventListener('click', () => document.getElementById('joaf-blood-reg-modal').classList.add('open'));
+        }
       }
 
       document.getElementById('joaf-blood-reg-modal').addEventListener('click', e => {
