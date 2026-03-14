@@ -431,8 +431,8 @@ const JOAFComponents = {
     if (!document.getElementById('joaf-global-alert-modal')) {
       const html = `
       <style>
-      #joaf-alert-fab{position:fixed;bottom:80px;left:16px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(144,22,31,.4);z-index:998;display:flex;align-items:center;gap:6px;white-space:nowrap;}
-      #joaf-global-alert-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:flex-end;}
+      #joaf-alert-fab{position:fixed!important;bottom:80px!important;left:16px!important;transform:none!important;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(144,22,31,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;}
+      #joaf-global-alert-modal{display:none;position:fixed!important;inset:0!important;background:rgba(0,0,0,.6);z-index:99999!important;align-items:flex-end;}
       #joaf-global-alert-modal.open{display:flex;}
       .joaf-alert-modal-inner{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
       .joaf-alert-modal-inner h3{font-size:17px;font-weight:900;margin:0;}
@@ -497,6 +497,16 @@ const JOAFComponents = {
       const div = document.createElement('div');
       div.innerHTML = html;
       document.body.appendChild(div);
+
+      // Blood donor FAB
+      if (!document.getElementById('joaf-blood-fab')) {
+        const bfab = document.createElement('button');
+        bfab.id = 'joaf-blood-fab';
+        bfab.innerHTML = '🩸 রক্ত দিন';
+        bfab.style.cssText = 'position:fixed!important;bottom:140px!important;left:16px!important;transform:none!important;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;';
+        bfab.addEventListener('click', () => { window.location.href = '/rokto.html'; });
+        document.body.appendChild(bfab);
+      }
 
       let _selType = 'other', _gps = null, _photo = null;
 

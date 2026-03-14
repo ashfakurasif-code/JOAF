@@ -383,7 +383,7 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="/js/plugins.js"></script>
-<script src="/js/data.js?v=9.0.1"></script>
+<script src="/js/data.js?v=9.6"></script>
 <script src="/js/components.js?v=9.6"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script>
@@ -606,7 +606,7 @@ function claimReward() {
   const unclaimed = (CU.cycles||0) - (CU.claimedCycles||0);
   if (unclaimed <= 0) return;
   const amount = unclaimed * REWARD_AMT;
-  const msg = `🎉 অভিনন্দন ${CU.name}!\n\nআপনি ${bn(unclaimed)} চক্র সম্পন্ন করেছেন।\nমোট: ৳${bn(amount)}\n\nপুরস্কার পেতে ইমেইল করুন:\ninfo@julyforum.com\n\nবিষয়: জনরায় পুরস্কার - ${CU.phone}`;
+  const msg = `🎉 অভিনন্দন ${CU.name}!\n\nআপনি ${bn(unclaimed)} চক্র সম্পন্ন করেছেন।\nমোট: ৳${bn(amount)}\n\nপুরস্কার পেতে ইমেইল করুন:\njoafforum@gmail.com\n\nবিষয়: জনরায় পুরস্কার - ${CU.phone}`;
   alert(msg);
   // Mark as claimed
   CU.claimedCycles = CU.cycles;
