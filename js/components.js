@@ -570,7 +570,7 @@ const JOAFComponents = {
         // অন্য page এ — বামে FAB দেখাও
         if (bfabEl) {
           bfabEl.style.display = 'flex';
-          bfabEl.addEventListener('click', () => document.getElementById('joaf-blood-reg-modal').classList.add('open'));
+          bfabEl.addEventListener('click', () => window.location.href = '/rokto.html');
         }
       }
 
