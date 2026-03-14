@@ -510,7 +510,7 @@ const JOAFComponents = {
         bloodModal.id = 'joaf-blood-modal-wrap';
         bloodModal.innerHTML = \`
         <style>
-        #joaf-blood-fab{position:fixed!important;bottom:140px!important;left:16px!important;transform:none!important;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;}
+        #joaf-blood-fab{position:fixed!important;bottom:160px!important;right:16px!important;left:auto!important;transform:none!important;width:56px!important;height:56px!important;background:#075e55;color:#fff;border:none;border-radius:50%!important;font-size:24px;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.5);z-index:9990!important;display:flex!important;align-items:center;justify-content:center;}
         #joaf-blood-modal{display:none;position:fixed!important;inset:0!important;background:rgba(0,0,0,.6);z-index:99999!important;align-items:flex-end;}
         #joaf-blood-modal.open{display:flex;}
         .joaf-blood-inner{background:#fff;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;}
@@ -520,7 +520,7 @@ const JOAFComponents = {
         .joaf-blood-fg input:focus,.joaf-blood-fg select:focus{border-color:#075e55;}
         .joaf-blood-submit{width:100%;padding:13px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
         </style>
-        <button id="joaf-blood-fab">🩸 রক্ত নিবন্ধন</button>
+        <button id="joaf-blood-fab" title="রক্তদাতা নিবন্ধন">🩸</button>
         <div id="joaf-blood-modal">
           <div class="joaf-blood-inner">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
