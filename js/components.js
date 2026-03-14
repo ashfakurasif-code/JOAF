@@ -39,16 +39,16 @@ const JOAFComponents = {
       <div class="joaf-header-main">
         <div class="container">
           <div class="joaf-header-row">
-            <!-- LEFT: pill tag + tagline (was center) -->
+            <!-- LEFT: Logo only -->
+            <a href="/" class="joaf-logo" aria-label="JOAF হোম">
+              <img src="${s.logo}?v=${s.version}" alt="${s.abbr}">
+            </a>
+
+            <!-- CENTER (mobile only): pill tag + tagline — replaces hamburger -->
             <div class="joaf-mob-center d-md-none">
               <div class="joaf-mob-pill"><span class="joaf-mob-pill-dot"></span>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</div>
               <div class="joaf-mob-tagline">দেশ আগে, দল পরে — আমরা ফিরে এসেছি।</div>
             </div>
-
-            <!-- CENTER: Logo (was left) -->
-            <a href="/" class="joaf-logo" aria-label="JOAF হোম">
-              <img src="${s.logo}?v=${s.version}" alt="${s.abbr}">
-            </a>
 
             <!-- RIGHT: Desktop nav | Mobile: CTA pill buttons -->
             <div class="joaf-header-right">

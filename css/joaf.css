@@ -76,9 +76,8 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .joaf-header-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;}
 .joaf-header-meta span{color:rgba(255,255,255,.8);font-size:12px;display:flex;align-items:center;gap:5px;}
 .joaf-header-main{padding:0;}
-.joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;position:relative;}
+.joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;}
 .joaf-header-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.joaf-logo{position:absolute;left:50%;transform:translateX(-50%);z-index:2;}
 .joaf-logo img{max-width:95px;height:auto;display:block;padding:4px 0;}
 .joaf-logo:hover img{transform:scale(1.06);}
 
@@ -494,7 +493,6 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
   display: flex;
   flex-direction: column;
   justify-content: center;
-  order: -1;
 }
 
 /* The red pill tag */
