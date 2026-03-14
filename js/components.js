@@ -861,6 +861,86 @@ async function joafSendAdminEmail(data) {
 // ── Push Notification Subscription ──────────────────
 const JOAF_VAPID = 'BCSwlS-ZLtznZGUGaDil3TQzT5GMmqeIAVyDNmimf5Z7IokRwk1xWDtatjALnGNhufdgq9UVZNnHcbnzXq7JcXE';
 
+// ── Emergency Services Database ──────────────────────
+const JOAF_EMERGENCY_DB = {"ঢাকা": {"police": ["999", "02-9514444", "02-9514445"], "fire": ["102", "02-9553344", "02-9553355"], "ambulance": ["199", "02-9891915"], "hospital": ["DMCH: 02-55165001", "Shaheed Suhrawardy: 02-9115340"]}, "গাজীপুর": {"police": ["999", "02-9810100"], "fire": ["102", "02-9813733"], "ambulance": ["199", "02-9810012"]}, "নারায়ণগঞ্জ": {"police": ["999", "02-7641992"], "fire": ["102", "02-7641616"], "ambulance": ["199", "02-7641234"]}, "মানিকগঞ্জ": {"police": ["999", "0651-62199"], "fire": ["102", "0651-62102"], "ambulance": ["199"]}, "মুন্সীগঞ্জ": {"police": ["999", "0681-62199"], "fire": ["102", "0681-62102"], "ambulance": ["199"]}, "নরসিংদী": {"police": ["999", "0621-62199"], "fire": ["102", "0621-62102"], "ambulance": ["199"]}, "কিশোরগঞ্জ": {"police": ["999", "0941-62199"], "fire": ["102", "0941-62700"], "ambulance": ["199"]}, "টাঙ্গাইল": {"police": ["999", "0921-62199"], "fire": ["102", "0921-62102"], "ambulance": ["199"]}, "ফরিদপুর": {"police": ["999", "0631-62199"], "fire": ["102", "0631-62102"], "ambulance": ["199"]}, "গোপালগঞ্জ": {"police": ["999", "0668-62199"], "fire": ["102", "0668-62102"], "ambulance": ["199"]}, "মাদারীপুর": {"police": ["999", "0661-62199"], "fire": ["102", "0661-62102"], "ambulance": ["199"]}, "শরীয়তপুর": {"police": ["999", "0601-62199"], "fire": ["102", "0601-62102"], "ambulance": ["199"]}, "রাজবাড়ী": {"police": ["999", "0641-62199"], "fire": ["102", "0641-62102"], "ambulance": ["199"]}, "চট্টগ্রাম": {"police": ["999", "031-615730", "031-615731"], "fire": ["102", "031-612229", "031-630234"], "ambulance": ["199", "031-615460"], "hospital": ["CMCH: 031-630286", "General Hospital: 031-612269"]}, "কক্সবাজার": {"police": ["999", "0341-62199"], "fire": ["102", "0341-62102"], "ambulance": ["199", "0341-62000"]}, "কুমিল্লা": {"police": ["999", "081-62199", "081-72000"], "fire": ["102", "081-62102"], "ambulance": ["199", "081-62911"]}, "ব্রাহ্মণবাড়িয়া": {"police": ["999", "0851-62199"], "fire": ["102", "0851-62102"], "ambulance": ["199"]}, "চাঁদপুর": {"police": ["999", "0841-62199"], "fire": ["102", "0841-62102"], "ambulance": ["199"]}, "নোয়াখালী": {"police": ["999", "0321-62199"], "fire": ["102", "0321-62700"], "ambulance": ["199"]}, "ফেনী": {"police": ["999", "0331-62199"], "fire": ["102", "0331-62102"], "ambulance": ["199"]}, "লক্ষ্মীপুর": {"police": ["999", "0381-62199"], "fire": ["102", "0381-62102"], "ambulance": ["199"]}, "খাগড়াছড়ি": {"police": ["999", "0371-62199"], "fire": ["102", "0371-62102"], "ambulance": ["199"]}, "রাঙ্গামাটি": {"police": ["999", "0351-62199"], "fire": ["102", "0351-62102"], "ambulance": ["199"]}, "বান্দরবান": {"police": ["999", "0361-62199"], "fire": ["102", "0361-62102"], "ambulance": ["199"]}, "সিলেট": {"police": ["999", "0821-716575", "0821-716576"], "fire": ["102", "0821-715511", "0821-716516"], "ambulance": ["199", "0821-716577"], "hospital": ["Sylhet MAG Osmani: 0821-716476"]}, "মৌলভীবাজার": {"police": ["999", "0861-52199"], "fire": ["102", "0861-52102"], "ambulance": ["199"]}, "হবিগঞ্জ": {"police": ["999", "0831-52199"], "fire": ["102", "0831-52102"], "ambulance": ["199"]}, "সুনামগঞ্জ": {"police": ["999", "0871-62199"], "fire": ["102", "0871-62102"], "ambulance": ["199"]}, "রাজশাহী": {"police": ["999", "0721-772266", "0721-772267"], "fire": ["102", "0721-772229"], "ambulance": ["199", "0721-772500"], "hospital": ["RMCH: 0721-772150"]}, "নওগাঁ": {"police": ["999", "0741-62199"], "fire": ["102", "0741-62102"], "ambulance": ["199"]}, "নাটোর": {"police": ["999", "0771-62199"], "fire": ["102", "0771-62102"], "ambulance": ["199"]}, "চাঁপাইনবাবগঞ্জ": {"police": ["999", "0781-55199"], "fire": ["102", "0781-55102"], "ambulance": ["199"]}, "পাবনা": {"police": ["999", "0731-65199"], "fire": ["102", "0731-65102"], "ambulance": ["199"]}, "সিরাজগঞ্জ": {"police": ["999", "0751-62199"], "fire": ["102", "0751-62102"], "ambulance": ["199"]}, "বগুড়া": {"police": ["999", "051-62199", "051-67000"], "fire": ["102", "051-62102"], "ambulance": ["199", "051-62911"]}, "জয়পুরহাট": {"police": ["999", "0571-62199"], "fire": ["102", "0571-62102"], "ambulance": ["199"]}, "খুলনা": {"police": ["999", "041-731477", "041-731478"], "fire": ["102", "041-722100", "041-720222"], "ambulance": ["199", "041-731500"], "hospital": ["Khulna Medical: 041-723347"]}, "যশোর": {"police": ["999", "0421-68199"], "fire": ["102", "0421-68102"], "ambulance": ["199", "0421-68500"]}, "সাতক্ষীরা": {"police": ["999", "0471-62199"], "fire": ["102", "0471-62102"], "ambulance": ["199"]}, "ঝিনাইদহ": {"police": ["999", "0451-62199"], "fire": ["102", "0451-62102"], "ambulance": ["199"]}, "মাগুরা": {"police": ["999", "0488-62199"], "fire": ["102", "0488-62102"], "ambulance": ["199"]}, "নড়াইল": {"police": ["999", "0481-62199"], "fire": ["102", "0481-62102"], "ambulance": ["199"]}, "কুষ্টিয়া": {"police": ["999", "071-62199", "071-73000"], "fire": ["102", "071-62102"], "ambulance": ["199"]}, "চুয়াডাঙ্গা": {"police": ["999", "0761-62199"], "fire": ["102", "0761-62102"], "ambulance": ["199"]}, "মেহেরপুর": {"police": ["999", "0791-62199"], "fire": ["102", "0791-62102"], "ambulance": ["199"]}, "বাগেরহাট": {"police": ["999", "0468-62199"], "fire": ["102", "0468-62102"], "ambulance": ["199"]}, "বরিশাল": {"police": ["999", "0431-62199", "0431-2174199"], "fire": ["102", "0431-62102", "0431-2174102"], "ambulance": ["199", "0431-62500"], "hospital": ["Barishal Sher-e-Bangla: 0431-2173280"]}, "ভোলা": {"police": ["999", "0491-62199"], "fire": ["102", "0491-62102"], "ambulance": ["199"]}, "পটুয়াখালী": {"police": ["999", "0441-62199"], "fire": ["102", "0441-62102"], "ambulance": ["199"]}, "পিরোজপুর": {"police": ["999", "0461-62199"], "fire": ["102", "0461-62102"], "ambulance": ["199"]}, "বরগুনা": {"police": ["999", "0448-62199"], "fire": ["102", "0448-62102"], "ambulance": ["199"]}, "ঝালকাঠি": {"police": ["999", "0498-62199"], "fire": ["102", "0498-62102"], "ambulance": ["199"]}, "রংপুর": {"police": ["999", "0521-62199", "0521-62200"], "fire": ["102", "0521-62102"], "ambulance": ["199", "0521-62500"], "hospital": ["Rangpur Medical: 0521-62640"]}, "দিনাজপুর": {"police": ["999", "0531-64199"], "fire": ["102", "0531-64102"], "ambulance": ["199"]}, "গাইবান্ধা": {"police": ["999", "0541-62199"], "fire": ["102", "0541-62102"], "ambulance": ["199"]}, "কুড়িগ্রাম": {"police": ["999", "0581-62199"], "fire": ["102", "0581-62102"], "ambulance": ["199"]}, "লালমনিরহাট": {"police": ["999", "0591-62199"], "fire": ["102", "0591-62102"], "ambulance": ["199"]}, "নীলফামারী": {"police": ["999", "0551-62199"], "fire": ["102", "0551-62102"], "ambulance": ["199"]}, "পঞ্চগড়": {"police": ["999", "0564-62199"], "fire": ["102", "0564-62102"], "ambulance": ["199"]}, "ঠাকুরগাঁও": {"police": ["999", "0561-52199"], "fire": ["102", "0561-52102"], "ambulance": ["199"]}, "ময়মনসিংহ": {"police": ["999", "091-62199", "091-67000"], "fire": ["102", "091-62102"], "ambulance": ["199", "091-62500"], "hospital": ["Mymensingh Medical: 091-62524"]}, "জামালপুর": {"police": ["999", "0981-62199"], "fire": ["102", "0981-62102"], "ambulance": ["199"]}, "শেরপুর": {"police": ["999", "0931-62199"], "fire": ["102", "0931-62102"], "ambulance": ["199"]}, "নেত্রকোনা": {"police": ["999", "0951-62199"], "fire": ["102", "0951-62102"], "ambulance": ["199"]}};
+
+// Type → relevant services
+const JOAF_ALERT_SERVICES = {
+  'আগুন': ['fire','police','ambulance'],
+  'বন্যা': ['police','ambulance'],
+  'অপরাধ': ['police'],
+  'মেডিকেল': ['ambulance','hospital'],
+  'দুর্ঘটনা': ['ambulance','police','fire'],
+  'অন্যান্য': ['police','ambulance']
+};
+
+// National emergency numbers
+const JOAF_NATIONAL = [
+  {emoji:'🆘', name:'জাতীয় জরুরি', number:'999', desc:'Police/Fire/Ambulance'},
+  {emoji:'🚑', name:'অ্যাম্বুলেন্স', number:'199', desc:'জাতীয় অ্যাম্বুলেন্স সেবা'},
+  {emoji:'🚒', name:'ফায়ার সার্ভিস', number:'102', desc:'অগ্নিকাণ্ড ও উদ্ধার'},
+  {emoji:'👮', name:'পুলিশ', number:'100', desc:'আইনশৃঙ্খলা'},
+  {emoji:'🏥', name:'স্বাস্থ্য', number:'16430', desc:'স্বাস্থ্য বাতায়ন'},
+  {emoji:'👩‍⚕️', name:'নারী সহায়তা', number:'10921', desc:'নারী ও শিশু নির্যাতন'},
+  {emoji:'🧒', name:'শিশু সহায়তা', number:'1098', desc:'শিশু হেল্পলাইন'},
+];
+
+function joafShowEmergencyPopup(district, alertType) {
+  const existing = document.getElementById('joaf-emergency-popup');
+  if (existing) existing.remove();
+
+  const services = JOAF_ALERT_SERVICES[alertType] || ['police','ambulance'];
+  const distData = JOAF_EMERGENCY_DB[district] || {};
+
+  let localHTML = '';
+  if (Object.keys(distData).length) {
+    localHTML = `<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;margin-bottom:6px">📍 ${district} জেলা</div>`;
+    services.forEach(svc => {
+      if (!distData[svc]) return;
+      const icons = {police:'👮',fire:'🚒',ambulance:'🚑',hospital:'🏥'};
+      const names = {police:'পুলিশ',fire:'ফায়ার সার্ভিস',ambulance:'অ্যাম্বুলেন্স',hospital:'হাসপাতাল'};
+      distData[svc].forEach(num => {
+        localHTML += `<a href="tel:${num}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff5f5;border-radius:10px;margin-bottom:6px;text-decoration:none;border:1px solid #fecaca">
+          <span style="font-size:20px">${icons[svc]}</span>
+          <div><div style="font-size:12px;font-weight:700;color:#1a1a1a">${names[svc]}</div><div style="font-size:13px;font-weight:900;color:#90161f">${num}</div></div>
+          <span style="margin-left:auto;background:#90161f;color:#fff;padding:4px 10px;border-radius:50px;font-size:11px;font-weight:800">📞 কল</span>
+        </a>`;
+      });
+    });
+    localHTML += '</div>';
+  }
+
+  let nationalHTML = '<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;margin-bottom:6px">🇧🇩 জাতীয় নম্বর</div>';
+  JOAF_NATIONAL.forEach(n => {
+    nationalHTML += `<a href="tel:${n.number}" style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f0fdf4;border-radius:10px;margin-bottom:6px;text-decoration:none;border:1px solid #bbf7d0">
+      <span style="font-size:18px">${n.emoji}</span>
+      <div><div style="font-size:11px;font-weight:700;color:#1a1a1a">${n.name}</div><div style="font-size:13px;font-weight:900;color:#065f46">${n.number}</div></div>
+      <span style="margin-left:auto;font-size:10px;color:#6b7280">${n.desc}</span>
+    </a>`;
+  });
+  nationalHTML += '</div>';
+
+  const popup = document.createElement('div');
+  popup.id = 'joaf-emergency-popup';
+  popup.innerHTML = `
+    <style>
+    #joaf-emergency-popup{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999999;display:flex;align-items:flex-end;}
+    .jep-inner{background:#f9fafb;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto;}
+    </style>
+    <div class="jep-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="margin:0;font-size:16px;font-weight:900;color:#90161f">🚨 জরুরি সেবার নম্বর</h3>
+        <button onclick="document.getElementById('joaf-emergency-popup').remove()" style="background:none;border:none;font-size:22px;cursor:pointer">✕</button>
+      </div>
+      ${localHTML}
+      ${nationalHTML}
+      <button onclick="document.getElementById('joaf-emergency-popup').remove()" style="width:100%;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:8px">বন্ধ করুন</button>
+    </div>
+  `;
+  popup.addEventListener('click', e => { if(e.target===popup) popup.remove(); });
+  document.body.appendChild(popup);
+}
+
 async function joafSubscribePush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
