@@ -871,4 +871,4 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
   transform:translateX(-50%) translateY(0)!important;
 }
 /* Maze section background */
-.joaf-maze-section{background:#ffffff!important;padding:30px 0;color:#1a202c!important;position:relative;z-index:10;}
+.joaf-maze-section{background:#ffffff!important;padding:30px 0;color:#1a202c!important;}
