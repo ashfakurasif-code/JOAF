@@ -533,6 +533,11 @@ const JOAFComponents = {
           </div>
           <div class="jbr-fg"><label>উপজেলা / এলাকা</label><input type="text" id="jbr-area" placeholder="আপনার উপজেলা বা এলাকা"></div>
           <div class="jbr-fg"><label>শেষ রক্তদানের তারিখ (যদি থাকে)</label><input type="date" id="jbr-lastdonate"></div>
+          <div class="jbr-fg">
+            <button type="button" id="jbr-gps-btn" style="width:100%;padding:10px;background:#f3f4f6;border:2px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📍 আপনার GPS লোকেশন যোগ করুন (ঐচ্ছিক)</button>
+            <input type="hidden" id="jbr-lat">
+            <input type="hidden" id="jbr-lng">
+          </div>
           <button class="jbr-submit" id="jbr-submit">✅ নিবন্ধন করুন</button>
           <button style="width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:13px;color:#6b7280;margin-top:6px;cursor:pointer" onclick="document.getElementById('joaf-blood-reg-modal').classList.remove('open')">বাতিল করুন</button>
         </div>
@@ -566,6 +571,24 @@ const JOAFComponents = {
         }
       }
 
+      // GPS button handler
+      const jbrGpsBtn = document.getElementById('jbr-gps-btn');
+      if (jbrGpsBtn) {
+        jbrGpsBtn.addEventListener('click', () => {
+          jbrGpsBtn.textContent = '⏳ লোকেশন নেওয়া হচ্ছে...';
+          navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('jbr-lat').value = pos.coords.latitude;
+            document.getElementById('jbr-lng').value = pos.coords.longitude;
+            jbrGpsBtn.textContent = '✅ লোকেশন পাওয়া গেছে';
+            jbrGpsBtn.style.background = '#dcfce7';
+            jbrGpsBtn.style.borderColor = '#10b981';
+            jbrGpsBtn.style.color = '#065f46';
+          }, () => {
+            jbrGpsBtn.textContent = '❌ লোকেশন পাওয়া যায়নি';
+          });
+        });
+      }
+
       document.getElementById('joaf-blood-reg-modal').addEventListener('click', e => {
         if (e.target === document.getElementById('joaf-blood-reg-modal'))
           document.getElementById('joaf-blood-reg-modal').classList.remove('open');
@@ -587,7 +610,9 @@ const JOAFComponents = {
           const {getFirestore,collection,addDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
           const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753',storageBucket:'joaf-app-45753.firebasestorage.app',messagingSenderId:'472362223214',appId:'1:472362223214:web:9186a4f90dc608bae4487f'});
           const db = getFirestore(fbApp);
-          await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,createdAt:serverTimestamp()});
+          const lat = document.getElementById('jbr-lat').value;
+          const lng = document.getElementById('jbr-lng').value;
+          await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,lat:lat?parseFloat(lat):null,lng:lng?parseFloat(lng):null,createdAt:serverTimestamp()});
           alert('✅ সফলভাবে নিবন্ধন হয়েছে! আপনাকে ধন্যবাদ।');
           document.getElementById('joaf-blood-reg-modal').classList.remove('open');
           ['jbr-name','jbr-phone','jbr-area'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
