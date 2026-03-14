@@ -505,8 +505,8 @@ const JOAFComponents = {
         const bfab = document.createElement('a');
         bfab.id = 'joaf-blood-fab';
         bfab.href = '/rokto.html';
-        bfab.innerHTML = '<span style="color:#90161f;font-size:20px;">🩸</span><span style="font-size:11px;font-weight:900;color:#90161f;margin-top:2px;">রক্ত</span>';
-        bfab.style.cssText = 'position:fixed!important;bottom:160px!important;left:16px!important;width:56px!important;height:56px!important;background:#075e55;border-radius:50%!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 16px rgba(7,94,85,.5);z-index:9990!important;gap:1px;';
+        bfab.innerHTML = '🩸 রক্ত নিবন্ধন করুন';
+        bfab.style.cssText = 'position:fixed!important;bottom:140px!important;left:16px!important;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;text-decoration:none;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;';
         document.body.appendChild(bfab);
       }
       let _selType = 'other', _gps = null, _photo = null;
