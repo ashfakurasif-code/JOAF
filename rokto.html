@@ -161,7 +161,8 @@ if (dSel) {
   });
 }
 
-let allDonors = [];
+window.allDonors = [];
+let allDonors = window.allDonors;
 let activeBlood = 'all';
 
 // Load donors
@@ -170,6 +171,7 @@ async function loadDonors() {
     const q = query(collection(db, 'donors'), orderBy('createdAt', 'desc'));
     const snap = await getDocs(q);
     allDonors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    window.allDonors = allDonors;
     updateStats();
     renderDonors();
   } catch(e) {
@@ -191,7 +193,7 @@ function updateStats() {
   document.getElementById('totalDistricts').textContent = districts.length;
 }
 
-function renderDonors() {
+window.renderDonors = function renderDonors() {
   const blood = activeBlood;
   const district = document.getElementById('districtFilter').value;
   const search = document.getElementById('searchInput').value.toLowerCase();
@@ -284,7 +286,7 @@ const suggestBox = document.getElementById('searchSuggestions');
 
 searchInput.addEventListener('input', function() {
   const q = this.value.trim();
-  renderDonors();
+  window.renderDonors ? window.renderDonors() : renderDonors();
   if (!q) { suggestBox.classList.remove('show'); return; }
   
   // Find matching suggestions from donors + districts
@@ -315,7 +317,7 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.search-wrap')) suggestBox.classList.remove('show');
 });
 
-document.getElementById('districtFilter').addEventListener('change', renderDonors);
+document.getElementById('districtFilter').addEventListener('change', () => window.renderDonors ? window.renderDonors() : renderDonors());
 document.getElementById('searchInput').addEventListener('input', renderDonors);
 
 // Modal
