@@ -132,6 +132,53 @@ const JOAFComponents = {
     </div>`;
   },
 
+  renderMaze() {
+    const bigContainer = document.getElementById('maze-big-tiles');
+    if (!bigContainer || !JOAF.maze) return;
+    bigContainer.innerHTML = JOAF.maze.layers[0].tiles.map(t => `
+      <div class="jtile ${t.color}" onclick="joafMaze.goTo(${t.goTo})">
+        <span class="jtile-icon">${t.icon}</span>
+        <div class="jtile-name">${t.name}</div>
+        <div class="jtile-sub">${t.sub}</div>
+        <div class="jtile-arr">›</div>
+      </div>`).join('');
+    for (let i = 1; i <= 4; i++) {
+      const sub = document.getElementById('maze-sub-tiles-'+i);
+      if (!sub) continue;
+      sub.innerHTML = JOAF.maze.layers[i].tiles.map(s => `
+        <a href="${s.link}" class="jstile jbr-${i===1?'red':i===2?'blue':i===3?'green':'purple'}">
+          <span class="jsi">${s.icon}</span>
+          <span class="jsn">${s.name}</span>
+        </a>`).join('');
+    }
+  },
+
+  initMaze() {
+    window.joafMaze = {
+      currentLayer: 0,
+      goTo(layer) {
+        document.querySelectorAll('.jlayer').forEach(l => l.classList.remove('active'));
+        const el = document.getElementById('layer-'+layer);
+        if (el) el.classList.add('active');
+        this.currentLayer = layer;
+        this.renderBC();
+      },
+      renderBC() {
+        const bc = document.getElementById('maze-bc');
+        if (!bc) return;
+        let h = '';
+        if (this.currentLayer > 0) {
+          const title = JOAF.maze.layers[this.currentLayer].title;
+          h = `<button class="jbc-back" onclick="joafMaze.goTo(0)">‹ ফিরে যান</button>
+               <button class="jbc-home" onclick="joafMaze.goTo(0)">🏠</button>
+               <span class="jbc-sep">›</span>
+               <span class="jbc-cur">${title}</span>`;
+        }
+        bc.innerHTML = h;
+      }
+    };
+  },
+
   renderTicker() {
     const items = [...JOAF.ticker, ...JOAF.ticker]
       .map(t => `<span class="ticker-item"><a href="${t.href}">${t.text}</a><span class="ticker-sep">◆</span></span>`)
@@ -478,14 +525,7 @@ const JOAFComponents = {
     const fp = document.getElementById('joaf-footer');
     if (fp) fp.outerHTML = this.renderFooter();
 
-    // 3b. Inject maze nav into placeholder
-    const mazeEl = document.getElementById('joaf-maze-nav');
-    if (mazeEl) {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = this.renderMazeNav();
-      mazeEl.replaceWith(tmp.firstElementChild);
-      this.initMazeNav();
-    }
+    // maze HTML is in index.html, rendered via renderMaze()
 
     // Global Alert FAB + Modal — all pages
     // Remove existing first to re-inject fresh
@@ -1119,6 +1159,8 @@ const JOAFComponents = {
 function _joafInit(){
   const page=(document.body&&document.body.dataset.page)||window.location.pathname.split('/').pop().replace('.html','').replace('/','')|| 'home';
   JOAFComponents.init(page);
+  JOAFComponents.renderMaze();
+  JOAFComponents.initMaze();
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',_joafInit);}else{_joafInit();}
 

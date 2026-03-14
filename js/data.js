@@ -206,6 +206,55 @@ const JOAF = {
   ]
 };
 
+// ── FULL MULTI-LEVEL MAZE DATA ────────────────────────────────
+JOAF.maze = {
+  layers: {
+    0: { type:"big", tiles:[
+      { id:1, icon:"🔥", name:"আন্দোলন",  sub:"জুলাই যোদ্ধা & ট্র্যাকার", color:"jc-red",   goTo:1 },
+      { id:2, icon:"🆘", name:"সেবা",     sub:"রক্ত + জরুরি সতর্কতা",   color:"jc-teal",  goTo:2 },
+      { id:3, icon:"🌱", name:"সুযোগ",    sub:"চাকরি, বৃত্তি, কারিগর",  color:"jc-green", goTo:3 },
+      { id:4, icon:"🌐", name:"JOAF",     sub:"কমিউনিটি & যোগ দিন",    color:"jc-blue",  goTo:4 }
+    ]},
+    1: { type:"sub", title:"আন্দোলন", tiles:[
+      { icon:"✊",  name:"জুলাই যোদ্ধা",    link:"/july-warriors.html" },
+      { icon:"🏛️", name:"নেতা ট্র্যাকার",  link:"/leader-tracker.html" },
+      { icon:"🚫", name:"দুর্নীতি রিপোর্ট", link:"/legal.html" },
+      { icon:"🗳️", name:"জনমত জরিপ",       link:"/joaf-polls.html" },
+      { icon:"🩹", name:"পরিবার সহায়",     link:"/july-family.html" },
+      { icon:"🗳️", name:"ভোটার তথ্য",      link:"/voter.html" }
+    ]},
+    2: { type:"sub", title:"সেবা", tiles:[
+      { icon:"🩸", name:"রক্তদাতা",      link:"/rokto.html" },
+      { icon:"🚨", name:"জরুরি সতর্কতা", link:"/alert.html" },
+      { icon:"🛒", name:"বাজার দর",      link:"/bajar.html" },
+      { icon:"🌦️", name:"আবহাওয়া",      link:"/weather.html" },
+      { icon:"🏥", name:"হাসপাতাল",      link:"/hospital.html" },
+      { icon:"👨‍⚕️", name:"ডাক্তার",     link:"/doctor.html" },
+      { icon:"💊", name:"ওষুধের দাম",    link:"/medicine.html" },
+      { icon:"⚖️", name:"আইনি সহায়তা",  link:"/legal.html" },
+      { icon:"🍱", name:"খাদ্য সহায়তা", link:"/food-aid.html" }
+    ]},
+    3: { type:"sub", title:"সুযোগ", tiles:[
+      { icon:"💼", name:"চাকরি",         link:"/jobs.html" },
+      { icon:"🎓", name:"বৃত্তি",         link:"/jobs.html" },
+      { icon:"🔧", name:"কারিগর",        link:"/jobs.html" },
+      { icon:"🌾", name:"কৃষি তথ্য",     link:"/agriculture.html" },
+      { icon:"👩‍💼", name:"নারী উদ্যোক্তা", link:"/women-entrepreneur.html" },
+      { icon:"🚀", name:"যুব উদ্যোক্তা", link:"/youth-startup.html" },
+      { icon:"💻", name:"ফ্রিল্যান্সিং",  link:"/freelance.html" }
+    ]},
+    4: { type:"sub", title:"JOAF", tiles:[
+      { icon:"👥", name:"কমিউনিটি",    link:"/community.html" },
+      { icon:"📰", name:"সংবাদ",        link:"/news.html" },
+      { icon:"📅", name:"অনুষ্ঠান",     link:"/events.html" },
+      { icon:"🤝", name:"যোগ দিন",      link:"/membership.html" },
+      { icon:"💚", name:"সহযোগিতা",    link:"/donate.html" },
+      { icon:"📡", name:"লাইভ",         link:"/live.html" },
+      { icon:"💬", name:"ফোরাম",        link:"/forum.html" }
+    ]}
+  }
+};
+
 // ── Bangla Utilities ───────────────────────────────────────
 const BanglaUtil = {
   digits: ['০','১','২','৩','৪','৫','৬','৭','৮','৯'],
