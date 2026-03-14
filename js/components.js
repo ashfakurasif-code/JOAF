@@ -519,7 +519,7 @@ const JOAFComponents = {
       .jbr-fg input:focus,.jbr-fg select:focus{border-color:#075e55;}
       .jbr-submit{width:100%;padding:13px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
       </style>
-      <button id="joaf-blood-fab" style="display:none">🩸 নিবন্ধন করুন</button>
+      <button id="joaf-blood-fab" style="display:none">🩸 রক্ত নিবন্ধন করুন</button>
       <div id="joaf-blood-reg-modal">
         <div class="jbr-inner">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -541,7 +541,7 @@ const JOAFComponents = {
             <input type="hidden" id="jbr-lat">
             <input type="hidden" id="jbr-lng">
           </div>
-          <button class="jbr-submit" id="jbr-submit">✅ নিবন্ধন করুন</button>
+          <button class="jbr-submit" id="jbr-submit">✅ রক্ত নিবন্ধন করুন</button>
           <button style="width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:13px;color:#6b7280;margin-top:6px;cursor:pointer" onclick="document.getElementById('joaf-blood-reg-modal').classList.remove('open')">বাতিল করুন</button>
         </div>
       </div>`;
@@ -620,7 +620,7 @@ const JOAFComponents = {
           document.getElementById('joaf-blood-reg-modal').classList.remove('open');
           ['jbr-name','jbr-phone','jbr-area'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
         } catch(e) { alert('সমস্যা হয়েছে, আবার চেষ্টা করুন।'); console.error(e); }
-        btn.textContent='✅ নিবন্ধন করুন'; btn.disabled=false;
+        btn.textContent='✅ রক্ত নিবন্ধন করুন'; btn.disabled=false;
       });
       let _selType = 'other', _gps = null, _photo = null;
 
