@@ -428,6 +428,8 @@ const JOAFComponents = {
     if (fp) fp.outerHTML = this.renderFooter();
 
     // Global Alert FAB + Modal — all pages
+    // Remove existing first to re-inject fresh
+    ['joaf-global-alert-modal','joaf-alert-fab','joaf-blood-fab'].forEach(id => { const el = document.getElementById(id); if(el) el.parentElement?.remove(); });
     if (!document.getElementById('joaf-global-alert-modal')) {
       const html = `
       <style>
@@ -499,14 +501,12 @@ const JOAFComponents = {
       document.body.appendChild(div);
 
       // Blood donor FAB
-      if (!document.getElementById('joaf-blood-fab')) {
         const bfab = document.createElement('button');
         bfab.id = 'joaf-blood-fab';
         bfab.innerHTML = '🩸 রক্ত দিন';
         bfab.style.cssText = 'position:fixed!important;bottom:140px!important;left:16px!important;transform:none!important;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;padding:12px 18px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgba(7,94,85,.4);z-index:9990!important;display:flex!important;align-items:center;gap:6px;white-space:nowrap;';
         bfab.addEventListener('click', () => { window.location.href = '/rokto.html'; });
         document.body.appendChild(bfab);
-      }
 
       let _selType = 'other', _gps = null, _photo = null;
 

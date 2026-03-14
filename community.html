@@ -313,7 +313,7 @@ function renderCards(){
   const q=searchQuery.trim().toLowerCase();
   const filtered=JOAF.communityGroups.filter(g=>{
     const catOk=activeFilter==='all'||g.cat===activeFilter;
-    const qOk=!q||window.bnSearch(q,g.name)||window.bnSearch(q,g.meta||'')||window.bnSearch(q,g.cat||'');
+    const qOk=!q||window.bnSearch(q,g.name,g.name)||window.bnSearch(q,g.meta||'',g.name)||window.bnSearch(q,g.cat||'',g.name);
     return catOk&&qOk;
   });
   document.getElementById('resultCount').innerHTML='<strong>'+filtered.length+'</strong>টি গ্রুপ পাওয়া গেছে';

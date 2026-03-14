@@ -21,7 +21,7 @@
 a,button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 html{scroll-behavior:smooth;}
 img{max-width:100%;height:auto;}
-body{font-family:var(--font);color:var(--text);overflow-x:hidden;}
+body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 @media(pointer:fine){body{cursor:none;}}
 
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}

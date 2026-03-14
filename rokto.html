@@ -218,7 +218,7 @@ function renderDonors() {
   let filtered = allDonors.filter(d => {
     if (blood !== 'all' && d.blood !== blood) return false;
     if (district && d.district !== district) return false;
-    if (search && !window.bnSearch(search, d.name||'') && !window.bnSearch(search, d.area||'') && !window.bnSearch(search, d.district||'')) return false;
+    if (search && !window.bnSearch(search, d.name||'') && !window.bnSearch(search, d.area||'') && !window.bnSearch(search, d.district||'') && !window.bnSearch(search, (d.district||'')+' '+(d.area||''))) return false;
     return true;
   });
 
