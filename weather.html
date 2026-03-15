@@ -162,7 +162,7 @@ function updateMap(lat, lng, label) {
 function renderWeather(data, locLabel, lat, lng) {
   const c = data.current;
   const daily = data.daily;
-  if (!c || !daily) {
+  if (!c || !daily || !daily.date) {
     document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
     document.getElementById('forecastList').innerHTML = '<div class="loading-state">তথ্য পাওয়া যাচ্ছে না</div>';
     document.getElementById('farmAdvice').innerHTML = '<div class="loading-state">তথ্য পাওয়া যাচ্ছে না</div>';
@@ -173,7 +173,8 @@ function renderWeather(data, locLabel, lat, lng) {
   const humidity = Math.round(c.relative_humidity_2m);
   const wind     = Math.round(c.wind_speed_10m);
   const rain     = parseFloat(c.precipitation) || 0;
-  const code     = parseInt(c.weathercode) || 0;
+  // open-meteo uses weather_code (newer) or weathercode (older)
+  const code     = parseInt(c.weather_code ?? c.weathercode) || 0;
   const wx       = wxFromCode(code, rain);
 
   document.getElementById('wxIcon').textContent     = wx.icon;
@@ -205,7 +206,7 @@ function renderWeather(data, locLabel, lat, lng) {
       const max = Math.round(daily.temperature_2m_max[i]);
       const min = Math.round(daily.temperature_2m_min[i]);
       const r   = parseFloat(daily.precipitation_sum[i]) || 0;
-      const wc  = parseInt((daily.weathercode || [])[i]) || 0;
+      const wc  = parseInt(((daily.weather_code || daily.weathercode) || [])[i]) || 0;
       const dWx = wxFromCode(wc, r);
       return `<div class="day-row">
         <span class="day-name">${DAYS[dt.getDay()]}</span>
@@ -218,7 +219,7 @@ function renderWeather(data, locLabel, lat, lng) {
   // Farm advice
   const tRain = parseFloat(daily.precipitation_sum[0]) || 0;
   const tMax  = Math.round(daily.temperature_2m_max[0]);
-  const tCode = parseInt((daily.weathercode || [])[0]) || 0;
+  const tCode = parseInt(((daily.weather_code || daily.weathercode) || [])[0]) || 0;
   let advice;
   if (tCode >= 95 || tRain > 30)
     advice = '⚠️ আজ বজ্রঝড় বা ভারী বৃষ্টির সম্ভাবনা। <b>জেলেরা নৌকা না নামানোর পরামর্শ।</b> মাঠে কাজ করবেন না।';
@@ -240,8 +241,8 @@ function renderWeather(data, locLabel, lat, lng) {
 async function fetchWeather(lat, lng) {
   const url = `https://api.open-meteo.com/v1/forecast`
     + `?latitude=${lat}&longitude=${lng}`
-    + `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weathercode`
-    + `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode`
+    + `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code`
+    + `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code`
     + `&timezone=auto&forecast_days=7`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Weather API failed');
