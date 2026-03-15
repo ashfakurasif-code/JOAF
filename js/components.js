@@ -1440,6 +1440,23 @@ function _joafShowInstallPrompt() {
     } else if (_D.isSafari || _D.isFirefox) {
       // MacOS Safari / Firefox — share sheet
       try { await navigator.share({ title: 'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url: 'https://www.julyforum.com' }); } catch(e) {}
+    } else {
+      // _deferredPWA not available — show toast pointing to browser's own install
+      const btn = document.getElementById('ji-install');
+      if (btn) {
+        btn.textContent = '⬆️ Browser Menu থেকে Install করুন';
+        btn.style.background = 'linear-gradient(135deg,#374151,#1f2937)';
+        btn.style.fontSize = '12px';
+      }
+      // Show a small toast below button
+      const toast = document.createElement('div');
+      toast.style.cssText = 'text-align:center;font-size:11px;color:#6b7280;margin-top:8px;padding:0 8px;';
+      toast.textContent = 'Chrome Menu (⋮) → "Install JOAF" অথবা Address bar এর Install icon এ click করুন';
+      const existing = wrap.querySelector('.ji-toast');
+      if (!existing) {
+        toast.className = 'ji-toast';
+        wrap.querySelector('.ji-btn') && wrap.querySelector('.ji-btn').parentNode.appendChild(toast);
+      }
     }
   });
 
@@ -1457,7 +1474,7 @@ function _joafShowPushPrompt() {
   if (_D.isIOS && !_D.isStandalone) return; // iOS non-standalone: install prompt handles everything
   if (!('Notification' in window)) return;
   if (_S.pushDenied) return;
-  if (_S.pushGranted && _S.locationGranted) return; // both already granted
+  if (_S.pushGranted) return; // push already granted, no need to ask again
   if (document.getElementById('joaf-push-wrap')) return;
 
   const wrap = document.createElement('div');
@@ -1466,7 +1483,7 @@ function _joafShowPushPrompt() {
     <style>
     #joaf-push-wrap {
       position: fixed;
-      bottom: 20px;
+      bottom: 200px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 99996;
