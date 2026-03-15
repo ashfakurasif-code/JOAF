@@ -1014,7 +1014,6 @@ const JOAFComponents = {
     </section>
 `;
   },
-,
 
   initMazeNav() {
     if (window.joafMaze) return;
@@ -1078,7 +1077,7 @@ const JOAFComponents = {
         bc.innerHTML=h;
       }
     };
-  },,
+  },
 
   renderStats() {
     const row = document.getElementById('stats-row');
@@ -1644,7 +1643,7 @@ function _joafRenderLocationPrompt() {
 // 4. iOS Chrome/Edge/Firefox — Full Screen Prompt
 // ══════════════════════════════════════════════════════════════
 function _joafShowIOSPrompt() {
-  if (!_D.isIOSChrome) return;
+  if (!_D.isIOS) return; // Show for ALL iOS (Chrome, Safari, Firefox)
   if (_D.isStandalone) return;
   if (document.getElementById('joaf-ios-wrap')) return;
 
@@ -1730,8 +1729,18 @@ function _joafShowIOSPrompt() {
 
   document.body.appendChild(wrap);
 
-  document.getElementById('ii-safari-btn').addEventListener('click', () => {
-    window.location.href = 'x-safari-https://www.julyforum.com';
+  // Update button label based on browser
+  const safariBtn = document.getElementById('ii-safari-btn');
+  if (safariBtn) safariBtn.textContent = _D.isIOSChrome ? '🧭 Safari এ খুলুন' : '📲 Install করুন';
+
+  document.getElementById('ii-safari-btn').addEventListener('click', async () => {
+    if (_D.isIOSChrome) {
+      // iOS Chrome → open in Safari
+      window.location.href = 'x-safari-https://www.julyforum.com';
+    } else {
+      // iOS Safari → share sheet → Add to Home Screen
+      try { await navigator.share({ title: 'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url: 'https://www.julyforum.com' }); } catch(e) {}
+    }
   });
 
   document.getElementById('ii-close').addEventListener('click', () => {
@@ -1751,8 +1760,8 @@ function _joafShowIOSPrompt() {
 // 5. START — page load এ সব prompt চালু করো
 // ══════════════════════════════════════════════════════════════
 setTimeout(() => {
-  if (_D.isIOSChrome) {
-    // iOS Chrome/Edge/Firefox → full screen iOS prompt
+  if (_D.isIOS) {
+    // All iOS browsers → iOS prompt (full screen)
     _joafShowIOSPrompt();
     return;
   }
