@@ -872,3 +872,15 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 }
 /* Maze section background */
 .joaf-maze-section{background:#ffffff!important;padding:30px 0;color:#1a202c!important;position:relative;z-index:10;}
+
+/* ── Bootstrap display utility fallback (for pages without Bootstrap) ──
+   Ensures header mobile/desktop layout works on ALL pages.
+   Safe on pages that DO have Bootstrap — same values, no conflict. */
+.d-none  { display: none  !important; }
+.d-flex  { display: flex  !important; }
+.d-block { display: block !important; }
+@media (min-width: 768px) {
+  .d-md-none  { display: none  !important; }
+  .d-md-flex  { display: flex  !important; }
+  .d-md-block { display: block !important; }
+}
