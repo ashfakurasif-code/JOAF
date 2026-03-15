@@ -12,7 +12,6 @@
 <style>
 .wx-hero{background:linear-gradient(135deg,#0c4a6e,#0284c7);padding:40px 0 30px;color:#fff;text-align:center;}
 .wx-main{font-size:72px;font-weight:900;line-height:1;}
-.wx-temp{font-size:22px;font-weight:700;margin-top:6px;opacity:.9;}
 .wx-desc{font-size:16px;opacity:.8;margin-top:4px;}
 .wx-loc{font-size:13px;opacity:.7;margin-top:8px;}
 .wx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;}
@@ -24,30 +23,42 @@
 .forecast-card h4{font-size:14px;font-weight:800;margin-bottom:12px;color:#1a1a2e;}
 .day-row{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6;}
 .day-row:last-child{border:none;}
-.day-name{font-size:13px;font-weight:700;color:#374151;width:80px;}
-.day-icon{font-size:20px;margin:0 12px;}
+.day-name{font-size:13px;font-weight:700;color:#374151;width:80px;flex-shrink:0;}
+.day-icon{font-size:20px;margin:0 12px;flex-shrink:0;}
 .day-desc{font-size:12px;color:#6b7280;flex:1;}
-.day-temp{font-size:13px;font-weight:700;color:#1a1a2e;}
+.day-temp{font-size:13px;font-weight:700;color:#1a1a2e;flex-shrink:0;}
 .alert-strip{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-radius:14px;padding:14px;margin-bottom:14px;border:1.5px solid #fca5a5;}
 .alert-strip h4{font-size:14px;font-weight:800;color:#991b1b;margin-bottom:6px;}
 .notif-btn{width:100%;padding:12px;background:linear-gradient(135deg,#0c4a6e,#0284c7);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:12px;}
 .dist-select{width:100%;padding:12px 16px;border-radius:50px;border:2px solid #e5e7eb;font-size:14px;font-family:inherit;margin-bottom:16px;outline:none;}
+.loading-spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin:16px auto 0;}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
+
 <div class="wx-hero"><div class="container">
-  <div id="wxIcon">🌤️</div>
+  <div id="wxIcon" style="font-size:52px;">🌤️</div>
   <div class="wx-main" id="wxTemp">—°</div>
   <div class="wx-desc" id="wxDesc">আবহাওয়া লোড হচ্ছে...</div>
   <div class="wx-loc" id="wxLoc">📍 অবস্থান নির্ণয় করা হচ্ছে</div>
+  <div id="wxSpinner" class="loading-spinner"></div>
 </div></div>
 
 <section class="section"><div class="container">
 
-  <select class="dist-select" id="distSel" onchange="loadWeather(this.value)">
-    <option value="">আপনার জেলা বেছে নিন</option>
-    <option value="Dhaka">ঢাকা</option><option value="Chattogram">চট্টগ্রাম</option>
-    <option value="Rajshahi">রাজশাহী</option><option value="Khulna">খুলনা</option>
-    <option value="Sylhet">সিলেট</option><option value="Barishal">বরিশাল</option>
-    <option value="Rangpur">রংপুর</option><option value="Mymensingh">ময়মনসিংহ</option>
+  <select class="dist-select" id="distSel" onchange="loadByCity(this.value)">
+    <option value="">অন্য জেলা বেছে নিন</option>
+    <option value="Dhaka">ঢাকা</option>
+    <option value="Chattogram">চট্টগ্রাম</option>
+    <option value="Rajshahi">রাজশাহী</option>
+    <option value="Khulna">খুলনা</option>
+    <option value="Sylhet">সিলেট</option>
+    <option value="Barishal">বরিশাল</option>
+    <option value="Rangpur">রংপুর</option>
+    <option value="Mymensingh">ময়মনসিংহ</option>
+    <option value="Cumilla">কুমিল্লা</option>
+    <option value="Narayanganj">নারায়ণগঞ্জ</option>
+    <option value="Gazipur">গাজীপুর</option>
+    <option value="Cox's Bazar">কক্সবাজার</option>
   </select>
 
   <div class="wx-grid">
@@ -63,97 +74,214 @@
 
   <div class="forecast-card">
     <h4>📅 ৭ দিনের পূর্বাভাস</h4>
-    <div id="forecastList"></div>
+    <div id="forecastList"><div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px;">লোড হচ্ছে...</div></div>
   </div>
 
   <div class="forecast-card">
     <h4>🌾 কৃষক ও জেলেদের জন্য পরামর্শ</h4>
-    <div id="farmAdvice" style="font-size:13px;color:#374151;line-height:1.7;"></div>
+    <div id="farmAdvice" style="font-size:13px;color:#374151;line-height:1.8;"><div style="text-align:center;padding:20px;color:#9ca3af;font-size:13px;">লোড হচ্ছে...</div></div>
   </div>
 
   <button class="notif-btn" onclick="requestWxNotif()">🔔 দৈনিক আবহাওয়া notification চালু করুন</button>
 
 </div></section>
+
 <div id="joaf-footer"></div>
 <script src="/js/modernizr-2.8.3.min.js"></script>
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
 <script>
-function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
+// Bangla number converter
+function bn(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return n.toString().replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+}
 
-const WX_ICONS={'Clear':'☀️','Clouds':'☁️','Rain':'🌧️','Drizzle':'🌦️','Thunderstorm':'⛈️','Snow':'❄️','Mist':'🌫️','Fog':'🌫️','Haze':'🌫️'};
-const WX_BN={'Clear':'পরিষ্কার আকাশ','Clouds':'মেঘলা','Rain':'বৃষ্টিপাত','Drizzle':'গুঁড়ি বৃষ্টি','Thunderstorm':'বজ্রঝড়','Snow':'তুষারপাত','Mist':'কুয়াশা','Fog':'ঘন কুয়াশা','Haze':'ধোঁয়াশা'};
-const DAYS=['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+const DAYS = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
 
-// Open-Meteo free API (no key needed)
-async function loadWeather(city='Dhaka'){
-  const coords={'Dhaka':[23.8103,90.4125],'Chattogram':[22.3569,91.7832],'Rajshahi':[24.3745,88.6042],'Khulna':[22.8456,89.5403],'Sylhet':[24.8949,91.8687],'Barishal':[22.7010,90.3535],'Rangpur':[25.7439,89.2752],'Mymensingh':[24.7471,90.4203]};
-  const [lat,lng]=coords[city]||coords['Dhaka'];
-  const cityBn={'Dhaka':'ঢাকা','Chattogram':'চট্টগ্রাম','Rajshahi':'রাজশাহী','Khulna':'খুলনা','Sylhet':'সিলেট','Barishal':'বরিশাল','Rangpur':'রংপুর','Mymensingh':'ময়মনসিংহ'};
-  try{
-    const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=Asia%2FDhaka&forecast_days=7`);
-    const d=await res.json();
-    const c=d.current;
-    const temp=Math.round(c.temperature_2m);
-    document.getElementById('wxTemp').textContent=bn(temp)+'°C';
-    document.getElementById('wxDesc').textContent='বর্তমান আবহাওয়া';
-    document.getElementById('wxLoc').textContent='📍 '+cityBn[city];
-    document.getElementById('wxHumidity').textContent=bn(c.relative_humidity_2m)+'%';
-    document.getElementById('wxWind').textContent=bn(Math.round(c.wind_speed_10m))+' km/h';
-    document.getElementById('wxRain').textContent=bn(c.precipitation||0)+' mm';
+const COORDS = {
+  'Dhaka':        [23.8103, 90.4125],
+  'Chattogram':   [22.3569, 91.7832],
+  'Rajshahi':     [24.3745, 88.6042],
+  'Khulna':       [22.8456, 89.5403],
+  'Sylhet':       [24.8949, 91.8687],
+  'Barishal':     [22.7010, 90.3535],
+  'Rangpur':      [25.7439, 89.2752],
+  'Mymensingh':   [24.7471, 90.4203],
+  'Cumilla':      [23.4607, 91.1809],
+  'Narayanganj':  [23.6238, 90.4996],
+  'Gazipur':      [23.9999, 90.4203],
+  "Cox's Bazar":  [21.4272, 92.0058],
+};
 
-    // forecast
-    const daily=d.daily;
-    document.getElementById('forecastList').innerHTML=daily.date.slice(0,7).map((date,i)=>{
-      const dt=new Date(date);
-      const max=Math.round(daily.temperature_2m_max[i]);
-      const min=Math.round(daily.temperature_2m_min[i]);
-      const rain=daily.precipitation_sum[i]||0;
-      return `<div class="day-row">
-        <span class="day-name">${DAYS[dt.getDay()]}</span>
-        <span class="day-icon">${rain>5?'🌧️':rain>0?'🌦️':'☀️'}</span>
-        <span class="day-desc">${rain>0?bn(Math.round(rain))+'mm বৃষ্টি':'পরিষ্কার'}</span>
-        <span class="day-temp">${bn(max)}°/${bn(min)}°</span>
-      </div>`;
-    }).join('');
+const CITY_BN = {
+  'Dhaka':'ঢাকা','Chattogram':'চট্টগ্রাম','Rajshahi':'রাজশাহী',
+  'Khulna':'খুলনা','Sylhet':'সিলেট','Barishal':'বরিশাল',
+  'Rangpur':'রংপুর','Mymensingh':'ময়মনসিংহ','Cumilla':'কুমিল্লা',
+  'Narayanganj':'নারায়ণগঞ্জ','Gazipur':'গাজীপুর',"Cox's Bazar":'কক্সবাজার'
+};
 
-    // farm advice
-    const rain=d.daily.precipitation_sum[0]||0;
-    const maxT=Math.round(d.daily.temperature_2m_max[0]);
-    let advice='';
-    if(rain>20) advice='⚠️ আজ ভারী বৃষ্টির সম্ভাবনা। জেলেরা নৌকা না নামানোর পরামর্শ। মাঠে কাজ করবেন না।';
-    else if(rain>5) advice='🌦️ হালকা বৃষ্টি হতে পারে। সেচ কাজ বন্ধ রাখুন।';
-    else if(maxT>38) advice='☀️ তীব্র গরম। বিকেলে মাঠে কাজ না করাই ভালো। গবাদিপশুকে ছায়া দিন।';
-    else advice='✅ আবহাওয়া অনুকূল। মাঠে কাজ করার ভালো সময়।';
-    document.getElementById('farmAdvice').textContent=advice;
-  }catch(e){
-    document.getElementById('wxDesc').textContent='আবহাওয়া তথ্য পাওয়া যাচ্ছে না';
+// WMO weather code → icon + bangla desc
+function wxFromCode(code, rain) {
+  if (code === 0) return {icon:'☀️', desc:'পরিষ্কার আকাশ'};
+  if (code <= 2) return {icon:'🌤️', desc:'আংশিক মেঘলা'};
+  if (code <= 3) return {icon:'☁️', desc:'মেঘলা'};
+  if (code <= 49) return {icon:'🌫️', desc:'কুয়াশা'};
+  if (code <= 59) return {icon:'🌦️', desc:'গুঁড়ি বৃষ্টি'};
+  if (code <= 69) return {icon:'🌧️', desc:'বৃষ্টিপাত'};
+  if (code <= 79) return {icon:'❄️', desc:'তুষারপাত'};
+  if (code <= 84) return {icon: rain > 5 ? '🌧️' : '🌦️', desc:'বৃষ্টিপাত'};
+  if (code <= 99) return {icon:'⛈️', desc:'বজ্রঝড়'};
+  return {icon:'🌤️', desc:'আবহাওয়া'};
+}
+
+function renderWeather(d, locationLabel) {
+  document.getElementById('wxSpinner').style.display = 'none';
+
+  const c = d.current;
+  const temp = Math.round(c.temperature_2m);
+  const humidity = Math.round(c.relative_humidity_2m);
+  const wind = Math.round(c.wind_speed_10m);
+  const rain = c.precipitation || 0;
+  const code = c.weathercode || 0;
+
+  const wx = wxFromCode(code, rain);
+
+  document.getElementById('wxIcon').textContent = wx.icon;
+  document.getElementById('wxTemp').textContent = bn(temp) + '°C';
+  document.getElementById('wxDesc').textContent = wx.desc;
+  document.getElementById('wxLoc').textContent = '📍 ' + locationLabel;
+
+  document.getElementById('wxHumidity').textContent = bn(humidity) + '%';
+  document.getElementById('wxWind').textContent = bn(wind) + ' km/h';
+  document.getElementById('wxRain').textContent = bn(Math.round(rain * 10) / 10) + ' mm';
+
+  // Alert
+  const alertEl = document.getElementById('wxAlert');
+  if (code >= 80 || rain > 20) {
+    alertEl.style.display = 'block';
+    document.getElementById('wxAlertText').textContent =
+      code >= 95 ? '⚡ বজ্রঝড়ের সম্ভাবনা। ঘরের বাইরে না যাওয়াই ভালো।'
+                 : '🌧️ ভারী বৃষ্টির সম্ভাবনা। সতর্ক থাকুন।';
+  } else {
+    alertEl.style.display = 'none';
+  }
+
+  // 7-day forecast
+  const daily = d.daily;
+  document.getElementById('forecastList').innerHTML = daily.date.slice(0, 7).map((date, i) => {
+    const dt = new Date(date);
+    const max = Math.round(daily.temperature_2m_max[i]);
+    const min = Math.round(daily.temperature_2m_min[i]);
+    const r   = daily.precipitation_sum[i] || 0;
+    const wc  = daily.weathercode ? daily.weathercode[i] : 0;
+    const dayWx = wxFromCode(wc, r);
+    const rainText = r > 0 ? bn(Math.round(r)) + ' mm বৃষ্টি' : 'বৃষ্টি নেই';
+    return `<div class="day-row">
+      <span class="day-name">${DAYS[dt.getDay()]}</span>
+      <span class="day-icon">${dayWx.icon}</span>
+      <span class="day-desc">${dayWx.desc}${r > 0 ? ' · ' + rainText : ''}</span>
+      <span class="day-temp">${bn(max)}°/${bn(min)}°</span>
+    </div>`;
+  }).join('');
+
+  // Farm advice
+  const todayRain = daily.precipitation_sum[0] || 0;
+  const todayMax  = Math.round(daily.temperature_2m_max[0]);
+  const todayCode = daily.weathercode ? daily.weathercode[0] : 0;
+  let advice = '';
+  if (todayCode >= 95 || todayRain > 30) {
+    advice = '⚠️ আজ বজ্রঝড় বা ভারী বৃষ্টির সম্ভাবনা। <b>জেলেরা নৌকা না নামানোর পরামর্শ।</b> মাঠে কাজ করবেন না। গবাদিপশু নিরাপদ স্থানে রাখুন।';
+  } else if (todayRain > 10) {
+    advice = '🌧️ আজ মাঝারি বৃষ্টি হতে পারে। সেচ কাজ বন্ধ রাখুন। জমি থেকে পানি নিষ্কাশনের ব্যবস্থা রাখুন।';
+  } else if (todayRain > 2) {
+    advice = '🌦️ হালকা বৃষ্টির সম্ভাবনা। কীটনাশক স্প্রে করা থেকে বিরত থাকুন। জেলেরা সকাল সকাল ফিরে আসুন।';
+  } else if (todayMax > 38) {
+    advice = '☀️ তীব্র গরম (' + bn(todayMax) + '°C)। দুপুর ১২টা থেকে বিকেল ৪টা পর্যন্ত মাঠে কাজ না করাই ভালো। গবাদিপশু ও হাঁস-মুরগিকে ছায়া ও পানি দিন।';
+  } else if (todayMax > 32) {
+    advice = '🌤️ গরম আবহাওয়া। সকালে ও বিকেলে কাজ করুন। ধান ও সবজি গাছে পানি দিন।';
+  } else {
+    advice = '✅ আবহাওয়া অনুকূল। মাঠে কাজ করার ভালো সময়। সার প্রয়োগ ও রোপণের জন্য উপযুক্ত।';
+  }
+  document.getElementById('farmAdvice').innerHTML = advice;
+}
+
+async function fetchWeather(lat, lng) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weathercode&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=auto&forecast_days=7`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API error');
+  return await res.json();
+}
+
+// Reverse geocode using open-meteo timezone info
+async function getLocationName(lat, lng) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=bn`);
+    const d = await res.json();
+    const addr = d.address;
+    return addr.city || addr.town || addr.county || addr.state || 'আপনার এলাকা';
+  } catch(e) {
+    return 'আপনার এলাকা';
   }
 }
 
-function requestWxNotif(){
-  if(!('Notification' in window)) return;
-  Notification.requestPermission().then(p=>{
-    if(p==='granted'){
-      navigator.serviceWorker.ready.then(r=>r.showNotification('🌤️ আবহাওয়া Alert চালু!',{body:'প্রতিদিন সকালে আবহাওয়া পাবেন।',icon:'/logoc7c3.png'}));
+async function loadByGPS() {
+  try {
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, {timeout: 8000})
+    );
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+
+    // fetch weather and location name in parallel
+    const [data, locName] = await Promise.all([
+      fetchWeather(lat, lng),
+      getLocationName(lat, lng)
+    ]);
+
+    renderWeather(data, locName);
+  } catch(e) {
+    // GPS failed → fallback to Dhaka
+    loadByCity('Dhaka');
+  }
+}
+
+window.loadByCity = async function(city) {
+  if (!city) return;
+  document.getElementById('wxSpinner').style.display = 'block';
+  document.getElementById('wxDesc').textContent = 'লোড হচ্ছে...';
+
+  const [lat, lng] = COORDS[city] || COORDS['Dhaka'];
+  const locName = CITY_BN[city] || city;
+
+  try {
+    const data = await fetchWeather(lat, lng);
+    renderWeather(data, locName);
+  } catch(e) {
+    document.getElementById('wxSpinner').style.display = 'none';
+    document.getElementById('wxDesc').textContent = 'আবহাওয়া তথ্য পাওয়া যাচ্ছে না';
+  }
+};
+
+function requestWxNotif() {
+  if (!('Notification' in window)) return;
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') {
+      navigator.serviceWorker.ready.then(r =>
+        r.showNotification('🌤️ আবহাওয়া Alert চালু!', {
+          body: 'প্রতিদিন সকালে আবহাওয়া পাবেন।', icon: '/logoc7c3.png'
+        })
+      );
     }
   });
 }
 
-// Auto-detect location
-if(navigator.geolocation){
-  navigator.geolocation.getCurrentPosition(pos=>{
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=Asia%2FDhaka&forecast_days=7`)
-      .then(r=>r.json()).then(d=>{
-        const c=d.current;
-        document.getElementById('wxTemp').textContent=Math.round(c.temperature_2m)+'°C';
-        document.getElementById('wxDesc').textContent='আপনার বর্তমান অবস্থান';
-        document.getElementById('wxLoc').textContent='📍 আপনার এলাকা';
-        document.getElementById('wxHumidity').textContent=c.relative_humidity_2m+'%';
-        document.getElementById('wxWind').textContent=Math.round(c.wind_speed_10m)+' km/h';
-        document.getElementById('wxRain').textContent=(c.precipitation||0)+' mm';
-      });
-  },()=>loadWeather('Dhaka'));
-} else { loadWeather('Dhaka'); }
-</script><script src="/js/rainbow-swirl-cursor.js" defer></script>
+// Start — try GPS first, fallback to Dhaka
+if (navigator.geolocation) {
+  loadByGPS();
+} else {
+  loadByCity('Dhaka');
+}
+</script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
 </body></html>
