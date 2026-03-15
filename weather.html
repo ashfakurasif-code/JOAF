@@ -162,7 +162,7 @@ function updateMap(lat, lng, label) {
 function renderWeather(data, locLabel, lat, lng) {
   const c = data.current;
   const daily = data.daily;
-  if (!c || !daily || !daily.date) {
+  if (!c || !daily || !daily.date || !daily.temperature_2m_max) {
     document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
     document.getElementById('forecastList').innerHTML = '<div class="loading-state">তথ্য পাওয়া যাচ্ছে না</div>';
     document.getElementById('farmAdvice').innerHTML = '<div class="loading-state">তথ্য পাওয়া যাচ্ছে না</div>';
@@ -173,7 +173,6 @@ function renderWeather(data, locLabel, lat, lng) {
   const humidity = Math.round(c.relative_humidity_2m);
   const wind     = Math.round(c.wind_speed_10m);
   const rain     = parseFloat(c.precipitation) || 0;
-  // open-meteo uses weather_code (newer) or weathercode (older)
   const code     = parseInt(c.weather_code ?? c.weathercode) || 0;
   const wx       = wxFromCode(code, rain);
 
