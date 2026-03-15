@@ -878,12 +878,30 @@ const JOAFComponents = {
 
   // ── PWA Install Prompt ─────────────────────────────────────
   initPWAPrompt() {
-    // Handled by global _joafShowInstallPrompt below
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') joafSubscribePush();
+    if (localStorage.getItem('joaf-pwa-dismissed')) return;
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (localStorage.getItem('joaf-pwa-installed')) return;
+    const p = JOAF.pwaPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      window._deferredPWA = e;
+      window._joafShowInstallPrompt();
+    });
+    // Fallback: show after 1.5s if event already fired
+    setTimeout(() => {
+      if (window._deferredPWA && !document.getElementById('joaf-install-wrap')) {
+        window._joafShowInstallPrompt();
+      }
+    }, 1500);
   },
   // ── Push Notification Permission Prompt ───────────────────
   initPushPrompt() {
-    // Handled by global _joafShowPushPrompt below
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') { joafSubscribePush(); return; }
+    if (Notification.permission === 'denied') return;
+    if (localStorage.getItem('joaf-push-dismissed')) return;
+    // Show after 3.5s (called from init with setTimeout 3500)
+    window._joafShowPushPrompt();
   },
   initIOSPrompt() {
     // Handled by global _joafShowIOSPrompt below
@@ -1336,194 +1354,116 @@ window.addEventListener('appinstalled', () => {
 // 1. INSTALL PROMPT
 // ══════════════════════════════════════════════════════════════
 function _joafShowInstallPrompt() {
-  if (_D.isIOS) return; // iOS has its own full-screen prompt
+  if (_D.isIOS) return;
   if (_D.isStandalone) return;
-  if (_S.pwaInstalled) return;
   if (localStorage.getItem('joaf-pwa-installed')) return;
+  if (localStorage.getItem('joaf-pwa-dismissed')) return;
   if (document.getElementById('joaf-install-wrap')) return;
+
+  const p = (typeof JOAF !== 'undefined' && JOAF.pwaPrompt) ? JOAF.pwaPrompt : {
+    title: '📲 JOAF App Install করুন',
+    body: 'Breaking news, বাজার দর, আবহাওয়া, রক্তদাতা — সব এক জায়গায়।',
+    install: '✅ Install করুন',
+    later: 'পরে'
+  };
 
   const wrap = document.createElement('div');
   wrap.id = 'joaf-install-wrap';
   wrap.innerHTML = `
     <style>
     #joaf-install-wrap {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 99997;
-      width: calc(100% - 32px);
-      max-width: 400px;
-      background: #fff;
-      border-radius: 20px;
-      box-shadow: 0 12px 48px rgba(0,0,0,.25);
-      padding: 24px 20px 20px;
-      font-family: inherit;
-      animation: _joaf-popin .25s ease;
+      position:fixed;bottom:0;left:0;right:0;z-index:99997;
+      background:#0d0d1a;color:#fff;padding:16px 20px;
+      display:flex;align-items:center;gap:12px;
+      box-shadow:0 -4px 20px rgba(0,0,0,.4);font-family:inherit;
     }
-    @keyframes _joaf-popin {
-      from { opacity:0; transform:translate(-50%,-48%) scale(.96); }
-      to   { opacity:1; transform:translate(-50%,-50%) scale(1); }
-    }
-    #joaf-install-wrap .ji-close {
-      position: absolute; top: 12px; right: 12px;
-      width: 28px; height: 28px; border-radius: 50%;
-      background: #f3f4f6; border: none; font-size: 14px;
-      cursor: pointer; display: flex; align-items: center;
-      justify-content: center; color: #6b7280;
-    }
-    #joaf-install-wrap .ji-logo {
-      width: 52px; height: 52px; border-radius: 14px; margin-bottom: 10px;
-    }
-    #joaf-install-wrap .ji-title {
-      font-size: 17px; font-weight: 900; color: #1a1a2e; margin-bottom: 4px;
-    }
-    #joaf-install-wrap .ji-domain {
-      font-size: 13px; color: #90161f; font-weight: 800; margin-bottom: 14px;
-      text-decoration: none; display: block;
-    }
-    #joaf-install-wrap .ji-features {
-      font-size: 12px; color: #374151; line-height: 1.9;
-      margin-bottom: 16px; text-align: left;
-    }
-    #joaf-install-wrap .ji-btn {
-      width: 100%; padding: 13px;
-      background: linear-gradient(135deg,#90161f,#c0392b);
-      color: #fff; border: none; border-radius: 50px;
-      font-size: 14px; font-weight: 900; font-family: inherit;
-      cursor: pointer;
-    }
+    #joaf-install-wrap img{width:44px;height:44px;border-radius:10px;flex-shrink:0;}
+    #joaf-install-wrap .ji-text{flex:1;min-width:0;}
+    #joaf-install-wrap .ji-title{font-size:14px;font-weight:900;margin-bottom:3px;}
+    #joaf-install-wrap .ji-body{font-size:11px;color:#9ca3af;line-height:1.4;}
+    #joaf-install-wrap .ji-btns{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+    #joaf-install-wrap .ji-btn{background:#90161f;color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap;}
+    #joaf-install-wrap .ji-later{background:transparent;color:#6b7280;border:none;font-size:11px;font-family:inherit;cursor:pointer;}
     </style>
-    <button class="ji-close" id="ji-close">✕</button>
-    <div style="text-align:center">
-      <img src="/logoc7c3.png" class="ji-logo">
-      <div class="ji-title">📲 JOAF App Install করুন</div>
-      <a href="https://www.julyforum.com" class="ji-domain">🌐 www.julyforum.com</a>
+    <img src="/logoc7c3.png" alt="JOAF">
+    <div class="ji-text">
+      <div class="ji-title">${p.title}</div>
+      <div class="ji-body">${p.body}</div>
     </div>
-    <div class="ji-features">
-      🚨 জরুরি সতর্কতা — বন্যা, আগুন, দুর্ঘটনা<br>
-      🩸 রক্তের প্রয়োজনে তাৎক্ষণিক Alert<br>
-      📺 লাইভ সম্প্রচার ও Breaking News<br>
-      🏛️ নেতা ট্র্যাকার — প্রতিশ্রুতি vs বাস্তবতা<br>
-      🚫 দুর্নীতি রিপোর্ট করুন<br>
-      ✊ জুলাই যোদ্ধা ও পরিবার সহায়<br>
-      🛒 বাজার দর · 💊 ওষুধের দাম · 🌦️ আবহাওয়া<br>
-      🏥 হাসপাতাল · ⚖️ আইনি সহায়তা · 🗳️ জনমত<br>
-      💼 চাকরি · 💻 ফ্রিল্যান্স · 🚀 উদ্যোক্তা<br>
-      🌍 বিশ্বজুড়ে JOAF নেটওয়ার্ক
-    </div>
-    <button class="ji-btn" id="ji-install">✅ Install করুন</button>`;
+    <div class="ji-btns">
+      <button class="ji-btn" onclick="window._joafInstallClick();">${p.install}</button>
+      <button class="ji-later" onclick="localStorage.setItem('joaf-pwa-dismissed','1');document.getElementById('joaf-install-wrap').remove();setTimeout(window._joafShowInstallPrompt,5000);">${p.later}</button>
+    </div>`;
 
   document.body.appendChild(wrap);
-
-  // Install button
-  document.getElementById('ji-install').addEventListener('click', async () => {
-    if (window._deferredPWA) {
-      // Chromium (Chrome/Edge/Samsung) — direct install
-      try {
-        window._deferredPWA.prompt();
-        const { outcome } = await window._deferredPWA.userChoice;
-        if (outcome === 'accepted') {
-          _S.pwaInstalled = true;
-          localStorage.setItem('joaf-pwa-installed', '1');
-          wrap.remove();
-        }
-      } catch(e) {}
-    } else if (_D.isIOSSafari) {
-      // iOS Safari — share sheet → Add to Home Screen
-      try { await navigator.share({ title: 'JOAF', url: 'https://www.julyforum.com' }); } catch(e) {}
-    } else if (_D.isSafari || _D.isFirefox) {
-      // MacOS Safari / Firefox — share sheet
-      try { await navigator.share({ title: 'JOAF', url: 'https://www.julyforum.com' }); } catch(e) {}
-    }
-    // else: _deferredPWA not fired yet — do nothing, wait for it
-  });
-
-  // Close
-  document.getElementById('ji-close').addEventListener('click', () => {
-    wrap.remove();
-    setTimeout(_joafShowInstallPrompt, 5000);
-  });
 }
+
+window._joafInstallClick = async () => {
+  if (window._deferredPWA) {
+    window._deferredPWA.prompt();
+    try {
+      const { outcome } = await window._deferredPWA.userChoice;
+      if (outcome === 'accepted') {
+        localStorage.setItem('joaf-pwa-installed', '1');
+        const w = document.getElementById('joaf-install-wrap');
+        if (w) w.remove();
+      }
+    } catch(e) {}
+  } else if (_D.isIOSSafari || _D.isSafari || _D.isFirefox) {
+    try { await navigator.share({ title: 'JOAF', url: 'https://www.julyforum.com' }); } catch(e) {}
+  }
+};
+
 
 // ══════════════════════════════════════════════════════════════
 // 2. PUSH + LOCATION PROMPT
 // ══════════════════════════════════════════════════════════════
 function _joafShowPushPrompt() {
-  if (_D.isIOS && !_D.isStandalone) return; // iOS non-standalone: install prompt handles everything
+  if (_D.isIOS && !_D.isStandalone) return;
   if (!('Notification' in window)) return;
-  if (_S.pushDenied) return;
-  if (_S.pushGranted) return; // push already granted, no need to ask again
+  if (Notification.permission === 'granted') { joafSubscribePush(); return; }
+  if (Notification.permission === 'denied') return;
+  if (localStorage.getItem('joaf-push-dismissed')) return;
   if (document.getElementById('joaf-push-wrap')) return;
+
+  const p = (typeof JOAF !== 'undefined' && JOAF.notifPrompt) ? JOAF.notifPrompt : {
+    title: '🔔 সবার আগে খবর পান',
+    points: [
+      '🚨 আগুন · বন্যা · দুর্ঘটনায় সাথে সাথে জানুন',
+      '🩸 জরুরি রক্তের প্রয়োজনে Alert পাবেন',
+      '📺 Breaking News সবার আগে',
+      '✊ জুলাই আন্দোলনের গুরুত্বপূর্ণ আপডেট',
+      '🛒 প্রতিদিন সকালে বাজার দর',
+    ],
+    allow: '✅ চালু করুন — বিনামূল্যে',
+    skip: 'এখন না'
+  };
 
   const wrap = document.createElement('div');
   wrap.id = 'joaf-push-wrap';
   wrap.innerHTML = `
     <style>
-    #joaf-push-wrap {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 99998;
-      width: calc(100% - 32px);
-      max-width: 400px;
-      background: #0d0d1a;
-      border-radius: 20px;
-      box-shadow: 0 12px 48px rgba(0,0,0,.3);
-      padding: 20px;
-      font-family: inherit;
-      color: #fff;
-      animation: _joaf-slideup .25s ease;
-    }
-    @keyframes _joaf-slideup {
-      from { opacity:0; transform:translateX(-50%) translateY(20px); }
-      to   { opacity:1; transform:translateX(-50%) translateY(0); }
-    }
-    #joaf-push-wrap .jp-close {
-      position: absolute; top: 12px; right: 12px;
-      width: 28px; height: 28px; border-radius: 50%;
-      background: rgba(255,255,255,.1); border: none; font-size: 14px;
-      cursor: pointer; display: flex; align-items: center;
-      justify-content: center; color: rgba(255,255,255,.7);
-    }
-    #joaf-push-wrap .jp-title {
-      font-size: 15px; font-weight: 900; margin-bottom: 10px;
-    }
-    #joaf-push-wrap .jp-features {
-      font-size: 12px; color: rgba(255,255,255,.75);
-      line-height: 1.8; margin-bottom: 14px;
-    }
-    #joaf-push-wrap .jp-btn {
-      width: 100%; padding: 12px;
-      background: linear-gradient(135deg,#90161f,#c0392b);
-      color: #fff; border: none; border-radius: 50px;
-      font-size: 13px; font-weight: 900;
-      font-family: inherit; cursor: pointer;
+    #joaf-push-wrap{
+      position:fixed;inset:0;z-index:99998;
+      background:rgba(0,0,0,.65);display:flex;align-items:flex-end;
     }
     </style>
-    <button class="jp-close" id="jp-close">✕</button>
-    <div class="jp-title">🔔 Notification চালু করুন</div>
-    <div class="jp-features">
-      🚨 আগুন · বন্যা · দুর্ঘটনায় সাথে সাথে জানুন<br>
-      🩸 জরুরি রক্তের প্রয়োজনে Alert পাবেন<br>
-      📺 Breaking News সবার আগে<br>
-      ✊ জুলাই আন্দোলনের গুরুত্বপূর্ণ আপডেট<br>
-      🛒 প্রতিদিন সকালে বাজার দর<br>
-      🌦️ আপনার এলাকার আবহাওয়া সতর্কতা<br>
-      🚨 জরুরি সতর্কতা · 🩸 রক্তদান · 🏥 স্বাস্থ্য
-    </div>
-    <button class="jp-btn" id="jp-allow">🔔 চালু করুন</button>`;
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;width:100%;max-width:480px;margin:0 auto;font-family:inherit;">
+      <div style="font-size:20px;font-weight:900;color:#0d0d1a;margin-bottom:6px;">${p.title}</div>
+      <div style="margin:14px 0;">
+        ${p.points.map(pt=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;font-size:14px;color:#374151;line-height:1.5;">${pt}</div>`).join('')}
+      </div>
+      <button id="joaf-push-allow" style="width:100%;padding:14px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer;margin-bottom:10px;">${p.allow}</button>
+      <button id="joaf-push-skip" style="width:100%;padding:10px;background:transparent;color:#9ca3af;border:none;font-size:13px;font-family:inherit;cursor:pointer;">${p.skip}</button>
+    </div>`;
 
   document.body.appendChild(wrap);
 
-  document.getElementById('jp-allow').addEventListener('click', async () => {
+  document.getElementById('joaf-push-allow').onclick = async () => {
     wrap.remove();
     try {
-      // Step 1: Push permission
       const perm = await Notification.requestPermission();
       if (perm === 'granted') {
-        _S.pushGranted = true;
         joafSubscribePush();
         try {
           const reg = await navigator.serviceWorker.ready;
@@ -1532,8 +1472,7 @@ function _joafShowPushPrompt() {
             icon: '/logoc7c3.png', badge: '/logoc7c3.png', vibrate: [200,100,200]
           });
         } catch(e) {}
-
-        // Step 2: Location permission
+        // Request location after push granted
         if (navigator.geolocation && !_S.locationGranted) {
           navigator.geolocation.getCurrentPosition(
             () => { _S.locationGranted = true; },
@@ -1542,13 +1481,14 @@ function _joafShowPushPrompt() {
         }
       }
     } catch(e) {}
-  });
+  };
 
-  document.getElementById('jp-close').addEventListener('click', () => {
+  document.getElementById('joaf-push-skip').onclick = () => {
     wrap.remove();
     setTimeout(_joafShowPushPrompt, 5000);
-  });
+  };
 }
+
 
 // ══════════════════════════════════════════════════════════════
 // 3. LOCATION PROMPT — সব page এ যদি location not granted
