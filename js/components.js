@@ -884,11 +884,9 @@ const JOAFComponents = {
     // Already installed as PWA
     if (window.matchMedia('(display-mode: standalone)').matches) return;
 
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      window._deferredPWA = e;
-      window._joafShowInstallPrompt();
-    });
+    // beforeinstallprompt is captured at script load level above
+    // Just show prompt if already captured
+    if (window._deferredPWA) window._joafShowInstallPrompt();
   },
 
   // ── Push Notification Permission Prompt ───────────────────
@@ -1259,6 +1257,131 @@ const JOAFComponents = {
     }
   }
 };
+
+
+// ── Location Permission Prompt ───────────────────────────────
+// alert, rokto, weather page এ location দরকার — সুন্দর popup দিয়ে চাইবে
+const LOCATION_PAGES = {
+  'alert':   { icon:'🚨', reason:'আপনার এলাকার সঠিক সতর্কতা পাঠাতে', benefit:'আপনার কাছের বিপদ সাথে সাথে জানাবে' },
+  'bajar':   { icon:'🛒', reason:'আপনার এলাকার বাজার দর দেখাতে', benefit:'কাছের বাজারের সঠিক দাম পাবেন' },
+  'weather': { icon:'🌦️', reason:'আপনার এলাকার আবহাওয়া দেখাতে', benefit:'সঠিক আবহাওয়া ও কৃষি পরামর্শ পাবেন' },
+  'rokto':   { icon:'🩸', reason:'আপনার কাছের রক্তদাতা খুঁজে পেতে', benefit:'জরুরি মুহূর্তে দ্রুত রক্ত পাবেন' },
+  'hospital':{ icon:'🏥', reason:'আপনার কাছের হাসপাতাল খুঁজে পেতে', benefit:'নিকটতম হাসপাতাল ও ডাক্তার দেখাবে' },
+};
+
+function _joafShowLocationPrompt(pageId) {
+  const info = LOCATION_PAGES[pageId];
+  if (!info) return;
+  if (document.getElementById('joaf-location-prompt')) return;
+
+  // Already granted — no need to show
+  if (navigator.permissions) {
+    navigator.permissions.query({name:'geolocation'}).then(r => {
+      if (r.state === 'granted') return;
+      if (r.state === 'denied') return;
+      _joafRenderLocationPrompt(info);
+    }).catch(() => _joafRenderLocationPrompt(info));
+  } else {
+    _joafRenderLocationPrompt(info);
+  }
+}
+
+function _joafRenderLocationPrompt(info) {
+  if (document.getElementById('joaf-location-prompt')) return;
+
+  const el = document.createElement('div');
+  el.id = 'joaf-location-prompt';
+  el.innerHTML = `
+    <style>
+    #joaf-location-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 420px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.18);
+      z-index: 99995;
+      padding: 18px 18px 16px;
+      font-family: inherit;
+      border: 1.5px solid #e5e7eb;
+      animation: joaf-slideup .3s ease;
+    }
+    @keyframes joaf-slideup { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    #joaf-location-prompt .jlp-close {
+      position: absolute; top: 12px; right: 12px;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #f3f4f6; border: none; font-size: 13px;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #6b7280;
+    }
+    #joaf-location-prompt .jlp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    #joaf-location-prompt .jlp-icon { font-size: 28px; flex-shrink: 0; }
+    #joaf-location-prompt .jlp-title { font-size: 14px; font-weight: 900; color: #1a1a2e; }
+    #joaf-location-prompt .jlp-reason { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    #joaf-location-prompt .jlp-benefit {
+      background: linear-gradient(135deg,#f0fdf4,#dcfce7);
+      border: 1px solid #86efac; border-radius: 10px;
+      padding: 8px 12px; font-size: 12px; color: #166534;
+      font-weight: 700; margin-bottom: 12px;
+    }
+    #joaf-location-prompt .jlp-btn {
+      width: 100%; padding: 11px;
+      background: linear-gradient(135deg,#16a34a,#15803d);
+      color: #fff; border: none; border-radius: 50px;
+      font-size: 13px; font-weight: 900; font-family: inherit;
+      cursor: pointer;
+    }
+    </style>
+    <button class="jlp-close" id="jlp-close">✕</button>
+    <div class="jlp-head">
+      <div class="jlp-icon">${info.icon}</div>
+      <div>
+        <div class="jlp-title">📍 Location Permission দিন</div>
+        <div class="jlp-reason">${info.reason}</div>
+      </div>
+    </div>
+    <div class="jlp-benefit">✅ ${info.benefit}</div>
+    <button class="jlp-btn" id="jlp-allow-btn">📍 Location Allow করুন</button>`;
+
+  document.body.appendChild(el);
+
+  document.getElementById('jlp-allow-btn').addEventListener('click', () => {
+    el.remove();
+    navigator.geolocation.getCurrentPosition(
+      () => {}, // success — page এর নিজস্ব handler কাজ করবে
+      () => {}
+    );
+  });
+
+  document.getElementById('jlp-close').addEventListener('click', () => {
+    el.remove();
+  });
+}
+
+// Page load এ location prompt দেখাও
+(function() {
+  const page = (document.body && document.body.dataset.page) || '';
+  if (LOCATION_PAGES[page]) {
+    // ২ সেকেন্ড পর দেখাও — page content load হওয়ার পর
+    setTimeout(() => _joafShowLocationPrompt(page), 2000);
+  }
+})();
+
+// ── Capture beforeinstallprompt immediately (before any timeout) ──
+// Must be at top level — event fires early, before setTimeout callbacks
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  window._deferredPWA = e;
+  // Show prompt immediately if not iOS and not standalone
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  if (!isIOS && !isStandalone) {
+    setTimeout(() => window._joafShowInstallPrompt(), 1000);
+  }
+});
 
 function _joafInit(){
   const page=(document.body&&document.body.dataset.page)||window.location.pathname.split('/').pop().replace('.html','').replace('/','')|| 'home';
