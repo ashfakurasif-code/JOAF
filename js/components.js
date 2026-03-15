@@ -1385,6 +1385,7 @@ window.addEventListener('beforeinstallprompt', e => {
 // Show install prompt anyway after 1.5s — user can still install manually
 window.addEventListener('appinstalled', () => {
   window._joafPWAInstalled = true;
+  localStorage.setItem('joaf-pwa-installed', '1');
 });
 
 setTimeout(() => {
@@ -1591,7 +1592,8 @@ const _joafIsStandalone = window.navigator.standalone === true
 window._joafShowInstallPrompt = function() {
   if (_joafIsIOS) return;
   if (_joafIsStandalone) return;
-  if (!window._deferredPWA) return;
+  if (window._joafPWAInstalled) return;
+  if (localStorage.getItem('joaf-pwa-installed')) return;
   if (document.getElementById('joaf-install-wrap')) return;
 
   const wrap = document.createElement('div');
@@ -1661,7 +1663,10 @@ window._joafShowInstallPrompt = function() {
       window._deferredPWA.prompt();
       try {
         const { outcome } = await window._deferredPWA.userChoice;
-        if (outcome === 'accepted') window._joafPWAInstalled = true;
+        if (outcome === 'accepted') {
+          window._joafPWAInstalled = true;
+          localStorage.setItem('joaf-pwa-installed', '1');
+        }
       } catch(e) {}
     } else {
       // beforeinstallprompt didn't fire — guide user to Chrome's "Open in app"
@@ -1754,11 +1759,16 @@ window._joafShowPushPrompt = function() {
 // ── Start prompts on page load ──
 setTimeout(() => {
   if (_joafIsIOS) return; // iOS has its own prompt
+  if (_joafIsStandalone) return; // already installed
+
   // Push — already granted হলে subscribe করো
-  if (Notification.permission === 'granted') { joafSubscribePush(); }
-  // Show install prompt (needs beforeinstallprompt event)
-  // Show push prompt
-  else { window._joafShowPushPrompt(); }
+  if (Notification.permission === 'granted') {
+    joafSubscribePush();
+  } else {
+    // Install prompt + Push prompt দুটোই দেখাও
+    window._joafShowInstallPrompt();
+    window._joafShowPushPrompt();
+  }
 }, 1000);
 
 // Auto cache-bust for dynamic JS files
