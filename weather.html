@@ -248,6 +248,13 @@ async function fetchWeather(lat, lng) {
   return res.json();
 }
 
+let _rendered = false;
+function renderOnce(data, name, lat, lng) {
+  if (_rendered) return;
+  _rendered = true;
+  renderWeather(data, name, lat, lng);
+}
+
 // Try multiple IP geolocation services in order
 async function getIPLocation() {
   const services = [
@@ -277,64 +284,40 @@ async function getIPLocation() {
 }
 
 async function initWeather() {
-  // Step 1: GPS first (most accurate)
-  if (navigator.geolocation) {
-    const gpsPromise = new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, {timeout: 5000})
+  const tryGPS = async () => {
+    if (!navigator.geolocation) throw new Error('no geo');
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, {timeout: 6000})
     );
-    // Race: GPS vs IP (whichever is faster wins)
-    const ipPromise = getIPLocation().catch(() => null);
-
-    // Try GPS with 5s timeout
-    let gpsPos = null;
-    try {
-      gpsPos = await Promise.race([
-        gpsPromise,
-        new Promise((_, rej) => setTimeout(() => rej(new Error('GPS timeout')), 5000))
-      ]);
-    } catch(e) {}
-
-    if (gpsPos) {
-      const lat = gpsPos.coords.latitude;
-      const lng = gpsPos.coords.longitude;
-      // Get city name from IP (already fetched in parallel)
-      const ipLoc = await ipPromise;
-      const name  = ipLoc ? ipLoc.name : 'আপনার এলাকা';
-      try {
-        const data = await fetchWeather(lat, lng);
-        renderWeather(data, name, lat, lng);
-        return;
-      } catch(e) {}
-    }
-
-    // GPS failed → use IP location
-    try {
-      const ipLoc = await ipPromise || await getIPLocation();
-      if (ipLoc) {
-        const data = await fetchWeather(ipLoc.lat, ipLoc.lng);
-        renderWeather(data, ipLoc.name, ipLoc.lat, ipLoc.lng);
-        return;
-      }
-    } catch(e) {}
-  } else {
-    // No geolocation API → try IP
-    try {
-      const ipLoc = await getIPLocation();
-      const data  = await fetchWeather(ipLoc.lat, ipLoc.lng);
-      renderWeather(data, ipLoc.name, ipLoc.lat, ipLoc.lng);
-      return;
-    } catch(e) {}
-  }
-
-  // Last resort → Dhaka
-  const [lat,lng] = COORDS['Dhaka'];
-  try {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
     const data = await fetchWeather(lat, lng);
-    renderWeather(data, 'ঢাকা', lat, lng);
-  } catch(e) {
-    document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
-    document.getElementById('forecastList').innerHTML = '<div class="loading-state">সংযোগ সমস্যা</div>';
-    document.getElementById('farmAdvice').innerHTML  = '<div class="loading-state">সংযোগ সমস্যা</div>';
+    let name = 'আপনার এলাকা';
+    try { const ip = await getIPLocation(); name = ip.name; } catch(e) {}
+    renderOnce(data, name, lat, lng);
+  };
+
+  const tryIP = async () => {
+    const ip   = await getIPLocation();
+    if (_rendered) return;
+    const data = await fetchWeather(ip.lat, ip.lng);
+    renderOnce(data, ip.name, ip.lat, ip.lng);
+  };
+
+  // GPS আর IP parallel এ চলবে — যেটা আগে জিতবে সেটাই দেখাবে
+  await Promise.any([tryGPS(), tryIP()]).catch(() => {});
+
+  // দুটোই fail হলে Dhaka
+  if (!_rendered) {
+    try {
+      const [lat,lng] = COORDS['Dhaka'];
+      const data = await fetchWeather(lat, lng);
+      renderOnce(data, 'ঢাকা', lat, lng);
+    } catch(e) {
+      document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
+      document.getElementById('forecastList').innerHTML = '<div class="loading-state">সংযোগ সমস্যা</div>';
+      document.getElementById('farmAdvice').innerHTML  = '<div class="loading-state">সংযোগ সমস্যা</div>';
+    }
   }
 }
 
