@@ -814,14 +814,14 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 
 /* screen + layers */
 .joaf-screen{position:relative;overflow:hidden;}
-.jlayer{display:none;}
-.jlayer.active{display:block;animation:jSlideIn .32s cubic-bezier(.34,1.1,.64,1) both;}
+.jlayer{display:none!important;}
+.jlayer.active{display:block!important;animation:jSlideIn .32s cubic-bezier(.34,1.1,.64,1) both;}
 .jlayer.jback{animation:jSlideBack .28s cubic-bezier(.4,0,.2,1) both;}
 @keyframes jSlideIn{from{opacity:0;transform:translateX(44px) scale(.95);}to{opacity:1;transform:none;}}
 @keyframes jSlideBack{from{opacity:0;transform:translateX(-44px) scale(.95);}to{opacity:1;transform:none;}}
 
 /* grids */
-.jgrid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.jgrid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:200px;}
 .jgrid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 
 /* main tile */
