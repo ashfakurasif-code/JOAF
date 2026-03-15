@@ -871,42 +871,79 @@ const JOAFComponents = {
 
     // 9. Push notification permission prompt
     setTimeout(() => this.initPushPrompt(), 3500);
-
-    // 10. iOS Chrome install prompt
-    setTimeout(() => this.initIOSPrompt(), 1000);
   },
 
-  // ── PWA Install Prompt ─────────────────────────────────────
+  // ── PWA Install Prompt ────────────────────────────────────
   initPWAPrompt() {
     if (localStorage.getItem('joaf-pwa-dismissed')) return;
     if (window.matchMedia('(display-mode: standalone)').matches) return;
-    if (localStorage.getItem('joaf-pwa-installed')) return;
     const p = JOAF.pwaPrompt;
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       window._deferredPWA = e;
-      window._joafShowInstallPrompt();
+      const el = document.createElement('div');
+      el.id = 'joaf-pwa-prompt';
+      el.innerHTML = `
+        <div style="position:fixed;bottom:0;left:0;right:0;z-index:99998;background:#0d0d1a;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,.4);">
+          <img src="/logoc7c3.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:900;margin-bottom:3px;">${p.title}</div>
+            <div style="font-size:11px;color:#9ca3af;line-height:1.4;">${p.body}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+            <button onclick="window._deferredPWA&&window._deferredPWA.prompt();document.getElementById('joaf-pwa-prompt').remove();" style="background:#90161f;color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap;">${p.install}</button>
+            <button onclick="localStorage.setItem('joaf-pwa-dismissed','1');document.getElementById('joaf-pwa-prompt').remove();" style="background:transparent;color:#6b7280;border:none;font-size:11px;font-family:inherit;cursor:pointer;">${p.later}</button>
+          </div>
+        </div>`;
+      document.body.appendChild(el);
     });
-    // Fallback: show after 1.5s if event already fired
-    setTimeout(() => {
-      if (window._deferredPWA && !document.getElementById('joaf-install-wrap')) {
-        window._joafShowInstallPrompt();
-      }
-    }, 1500);
   },
+
   // ── Push Notification Permission Prompt ───────────────────
   initPushPrompt() {
     if (!('Notification' in window)) return;
-    if (Notification.permission === 'granted') { joafSubscribePush(); return; }
+    if (Notification.permission === 'granted') return;
     if (Notification.permission === 'denied') return;
     if (localStorage.getItem('joaf-push-dismissed')) return;
-    // Show after 3.5s (called from init with setTimeout 3500)
-    window._joafShowPushPrompt();
-  },
-  initIOSPrompt() {
-    // Handled by global _joafShowIOSPrompt below
-  },
+    const p = JOAF.notifPrompt;
+    const el = document.createElement('div');
+    el.id = 'joaf-push-prompt';
+    el.innerHTML = `
+      <div style="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:flex;align-items:flex-end;">
+        <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;width:100%;max-width:480px;margin:0 auto;">
+          <div style="font-size:20px;font-weight:900;color:#0d0d1a;margin-bottom:6px;">${p.title}</div>
+          <div style="margin:14px 0;">
+            ${p.points.map(pt=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;font-size:14px;color:#374151;line-height:1.5;">${pt}</div>`).join('')}
+          </div>
+          <button id="joaf-push-allow" style="width:100%;padding:14px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer;margin-bottom:10px;">${p.allow}</button>
+          <button id="joaf-push-skip" style="width:100%;padding:10px;background:transparent;color:#9ca3af;border:none;font-size:13px;font-family:inherit;cursor:pointer;">${p.skip}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
 
+    document.getElementById('joaf-push-allow').onclick = async () => {
+      el.remove();
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          // Send welcome push
+          const reg = await navigator.serviceWorker.ready;
+          const msg = JOAF.pushMessages.welcome;
+          reg.showNotification(msg.title, {
+            body: msg.body,
+            icon: '/logoc7c3.png',
+            badge: '/logoc7c3.png',
+            vibrate: [200,100,200],
+            data: { url: '/' }
+          });
+        }
+      } catch(e) {}
+    };
+    document.getElementById('joaf-push-skip').onclick = () => {
+      localStorage.setItem('joaf-push-dismissed','1');
+      el.remove();
+    };
+  },
 
   renderMazeNav() {
     return `
@@ -1119,7 +1156,6 @@ const JOAFComponents = {
   }
 };
 
-
 function _joafInit(){
   const page=(document.body&&document.body.dataset.page)||window.location.pathname.split('/').pop().replace('.html','').replace('/','')|| 'home';
   JOAFComponents.init(page);
@@ -1302,11 +1338,76 @@ async function joafSubscribePush() {
   } catch(e) { console.log('Push subscription failed:', e); }
 }
 
+// Request notification permission and subscribe
+async function joafRequestNotification() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if (Notification.permission === 'denied') return;
+  
+  if (Notification.permission === 'default') {
+    // Show custom prompt first
+    _joafShowNotifPrompt();
+  } else if (Notification.permission === 'granted') {
+    joafSubscribePush();
+  }
+}
 
-// ══════════════════════════════════════════════════════════════
-// JOAF PROMPT SYSTEM v2.0
-// Install + Push + Location — সব device, সব page
-// ══════════════════════════════════════════════════════════════
+function _joafShowNotifPrompt() {
+  if (document.getElementById('joaf-notif-prompt')) return;
+  
+  const el = document.createElement('div');
+  el.id = 'joaf-notif-prompt';
+  el.innerHTML = `
+    <style>
+    #joaf-notif-prompt{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:420px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:999999;padding:18px 20px;font-family:inherit;}
+    #joaf-notif-prompt h4{margin:0 0 6px;font-size:15px;color:#1a1a1a;display:flex;align-items:center;gap:8px;}
+    #joaf-notif-prompt ul{margin:8px 0 14px 0;padding-left:18px;font-size:12px;color:#374151;line-height:1.8;}
+    #joaf-notif-prompt .jnp-btns{display:flex;gap:8px;}
+    #joaf-notif-prompt .jnp-allow{flex:1;padding:10px;background:#90161f;color:#fff;border:none;border-radius:50px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;}
+    #joaf-notif-prompt .jnp-later{padding:10px 16px;background:#f3f4f6;color:#374151;border:none;border-radius:50px;font-size:13px;font-family:inherit;cursor:pointer;}
+    </style>
+    <h4>🔔 সতর্কতার নোটিফিকেশন চালু করুন</h4>
+    <ul>
+      <li>আপনার এলাকায় <b>আগুন, বন্যা বা দুর্ঘটনা</b> হলে সাথে সাথে জানবেন</li>
+      <li><b>জরুরি রক্তের</b> প্রয়োজনে তাৎক্ষণিক alert পাবেন</li>
+      <li>JOAF এর গুরুত্বপূর্ণ ঘোষণা <b>মিস করবেন না</b></li>
+      <li>সম্পূর্ণ <b>বিনামূল্যে</b>, যেকোনো সময় বন্ধ করা যাবে</li>
+    </ul>
+    <div class="jnp-btns">
+      <button class="jnp-allow" onclick="window._joafAllowNotif()">🔔 হ্যাঁ, চালু করুন</button>
+      <button class="jnp-later" onclick="window._joafLaterNotif()">পরে</button>
+    </div>
+  `;
+  document.body.appendChild(el);
+}
+
+window._joafAllowNotif = async () => {
+  document.getElementById('joaf-notif-prompt')?.remove();
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') joafSubscribePush();
+  localStorage.setItem('joaf_notif_asked', Date.now().toString());
+};
+
+window._joafLaterNotif = () => {
+  document.getElementById('joaf-notif-prompt')?.remove();
+  // Ask again after 30 seconds
+  setTimeout(_joafShowNotifPrompt, 30000);
+};
+
+// Ask after 5 seconds
+setTimeout(() => {
+  if (Notification.permission === 'granted') {
+    joafSubscribePush();
+  } else if (Notification.permission === 'default') {
+    joafRequestNotification();
+  }
+}, 5000);
+
+// Keep asking every 30 seconds until accepted or denied
+setInterval(() => {
+  if (Notification.permission === 'default' && !document.getElementById('joaf-notif-prompt')) {
+    _joafShowNotifPrompt();
+  }
+}, 30000);
 
 // ── Device Detection ──────────────────────────────────────────
 const _D = {
@@ -1314,371 +1415,63 @@ const _D = {
   isIOSSafari: /iphone|ipad|ipod/i.test(navigator.userAgent) && /safari/i.test(navigator.userAgent) && !/crios|fxios|edgios|chrome/i.test(navigator.userAgent),
   isIOSChrome: /iphone|ipad|ipod/i.test(navigator.userAgent) && /crios|fxios|edgios/i.test(navigator.userAgent),
   isSafari:    /^((?!chrome|android).)*safari/i.test(navigator.userAgent),
-  isFirefox:   /firefox|fxios/i.test(navigator.userAgent),
-  isChromium:  /chrome|chromium|crios|edg|samsung|samsungbrowser|opr|brave/i.test(navigator.userAgent) && !/edgios/i.test(navigator.userAgent),
   isStandalone: window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches,
 };
 
-// ── State ─────────────────────────────────────────────────────
-const _S = {
-  pwaInstalled:  localStorage.getItem('joaf-pwa-installed') === '1' || _D.isStandalone,
-  pushGranted:   typeof Notification !== 'undefined' && Notification.permission === 'granted',
-  pushDenied:    typeof Notification !== 'undefined' && Notification.permission === 'denied',
-  locationGranted: false, // will be checked async
-};
-
-// Check location permission async
-if (navigator.permissions) {
-  navigator.permissions.query({name:'geolocation'}).then(r => {
-    _S.locationGranted = r.state === 'granted';
-  }).catch(() => {});
-}
-
-// ── beforeinstallprompt — capture immediately ─────────────────
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  window._deferredPWA = e;
-  if (!_D.isIOS && !_D.isStandalone && !_S.pwaInstalled) {
-    setTimeout(() => _joafShowInstallPrompt(), 1000);
-  }
-});
-
-window.addEventListener('appinstalled', () => {
-  _S.pwaInstalled = true;
-  localStorage.setItem('joaf-pwa-installed', '1');
-  const el = document.getElementById('joaf-install-wrap');
-  if (el) el.remove();
-});
-
-// ══════════════════════════════════════════════════════════════
-// 1. INSTALL PROMPT
-// ══════════════════════════════════════════════════════════════
-function _joafShowInstallPrompt() {
-  if (_D.isIOS) return;
-  if (_D.isStandalone) return;
-  if (localStorage.getItem('joaf-pwa-installed')) return;
-  if (localStorage.getItem('joaf-pwa-dismissed')) return;
-  if (document.getElementById('joaf-install-wrap')) return;
-
-  const p = (typeof JOAF !== 'undefined' && JOAF.pwaPrompt) ? JOAF.pwaPrompt : {
-    title: '📲 JOAF App Install করুন',
-    body: 'Breaking news, বাজার দর, আবহাওয়া, রক্তদাতা — সব এক জায়গায়।',
-    install: '✅ Install করুন',
-    later: 'পরে'
-  };
-
-  const wrap = document.createElement('div');
-  wrap.id = 'joaf-install-wrap';
-  wrap.innerHTML = `
-    <style>
-    #joaf-install-wrap {
-      position:fixed;bottom:0;left:0;right:0;z-index:99997;
-      background:#0d0d1a;color:#fff;padding:16px 20px;
-      display:flex;align-items:center;gap:12px;
-      box-shadow:0 -4px 20px rgba(0,0,0,.4);font-family:inherit;
-    }
-    #joaf-install-wrap img{width:44px;height:44px;border-radius:10px;flex-shrink:0;}
-    #joaf-install-wrap .ji-text{flex:1;min-width:0;}
-    #joaf-install-wrap .ji-title{font-size:14px;font-weight:900;margin-bottom:3px;}
-    #joaf-install-wrap .ji-body{font-size:11px;color:#9ca3af;line-height:1.4;}
-    #joaf-install-wrap .ji-btns{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
-    #joaf-install-wrap .ji-btn{background:#90161f;color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap;}
-    #joaf-install-wrap .ji-later{background:transparent;color:#6b7280;border:none;font-size:11px;font-family:inherit;cursor:pointer;}
-    </style>
-    <img src="/logoc7c3.png" alt="JOAF">
-    <div class="ji-text">
-      <div class="ji-title">${p.title}</div>
-      <div class="ji-body">${p.body}</div>
-    </div>
-    <div class="ji-btns">
-      <button class="ji-btn" onclick="window._joafInstallClick();">${p.install}</button>
-      <button class="ji-later" onclick="localStorage.setItem('joaf-pwa-dismissed','1');document.getElementById('joaf-install-wrap').remove();setTimeout(window._joafShowInstallPrompt,5000);">${p.later}</button>
-    </div>`;
-
-  document.body.appendChild(wrap);
-}
-
-window._joafInstallClick = async () => {
-  if (window._deferredPWA) {
-    window._deferredPWA.prompt();
-    try {
-      const { outcome } = await window._deferredPWA.userChoice;
-      if (outcome === 'accepted') {
-        localStorage.setItem('joaf-pwa-installed', '1');
-        const w = document.getElementById('joaf-install-wrap');
-        if (w) w.remove();
-      }
-    } catch(e) {}
-  } else if (_D.isIOSSafari || _D.isSafari || _D.isFirefox) {
-    try { await navigator.share({ title: 'JOAF', url: 'https://www.julyforum.com' }); } catch(e) {}
-  }
-};
-
-
-// ══════════════════════════════════════════════════════════════
-// 2. PUSH + LOCATION PROMPT
-// ══════════════════════════════════════════════════════════════
-function _joafShowPushPrompt() {
-  if (_D.isIOS && !_D.isStandalone) return;
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') { joafSubscribePush(); return; }
-  if (Notification.permission === 'denied') return;
-  if (localStorage.getItem('joaf-push-dismissed')) return;
-  if (document.getElementById('joaf-push-wrap')) return;
-
-  const p = (typeof JOAF !== 'undefined' && JOAF.notifPrompt) ? JOAF.notifPrompt : {
-    title: '🔔 সবার আগে খবর পান',
-    points: [
-      '🚨 আগুন · বন্যা · দুর্ঘটনায় সাথে সাথে জানুন',
-      '🩸 জরুরি রক্তের প্রয়োজনে Alert পাবেন',
-      '📺 Breaking News সবার আগে',
-      '✊ জুলাই আন্দোলনের গুরুত্বপূর্ণ আপডেট',
-      '🛒 প্রতিদিন সকালে বাজার দর',
-    ],
-    allow: '✅ চালু করুন — বিনামূল্যে',
-    skip: 'এখন না'
-  };
-
-  const wrap = document.createElement('div');
-  wrap.id = 'joaf-push-wrap';
-  wrap.innerHTML = `
-    <style>
-    #joaf-push-wrap{
-      position:fixed;inset:0;z-index:99998;
-      background:rgba(0,0,0,.65);display:flex;align-items:flex-end;
-    }
-    </style>
-    <div style="background:#fff;border-radius:24px 24px 0 0;padding:24px 20px;width:100%;max-width:480px;margin:0 auto;font-family:inherit;">
-      <div style="font-size:20px;font-weight:900;color:#0d0d1a;margin-bottom:6px;">${p.title}</div>
-      <div style="margin:14px 0;">
-        ${p.points.map(pt=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;font-size:14px;color:#374151;line-height:1.5;">${pt}</div>`).join('')}
-      </div>
-      <button id="joaf-push-allow" style="width:100%;padding:14px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer;margin-bottom:10px;">${p.allow}</button>
-      <button id="joaf-push-skip" style="width:100%;padding:10px;background:transparent;color:#9ca3af;border:none;font-size:13px;font-family:inherit;cursor:pointer;">${p.skip}</button>
-    </div>`;
-
-  document.body.appendChild(wrap);
-
-  document.getElementById('joaf-push-allow').onclick = async () => {
-    wrap.remove();
-    try {
-      const perm = await Notification.requestPermission();
-      if (perm === 'granted') {
-        joafSubscribePush();
-        try {
-          const reg = await navigator.serviceWorker.ready;
-          reg.showNotification('✅ Notification চালু হয়েছে!', {
-            body: 'JOAF এর সতর্কতা ও খবর এখন থেকে পাবেন।',
-            icon: '/logoc7c3.png', badge: '/logoc7c3.png', vibrate: [200,100,200]
-          });
-        } catch(e) {}
-        // Request location after push granted
-        if (navigator.geolocation && !_S.locationGranted) {
-          navigator.geolocation.getCurrentPosition(
-            () => { _S.locationGranted = true; },
-            () => {}
-          );
-        }
-      }
-    } catch(e) {}
-  };
-
-  document.getElementById('joaf-push-skip').onclick = () => {
-    wrap.remove();
-    setTimeout(_joafShowPushPrompt, 5000);
-  };
-}
-
-
-// ══════════════════════════════════════════════════════════════
-// 3. LOCATION PROMPT — সব page এ যদি location not granted
-// ══════════════════════════════════════════════════════════════
-function _joafShowLocationPrompt() {
-  if (_S.locationGranted) return;
-  if (!navigator.geolocation) return;
-  if (document.getElementById('joaf-loc-wrap')) return;
-
-  // Check current permission state
-  if (navigator.permissions) {
-    navigator.permissions.query({name:'geolocation'}).then(r => {
-      if (r.state === 'granted') { _S.locationGranted = true; return; }
-      if (r.state === 'denied') return; // user already denied, don't ask
-      _joafRenderLocationPrompt();
-    }).catch(() => _joafRenderLocationPrompt());
-  } else {
-    _joafRenderLocationPrompt();
-  }
-}
-
-function _joafRenderLocationPrompt() {
-  if (document.getElementById('joaf-loc-wrap')) return;
-
-  const wrap = document.createElement('div');
-  wrap.id = 'joaf-loc-wrap';
-  wrap.innerHTML = `
-    <style>
-    #joaf-loc-wrap {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 99994;
-      width: calc(100% - 32px);
-      max-width: 400px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.15);
-      padding: 16px 18px;
-      font-family: inherit;
-      border: 1.5px solid #e5e7eb;
-      animation: _joaf-slideup .3s ease;
-    }
-    #joaf-loc-wrap .jl-close {
-      position: absolute; top: 10px; right: 10px;
-      width: 26px; height: 26px; border-radius: 50%;
-      background: #f3f4f6; border: none; font-size: 13px;
-      cursor: pointer; display: flex; align-items: center;
-      justify-content: center; color: #6b7280;
-    }
-    #joaf-loc-wrap .jl-title {
-      font-size: 14px; font-weight: 900; color: #1a1a2e; margin-bottom: 6px;
-    }
-    #joaf-loc-wrap .jl-sub {
-      font-size: 12px; color: #6b7280; margin-bottom: 12px; line-height: 1.5;
-    }
-    #joaf-loc-wrap .jl-btn {
-      width: 100%; padding: 11px;
-      background: linear-gradient(135deg,#16a34a,#15803d);
-      color: #fff; border: none; border-radius: 50px;
-      font-size: 13px; font-weight: 900;
-      font-family: inherit; cursor: pointer;
-    }
-    </style>
-    <button class="jl-close" id="jl-close">✕</button>
-    <div class="jl-title">📍 Location Allow করুন</div>
-    <div class="jl-sub">
-      আপনার এলাকার সতর্কতা, আবহাওয়া, বাজার দর,
-      রক্তদাতা ও হাসপাতাল সঠিকভাবে দেখাতে
-    </div>
-    <button class="jl-btn" id="jl-allow">📍 Allow করুন</button>`;
-
-  document.body.appendChild(wrap);
-
-  document.getElementById('jl-allow').addEventListener('click', () => {
-    wrap.remove();
-    navigator.geolocation.getCurrentPosition(
-      () => { _S.locationGranted = true; },
-      () => {}
-    );
-  });
-
-  document.getElementById('jl-close').addEventListener('click', () => {
-    wrap.remove();
-    // পরের page এ আবার দেখাবে (no localStorage — refresh করলে আবার আসবে)
-  });
-}
-
-// ══════════════════════════════════════════════════════════════
-// 4. iOS Chrome/Edge/Firefox — Full Screen Prompt
-// ══════════════════════════════════════════════════════════════
+// ── iOS Full Screen Install Prompt ────────────────────────────
 function _joafShowIOSPrompt() {
-  if (!_D.isIOS) return; // Show for ALL iOS (Chrome, Safari, Firefox)
+  if (!_D.isIOS) return;
   if (_D.isStandalone) return;
   if (document.getElementById('joaf-ios-wrap')) return;
 
   const PAGES = [
-    {icon:'🚨', label:'জরুরি সতর্কতা', href:'/alert.html'},
-    {icon:'🩸', label:'রক্তদাতা নেটওয়ার্ক', href:'/rokto.html'},
-    {icon:'📺', label:'লাইভ সম্প্রচার', href:'/live.html'},
-    {icon:'🏛️', label:'নেতা ট্র্যাকার', href:'/leader-tracker.html'},
-    {icon:'🚫', label:'দুর্নীতি রিপোর্ট', href:'/legal.html'},
-    {icon:'✊', label:'জুলাই যোদ্ধা', href:'/july-warriors.html'},
-    {icon:'🩹', label:'জুলাই পরিবার সহায়', href:'/july-family.html'},
-    {icon:'🛒', label:'বাজার দর', href:'/bajar.html'},
-    {icon:'💊', label:'ওষুধের দাম', href:'/medicine.html'},
-    {icon:'🌦️', label:'আবহাওয়া', href:'/weather.html'},
-    {icon:'🏥', label:'হাসপাতাল', href:'/hospital.html'},
-    {icon:'⚖️', label:'আইনি সহায়তা', href:'/legal.html'},
-    {icon:'🗳️', label:'জনমত জরিপ', href:'/joaf-polls.html'},
-    {icon:'💼', label:'চাকরি ও বৃত্তি', href:'/jobs.html'},
-    {icon:'💻', label:'ফ্রিল্যান্সিং গাইড', href:'/freelance.html'},
-    {icon:'👩‍💼', label:'নারী উদ্যোক্তা', href:'/women-entrepreneur.html'},
-    {icon:'🚀', label:'যুব উদ্যোক্তা', href:'/youth-startup.html'},
-    {icon:'🌾', label:'কৃষি তথ্যসেবা', href:'/agriculture.html'},
-    {icon:'💬', label:'আলোচনা ফোরাম', href:'/forum.html'},
-    {icon:'📰', label:'সংবাদ', href:'/news.html'},
-    {icon:'🌍', label:'কমিউনিটি নেটওয়ার্ক', href:'/community.html'},
+    {icon:'🚨',label:'জরুরি সতর্কতা',href:'/alert.html'},
+    {icon:'🩸',label:'রক্তদাতা',href:'/rokto.html'},
+    {icon:'📺',label:'লাইভ',href:'/live.html'},
+    {icon:'🏛️',label:'নেতা ট্র্যাকার',href:'/leader-tracker.html'},
+    {icon:'✊',label:'জুলাই যোদ্ধা',href:'/july-warriors.html'},
+    {icon:'🩹',label:'পরিবার সহায়',href:'/july-family.html'},
+    {icon:'🛒',label:'বাজার দর',href:'/bajar.html'},
+    {icon:'💊',label:'ওষুধের দাম',href:'/medicine.html'},
+    {icon:'🌦️',label:'আবহাওয়া',href:'/weather.html'},
+    {icon:'🏥',label:'হাসপাতাল',href:'/hospital.html'},
+    {icon:'⚖️',label:'আইনি সহায়তা',href:'/legal.html'},
+    {icon:'💼',label:'চাকরি',href:'/jobs.html'},
+    {icon:'💻',label:'ফ্রিল্যান্স',href:'/freelance.html'},
+    {icon:'🌾',label:'কৃষি',href:'/agriculture.html'},
+    {icon:'💬',label:'ফোরাম',href:'/forum.html'},
   ];
-
-  const pills = PAGES.map(p =>
-    `<a href="${p.href}" style="display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:50px;font-size:12px;font-weight:700;color:#374151;text-decoration:none;margin:3px;">${p.icon} ${p.label}</a>`
-  ).join('');
+  const pills = PAGES.map(p=>`<a href="${p.href}" style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:50px;font-size:12px;font-weight:700;color:#374151;text-decoration:none;margin:3px;">${p.icon} ${p.label}</a>`).join('');
 
   const wrap = document.createElement('div');
   wrap.id = 'joaf-ios-wrap';
   wrap.innerHTML = `
     <style>
-    #joaf-ios-wrap {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.72);
-      z-index: 999999;
-      display: flex; align-items: center; justify-content: center;
-      padding: 16px;
-      animation: _joaf-fadein .3s ease;
-      overflow-y: auto;
-    }
-    @keyframes _joaf-fadein { from{opacity:0} to{opacity:1} }
-    #joaf-ios-wrap .ii-box {
-      background: #fff; border-radius: 24px;
-      padding: 24px 18px 20px;
-      width: 100%; max-width: 380px;
-      position: relative;
-      box-shadow: 0 20px 60px rgba(0,0,0,.4);
-      max-height: 88vh; overflow-y: auto;
-    }
-    #joaf-ios-wrap .ii-close {
-      position: absolute; top: 14px; right: 14px;
-      width: 30px; height: 30px; border-radius: 50%;
-      background: #f3f4f6; border: none; font-size: 15px;
-      cursor: pointer; display: flex; align-items: center;
-      justify-content: center; color: #6b7280;
-    }
-    #joaf-ios-wrap .ii-logo { width: 56px; height: 56px; border-radius: 14px; margin-bottom: 10px; }
-    #joaf-ios-wrap .ii-title { font-size: 18px; font-weight: 900; color: #1a1a2e; margin-bottom: 4px; }
-    #joaf-ios-wrap .ii-domain { font-size: 13px; color: #90161f; font-weight: 800; text-decoration: none; display: block; margin-bottom: 14px; }
-    #joaf-ios-wrap .ii-pills { margin-bottom: 16px; text-align: left; }
-    #joaf-ios-wrap .ii-btn {
-      width: 100%; padding: 13px;
-      background: linear-gradient(135deg,#90161f,#c0392b);
-      color: #fff; border: none; border-radius: 50px;
-      font-size: 14px; font-weight: 900; font-family: inherit;
-      cursor: pointer;
-    }
+    #joaf-ios-wrap{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
+    #joaf-ios-wrap .ii-box{background:#fff;border-radius:24px;padding:24px 18px 20px;width:100%;max-width:380px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.4);max-height:88vh;overflow-y:auto;}
+    #joaf-ios-wrap .ii-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:#f3f4f6;border:none;font-size:15px;cursor:pointer;color:#6b7280;}
+    #joaf-ios-wrap .ii-btn{width:100%;padding:13px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:12px;}
     </style>
     <div class="ii-box">
       <button class="ii-close" id="ii-close">✕</button>
-      <div style="text-align:center">
-        <img src="/logoc7c3.png" class="ii-logo">
-        <div class="ii-title">📲 JOAF App Install করুন</div>
-        <a href="https://www.julyforum.com" class="ii-domain">🌐 www.julyforum.com</a>
+      <div style="text-align:center;margin-bottom:14px;">
+        <img src="/logoc7c3.png" style="width:56px;height:56px;border-radius:14px;margin-bottom:10px;">
+        <div style="font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:4px;">📲 JOAF App Install করুন</div>
+        <a href="https://www.julyforum.com" style="font-size:13px;color:#90161f;font-weight:800;text-decoration:none;">🌐 www.julyforum.com</a>
       </div>
-      <div class="ii-pills">${pills}</div>
-      <button class="ii-btn" id="ii-safari-btn">🧭 Safari এ খুলুন</button>
+      <div style="margin-bottom:12px;">${pills}</div>
+      <button class="ii-btn" id="ii-install-btn"></button>
     </div>`;
-
   document.body.appendChild(wrap);
 
-  // Update button label based on browser
-  const safariBtn = document.getElementById('ii-safari-btn');
-  if (safariBtn) safariBtn.textContent = _D.isIOSChrome ? '🧭 Safari এ খুলুন' : '📲 Install করুন';
+  const btn = document.getElementById('ii-install-btn');
+  btn.textContent = _D.isIOSChrome ? '🧭 Safari এ খুলুন' : '📲 Install করুন';
 
-  document.getElementById('ii-safari-btn').addEventListener('click', async () => {
+  btn.addEventListener('click', async () => {
     if (_D.isIOSChrome) {
-      // iOS Chrome → open in Safari
       window.location.href = 'x-safari-https://www.julyforum.com';
     } else {
-      // iOS Safari → share sheet → Add to Home Screen
-      try { await navigator.share({ title: 'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url: 'https://www.julyforum.com' }); } catch(e) {}
+      try { await navigator.share({title:'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম',url:'https://www.julyforum.com'}); } catch(e) {}
     }
   });
 
@@ -1686,53 +1479,44 @@ function _joafShowIOSPrompt() {
     wrap.remove();
     setTimeout(_joafShowIOSPrompt, 5000);
   });
+}
 
-  wrap.addEventListener('click', e => {
-    if (e.target === wrap) {
-      wrap.remove();
-      setTimeout(_joafShowIOSPrompt, 5000);
-    }
+// ── Location Prompt ────────────────────────────────────────────
+function _joafShowLocationPrompt() {
+  if (!navigator.geolocation) return;
+  if (document.getElementById('joaf-loc-wrap')) return;
+  if (navigator.permissions) {
+    navigator.permissions.query({name:'geolocation'}).then(r => {
+      if (r.state === 'granted' || r.state === 'denied') return;
+      _joafRenderLocationPrompt();
+    }).catch(() => _joafRenderLocationPrompt());
+  } else {
+    _joafRenderLocationPrompt();
+  }
+}
+function _joafRenderLocationPrompt() {
+  if (document.getElementById('joaf-loc-wrap')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'joaf-loc-wrap';
+  wrap.innerHTML = `
+    <div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99994;width:calc(100% - 32px);max-width:400px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.15);padding:16px 18px;font-family:inherit;border:1.5px solid #e5e7eb;">
+      <button onclick="document.getElementById('joaf-loc-wrap').remove();" style="position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;background:#f3f4f6;border:none;font-size:13px;cursor:pointer;color:#6b7280;">✕</button>
+      <div style="font-size:14px;font-weight:900;color:#1a1a2e;margin-bottom:6px;">📍 Location Allow করুন</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:12px;line-height:1.5;">আপনার এলাকার সতর্কতা, আবহাওয়া, বাজার দর, রক্তদাতা ও হাসপাতাল সঠিকভাবে দেখাতে</div>
+      <button id="jl-allow-btn" style="width:100%;padding:11px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:50px;font-size:13px;font-weight:900;font-family:inherit;cursor:pointer;">📍 Allow করুন</button>
+    </div>`;
+  document.body.appendChild(wrap);
+  document.getElementById('jl-allow-btn').addEventListener('click', () => {
+    wrap.remove();
+    navigator.geolocation.getCurrentPosition(() => {}, () => {});
   });
 }
 
-// ══════════════════════════════════════════════════════════════
-// 5. START — page load এ সব prompt চালু করো
-// ══════════════════════════════════════════════════════════════
+// ── iOS: show on load ──────────────────────────────────────────
 setTimeout(() => {
-  if (_D.isIOS) {
-    // All iOS browsers → iOS prompt (full screen)
-    _joafShowIOSPrompt();
-    return;
-  }
-
-  if (_D.isStandalone) {
-    // PWA installed → push + location only
-    if (!_S.pushGranted && !_S.pushDenied) _joafShowPushPrompt();
-    // Location — always check independently
-    setTimeout(_joafShowLocationPrompt, 500);
-    return;
-  }
-
-  // Normal browser (Android/Desktop)
-  if (!_S.pwaInstalled) {
-    _joafShowInstallPrompt();
-  }
-  // Push prompt — 600ms পরে
-  if (!_S.pushGranted && !_S.pushDenied) {
-    setTimeout(_joafShowPushPrompt, 600);
-  }
-  // Location prompt — push granted কিন্তু location না, OR push already granted আগে
-  // সবসময় check করো — push এর উপর depend না
+  if (_D.isIOS && !_D.isStandalone) _joafShowIOSPrompt();
   setTimeout(_joafShowLocationPrompt, 1200);
 }, 1000);
-
-// Fallback: beforeinstallprompt never fired
-setTimeout(() => {
-  if (_D.isIOS || _D.isStandalone || _S.pwaInstalled) return;
-  if (localStorage.getItem('joaf-pwa-installed')) return;
-  if (!window._deferredPWA) _joafShowInstallPrompt();
-}, 1500);
-
 
 
 // Auto cache-bust for dynamic JS files
