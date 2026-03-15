@@ -255,7 +255,7 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .person-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:all var(--tr);height:100%;}
 .person-card:hover{transform:translateY(-7px);box-shadow:var(--shadow-lg);}
 .person-card .card-img-wrap{height:240px;overflow:hidden;position:relative;}
-.person-card .card-img-wrap img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .5s ease;filter:brightness(1.04);}
+.person-card .card-img-wrap img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .5s ease;filter:brightness(1.04);}
 .person-card:hover .card-img-wrap img{transform:scale(1.07);}
 .person-card .card-info{padding:16px;}
 .person-card .card-info h3{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--brand);}
