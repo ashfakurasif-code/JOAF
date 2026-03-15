@@ -1420,23 +1420,26 @@ function _joafShowInstallPrompt() {
   document.getElementById('ji-install').addEventListener('click', async () => {
     if (window._deferredPWA) {
       // Chromium browsers — direct install
-      wrap.remove();
-      window._deferredPWA.prompt();
       try {
+        await window._deferredPWA.prompt();
         const { outcome } = await window._deferredPWA.userChoice;
         if (outcome === 'accepted') {
           _S.pwaInstalled = true;
           localStorage.setItem('joaf-pwa-installed', '1');
+          wrap.remove();
         }
-      } catch(e) {}
+        // Reset so it can be used again if user dismissed
+        window._deferredPWA = null;
+      } catch(e) {
+        // prompt() failed - might be already used
+        // Re-capture on next beforeinstallprompt
+      }
     } else if (_D.isIOSSafari) {
       // iOS Safari — share sheet
-      wrap.remove();
-      try { await navigator.share({ title: 'JOAF', url: 'https://www.julyforum.com' }); } catch(e) {}
+      try { await navigator.share({ title: 'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url: 'https://www.julyforum.com' }); } catch(e) {}
     } else if (_D.isSafari || _D.isFirefox) {
-      // MacOS Safari / Firefox — share sheet try
-      wrap.remove();
-      try { await navigator.share({ title: 'JOAF', url: 'https://www.julyforum.com' }); } catch(e) {}
+      // MacOS Safari / Firefox — share sheet
+      try { await navigator.share({ title: 'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url: 'https://www.julyforum.com' }); } catch(e) {}
     }
   });
 
@@ -1769,9 +1772,8 @@ setTimeout(() => {
   if (_D.isStandalone) {
     // PWA installed → push + location only
     if (!_S.pushGranted && !_S.pushDenied) _joafShowPushPrompt();
-    else if (_S.pushGranted && !_S.locationGranted) {
-      setTimeout(_joafShowLocationPrompt, 500);
-    }
+    // Location — always check independently
+    setTimeout(_joafShowLocationPrompt, 500);
     return;
   }
 
@@ -1779,14 +1781,13 @@ setTimeout(() => {
   if (!_S.pwaInstalled) {
     _joafShowInstallPrompt();
   }
-  // Push prompt — 600ms পরে (install prompt এর নিচে)
+  // Push prompt — 600ms পরে
   if (!_S.pushGranted && !_S.pushDenied) {
     setTimeout(_joafShowPushPrompt, 600);
   }
-  // Location prompt — 1200ms পরে (push এর নিচে)
-  if (_S.pushGranted && !_S.locationGranted) {
-    setTimeout(_joafShowLocationPrompt, 1200);
-  }
+  // Location prompt — push granted কিন্তু location না, OR push already granted আগে
+  // সবসময় check করো — push এর উপর depend না
+  setTimeout(_joafShowLocationPrompt, 1200);
 }, 1000);
 
 // Fallback: beforeinstallprompt never fired
