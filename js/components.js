@@ -6,6 +6,12 @@
 // ✅ Ticker: responsive speed
 // ✅ Mobile nav: slide-in panel, guaranteed
 
+// ── Capture beforeinstallprompt immediately at script load ──
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  window._deferredPWA = e;
+});
+
 const JOAFComponents = {
 
   renderHeader(activePage) {
@@ -877,26 +883,65 @@ const JOAFComponents = {
   initPWAPrompt() {
     if (localStorage.getItem('joaf-pwa-dismissed')) return;
     if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (_D && _D.isIOS) return; // iOS handled separately
     const p = JOAF.pwaPrompt;
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      window._deferredPWA = e;
+
+    const _showPrompt = () => {
+      if (document.getElementById('joaf-pwa-prompt')) return;
       const el = document.createElement('div');
       el.id = 'joaf-pwa-prompt';
       el.innerHTML = `
-        <div style="position:fixed;bottom:0;left:0;right:0;z-index:99998;background:#0d0d1a;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,.4);">
-          <img src="/logoc7c3.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;">
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:14px;font-weight:900;margin-bottom:3px;">${p.title}</div>
-            <div style="font-size:11px;color:#9ca3af;line-height:1.4;">${p.body}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-            <button onclick="window._deferredPWA&&window._deferredPWA.prompt();document.getElementById('joaf-pwa-prompt').remove();" style="background:#90161f;color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap;">${p.install}</button>
-            <button onclick="localStorage.setItem('joaf-pwa-dismissed','1');document.getElementById('joaf-pwa-prompt').remove();" style="background:transparent;color:#6b7280;border:none;font-size:11px;font-family:inherit;cursor:pointer;">${p.later}</button>
+        <style>
+        #joaf-pwa-prompt-overlay{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;}
+        #joaf-pwa-prompt-box{background:#fff;border-radius:20px;padding:24px 20px;width:100%;max-width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+        #joaf-pwa-prompt-box img{width:64px;height:64px;border-radius:16px;margin-bottom:12px;}
+        #joaf-pwa-prompt-box .jp-title{font-size:17px;font-weight:900;color:#1a1a2e;margin-bottom:6px;}
+        #joaf-pwa-prompt-box .jp-body{font-size:12px;color:#6b7280;line-height:1.6;margin-bottom:18px;}
+        #joaf-pwa-prompt-box .jp-install{width:100%;padding:13px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-bottom:8px;}
+        #joaf-pwa-prompt-box .jp-later{background:transparent;color:#9ca3af;border:none;font-size:12px;font-family:inherit;cursor:pointer;}
+        </style>
+        <div id="joaf-pwa-prompt-overlay">
+          <div id="joaf-pwa-prompt-box">
+            <img src="/logoc7c3.png">
+            <div class="jp-title">${p.title}</div>
+            <div class="jp-body">${p.body}</div>
+            <button class="jp-install" onclick="window._joafInstallClick();">${p.install}</button><br>
+            <button class="jp-later" onclick="localStorage.setItem('joaf-pwa-dismissed','1');document.getElementById('joaf-pwa-prompt').remove();setTimeout(()=>{localStorage.removeItem('joaf-pwa-dismissed');},300000);">${p.later}</button>
           </div>
         </div>`;
       document.body.appendChild(el);
-    });
+    };
+
+    // Install click — device aware
+    window._joafInstallClick = async () => {
+      document.getElementById('joaf-pwa-prompt')?.remove();
+      const d = (typeof _D !== 'undefined') ? _D : {};
+      if (window._deferredPWA) {
+        // Chrome/Edge/Samsung/Opera/Brave on Android, Windows, MacOS
+        window._deferredPWA.prompt();
+        try {
+          const {outcome} = await window._deferredPWA.userChoice;
+          if (outcome === 'accepted') localStorage.setItem('joaf-pwa-installed','1');
+        } catch(e) {}
+      } else if (d.isIOSChrome) {
+        window.location.href = 'x-safari-https://www.julyforum.com';
+      } else {
+        // iOS Safari, MacOS Safari, Firefox — share sheet
+        try { await navigator.share({title:'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url:'https://www.julyforum.com'}); } catch(e) {}
+      }
+    };
+
+    // If event already captured (top-level listener), show immediately
+    if (window._deferredPWA) {
+      _showPrompt();
+    } else {
+      // Listen for it in case it fires after 2s
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        window._deferredPWA = e;
+        _showPrompt();
+      });
+    }
   },
 
   // ── Push Notification Permission Prompt ───────────────────
@@ -926,22 +971,26 @@ const JOAFComponents = {
       try {
         const perm = await Notification.requestPermission();
         if (perm === 'granted') {
-          // Send welcome push
-          const reg = await navigator.serviceWorker.ready;
-          const msg = JOAF.pushMessages.welcome;
-          reg.showNotification(msg.title, {
-            body: msg.body,
-            icon: '/logoc7c3.png',
-            badge: '/logoc7c3.png',
-            vibrate: [200,100,200],
-            data: { url: '/' }
-          });
+          joafSubscribePush();
+          try {
+            const reg = await navigator.serviceWorker.ready;
+            reg.showNotification('✅ Notification চালু হয়েছে!', {
+              body: 'JOAF এর সতর্কতা ও খবর এখন থেকে পাবেন।',
+              icon: '/logoc7c3.png', badge: '/logoc7c3.png', vibrate: [200,100,200]
+            });
+          } catch(e) {}
+          // Location permission — push allow এর পরেই চাইবে
+          setTimeout(_joafShowLocationPrompt, 500);
         }
       } catch(e) {}
     };
     document.getElementById('joaf-push-skip').onclick = () => {
-      localStorage.setItem('joaf-push-dismissed','1');
       el.remove();
+      setTimeout(() => {
+        if (Notification.permission === 'default') {
+          if (typeof JOAFComponents !== 'undefined') JOAFComponents.initPushPrompt();
+        }
+      }, 5000);
     };
   },
 
