@@ -1371,17 +1371,30 @@ function _joafRenderLocationPrompt(info) {
 })();
 
 // ── Capture beforeinstallprompt immediately (before any timeout) ──
-// Must be at top level — event fires early, before setTimeout callbacks
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   window._deferredPWA = e;
-  // Show prompt immediately if not iOS and not standalone
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
   if (!isIOS && !isStandalone) {
     setTimeout(() => window._joafShowInstallPrompt(), 1000);
   }
 });
+
+// ── Fallback: if beforeinstallprompt never fires (e.g. after uninstall)
+// Show install prompt anyway after 1.5s — user can still install manually
+window.addEventListener('appinstalled', () => {
+  window._joafPWAInstalled = true;
+});
+
+setTimeout(() => {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (isIOS || isStandalone || window._joafPWAInstalled) return;
+  // Show fallback install prompt even without deferredPWA
+  window._joafShowInstallPrompt();
+}, 1500);
 
 function _joafInit(){
   const page=(document.body&&document.body.dataset.page)||window.location.pathname.split('/').pop().replace('.html','').replace('/','')|| 'home';
@@ -1644,9 +1657,15 @@ window._joafShowInstallPrompt = function() {
   document.getElementById('ji-install-btn').addEventListener('click', async () => {
     wrap.remove();
     if (window._deferredPWA) {
+      // Normal install flow
       window._deferredPWA.prompt();
-      const { outcome } = await window._deferredPWA.userChoice;
-      if (outcome === 'accepted') window._joafPWAInstalled = true;
+      try {
+        const { outcome } = await window._deferredPWA.userChoice;
+        if (outcome === 'accepted') window._joafPWAInstalled = true;
+      } catch(e) {}
+    } else {
+      // beforeinstallprompt didn't fire — guide user to Chrome's "Open in app"
+      alert('Chrome এ Install করতে:\n\nAddress bar এর ডানে "Open in app" বা ⊕ icon এ click করুন।\n\nঅথবা Chrome Menu (⋮) → "Install JOAF" এ click করুন।');
     }
   });
 
