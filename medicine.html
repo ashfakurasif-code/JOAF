@@ -12,6 +12,7 @@
 <style>
 .med-hero{background:linear-gradient(135deg,#1e3a5f,#0369a1);padding:36px 0 24px;color:#fff;text-align:center;}
 .med-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
+.med-hero p{font-size:13px;opacity:.85;margin-top:4px;}
 .search-box{display:flex;gap:8px;margin-bottom:12px;}
 .search-box input{flex:1;padding:12px 16px;border:2px solid #e5e7eb;border-radius:50px;font-size:14px;font-family:inherit;outline:none;}
 .search-box input:focus{border-color:#0369a1;}
@@ -30,11 +31,27 @@
 .tip-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:14px;padding:14px;margin-bottom:16px;border:1.5px solid #93c5fd;}
 .tip-card h4{font-size:13px;font-weight:800;color:#1e40af;margin-bottom:8px;}
 .tip-item{font-size:12px;color:#1e3a8a;margin-bottom:5px;display:flex;gap:6px;}
+/* Loading */
+.loading-state{text-align:center;padding:60px 20px;}
+.loading-spinner{width:48px;height:48px;border:4px solid #e5e7eb;border-top-color:#0369a1;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:#6b7280;font-weight:600;}
+.loading-sub{font-size:12px;color:#9ca3af;margin-top:6px;}
+/* AI badge */
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:50px;font-size:11px;font-weight:700;margin-top:8px;}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:#60a5fa;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* Error */
+.error-box{background:#fef2f2;border:1.5px solid #fecaca;border-radius:14px;padding:16px;text-align:center;margin:20px 0;}
+.retry-btn{margin-top:10px;padding:8px 20px;background:#0369a1;color:#fff;border:none;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 </style>
+
 <div class="med-hero"><div class="container">
   <h1>💊 ওষুধের দাম</h1>
   <p>Generic বিকল্পে সাশ্রয় করুন</p>
+  <div class="ai-badge"><span class="ai-dot"></span> AI দিয়ে আপডেট</div>
 </div></div>
+
 <section class="section"><div class="container">
   <div class="tip-card">
     <h4>💡 স্বাস্থ্যসম্মত সাশ্রয়ের টিপস</h4>
@@ -44,17 +61,53 @@
     <div class="tip-item"><span>⚠️</span><span>নিজে নিজে ওষুধ না খেয়ে ডাক্তারের পরামর্শ নিন</span></div>
   </div>
   <div class="search-box">
-    <input id="medSearch" placeholder="ওষুধের নাম বা রোগ..." oninput="filterMeds()">
+    <input id="medSearch" placeholder="ওষুধের নাম বা রোগ..." oninput="window._filterMeds()">
   </div>
   <div class="cat-tabs" id="catTabs"></div>
-  <div id="medList"></div>
+  <div id="medList">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">ওষুধের সর্বশেষ দাম আনা হচ্ছে...</div>
+      <div class="loading-sub">AI দিয়ে আপডেট করা হচ্ছে</div>
+    </div>
+  </div>
 </div></section>
+
 <div id="joaf-footer"></div>
 <script src="/js/modernizr-2.8.3.min.js"></script>
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
-<script>
-const MEDS=[
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const FB_CONFIG = {
+  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
+  authDomain: "joaf-app-45753.firebaseapp.com",
+  projectId: "joaf-app-45753",
+  storageBucket: "joaf-app-45753.firebasestorage.app",
+  messagingSenderId: "472362223214",
+  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
+};
+
+const GROQ_KEY = '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';
+
+const fbApp = getApps().length ? getApps()[0] : initializeApp(FB_CONFIG);
+const db = getFirestore(fbApp);
+
+function bn(n) { return String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]); }
+
+function todayKey() {
+  const d = new Date();
+  return `med_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+const CATS = ['সব','জ্বর ও ব্যথা','গ্যাস্ট্রিক','পেটের রোগ','অ্যান্টিবায়োটিক','হৃদরোগ','উচ্চ রক্তচাপ','ডায়াবেটিস','অ্যালার্জি','ভিটামিন'];
+let activeCat = 'সব';
+let MEDS = [];
+
+const FALLBACK_MEDS = [
   {name:'Napa / Ace',generic:'Paracetamol 500mg',cat:'জ্বর ও ব্যথা',brandPrice:1.5,genericPrice:0.5,use:'জ্বর, মাথাব্যথা, সর্দি'},
   {name:'Seclo / Omeprazole',generic:'Omeprazole 20mg',cat:'গ্যাস্ট্রিক',brandPrice:5,genericPrice:2,use:'গ্যাস্ট্রিক, বুক জ্বালা'},
   {name:'Amodis / Metronidazole',generic:'Metronidazole 400mg',cat:'পেটের রোগ',brandPrice:3,genericPrice:1,use:'পেটের সংক্রমণ, ডায়রিয়া'},
@@ -66,25 +119,25 @@ const MEDS=[
   {name:'Calcium + D3',generic:'Calcium Carbonate 500mg',cat:'ভিটামিন',brandPrice:8,genericPrice:3,use:'হাড়ের শক্তি'},
   {name:'ORS / Saline',generic:'Oral Rehydration Salt',cat:'পেটের রোগ',brandPrice:15,genericPrice:5,use:'ডায়রিয়া, পানিশূন্যতা'},
 ];
-const CATS=['সব','জ্বর ও ব্যথা','গ্যাস্ট্রিক','পেটের রোগ','অ্যান্টিবায়োটিক','হৃদরোগ','উচ্চ রক্তচাপ','ডায়াবেটিস','অ্যালার্জি','ভিটামিন'];
-let activeCat='সব';
-function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
-function renderTabs(){
-  document.getElementById('catTabs').innerHTML=CATS.map(c=>
-    `<button class="cat-tab${c===activeCat?' active':''}" onclick="setCat('${c}')">${c}</button>`
+
+function renderTabs() {
+  document.getElementById('catTabs').innerHTML = CATS.map(c =>
+    `<button class="cat-tab${c===activeCat?' active':''}" onclick="window._setCat('${c}')">${c}</button>`
   ).join('');
 }
-function setCat(c){activeCat=c;filterMeds();}
-function filterMeds(){
+
+window._setCat = function(c) { activeCat = c; window._filterMeds(); };
+
+window._filterMeds = function() {
   renderTabs();
-  const q=document.getElementById('medSearch').value.toLowerCase();
-  const list=MEDS.filter(m=>{
-    const mQ=!q||m.name.toLowerCase().includes(q)||m.generic.toLowerCase().includes(q)||m.use.includes(q);
-    const mC=activeCat==='সব'||m.cat===activeCat;
-    return mQ&&mC;
+  const q = document.getElementById('medSearch')?.value?.toLowerCase() || '';
+  const list = MEDS.filter(m => {
+    const mQ = !q || m.name.toLowerCase().includes(q) || m.generic.toLowerCase().includes(q) || m.use.includes(q);
+    const mC = activeCat === 'সব' || m.cat === activeCat;
+    return mQ && mC;
   });
-  const save=m=>Math.round((1-m.genericPrice/m.brandPrice)*100);
-  document.getElementById('medList').innerHTML=list.length?list.map(m=>`
+  const save = m => Math.round((1 - m.genericPrice / m.brandPrice) * 100);
+  document.getElementById('medList').innerHTML = list.length ? list.map(m => `
     <div class="med-card">
       <div class="med-name">${m.name}</div>
       <div class="med-generic">Generic: ${m.generic}</div>
@@ -94,8 +147,115 @@ function filterMeds(){
         <div class="med-generic-price">Generic: <span>৳${bn(m.genericPrice)}/টি</span></div>
         <span class="med-save">${bn(save(m))}% সাশ্রয়</span>
       </div>
-    </div>`).join(''):'<div style="text-align:center;padding:40px;color:#9ca3af;">কোনো ওষুধ পাওয়া যায়নি</div>';
+    </div>`).join('') : '<div style="text-align:center;padding:40px;color:#9ca3af;">কোনো ওষুধ পাওয়া যায়নি</div>';
+};
+
+async function fetchFromGroq() {
+  const today = new Date();
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+
+  const prompt = `আজকের তারিখ ${dateStr}। বাংলাদেশে সাধারণ ওষুধের বর্তমান বাজার দাম web search করে খুঁজে বের করো।
+
+নিচের format এ JSON array return করো, শুধু JSON, অন্য কিছু না:
+
+[
+  {"name":"Napa / Ace","generic":"Paracetamol 500mg","cat":"জ্বর ও ব্যথা","brandPrice":1.5,"genericPrice":0.5,"use":"জ্বর, মাথাব্যথা, সর্দি"},
+  {"name":"Seclo / Omeprazole","generic":"Omeprazole 20mg","cat":"গ্যাস্ট্রিক","brandPrice":5,"genericPrice":2,"use":"গ্যাস্ট্রিক, বুক জ্বালা"},
+  {"name":"Amodis / Metronidazole","generic":"Metronidazole 400mg","cat":"পেটের রোগ","brandPrice":3,"genericPrice":1,"use":"পেটের সংক্রমণ, ডায়রিয়া"},
+  {"name":"Fimoxyl / Amoxicillin","generic":"Amoxicillin 500mg","cat":"অ্যান্টিবায়োটিক","brandPrice":8,"genericPrice":3,"use":"ব্যাকটেরিয়াজনিত সংক্রমণ"},
+  {"name":"Atova / Atorvastatin","generic":"Atorvastatin 10mg","cat":"হৃদরোগ","brandPrice":12,"genericPrice":4,"use":"কোলেস্টেরল নিয়ন্ত্রণ"},
+  {"name":"Losarco / Losartan","generic":"Losartan 50mg","cat":"উচ্চ রক্তচাপ","brandPrice":10,"genericPrice":3.5,"use":"উচ্চ রক্তচাপ"},
+  {"name":"Metformin / Glucomin","generic":"Metformin 500mg","cat":"ডায়াবেটিস","brandPrice":4,"genericPrice":1.5,"use":"টাইপ ২ ডায়াবেটিস"},
+  {"name":"Cetirizine / Alercet","generic":"Cetirizine 10mg","cat":"অ্যালার্জি","brandPrice":5,"genericPrice":1.5,"use":"অ্যালার্জি, চুলকানি"},
+  {"name":"Calcium + D3","generic":"Calcium Carbonate 500mg","cat":"ভিটামিন","brandPrice":8,"genericPrice":3,"use":"হাড়ের শক্তি"},
+  {"name":"ORS / Saline","generic":"Oral Rehydration Salt","cat":"পেটের রোগ","brandPrice":15,"genericPrice":5,"use":"ডায়রিয়া, পানিশূন্যতা"},
+  {"name":"Azithromycin / Zimax","generic":"Azithromycin 500mg","cat":"অ্যান্টিবায়োটিক","brandPrice":45,"genericPrice":18,"use":"শ্বাসতন্ত্রের সংক্রমণ"},
+  {"name":"Amlodipine / Amlovas","generic":"Amlodipine 5mg","cat":"উচ্চ রক্তচাপ","brandPrice":8,"genericPrice":2.5,"use":"উচ্চ রক্তচাপ, বুকে ব্যথা"},
+  {"name":"Pantoprazole / Pantonix","generic":"Pantoprazole 40mg","cat":"গ্যাস্ট্রিক","brandPrice":12,"genericPrice":4,"use":"গ্যাস্ট্রিক আলসার"},
+  {"name":"Vitamin C / Ascorbin","generic":"Ascorbic Acid 500mg","cat":"ভিটামিন","brandPrice":3,"genericPrice":1,"use":"রোগ প্রতিরোধ, সর্দি"},
+  {"name":"Ibuprofen / Profen","generic":"Ibuprofen 400mg","cat":"জ্বর ও ব্যথা","brandPrice":4,"genericPrice":1.5,"use":"ব্যথা, জ্বর, প্রদাহ"}
+]
+
+নিয়ম:
+- brandPrice এবং genericPrice সব সংখ্যা (প্রতি ট্যাবলেট/ক্যাপসুলের দাম টাকায়)
+- cat শুধু এগুলো থেকে: জ্বর ও ব্যথা, গ্যাস্ট্রিক, পেটের রোগ, অ্যান্টিবায়োটিক, হৃদরোগ, উচ্চ রক্তচাপ, ডায়াবেটিস, অ্যালার্জি, ভিটামিন
+- বাংলাদেশের বর্তমান বাজার দর দাও
+- শুধু JSON array, অন্য কিছু না`;
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + GROQ_KEY
+    },
+    body: JSON.stringify({
+      model: 'compound-beta-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.2,
+      max_tokens: 2000
+    })
+  });
+
+  if (!res.ok) throw new Error('Groq API failed: ' + res.status);
+  const data = await res.json();
+  let txt = data.choices?.[0]?.message?.content || '';
+  txt = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  const match = txt.match(/\[[\s\S]*\]/);
+  if (!match) throw new Error('No JSON array in response');
+  const meds = JSON.parse(match[0]);
+  if (!Array.isArray(meds) || meds.length < 5) throw new Error('Too few meds');
+  return meds;
 }
-renderTabs();filterMeds();
-</script><script src="/js/rainbow-swirl-cursor.js" defer></script>
+
+async function loadMeds() {
+  const cacheKey = todayKey();
+
+  // 1. Try Firebase cache
+  try {
+    const snap = await getDoc(doc(db, 'med_cache', cacheKey));
+    if (snap.exists()) {
+      const cached = snap.data();
+      if (cached.data && Array.isArray(cached.data) && cached.data.length >= 5) {
+        MEDS = cached.data;
+        renderTabs();
+        window._filterMeds();
+        return;
+      }
+    }
+  } catch(e) {
+    console.log('Firebase cache miss:', e);
+  }
+
+  // 2. Fetch from Groq
+  try {
+    const freshMeds = await fetchFromGroq();
+    MEDS = freshMeds;
+    renderTabs();
+    window._filterMeds();
+
+    // 3. Save to Firebase
+    try {
+      await setDoc(doc(db, 'med_cache', cacheKey), {
+        data: freshMeds,
+        fetchedAt: serverTimestamp()
+      });
+    } catch(e) {
+      console.log('Firebase save failed:', e);
+    }
+
+  } catch(e) {
+    console.warn('Groq failed, using fallback:', e);
+    MEDS = FALLBACK_MEDS;
+    document.getElementById('medList').innerHTML = `
+      <div style="background:#fef3c7;border:1.5px solid #fbbf24;border-radius:14px;padding:12px;margin-bottom:12px;text-align:center;font-size:12px;color:#92400e;font-weight:700;">
+        ⚠️ সর্বশেষ দাম আনতে সমস্যা হয়েছে — পুরনো তথ্য দেখানো হচ্ছে
+      </div>`;
+    renderTabs();
+    window._filterMeds();
+  }
+}
+
+loadMeds();
+</script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
 </body></html>
