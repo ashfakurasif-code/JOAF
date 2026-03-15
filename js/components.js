@@ -1419,45 +1419,24 @@ function _joafShowInstallPrompt() {
   // Install button
   document.getElementById('ji-install').addEventListener('click', async () => {
     if (window._deferredPWA) {
-      // Chromium browsers — direct install
+      // Chromium (Chrome/Edge/Samsung) — direct install
       try {
-        await window._deferredPWA.prompt();
+        window._deferredPWA.prompt();
         const { outcome } = await window._deferredPWA.userChoice;
         if (outcome === 'accepted') {
           _S.pwaInstalled = true;
           localStorage.setItem('joaf-pwa-installed', '1');
           wrap.remove();
         }
-        // Reset so it can be used again if user dismissed
-        window._deferredPWA = null;
-      } catch(e) {
-        // prompt() failed - might be already used
-        // Re-capture on next beforeinstallprompt
-      }
+      } catch(e) {}
     } else if (_D.isIOSSafari) {
-      // iOS Safari — share sheet
-      try { await navigator.share({ title: 'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url: 'https://www.julyforum.com' }); } catch(e) {}
+      // iOS Safari — share sheet → Add to Home Screen
+      try { await navigator.share({ title: 'JOAF', url: 'https://www.julyforum.com' }); } catch(e) {}
     } else if (_D.isSafari || _D.isFirefox) {
       // MacOS Safari / Firefox — share sheet
-      try { await navigator.share({ title: 'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url: 'https://www.julyforum.com' }); } catch(e) {}
-    } else {
-      // _deferredPWA not available — show toast pointing to browser's own install
-      const btn = document.getElementById('ji-install');
-      if (btn) {
-        btn.textContent = '⬆️ Browser Menu থেকে Install করুন';
-        btn.style.background = 'linear-gradient(135deg,#374151,#1f2937)';
-        btn.style.fontSize = '12px';
-      }
-      // Show a small toast below button
-      const toast = document.createElement('div');
-      toast.style.cssText = 'text-align:center;font-size:11px;color:#6b7280;margin-top:8px;padding:0 8px;';
-      toast.textContent = 'Chrome Menu (⋮) → "Install JOAF" অথবা Address bar এর Install icon এ click করুন';
-      const existing = wrap.querySelector('.ji-toast');
-      if (!existing) {
-        toast.className = 'ji-toast';
-        wrap.querySelector('.ji-btn') && wrap.querySelector('.ji-btn').parentNode.appendChild(toast);
-      }
+      try { await navigator.share({ title: 'JOAF', url: 'https://www.julyforum.com' }); } catch(e) {}
     }
+    // else: _deferredPWA not fired yet — do nothing, wait for it
   });
 
   // Close
@@ -1483,10 +1462,10 @@ function _joafShowPushPrompt() {
     <style>
     #joaf-push-wrap {
       position: fixed;
-      bottom: 200px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 99996;
+      z-index: 99998;
       width: calc(100% - 32px);
       max-width: 400px;
       background: #0d0d1a;
@@ -1603,7 +1582,7 @@ function _joafRenderLocationPrompt() {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 99995;
+      z-index: 99994;
       width: calc(100% - 32px);
       max-width: 400px;
       background: #fff;
