@@ -346,7 +346,19 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
       createdAt: serverTimestamp()
     });
 
-    alert('✅ সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
+    // Admin email notification via EmailJS (components.js এ defined)
+    if (typeof joafSendAdminEmail === 'function') {
+      joafSendAdminEmail({
+        type: selectedType,
+        title,
+        desc: description,
+        location,
+        photo: imageUrl || 'কোনো ছবি নেই',
+        reporter: reporter || 'অজ্ঞাত',
+      }).catch(()=>{});
+    }
+
+    alert('\u2705 সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
     closeModal();
     document.getElementById('f_title').value = '';
     document.getElementById('f_desc').value = '';
