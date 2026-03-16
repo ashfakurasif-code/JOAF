@@ -465,7 +465,18 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <div class="field"><label>সম্পূর্ণ বিষয়বস্তু</label><textarea id="pr-content" style="min-height:140px" placeholder="বিস্তারিত লিখুন..."></textarea></div>
           <div class="field-2">
             <div class="field"><label>তারিখ</label><input type="date" id="pr-date"></div>
-            <div class="field"><label>Image URL</label><input type="text" id="pr-img" placeholder="/img/press-release.jpg"></div>
+            <div class="field">
+            <label>Image URL</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="pr-img" placeholder="/img/press-release.jpg" style="flex:1">
+              <label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:8px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;transition:.15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text2)'">
+                📁 Upload
+                <input type="file" accept="image/*" style="display:none" onchange="inlineUpload(this,'pr-img','img')">
+              </label>
+            </div>
+            <div id="pr-img-preview" style="margin-top:6px;display:none"><img id="pr-img-preview-img" style="max-height:80px;border-radius:7px;border:1px solid var(--border)"></div>
+            <div id="pr-img-progress" style="display:none;margin-top:5px"><div style="background:var(--bg4);border-radius:50px;height:3px"><div id="pr-img-bar" style="height:100%;background:var(--accent);border-radius:50px;width:0%;transition:width .3s"></div></div><div id="pr-img-status" style="font-size:10px;color:var(--text2);margin-top:3px"></div></div>
+          </div>
           </div>
           <div class="btn-row mt12">
             <button class="btn btn-primary" onclick="addPressRelease()">📢 Publish করুন</button>
@@ -720,6 +731,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
     <div class="field"><label>গল্প / বিবরণ</label><textarea id="wr-story"></textarea></div>
     <div class="field"><label>Icon (emoji)</label><input type="text" id="wr-icon" placeholder="✊" maxlength="2"></div>
+    <div class="field">
+      <label>Photo URL (optional)</label>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="wr-photo" placeholder="/members/name.jpg" style="flex:1">
+        <label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:8px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;" >
+          📁 Upload
+          <input type="file" accept="image/*" style="display:none" onchange="inlineUpload(this,'wr-photo','members')">
+        </label>
+      </div>
+      <div id="wr-photo-progress" style="display:none;margin-top:5px"><div style="background:var(--bg4);border-radius:50px;height:3px"><div id="wr-photo-bar" style="height:100%;background:var(--accent);border-radius:50px;width:0%;transition:width .3s"></div></div><div id="wr-photo-status" style="font-size:10px;color:var(--text2);margin-top:3px"></div></div>
+    </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeModal('warriorModal')">বাতিল</button>
       <button class="btn btn-primary" onclick="saveWarrior()">💾 Save করুন</button>
@@ -739,7 +761,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="field"><label>বিভাগ</label>
         <select id="mb-cat"><option value="organizer">সংগঠক</option><option value="advisor">উপদেষ্টা</option><option value="coalition">জোট</option></select>
       </div>
-      <div class="field"><label>Image URL</label><input type="text" id="mb-img" placeholder="/members/name.png"></div>
+      <div class="field">
+        <label>Image URL</label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="mb-img" placeholder="/members/name.png" style="flex:1">
+          <label style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:8px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;">
+            📁 Upload
+            <input type="file" accept="image/*" style="display:none" onchange="inlineUpload(this,'mb-img','members')">
+          </label>
+        </div>
+        <div id="mb-img-progress" style="display:none;margin-top:5px"><div style="background:var(--bg4);border-radius:50px;height:3px"><div id="mb-img-bar" style="height:100%;background:var(--accent);border-radius:50px;width:0%;transition:width .3s"></div></div><div id="mb-img-status" style="font-size:10px;color:var(--text2);margin-top:3px"></div></div>
+      </div>
     </div>
     <div class="field"><label>Facebook URL</label><input type="text" id="mb-fb" placeholder="https://facebook.com/..."></div>
     <div class="modal-btns">
@@ -1493,6 +1525,60 @@ function toast(msg, type='success') {
 }
 
 // ── File Upload via GitHub API ──────────────────────────
+// ── Inline Upload (image URL field এর পাশে) ──────────────
+window.inlineUpload = async function(input, targetFieldId, folder) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const progressEl = document.getElementById(targetFieldId.replace('-','_').split('_')[0]+'-'+targetFieldId.split('-').slice(1).join('-')+'-progress') ||
+                     document.getElementById(targetFieldId+'-progress');
+  const barEl    = progressEl?.querySelector('[id$="-bar"]') || progressEl?.querySelector('div > div');
+  const statusEl = progressEl?.querySelector('[id$="-status"]') || progressEl?.querySelector('div + div');
+
+  // Show preview for press release image
+  if (targetFieldId === 'pr-img') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const prev = document.getElementById('pr-img-preview');
+      const prevImg = document.getElementById('pr-img-preview-img');
+      if (prev && prevImg) { prevImg.src = e.target.result; prev.style.display = 'block'; }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  if (progressEl) { progressEl.style.display = 'block'; if(barEl) barEl.style.width='30%'; if(statusEl) statusEl.textContent='Uploading...'; }
+
+  try {
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    if(barEl) barEl.style.width='60%';
+
+    const res = await fetch('/.netlify/functions/github-upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify({ filename: file.name, content: base64, folder, message: `Admin upload: ${file.name}` })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+    if(barEl) barEl.style.width='100%';
+    if(statusEl) { statusEl.textContent = '✅ Uploaded! Deploying...'; statusEl.style.color = 'var(--green)'; }
+
+    // Set URL in target field
+    document.getElementById(targetFieldId).value = data.url;
+    toast('✅ '+file.name+' uploaded!','success');
+  } catch(e) {
+    if(statusEl) { statusEl.textContent = '❌ '+e.message; statusEl.style.color = 'var(--red)'; }
+    toast('❌ Upload failed: '+e.message,'error');
+  }
+};
+
 window.previewFile = function(input) {
   const file = input.files[0];
   if (!file) return;
