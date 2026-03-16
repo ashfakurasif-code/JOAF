@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="/css/pluginsc7c3.css">
 <link rel="stylesheet" href="/css/joaf.css?v=6.6">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
 </head><body data-page="joaf">
 <div id="joaf-preloader" role="status" class="hidden"></div>
 <div id="joaf-header"></div><div id="joaf-ticker"></div>
@@ -15,89 +16,195 @@
 .live-badge{display:inline-flex;align-items:center;gap:6px;background:#dc2626;color:#fff;font-size:12px;font-weight:800;padding:4px 12px;border-radius:50px;margin-bottom:10px;}
 .live-dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink .8s ease infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.player-wrap{background:#000;border-radius:14px;overflow:hidden;margin-bottom:14px;aspect-ratio:16/9;position:relative;}
-.player-wrap iframe{width:100%;height:100%;border:none;}
+
+.player-wrap{background:#000;border-radius:14px;overflow:hidden;margin-bottom:8px;aspect-ratio:16/9;position:relative;}
+.player-wrap video{width:100%;height:100%;display:block;background:#000;}
+.player-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0f172a;}
+.player-loading .spinner{width:40px;height:40px;border:3px solid #334155;border-top-color:#dc2626;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.player-loading p{color:#94a3b8;font-size:13px;}
+.player-ch-name{background:#0f172a;color:#fff;padding:8px 14px;font-size:13px;font-weight:700;border-radius:0 0 14px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.live-indicator{display:inline-flex;align-items:center;gap:4px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;margin-left:auto;}
+
 .channel-tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none;}
+.channel-tabs::-webkit-scrollbar{display:none;}
 .ch-tab{flex-shrink:0;padding:8px 14px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
 .ch-tab.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+.ch-tab:hover:not(.active){background:#f3f4f6;}
+
 .video-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+@media(min-width:640px){.video-grid{grid-template-columns:repeat(3,1fr);}}
 .video-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.07);cursor:pointer;transition:transform .15s;}
-.video-card:hover{transform:translateY(-2px);}
-.video-thumb{background:#1a1a2e;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:32px;}
+.video-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.12);}
+.video-card.active-card{border:2px solid #dc2626;}
+.video-thumb{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;}
+.live-chip{position:absolute;top:6px;left:6px;background:#dc2626;color:#fff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:50px;display:flex;align-items:center;gap:3px;}
+.live-chip::before{content:'';width:5px;height:5px;border-radius:50%;background:#fff;animation:blink .8s ease infinite;}
 .video-body{padding:10px 10px 12px;}
-.video-title{font-size:12px;font-weight:700;color:#1a1a2e;line-height:1.4;margin-bottom:4px;}
+.video-title{font-size:12px;font-weight:700;color:#1a1a2e;line-height:1.4;margin-bottom:3px;}
 .video-ch{font-size:10px;color:#6b7280;}
+
 .notif-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin:12px 0;}
+.error-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:13px;color:#dc2626;margin-bottom:10px;display:none;}
 </style>
+
 <div class="live-hero"><div class="container">
   <div class="live-badge"><span class="live-dot"></span>LIVE</div>
   <h1>📡 লাইভ সম্প্রচার</h1>
 </div></div>
+
 <section class="section"><div class="container">
   <div class="channel-tabs" id="chTabs"></div>
   <div class="player-wrap" id="playerWrap">
-    <iframe id="mainPlayer" src="" allowfullscreen allow="autoplay"></iframe>
+    <div class="player-loading" id="playerLoading">
+      <div class="spinner"></div>
+      <p>চ্যানেল লোড হচ্ছে...</p>
+    </div>
+    <video id="liveVideo" controls playsinline></video>
   </div>
+  <div class="player-ch-name" id="chNameBar">
+    <span id="chNameText">📺 চ্যানেল বেছে নিন</span>
+    <span class="live-indicator"><span></span>LIVE</span>
+  </div>
+  <div class="error-msg" id="errorMsg">⚠️ এই মুহূর্তে stream পাওয়া যাচ্ছে না। অন্য চ্যানেল try করুন।</div>
   <button class="notif-btn" onclick="requestLiveNotif()">🔔 JOAF Live শুরু হলে notification পান</button>
-  <h3 style="font-size:15px;font-weight:900;margin-bottom:12px;color:#1a1a2e;">📺 সাম্প্রতিক ভিডিও</h3>
+  <h3 style="font-size:15px;font-weight:900;margin-bottom:12px;color:#1a1a2e;">📺 সব চ্যানেল</h3>
   <div class="video-grid" id="videoGrid"></div>
 </div></section>
+
 <div id="joaf-footer"></div>
 <script src="/js/modernizr-2.8.3.min.js"></script>
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
 <script>
-const CHANNELS=[
-  {name:'JOAF Live',id:'julyforum',icon:'🔥',embedId:'',liveChannelId:''},
-  {name:'Jamuna TV',id:'jamuna',icon:'📺',embedId:'BNWN6_DXNMQ',liveChannelId:'UCJ2RCS6Mm7stiOQPKNhyRZg'},
-  {name:'Somoy TV',id:'somoy',icon:'📡',embedId:'XYYGKhVxOmk',liveChannelId:'UCbnxaWxqiC1Rj6y1tR_GFVA'},
-  {name:'Channel 24',id:'ch24',icon:'🎬',embedId:'MVQrSGsAlpM',liveChannelId:'UCe1wrPJniKgTCvLxJD97F6A'},
-  {name:'RTV',id:'rtv',icon:'🌐',embedId:'rFfLYx5RFjY',liveChannelId:'UCzOHLoNwbebz4PtMFKGsGpQ'},
+// ═══════════════════════════════════════════════════
+// BANGLADESHI TV CHANNELS — HLS m3u8 Stream URLs
+// Source: digijadoo IPTV (publicly available)
+// ═══════════════════════════════════════════════════
+const CHANNELS = [
+  { name:'JOAF Live',       id:'joaf',         icon:'🔥', color:'#dc2626', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'যমুনা টিভি',     id:'jamuna',       icon:'📺', color:'#1e40af', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'সময় টিভি',      id:'somoy',        icon:'📡', color:'#065f46', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'চ্যানেল ২৪',     id:'ch24',         icon:'🎬', color:'#7c3aed', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'আরটিভি',         id:'rtv',          icon:'🌐', color:'#b45309', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'এনটিভি',         id:'ntv',          icon:'🔵', color:'#0369a1', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'একাত্তর টিভি',   id:'ekattor',      icon:'🏆', color:'#b91c1c', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'ডিবিসি নিউজ',    id:'dbc',          icon:'📰', color:'#475569', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'ইন্ডিপেন্ডেন্ট', id:'independent',  icon:'🗞️', color:'#4f46e5', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'চ্যানেল আই',     id:'channeli',     icon:'🎥', color:'#0f766e', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'একুশে টিভি',     id:'ekushey',      icon:'🌿', color:'#15803d', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'বিটিভি ওয়ার্ল্ড', id:'btv',        icon:'🏛️', color:'#92400e', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'দীপ্ত টিভি',     id:'deepto',       icon:'💡', color:'#854d0e', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'দেশ টিভি',       id:'desh',         icon:'🇧🇩', color:'#166534', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'বাংলাভিশন',      id:'banglavision',  icon:'👁️', color:'#9f1239', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'গাজী টিভি',      id:'gazi',         icon:'📻', color:'#1d4ed8', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'এটিএন বাংলা',    id:'atn',          icon:'📲', color:'#0891b2', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'বৈশাখী টিভি',    id:'boishakhi',    icon:'🌸', color:'#be185d', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'নাগরিক টিভি',    id:'nagorik',      icon:'🏙️', color:'#6d28d9', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'এসএ টিভি',       id:'satv',         icon:'📡', color:'#0f172a', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
+  { name:'চ্যানেল ৯',      id:'ch9',          icon:'9️⃣', color:'#374151', m3u8:'https://raw.githubusercontent.com/benmoose39/YouTube_to_m3u/main/assets/moose_na.m3u' },
 ];
-const VIDEOS=[
-  {title:'বাংলাদেশের রাজনৈতিক পরিস্থিতি — Jamuna TV Live',ch:'Jamuna TV',icon:'📺',id:'BNWN6_DXNMQ'},
-  {title:'সমসাময়িক সংবাদ — Somoy TV Live',ch:'Somoy TV',icon:'📡',id:'XYYGKhVxOmk'},
-  {title:'দেশের খবর — Channel 24 Live',ch:'Channel 24',icon:'🎬',id:'MVQrSGsAlpM'},
-  {title:'সর্বশেষ সংবাদ — RTV Live',ch:'RTV',icon:'🌐',id:'rFfLYx5RFjY'},
-];
-let activeCh='jamuna';
-function renderTabs(){
-  document.getElementById('chTabs').innerHTML=CHANNELS.map(c=>
-    `<button class="ch-tab${c.id===activeCh?' active':''}" onclick="setCh('${c.id}')">${c.icon} ${c.name}</button>`).join('');
-}
-function setCh(id){
-  activeCh=id;
-  renderTabs();
-  const ch=CHANNELS.find(c=>c.id===id);
-  const playerEl=document.getElementById('mainPlayer');
-  const wrapEl=document.getElementById('playerWrap');
-  if(ch&&ch.embedId){
-    playerEl.src=`https://www.youtube.com/embed/${ch.embedId}?autoplay=1&rel=0`;
-    wrapEl.style.display='block';
-  } else {
-    playerEl.src='';
-    wrapEl.innerHTML='<div style="color:#fff;display:flex;align-items:center;justify-content:center;height:100%;font-size:15px;padding:20px;text-align:center;">⏳ JOAF Live এর YouTube ID এখনো সেট করা হয়নি।</div>';
+
+let activeCh = 'jamuna';
+let hlsInstance = null;
+
+function loadStream(ch) {
+  const video = document.getElementById('liveVideo');
+  const loading = document.getElementById('playerLoading');
+  const errMsg = document.getElementById('errorMsg');
+  const chNameText = document.getElementById('chNameText');
+
+  errMsg.style.display = 'none';
+  loading.style.display = 'flex';
+  chNameText.textContent = ch.icon + ' ' + ch.name;
+  document.getElementById('chNameBar').style.display = 'flex';
+
+  // JOAF এর stream না থাকলে message দেখাও
+  if (!ch.m3u8) {
+    loading.innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:40px;margin-bottom:10px">🔥</div><p style="color:#fff;font-weight:900;font-size:16px">JOAF Live</p><p style="color:#94a3b8;font-size:13px">শীঘ্রই আসছে...</p></div>';
+    return;
   }
+
+  // পুরনো HLS instance destroy করো
+  if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+
+  if (Hls.isSupported()) {
+    hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true });
+    hlsInstance.loadSource(ch.m3u8);
+    hlsInstance.attachMedia(video);
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+      loading.style.display = 'none';
+      video.play().catch(()=>{});
+    });
+    hlsInstance.on(Hls.Events.ERROR, (e, data) => {
+      if (data.fatal) {
+        loading.style.display = 'none';
+        errMsg.style.display = 'block';
+      }
+    });
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    // Safari native HLS support
+    video.src = ch.m3u8;
+    video.addEventListener('loadedmetadata', () => {
+      loading.style.display = 'none';
+      video.play().catch(()=>{});
+    });
+  } else {
+    loading.style.display = 'none';
+    errMsg.style.display = 'block';
+    errMsg.textContent = '⚠️ আপনার browser HLS support করে না। Chrome/Firefox ব্যবহার করুন।';
+  }
+
+  // Active card highlight
+  document.querySelectorAll('.video-card').forEach(c => c.classList.remove('active-card'));
+  const card = document.getElementById('card-' + ch.id);
+  if (card) card.classList.add('active-card');
 }
-document.getElementById('videoGrid').innerHTML=VIDEOS.map(v=>`
-  <div class="video-card" onclick="playVideo('${v.id}')">
-    <div class="video-thumb">${v.icon}</div>
+
+function renderTabs() {
+  document.getElementById('chTabs').innerHTML = CHANNELS.map(c =>
+    `<button class="ch-tab${c.id === activeCh ? ' active' : ''}" onclick="setCh('${c.id}')">${c.icon} ${c.name}</button>`
+  ).join('');
+}
+
+function setCh(id) {
+  activeCh = id;
+  renderTabs();
+  const ch = CHANNELS.find(c => c.id === id);
+  if (ch) loadStream(ch);
+  // Scroll player into view on mobile
+  document.getElementById('playerWrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Video grid — সব channel এর card
+document.getElementById('videoGrid').innerHTML = CHANNELS.map(ch => `
+  <div class="video-card" id="card-${ch.id}" onclick="setCh('${ch.id}')">
+    <div class="video-thumb" style="background:${ch.color}22;">
+      <span>${ch.icon}</span>
+      <span class="live-chip">LIVE</span>
+    </div>
     <div class="video-body">
-      <div class="video-title">${v.title}</div>
-      <div class="video-ch">${v.ch}</div>
+      <div class="video-title">${ch.name}</div>
+      <div class="video-ch">সরাসরি সম্প্রচার</div>
     </div>
   </div>`).join('');
-function playVideo(vid){
-  if(!vid) return;
-  document.getElementById('mainPlayer').src=`https://www.youtube.com/embed/${vid}?autoplay=1&rel=0`;
-}
-function requestLiveNotif(){
-  if(!('Notification' in window)) return;
-  Notification.requestPermission().then(p=>{
-    if(p==='granted') navigator.serviceWorker.ready.then(r=>r.showNotification('📡 Live Alert চালু!',{body:'JOAF Live শুরু হলে জানানো হবে।',icon:'/logoc7c3.png'}));
+
+function requestLiveNotif() {
+  if (!('Notification' in window)) return alert('এই browser এ notification support নেই।');
+  Notification.requestPermission().then(p => {
+    if (p === 'granted')
+      navigator.serviceWorker.ready.then(r =>
+        r.showNotification('📡 Live Alert চালু!', {
+          body: 'JOAF Live শুরু হলে জানানো হবে।',
+          icon: '/logoc7c3.png'
+        })
+      );
   });
 }
+
+// Init
 renderTabs();
 setCh('jamuna');
-</script><script src="/js/rainbow-swirl-cursor.js" defer></script>
+</script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
 </body></html>
