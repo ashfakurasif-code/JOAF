@@ -198,7 +198,7 @@ body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-heig
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, getDocs, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FB_CONFIG = {
   apiKey: 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
@@ -385,28 +385,40 @@ async function loadStats() {
 }
 
 async function loadHistory() {
+  const list = document.getElementById('historyList');
   try {
-    const snap = await getDocs(
-      query(collection(db, 'notification_history'), orderBy('sentAt', 'desc'), limit(10))
-    );
-    const list = document.getElementById('historyList');
+    // orderBy ছাড়া সব নাও, তারপর JS এ sort করো — index লাগবে না
+    const snap = await getDocs(collection(db, 'notification_history'));
+    
     if (snap.empty) {
       list.innerHTML = '<div style="text-align:center;color:#64748b;padding:20px;font-size:13px;">এখনো কোনো notification পাঠানো হয়নি</div>';
       return;
     }
-    list.innerHTML = snap.docs.map(doc => {
-      const d = doc.data();
-      const time = d.sentAt?.toDate()?.toLocaleString('bn-BD') || '—';
+
+    // JS এ sort করো latest first
+    const docs = snap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => {
+        const ta = a.sentAt?.toMillis?.() || a.sentAt?.seconds * 1000 || 0;
+        const tb = b.sentAt?.toMillis?.() || b.sentAt?.seconds * 1000 || 0;
+        return tb - ta;
+      })
+      .slice(0, 10);
+
+    list.innerHTML = docs.map(d => {
+      const time = d.sentAt?.toDate?.()?.toLocaleString('bn-BD') || 
+                   (d.sentAt?.seconds ? new Date(d.sentAt.seconds * 1000).toLocaleString('bn-BD') : '—');
       return `<div class="history-item">
         <div>
-          <div class="h-title">${d.title}</div>
+          <div class="h-title">${d.title || '—'}</div>
           <div class="h-meta">${time}</div>
         </div>
-        <div class="h-sent">✅ ${d.sent} জন</div>
+        <div class="h-sent">✅ ${d.sent || 0} জন</div>
       </div>`;
     }).join('');
   } catch(e) {
     console.log('history error', e);
+    list.innerHTML = '<div style="text-align:center;color:#ef4444;padding:20px;font-size:13px;">❌ লোড করতে সমস্যা হয়েছে</div>';
   }
 }
 
