@@ -48,16 +48,17 @@
 <script src="/js/components.js?v=6.6"></script>
 <script>
 const CHANNELS=[
-  {name:'JOAF Live',id:'julyforum',yt:'UCxxxxxx',icon:'🔥',embedId:''},
-  {name:'Jamuna TV',id:'jamuna',yt:'UCxxxxxx',icon:'📺',embedId:'8cHQxRbp0PA'},
-  {name:'Somoy TV',id:'somoy',yt:'UCxxxxxx',icon:'📡',embedId:'3ZRBN-U4aAU'},
-  {name:'Channel 24',id:'ch24',yt:'UCxxxxxx',icon:'🎬',embedId:'Zp8R6UDfxo4'},
+  {name:'JOAF Live',id:'julyforum',icon:'🔥',embedId:'',liveChannelId:''},
+  {name:'Jamuna TV',id:'jamuna',icon:'📺',embedId:'BNWN6_DXNMQ',liveChannelId:'UCJ2RCS6Mm7stiOQPKNhyRZg'},
+  {name:'Somoy TV',id:'somoy',icon:'📡',embedId:'XYYGKhVxOmk',liveChannelId:'UCbnxaWxqiC1Rj6y1tR_GFVA'},
+  {name:'Channel 24',id:'ch24',icon:'🎬',embedId:'MVQrSGsAlpM',liveChannelId:'UCe1wrPJniKgTCvLxJD97F6A'},
+  {name:'RTV',id:'rtv',icon:'🌐',embedId:'rFfLYx5RFjY',liveChannelId:'UCzOHLoNwbebz4PtMFKGsGpQ'},
 ];
 const VIDEOS=[
-  {title:'জুলাই আন্দোলনের এক বছর',ch:'JOAF',icon:'🔥',id:''},
-  {title:'বাংলাদেশের রাজনৈতিক পরিস্থিতি',ch:'Jamuna TV',icon:'📺',id:'8cHQxRbp0PA'},
-  {title:'অর্থনীতির হালচাল',ch:'Somoy TV',icon:'📡',id:'3ZRBN-U4aAU'},
-  {title:'নতুন নির্বাচন কমিশন',ch:'Channel 24',icon:'🎬',id:'Zp8R6UDfxo4'},
+  {title:'বাংলাদেশের রাজনৈতিক পরিস্থিতি — Jamuna TV Live',ch:'Jamuna TV',icon:'📺',id:'BNWN6_DXNMQ'},
+  {title:'সমসাময়িক সংবাদ — Somoy TV Live',ch:'Somoy TV',icon:'📡',id:'XYYGKhVxOmk'},
+  {title:'দেশের খবর — Channel 24 Live',ch:'Channel 24',icon:'🎬',id:'MVQrSGsAlpM'},
+  {title:'সর্বশেষ সংবাদ — RTV Live',ch:'RTV',icon:'🌐',id:'rFfLYx5RFjY'},
 ];
 let activeCh='jamuna';
 function renderTabs(){
@@ -68,26 +69,35 @@ function setCh(id){
   activeCh=id;
   renderTabs();
   const ch=CHANNELS.find(c=>c.id===id);
+  const playerEl=document.getElementById('mainPlayer');
+  const wrapEl=document.getElementById('playerWrap');
   if(ch&&ch.embedId){
-    document.getElementById('mainPlayer').src=`https://www.youtube.com/embed/${ch.embedId}?autoplay=0`;
+    playerEl.src=`https://www.youtube.com/embed/${ch.embedId}?autoplay=1&rel=0`;
+    wrapEl.style.display='block';
   } else {
-    document.getElementById('mainPlayer').src='';
+    playerEl.src='';
+    wrapEl.innerHTML='<div style="color:#fff;display:flex;align-items:center;justify-content:center;height:100%;font-size:15px;padding:20px;text-align:center;">⏳ JOAF Live এর YouTube ID এখনো সেট করা হয়নি।</div>';
   }
 }
 document.getElementById('videoGrid').innerHTML=VIDEOS.map(v=>`
-  <div class="video-card" onclick="${v.id?`document.getElementById('mainPlayer').src='https://www.youtube.com/embed/${v.id}'`:''}">
+  <div class="video-card" onclick="playVideo('${v.id}')">
     <div class="video-thumb">${v.icon}</div>
     <div class="video-body">
       <div class="video-title">${v.title}</div>
       <div class="video-ch">${v.ch}</div>
     </div>
   </div>`).join('');
+function playVideo(vid){
+  if(!vid) return;
+  document.getElementById('mainPlayer').src=`https://www.youtube.com/embed/${vid}?autoplay=1&rel=0`;
+}
 function requestLiveNotif(){
   if(!('Notification' in window)) return;
   Notification.requestPermission().then(p=>{
     if(p==='granted') navigator.serviceWorker.ready.then(r=>r.showNotification('📡 Live Alert চালু!',{body:'JOAF Live শুরু হলে জানানো হবে।',icon:'/logoc7c3.png'}));
   });
 }
-renderTabs();setCh('jamuna');
+renderTabs();
+setCh('jamuna');
 </script><script src="/js/rainbow-swirl-cursor.js" defer></script>
 </body></html>
