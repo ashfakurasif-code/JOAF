@@ -1414,25 +1414,39 @@ async function joafSubscribePush() {
   try {
     const reg = await navigator.serviceWorker.ready;
     const existing = await reg.pushManager.getSubscription();
-    if (existing) return existing;
+    if (existing) {
+      // Already subscribed — ensure it's saved in backend
+      await joafSaveSubscription(existing);
+      return existing;
+    }
 
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: JOAF_VAPID
     });
 
-    // Save subscription to Firebase
-    const {initializeApp, getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const {getFirestore, collection, addDoc, serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-    const db = getFirestore(fbApp);
-    await addDoc(collection(db, 'push_subscriptions'), {
-      subscription: JSON.stringify(sub),
-      createdAt: serverTimestamp(),
-      userAgent: navigator.userAgent.substring(0, 100)
-    });
+    await joafSaveSubscription(sub);
     return sub;
   } catch(e) { console.log('Push subscription failed:', e); }
+}
+
+async function joafSaveSubscription(sub) {
+  try {
+    // Netlify function এ পাঠাও — সেখান থেকে Firestore এ save হবে
+    await fetch('/.netlify/functions/save-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscription: sub.toJSON(),
+        deviceInfo: {
+          userAgent: navigator.userAgent.substring(0, 150),
+          platform: navigator.platform || '',
+          language: navigator.language || '',
+          savedAt: new Date().toISOString(),
+        }
+      })
+    });
+  } catch(e) { console.log('Save subscription failed:', e); }
 }
 
 // ── Device Detection ──────────────────────────────────────────

@@ -1,0 +1,113 @@
+# .github/workflows/daily-notify.yml
+# প্রতিদিন scheduled notification পাঠায়
+# সম্পূর্ণ free — GitHub Actions
+
+name: Daily JOAF Notifications
+
+on:
+  schedule:
+    # সকাল ৮টা BD time = UTC 2:00
+    - cron: '0 2 * * *'    # বাজার দর
+    # সকাল ৭টা BD time = UTC 1:00
+    - cron: '0 1 * * *'    # আবহাওয়া
+    # রাত ৮টা BD time = UTC 14:00
+    - cron: '0 14 * * *'   # Poll/Streak reminder
+    # প্রতি সোমবার সকাল ৯টা = UTC 3:00
+    - cron: '0 3 * * 1'    # নেতা ট্র্যাকার সাপ্তাহিক
+
+  # Manual trigger — GitHub থেকেও চালানো যাবে
+  workflow_dispatch:
+    inputs:
+      type:
+        description: 'Notification type'
+        required: true
+        default: 'bajar'
+        type: choice
+        options:
+          - bajar
+          - poll
+          - streak
+          - weather
+          - blood
+          - alert
+          - live
+          - warrior
+          - corruption
+          - leader
+          - medicine
+          - agriculture
+          - jobs
+          - news
+          - breaking
+          - welcome
+      custom_title:
+        description: 'Custom title (optional)'
+        required: false
+      custom_body:
+        description: 'Custom message (optional)'
+        required: false
+
+jobs:
+  send-bajar:
+    name: সকালের বাজার দর
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 2 * * *'
+    steps:
+      - name: Send bajar notification
+        run: |
+          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
+            -H "Content-Type: application/json" \
+            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
+            -d '{"type": "bajar"}'
+
+  send-weather:
+    name: সকালের আবহাওয়া
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 1 * * *'
+    steps:
+      - name: Send weather notification
+        run: |
+          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
+            -H "Content-Type: application/json" \
+            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
+            -d '{"type": "weather"}'
+
+  send-poll:
+    name: রাতের Poll reminder
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 14 * * *'
+    steps:
+      - name: Send poll notification
+        run: |
+          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
+            -H "Content-Type: application/json" \
+            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
+            -d '{"type": "streak"}'
+
+  send-leader:
+    name: সাপ্তাহিক নেতা ট্র্যাকার
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 3 * * 1'
+    steps:
+      - name: Send leader tracker notification
+        run: |
+          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
+            -H "Content-Type: application/json" \
+            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
+            -d '{"type": "leader"}'
+
+  send-manual:
+    name: Manual notification
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Send manual notification
+        run: |
+          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
+            -H "Content-Type: application/json" \
+            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
+            -d '{
+              "type": "${{ github.event.inputs.type }}",
+              "title": "${{ github.event.inputs.custom_title }}",
+              "body": "${{ github.event.inputs.custom_body }}"
+            }'
