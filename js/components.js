@@ -12,6 +12,12 @@ window.addEventListener('beforeinstallprompt', e => {
   window._deferredPWA = e;
 });
 
+// ── App installed (browser/OS থেকে) — track করো ──
+window.addEventListener('appinstalled', () => {
+  localStorage.setItem('joaf-pwa-installed','1');
+  window._deferredPWA = null;
+});
+
 const JOAFComponents = {
 
   renderHeader(activePage) {
@@ -973,8 +979,11 @@ const JOAFComponents = {
   // ── Push Notification Permission Prompt ───────────────────
   initPushPrompt() {
     if (!('Notification' in window)) return;
-    if (Notification.permission === 'granted') return;
     if (Notification.permission === 'denied') return;
+    if (Notification.permission === 'granted') {
+      joafSubscribePush();
+      return;
+    }
     if (localStorage.getItem('joaf-push-granted')) return;
     if (document.getElementById('joaf-push-prompt')) return;
     const p = JOAF.notifPrompt;
