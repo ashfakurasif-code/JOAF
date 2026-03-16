@@ -374,16 +374,6 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     }
   } catch(e) { console.log('Email error:', e); }
 }, 500);
-      joafSendAdminEmail({
-        type: selectedType,
-        title,
-        desc: description,
-        location,
-        photo: imageUrl || 'কোনো ছবি নেই',
-        reporter: reporter || 'অজ্ঞাত',
-      }).catch(()=>{});
-    }
-
     alert('\u2705 সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
     closeModal();
     document.getElementById('f_title').value = '';
