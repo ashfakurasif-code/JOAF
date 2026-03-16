@@ -19,8 +19,9 @@
 
 /* Player */
 .player-wrap{background:#000;border-radius:14px 14px 0 0;overflow:hidden;aspect-ratio:16/9;position:relative;}
-.player-wrap video{width:100%;height:100%;display:block;}
-.player-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0f172a;}
+.player-wrap video{width:100%;height:100%;display:block;position:relative;z-index:1;}
+.player-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0f172a;z-index:2;}
+.player-overlay.hidden{display:none!important;}
 .spinner{width:44px;height:44px;border:3px solid #334155;border-top-color:#dc2626;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .overlay-text{color:#94a3b8;font-size:13px;margin:0;}
@@ -239,8 +240,8 @@ function tryUrl(idx, attempt) {
   const overlayCh = document.getElementById('overlayCh');
   const overlayStatus = document.getElementById('overlayStatus');
 
-  overlay.style.display = 'flex';
-  video.style.display = 'none';
+  // Show overlay, reset video
+  overlay.classList.remove('hidden');
   barName.textContent = ch.name;
   overlayCh.textContent = ch.name;
 
@@ -250,7 +251,7 @@ function tryUrl(idx, attempt) {
   }
 
   if (attempt >= urls.length) {
-    overlayStatus.textContent = '❌ সব link কাজ করছে না। পরে আবার try করুন।';
+    overlayStatus.textContent = '❌ সব link কাজ করছে না। পরে try করুন।';
     barUrl.textContent = '';
     return;
   }
@@ -262,15 +263,32 @@ function tryUrl(idx, attempt) {
   if (hlsObj) { hlsObj.destroy(); hlsObj = null; }
   video.src = '';
 
+  function showVideo() {
+    overlay.classList.add('hidden');
+    barUrl.textContent = `✅ link ${attempt+1}/${urls.length} কাজ করছে`;
+    video.play().catch(()=>{});
+  }
+
   if (Hls.isSupported()) {
-    hlsObj = new Hls({ enableWorker:true, lowLatencyMode:true, maxBufferLength:20, manifestLoadingTimeOut:8000, levelLoadingTimeOut:8000 });
+    hlsObj = new Hls({
+      enableWorker: true,
+      lowLatencyMode: true,
+      maxBufferLength: 20,
+      manifestLoadingTimeOut: 8000,
+      levelLoadingTimeOut: 8000
+    });
     hlsObj.loadSource(url);
     hlsObj.attachMedia(video);
+    // FRAG_LOADED = first video segment loaded = safe to show
+    hlsObj.on(Hls.Events.FRAG_LOADED, () => {
+      if (overlay.classList.contains('hidden')) return;
+      showVideo();
+    });
+    // Fallback: if FRAG_LOADED slow, show after 3s
     hlsObj.on(Hls.Events.MANIFEST_PARSED, () => {
-      overlay.style.display = 'none';
-      video.style.display = 'block';
-      barUrl.textContent = `✅ link ${attempt+1} কাজ করছে`;
-      video.play().catch(()=>{});
+      setTimeout(() => {
+        if (!overlay.classList.contains('hidden')) showVideo();
+      }, 3000);
     });
     hlsObj.on(Hls.Events.ERROR, (e, data) => {
       if (data.fatal) {
@@ -279,12 +297,9 @@ function tryUrl(idx, attempt) {
       }
     });
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    // Safari native HLS
     video.src = url;
-    video.onloadedmetadata = () => {
-      overlay.style.display = 'none';
-      video.style.display = 'block';
-      video.play().catch(()=>{});
-    };
+    video.oncanplay = () => showVideo();
     video.onerror = () => tryUrl(idx, attempt + 1);
   } else {
     overlayStatus.textContent = '⚠️ আপনার browser HLS support করে না।';
