@@ -274,7 +274,7 @@
   .person-card:hover{transform:translateY(-6px);box-shadow:0 16px 44px rgba(0,0,0,.13);}
   .person-card .card-img-wrap{height:220px;overflow:hidden;position:relative;}
   .person-card .card-img-wrap img{
-    width:100%;height:100%;object-fit:cover;object-position:top center;
+    width:100%;height:100%;object-fit:cover;object-position:center;
     transition:transform .5s ease;filter:brightness(1.04);
   }
   .person-card:hover .card-img-wrap img{transform:scale(1.06);}
@@ -797,8 +797,7 @@ function getRoleClass(role) {
       <div class="member-card">
         <div class="member-card-img-wrap">
           <img class="member-card-img" src="${m.img}" alt="${m.name}"
-               onerror="this.src='/logoc7c3.png'" loading="lazy"
-               style="${m.imgPosition ? 'object-position:'+m.imgPosition : ''}">
+               onerror="this.src='/logoc7c3.png'" loading="lazy">
           <span class="member-role-badge">${m.role.split('(')[0].trim()}</span>
           <span class="member-num-badge">${i+1}</span>
         </div>
