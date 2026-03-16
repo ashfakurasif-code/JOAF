@@ -1,21 +1,13 @@
 # .github/workflows/daily-notify.yml
-# প্রতিদিন scheduled notification পাঠায়
-# সম্পূর্ণ free — GitHub Actions
-
 name: Daily JOAF Notifications
 
 on:
   schedule:
-    # সকাল ৮টা BD time = UTC 2:00
-    - cron: '0 2 * * *'    # বাজার দর
-    # সকাল ৭টা BD time = UTC 1:00
-    - cron: '0 1 * * *'    # আবহাওয়া
-    # রাত ৮টা BD time = UTC 14:00
-    - cron: '0 14 * * *'   # Poll/Streak reminder
-    # প্রতি সোমবার সকাল ৯টা = UTC 3:00
-    - cron: '0 3 * * 1'    # নেতা ট্র্যাকার সাপ্তাহিক
+    - cron: '0 2 * * *'
+    - cron: '0 1 * * *'
+    - cron: '0 14 * * *'
+    - cron: '0 3 * * 1'
 
-  # Manual trigger — GitHub থেকেও চালানো যাবে
   workflow_dispatch:
     inputs:
       type:
@@ -46,68 +38,72 @@ on:
       custom_body:
         description: 'Custom message (optional)'
         required: false
+      custom_url:
+        description: 'Custom URL (optional)'
+        required: false
 
 jobs:
-  send-bajar:
-    name: সকালের বাজার দর
+  notify:
+    name: Send Notification
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && github.event.schedule == '0 2 * * *'
     steps:
-      - name: Send bajar notification
+      - name: Determine notification type
+        id: determine
         run: |
-          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
-            -H "Content-Type: application/json" \
-            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
-            -d '{"type": "bajar"}'
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "type=${{ github.event.inputs.type }}" >> $GITHUB_OUTPUT
+            echo "custom_title=${{ github.event.inputs.custom_title }}" >> $GITHUB_OUTPUT
+            echo "custom_body=${{ github.event.inputs.custom_body }}" >> $GITHUB_OUTPUT
+            echo "custom_url=${{ github.event.inputs.custom_url }}" >> $GITHUB_OUTPUT
+          else
+            HOUR=$(date -u +%H)
+            DOW=$(date -u +%u)
+            if [ "$HOUR" = "02" ]; then
+              echo "type=bajar" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" = "01" ]; then
+              echo "type=weather" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" = "14" ]; then
+              echo "type=streak" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" = "03" ] && [ "$DOW" = "1" ]; then
+              echo "type=leader" >> $GITHUB_OUTPUT
+            else
+              echo "type=bajar" >> $GITHUB_OUTPUT
+            fi
+            echo "custom_title=" >> $GITHUB_OUTPUT
+            echo "custom_body=" >> $GITHUB_OUTPUT
+            echo "custom_url=" >> $GITHUB_OUTPUT
+          fi
 
-  send-weather:
-    name: সকালের আবহাওয়া
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && github.event.schedule == '0 1 * * *'
-    steps:
-      - name: Send weather notification
+      - name: Send notification
         run: |
-          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
-            -H "Content-Type: application/json" \
-            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
-            -d '{"type": "weather"}'
+          TYPE="${{ steps.determine.outputs.type }}"
+          TITLE="${{ steps.determine.outputs.custom_title }}"
+          BODY="${{ steps.determine.outputs.custom_body }}"
+          URL="${{ steps.determine.outputs.custom_url }}"
 
-  send-poll:
-    name: রাতের Poll reminder
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && github.event.schedule == '0 14 * * *'
-    steps:
-      - name: Send poll notification
-        run: |
-          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
-            -H "Content-Type: application/json" \
-            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
-            -d '{"type": "streak"}'
+          if [ -n "$TITLE" ] && [ -n "$BODY" ]; then
+            PAYLOAD="{\"type\":\"$TYPE\",\"title\":\"$TITLE\",\"body\":\"$BODY\",\"url\":\"$URL\"}"
+          else
+            PAYLOAD="{\"type\":\"$TYPE\"}"
+          fi
 
-  send-leader:
-    name: সাপ্তাহিক নেতা ট্র্যাকার
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && github.event.schedule == '0 3 * * 1'
-    steps:
-      - name: Send leader tracker notification
-        run: |
-          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
-            -H "Content-Type: application/json" \
-            -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
-            -d '{"type": "leader"}'
+          echo "Sending: $PAYLOAD"
 
-  send-manual:
-    name: Manual notification
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Send manual notification
-        run: |
-          curl -X POST "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
             -H "Content-Type: application/json" \
             -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
-            -d '{
-              "type": "${{ github.event.inputs.type }}",
-              "title": "${{ github.event.inputs.custom_title }}",
-              "body": "${{ github.event.inputs.custom_body }}"
-            }'
+            -d "$PAYLOAD")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          RESP_BODY=$(echo "$RESPONSE" | head -n-1)
+
+          echo "Response: $RESP_BODY"
+          echo "HTTP Status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "ERROR: Failed with status $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "SUCCESS!"
