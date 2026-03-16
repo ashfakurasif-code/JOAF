@@ -21,6 +21,20 @@
 html{scroll-behavior:smooth;}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
+/* Upload */
+.upload-zone{border:2px dashed var(--border2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:.15s;position:relative;}
+.upload-zone:hover{border-color:var(--accent);background:var(--red-bg);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone .uz-icon{font-size:28px;margin-bottom:6px;}
+.upload-zone .uz-text{font-size:12px;color:var(--text2);}
+.upload-preview{margin-top:10px;display:none;}
+.upload-preview img{max-width:100%;max-height:120px;border-radius:8px;border:1px solid var(--border);}
+.upload-progress{background:var(--bg4);border-radius:50px;height:4px;margin-top:8px;overflow:hidden;display:none;}
+.upload-progress-bar{height:100%;background:var(--accent);border-radius:50px;transition:width .3s;}
+.upload-result{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:7px;display:none;}
+.upload-result.success{background:var(--green-bg);color:var(--green);}
+.upload-result.error{background:var(--red-bg);color:var(--red);}
+
 /* ══ LOGIN ══════════════════════════════════════ */
 #loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;background-image:radial-gradient(ellipse at 20% 50%,rgba(240,82,82,.04) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(96,165,250,.04) 0%,transparent 60%);}
 .lcard{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:36px 32px;width:340px;}
@@ -278,6 +292,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       </div>
       <div class="topbar-right">
         <span style="font-size:11px;color:var(--text2)">julyforum.com</span>
+        <button class="tbtn" onclick="openModal('uploadModal')" style="color:var(--green);border-color:var(--green-border)">📁 File Upload</button>
         <a href="https://julyforum.com" target="_blank" class="tbtn">🌐 Live Site</a>
       </div>
     </div>
@@ -749,6 +764,51 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeModal('medModal')">বাতিল</button>
       <button class="btn btn-primary" onclick="saveMedicine()">💾 Save করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- File Upload Modal -->
+<div class="modal-bg" id="uploadModal">
+  <div class="modal">
+    <h3>📁 File Upload</h3>
+    <div class="field">
+      <label>Folder</label>
+      <select id="up-folder">
+        <option value="img">📸 /img/ — Press Release, News images</option>
+        <option value="members">👥 /members/ — Member photos</option>
+        <option value="video">🎬 /video/ — Videos</option>
+        <option value="docs">📄 /docs/ — Documents</option>
+      </select>
+    </div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="up-file" accept="image/*,video/*,.pdf,.doc,.docx" onchange="previewFile(this)">
+      <div class="uz-icon">📤</div>
+      <div class="uz-text">Click করুন বা drag করুন<br><span style="font-size:10px;color:var(--text3)">Images, Videos, PDF, DOC সব support করে</span></div>
+    </div>
+    <div class="upload-preview" id="up-preview">
+      <img id="up-preview-img" src="" alt="preview">
+    </div>
+    <div class="upload-progress" id="up-progress">
+      <div class="upload-progress-bar" id="up-progress-bar" style="width:0%"></div>
+    </div>
+    <div class="upload-result" id="up-result"></div>
+    <div class="field mt12">
+      <label>Commit Message (optional)</label>
+      <input type="text" id="up-message" placeholder="Admin upload: press release image">
+    </div>
+    <div id="up-url-copy" style="display:none;margin-top:10px;">
+      <label class="field" style="display:block">
+        <span style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;">Uploaded URL (copy করুন)</span>
+        <div style="display:flex;gap:6px;margin-top:5px;">
+          <input type="text" id="up-url-val" readonly style="flex:1;padding:8px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--green);font-size:12px;font-family:monospace;">
+          <button class="btn btn-success btn-sm" onclick="copyUploadUrl()">Copy</button>
+        </div>
+      </label>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('uploadModal');resetUpload()">বন্ধ করুন</button>
+      <button class="btn btn-primary" id="up-btn" onclick="doUpload()">⬆️ Upload করুন</button>
     </div>
   </div>
 </div>
@@ -1432,7 +1492,95 @@ function toast(msg, type='success') {
   el._t = setTimeout(()=>{ el.style.display='none'; }, 4000);
 }
 
-// Close modals on background click
+// ── File Upload via GitHub API ──────────────────────────
+window.previewFile = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('up-preview-img').src = e.target.result;
+      document.getElementById('up-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+  // Auto-set commit message
+  document.getElementById('up-message').placeholder = `Admin upload: ${file.name}`;
+};
+
+window.doUpload = async function() {
+  const file = document.getElementById('up-file').files[0];
+  if (!file) return toast('একটি file select করুন','error');
+
+  const folder = document.getElementById('up-folder').value;
+  const message = document.getElementById('up-message').value || `Admin upload: ${file.name}`;
+  const btn = document.getElementById('up-btn');
+  btn.disabled = true; btn.textContent = '⏳ Uploading...';
+
+  // Show progress
+  document.getElementById('up-progress').style.display = 'block';
+  document.getElementById('up-progress-bar').style.width = '30%';
+
+  try {
+    // Convert file to base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('up-progress-bar').style.width = '60%';
+
+    const res = await fetch('/.netlify/functions/github-upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify({ filename: file.name, content: base64, folder, message })
+    });
+
+    document.getElementById('up-progress-bar').style.width = '100%';
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+    // Show result
+    const resultEl = document.getElementById('up-result');
+    resultEl.textContent = data.message;
+    resultEl.className = 'upload-result success';
+    resultEl.style.display = 'block';
+
+    // Show URL copy box
+    document.getElementById('up-url-val').value = data.url;
+    document.getElementById('up-url-copy').style.display = 'block';
+
+    toast('✅ Upload successful! Netlify deploy শুরু হয়েছে...','success');
+  } catch(e) {
+    const resultEl = document.getElementById('up-result');
+    resultEl.textContent = '❌ ' + e.message;
+    resultEl.className = 'upload-result error';
+    resultEl.style.display = 'block';
+    toast('❌ Upload failed: ' + e.message,'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '⬆️ Upload করুন';
+  }
+};
+
+window.copyUploadUrl = function() {
+  const val = document.getElementById('up-url-val').value;
+  navigator.clipboard.writeText(val).then(() => toast('✅ URL copied!','success'));
+};
+
+window.resetUpload = function() {
+  document.getElementById('up-file').value = '';
+  document.getElementById('up-preview').style.display = 'none';
+  document.getElementById('up-progress').style.display = 'none';
+  document.getElementById('up-progress-bar').style.width = '0%';
+  document.getElementById('up-result').style.display = 'none';
+  document.getElementById('up-url-copy').style.display = 'none';
+  document.getElementById('up-message').value = '';
+};
+
+// ── Close modals on background click
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if(e.target===bg) bg.classList.remove('open'); });
 });
