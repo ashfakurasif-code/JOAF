@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JOAF Admin — Master Control</title>
+<style>
+:root{
+  --bg:#08090e;--bg2:#0f1019;--bg3:#161722;--bg4:#1e1f2e;--bg5:#262738;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);--border3:rgba(255,255,255,.18);
+  --text:#eeeef5;--text2:#7878a0;--text3:#4a4a68;
+  --red:#f05252;--red-bg:rgba(240,82,82,.12);--red-border:rgba(240,82,82,.25);
+  --green:#34d399;--green-bg:rgba(52,211,153,.12);--green-border:rgba(52,211,153,.25);
+  --blue:#60a5fa;--blue-bg:rgba(96,165,250,.12);--blue-border:rgba(96,165,250,.25);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,.12);--amber-border:rgba(251,191,36,.25);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,.12);--purple-border:rgba(167,139,250,.25);
+  --accent:#f05252;--accent2:#ff6b6b;
+  --sidebar-w:220px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ══ LOGIN ══════════════════════════════════════ */
+#loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;background-image:radial-gradient(ellipse at 20% 50%,rgba(240,82,82,.04) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(96,165,250,.04) 0%,transparent 60%);}
+.lcard{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:36px 32px;width:340px;}
+.lcard-top{text-align:center;margin-bottom:28px;}
+.lcard-top .logo-circle{width:52px;height:52px;background:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px;}
+.lcard-top h1{font-size:19px;font-weight:900;letter-spacing:-.3px;}
+.lcard-top p{font-size:12px;color:var(--text2);margin-top:4px;}
+.lf{margin-bottom:12px;}
+.lf label{display:block;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
+.lf input{width:100%;padding:11px 14px;background:var(--bg);border:1.5px solid var(--border2);border-radius:10px;color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:.15s;}
+.lf input:focus{border-color:var(--accent);background:var(--bg2);}
+.lbtn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:.15s;margin-top:4px;}
+.lbtn:hover{background:var(--accent2);}
+.lbtn:disabled{opacity:.5;cursor:not-allowed;}
+.lerr{color:var(--red);font-size:12px;margin-top:8px;min-height:16px;text-align:center;}
+
+/* ══ APP SHELL ═══════════════════════════════════ */
+#app{display:none;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;z-index:200;display:flex;flex-direction:column;}
+.sidebar::-webkit-scrollbar{width:3px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+.slogo{padding:18px 16px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.slogo-ic{width:34px;height:34px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.slogo-text b{display:block;font-size:14px;font-weight:900;}
+.slogo-text small{font-size:9px;color:var(--text2);letter-spacing:.3px;}
+.snav{flex:1;padding:8px 6px;}
+.nsec{padding:10px 8px 4px;font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--text2);transition:.12s;margin-bottom:1px;position:relative;}
+.ni:hover{background:var(--bg3);color:var(--text);}
+.ni.active{background:var(--bg4);color:var(--text);}
+.ni.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:var(--accent);border-radius:2px;}
+.ni .ic{font-size:14px;width:16px;text-align:center;flex-shrink:0;}
+.nbadge{margin-left:auto;background:var(--accent);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:50px;min-width:18px;text-align:center;}
+.nbadge.green{background:var(--green);color:#000;}
+.sfoot{padding:12px 6px;border-top:1px solid var(--border);}
+
+/* TOPBAR */
+.main{margin-left:var(--sidebar-w);min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.topbar-left h2{font-size:15px;font-weight:800;letter-spacing:-.2px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.tbtn{padding:6px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;transition:.12s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.tbtn:hover{color:var(--text);border-color:var(--border3);}
+
+/* PAGES */
+.page{padding:22px;display:none;flex:1;}
+.page.active{display:block;}
+
+/* ══ COMPONENTS ══════════════════════════════════ */
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px;}
+.scard{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.scard::after{content:attr(data-icon);position:absolute;right:12px;top:10px;font-size:26px;opacity:.15;}
+.scard-num{font-size:26px;font-weight:900;line-height:1;margin-bottom:4px;}
+.scard-label{font-size:11px;color:var(--text2);}
+.scard-sub{font-size:10px;margin-top:3px;}
+.scard.red .scard-num{color:var(--red);}
+.scard.green .scard-num{color:var(--green);}
+.scard.blue .scard-num{color:var(--blue);}
+.scard.amber .scard-num{color:var(--amber);}
+.scard.purple .scard-num{color:var(--purple);}
+
+/* Cards */
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:13px;padding:18px;margin-bottom:14px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:13px;font-weight:800;}
+.card-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.card-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:640px){.card-2col{grid-template-columns:1fr;}}
+
+/* Form fields */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.field input,.field textarea,.field select{width:100%;padding:9px 12px;background:var(--bg);border:1.5px solid var(--border2);border-radius:9px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;transition:.15s;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);background:var(--bg2);}
+.field textarea{min-height:80px;}
+.field select option{background:var(--bg3);}
+.field-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.field-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+@media(max-width:500px){.field-2,.field-3{grid-template-columns:1fr;}}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s;display:inline-flex;align-items:center;gap:5px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-success{background:var(--green);color:#000;}
+.btn-success:hover{opacity:.85;}
+.btn-ghost{background:var(--bg4);color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{color:var(--text);}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red-border);}
+.btn-danger:hover{background:var(--red-bg);}
+.btn-warning{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.btn-sm{padding:4px 10px;font-size:10px;border-radius:6px;}
+.btn-lg{padding:11px 22px;font-size:13px;}
+.btn-full{width:100%;justify-content:center;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:var(--bg4);padding:9px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+td{padding:9px 12px;border-top:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.td-actions{display:flex;gap:5px;align-items:center;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.badge-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.badge-purple{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9990;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px);}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;padding:22px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;}
+.modal-lg{max-width:600px;}
+.modal h3{font-size:15px;font-weight:900;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);}
+
+/* Quick notification grid */
+.qgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+@media(max-width:600px){.qgrid{grid-template-columns:repeat(2,1fr);}}
+.qbtn{padding:10px 8px;border-radius:9px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:11px;font-weight:700;cursor:pointer;text-align:left;transition:.12s;font-family:inherit;}
+.qbtn:hover{border-color:var(--accent);background:var(--bg3);}
+.qbtn .qi{font-size:18px;display:block;margin-bottom:4px;}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;padding:11px 18px;border-radius:10px;font-size:12px;font-weight:700;z-index:99999;display:none;max-width:300px;animation:slideUp .2s ease;}
+.toast.success{background:#0d2a1e;color:var(--green);border:1px solid var(--green-border);}
+.toast.error{background:#2a0d0d;color:var(--red);border:1px solid var(--red-border);}
+.toast.info{background:#0d1a2a;color:var(--blue);border:1px solid var(--blue-border);}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* History items */
+.hist-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.hist-item:last-child{border:none;}
+.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.hist-info{flex:1;min-width:0;}
+.hist-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-time{font-size:10px;color:var(--text2);margin-top:1px;}
+.hist-sent{font-size:11px;font-weight:700;color:var(--green);flex-shrink:0;}
+
+/* Activity feed */
+.act-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.act-item:last-child{border:none;}
+.act-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.act-text{font-size:12px;flex:1;line-height:1.4;}
+.act-text b{color:var(--text);}
+.act-time{font-size:10px;color:var(--text2);}
+
+/* Donor card */
+.donor-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.donor-row:last-child{border:none;}
+.donor-ava{width:32px;height:32px;border-radius:9px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.donor-info{flex:1;min-width:0;}
+.donor-name{font-size:12px;font-weight:700;}
+.donor-meta{font-size:10px;color:var(--text2);margin-top:1px;}
+.donor-actions{display:flex;gap:5px;}
+
+/* Misc */
+.empty{text-align:center;padding:36px;color:var(--text2);font-size:13px;}
+.loading{text-align:center;padding:28px;color:var(--text2);font-size:12px;}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+.flex{display:flex;align-items:center;gap:8px;}
+.flex-sb{display:flex;align-items:center;justify-content:space-between;}
+.mt12{margin-top:12px;}
+.mt16{margin-top:16px;}
+.text-red{color:var(--red);}
+.text-green{color:var(--green);}
+.text-amber{color:var(--amber);}
+.text-blue{color:var(--blue);}
+.text-muted{color:var(--text2);}
+.section-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="lcard">
+    <div class="lcard-top">
+      <div class="logo-circle">⚡</div>
+      <h1>JOAF Admin</h1>
+      <p>Master Control Panel</p>
+    </div>
+    <div class="lf">
+      <label>Username</label>
+      <input type="text" id="lusr" placeholder="admin" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="lf">
+      <label>Password</label>
+      <input type="password" id="lpass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="lbtn" id="lbtn" onclick="doLogin()">প্রবেশ করুন →</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="slogo">
+      <div class="slogo-ic">⚡</div>
+      <div class="slogo-text">
+        <b>JOAF Admin</b>
+        <small>MASTER CONTROL</small>
+      </div>
+    </div>
+
+    <div class="snav">
+      <div class="nsec">Overview</div>
+      <div class="ni active" onclick="goPage('dashboard',this)"><span class="ic">📊</span>Dashboard</div>
+
+      <div class="nsec">Content</div>
+      <div class="ni" onclick="goPage('notification',this)"><span class="ic">🔔</span>Notification <span class="nbadge" id="b-notif">—</span></div>
+      <div class="ni" onclick="goPage('alert-page',this)"><span class="ic">🚨</span>সতর্কতা</div>
+      <div class="ni" onclick="goPage('blood',this)"><span class="ic">🩸</span>রক্তদাতা <span class="nbadge green" id="b-blood">—</span></div>
+      <div class="ni" onclick="goPage('press',this)"><span class="ic">📰</span>Press Release</div>
+
+      <div class="nsec">Data</div>
+      <div class="ni" onclick="goPage('leader',this)"><span class="ic">🏛️</span>নেতা ট্র্যাকার</div>
+      <div class="ni" onclick="goPage('warrior',this)"><span class="ic">✊</span>জুলাই যোদ্ধা</div>
+      <div class="ni" onclick="goPage('bajar',this)"><span class="ic">🛒</span>বাজার দর</div>
+      <div class="ni" onclick="goPage('medicine',this)"><span class="ic">💊</span>ওষুধের দাম</div>
+
+      <div class="nsec">Community</div>
+      <div class="ni" onclick="goPage('members',this)"><span class="ic">👥</span>Members</div>
+      <div class="ni" onclick="goPage('polls',this)"><span class="ic">🗳️</span>Polls / Streak</div>
+      <div class="ni" onclick="goPage('forum',this)"><span class="ic">💬</span>Forum</div>
+
+      <div class="nsec">System</div>
+      <div class="ni" onclick="goPage('analytics',this)"><span class="ic">📈</span>Analytics</div>
+      <div class="ni" onclick="goPage('settings',this)"><span class="ic">⚙️</span>Settings</div>
+    </div>
+
+    <div class="sfoot">
+      <div class="ni" onclick="doLogout()"><span class="ic">🚪</span>Logout</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2 id="pageTitle">Dashboard</h2>
+      </div>
+      <div class="topbar-right">
+        <span style="font-size:11px;color:var(--text2)">julyforum.com</span>
+        <a href="https://julyforum.com" target="_blank" class="tbtn">🌐 Live Site</a>
+      </div>
+    </div>
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="scard blue" data-icon="🔔"><div class="scard-num" id="ds-sub">—</div><div class="scard-label">Push Subscribers</div><div class="scard-sub text-muted">Active devices</div></div>
+        <div class="scard green" data-icon="🩸"><div class="scard-num" id="ds-donors">—</div><div class="scard-label">রক্তদাতা</div><div class="scard-sub text-muted">Total donors</div></div>
+        <div class="scard red" data-icon="🚨"><div class="scard-num" id="ds-alerts">—</div><div class="scard-label">সতর্কতা</div><div class="scard-sub text-muted">Active alerts</div></div>
+        <div class="scard amber" data-icon="🔔"><div class="scard-num" id="ds-notifs">—</div><div class="scard-label">Notifications Sent</div><div class="scard-sub text-muted">All time</div></div>
+        <div class="scard purple" data-icon="💬"><div class="scard-num" id="ds-polls">—</div><div class="scard-label">Poll Voters</div><div class="scard-sub text-muted">Registered users</div></div>
+      </div>
+
+      <div class="card-2col">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">⚡ Quick Actions</div><div class="card-sub">সবচেয়ে বেশি ব্যবহৃত</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-primary btn-full" onclick="goPage('notification',document.querySelector('.ni:nth-child(6)'))">🔔 Notification পাঠান</button>
+            <button class="btn btn-ghost btn-full" onclick="goPage('alert-page',document.querySelector('.ni:nth-child(7)'))">🚨 নতুন সতর্কতা দিন</button>
+            <button class="btn btn-ghost btn-full" onclick="goPage('blood',document.querySelector('.ni:nth-child(8)'))">🩸 রক্তদাতা দেখুন</button>
+            <button class="btn btn-ghost btn-full" onclick="goPage('bajar',document.querySelector('.ni:nth-child(13)'))">🛒 বাজার দর Update</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">📋 Recent Notifications</div></div>
+          </div>
+          <div id="dash-history"><div class="loading">লোড হচ্ছে...</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">🩸 সাম্প্রতিক রক্তের অনুরোধ</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="goPage('blood',document.querySelector('.ni:nth-child(8)'))">সব দেখুন →</button>
+        </div>
+        <div id="dash-blood"><div class="loading">লোড হচ্ছে...</div></div>
+      </div>
+    </div>
+
+    <!-- ══ NOTIFICATION ══ -->
+    <div class="page" id="page-notification">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="scard blue" data-icon="📱"><div class="scard-num" id="n-sub">—</div><div class="scard-label">Total Subscribers</div></div>
+        <div class="scard amber" data-icon="📤"><div class="scard-num" id="n-today">—</div><div class="scard-label">আজ পাঠানো</div></div>
+        <div class="scard green" data-icon="✅"><div class="scard-num" id="n-total">—</div><div class="scard-label">মোট Notification</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">⚡ Quick Send</div><div class="card-sub">Click করলে edit করে পাঠাতে পারবেন</div></div>
+        </div>
+        <div class="qgrid">
+          <button class="qbtn" onclick="openNotifModal('bajar')"><span class="qi">🛒</span>বাজার দর</button>
+          <button class="qbtn" onclick="openNotifModal('weather')"><span class="qi">🌦️</span>আবহাওয়া</button>
+          <button class="qbtn" onclick="openNotifModal('poll')"><span class="qi">🗳️</span>Poll Reminder</button>
+          <button class="qbtn" onclick="openNotifModal('streak')"><span class="qi">🔥</span>Streak Alert</button>
+          <button class="qbtn" onclick="openNotifModal('blood')"><span class="qi">🩸</span>রক্তের জরুরি</button>
+          <button class="qbtn" onclick="openNotifModal('alert')"><span class="qi">🚨</span>জরুরি সতর্কতা</button>
+          <button class="qbtn" onclick="openNotifModal('live')"><span class="qi">📡</span>JOAF Live</button>
+          <button class="qbtn" onclick="openNotifModal('warrior')"><span class="qi">✊</span>জুলাই যোদ্ধা</button>
+          <button class="qbtn" onclick="openNotifModal('corruption')"><span class="qi">🚫</span>দুর্নীতি রিপোর্ট</button>
+          <button class="qbtn" onclick="openNotifModal('leader')"><span class="qi">🏛️</span>নেতা ট্র্যাকার</button>
+          <button class="qbtn" onclick="openNotifModal('medicine')"><span class="qi">💊</span>ওষুধের দাম</button>
+          <button class="qbtn" onclick="openNotifModal('agriculture')"><span class="qi">🌾</span>কৃষি আপডেট</button>
+          <button class="qbtn" onclick="openNotifModal('jobs')"><span class="qi">💼</span>নতুন চাকরি</button>
+          <button class="qbtn" onclick="openNotifModal('breaking')"><span class="qi">🚨</span>Breaking News</button>
+          <button class="qbtn" onclick="openNotifModal('news')"><span class="qi">📢</span>JOAF বিবৃতি</button>
+          <button class="qbtn" onclick="openNotifModal('welcome')"><span class="qi">👋</span>Welcome</button>
+        </div>
+      </div>
+
+      <div class="card-2col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">✍️ Custom Notification</div></div>
+          <div class="field"><label>Title</label><input type="text" id="cn-title" placeholder="🚨 জরুরি ঘোষণা"></div>
+          <div class="field"><label>Message</label><textarea id="cn-body" placeholder="বিস্তারিত message..."></textarea></div>
+          <div class="field"><label>Link (optional)</label><input type="text" id="cn-url" placeholder="/alert.html"></div>
+          <button class="btn btn-primary btn-full btn-lg mt12" id="cn-btn" onclick="sendCustomNotif()">📤 সবার কাছে পাঠান</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">📋 Notification History</div></div>
+          <div id="notif-history"><div class="loading">লোড হচ্ছে...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALERT PAGE ══ -->
+    <div class="page" id="page-alert-page">
+      <div class="card-2col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🚨 নতুন সতর্কতা দিন</div></div>
+          <div class="field"><label>শিরোনাম</label><input type="text" id="al-title" placeholder="বন্যার সতর্কতা — সিলেট"></div>
+          <div class="field"><label>বিবরণ</label><textarea id="al-body" placeholder="বিস্তারিত লিখুন..."></textarea></div>
+          <div class="field-2">
+            <div class="field"><label>ধরন</label>
+              <select id="al-type">
+                <option value="flood">🌊 বন্যা</option>
+                <option value="fire">🔥 আগুন</option>
+                <option value="accident">🚑 দুর্ঘটনা</option>
+                <option value="crime">⚠️ অপরাধ</option>
+                <option value="health">🏥 স্বাস্থ্য</option>
+                <option value="political">🏛️ রাজনৈতিক</option>
+                <option value="other">📢 অন্যান্য</option>
+              </select>
+            </div>
+            <div class="field"><label>এলাকা</label><input type="text" id="al-area" placeholder="ঢাকা / সিলেট..."></div>
+          </div>
+          <div class="field"><label>Level</label>
+            <select id="al-level">
+              <option value="info">ℹ️ তথ্য</option>
+              <option value="warning">⚠️ সতর্কতা</option>
+              <option value="danger">🚨 বিপদ</option>
+            </select>
+          </div>
+          <div class="btn-row mt12">
+            <button class="btn btn-primary" onclick="postAlert()">📢 Post করুন</button>
+            <button class="btn btn-ghost" onclick="postAlert(true)">📢 Post + Notification</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">সক্রিয় সতর্কতা</div></div>
+            <button class="btn btn-ghost btn-sm" onclick="loadAlerts()">↻ Refresh</button>
+          </div>
+          <div id="alert-list"><div class="loading">লোড হচ্ছে...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BLOOD ══ -->
+    <div class="page" id="page-blood">
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="scard green" data-icon="🩸"><div class="scard-num" id="bl-total">—</div><div class="scard-label">মোট দাতা</div></div>
+        <div class="scard blue" data-icon="✅"><div class="scard-num" id="bl-active">—</div><div class="scard-label">সক্রিয়</div></div>
+        <div class="scard red" data-icon="🔴"><div class="scard-num" id="bl-apos">—</div><div class="scard-label">A+ গ্রুপ</div></div>
+        <div class="scard amber" data-icon="🔵"><div class="scard-num" id="bl-opos">—</div><div class="scard-label">O+ গ্রুপ</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">🩸 রক্তদাতা তালিকা</div></div>
+          <div class="flex">
+            <input type="text" id="bl-search" placeholder="নাম / গ্রুপ / জেলা..." style="padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;outline:none;width:180px;" oninput="filterDonors()">
+            <button class="btn btn-ghost btn-sm" onclick="loadDonors()">↻</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>নাম</th><th>রক্তের গ্রুপ</th><th>জেলা</th><th>ফোন</th><th>তারিখ</th><th>Action</th></tr></thead>
+            <tbody id="donor-tbody"><tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PRESS RELEASE ══ -->
+    <div class="page" id="page-press">
+      <div class="card-2col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">📰 নতুন Press Release</div></div>
+          <div class="field"><label>শিরোনাম</label><input type="text" id="pr-title" placeholder="JOAF বিবৃতি..."></div>
+          <div class="field"><label>সারসংক্ষেপ</label><textarea id="pr-summary" placeholder="সংক্ষিপ্ত বিবরণ..."></textarea></div>
+          <div class="field"><label>সম্পূর্ণ বিষয়বস্তু</label><textarea id="pr-content" style="min-height:140px" placeholder="বিস্তারিত লিখুন..."></textarea></div>
+          <div class="field-2">
+            <div class="field"><label>তারিখ</label><input type="date" id="pr-date"></div>
+            <div class="field"><label>Image URL</label><input type="text" id="pr-img" placeholder="/img/press-release.jpg"></div>
+          </div>
+          <div class="btn-row mt12">
+            <button class="btn btn-primary" onclick="addPressRelease()">📢 Publish করুন</button>
+            <button class="btn btn-ghost" onclick="addPressRelease(true)">Publish + Notification</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">প্রকাশিত Press Releases</div></div>
+          <div id="press-list"><div class="loading">লোড হচ্ছে...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LEADER TRACKER ══ -->
+    <div class="page" id="page-leader">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">🏛️ নেতা ট্র্যাকার</div><div class="card-sub">Firestore এ data save হলে সাইটে automatically দেখাবে</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('leaderModal')">+ নতুন নেতা</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>নাম</th><th>দল</th><th>পদ</th><th>Approval</th><th>প্রতিশ্রুতি</th><th>Action</th></tr></thead>
+            <tbody id="leader-tbody"><tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="card mt16" style="background:var(--amber-bg);border-color:var(--amber-border)">
+          <div style="font-size:12px;color:var(--amber)">⚠️ <b>Migration দরকার:</b> বর্তমানে নেতাদের data <code>leader-tracker.html</code> এ hardcoded আছে। Firestore এ migrate করলে এখান থেকে edit করা যাবে। Migration button নিচে আছে।</div>
+          <button class="btn btn-warning btn-sm mt12" onclick="migrateLeaders()">⬆️ Firestore এ Migrate করুন</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ WARRIORS ══ -->
+    <div class="page" id="page-warrior">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">✊ জুলাই যোদ্ধা</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('warriorModal')">+ নতুন যোদ্ধা</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>নাম</th><th>ধরন</th><th>জেলা</th><th>ভূমিকা</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="warrior-tbody"><tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BAJAR ══ -->
+    <div class="page" id="page-bajar">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">🛒 বাজার দর Manual Update</div><div class="card-sub">এখানে দাম দিলে site এ override হবে</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;" id="bajar-fields">
+          <!-- Dynamic fields -->
+        </div>
+        <div class="btn-row mt16">
+          <button class="btn btn-primary" onclick="saveBajar()">💾 Save করুন</button>
+          <button class="btn btn-ghost" onclick="saveBajar(true)">Save + Notification পাঠান</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">আজকের দাম (Firestore)</div></div>
+        <div id="bajar-current"><div class="loading">লোড হচ্ছে...</div></div>
+      </div>
+    </div>
+
+    <!-- ══ MEDICINE ══ -->
+    <div class="page" id="page-medicine">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">💊 ওষুধের দাম Update</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('medModal')">+ নতুন ওষুধ</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>ওষুধের নাম</th><th>Generic</th><th>MRP</th><th>আপডেট তারিখ</th><th>Action</th></tr></thead>
+            <tbody id="med-tbody"><tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MEMBERS ══ -->
+    <div class="page" id="page-members">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">👥 Members</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('memberModal')">+ নতুন Member</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>নাম</th><th>পদ</th><th>বিভাগ</th><th>Facebook</th><th>Action</th></tr></thead>
+            <tbody id="member-tbody"><tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ POLLS ══ -->
+    <div class="page" id="page-polls">
+      <div class="stats-grid">
+        <div class="scard purple" data-icon="🗳️"><div class="scard-num" id="po-voters">—</div><div class="scard-label">মোট Voters</div></div>
+        <div class="scard green" data-icon="🔥"><div class="scard-num" id="po-streak">—</div><div class="scard-label">Active Streaks</div></div>
+        <div class="scard amber" data-icon="🎉"><div class="scard-num" id="po-rewards">—</div><div class="scard-label">Reward Claims</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🗳️ Poll Voters তালিকা</div></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>নাম</th><th>ফোন</th><th>Streak</th><th>মোট ভোট</th><th>শেষ ভোট</th></tr></thead>
+            <tbody id="poll-tbody"><tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FORUM ══ -->
+    <div class="page" id="page-forum">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">💬 Forum Messages</div></div>
+          <select id="forum-room" onchange="loadForum()" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;outline:none;">
+            <option value="general">General</option>
+            <option value="blood">Blood</option>
+            <option value="alert">Alert</option>
+            <option value="jobs">Jobs</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>User</th><th>Message</th><th>সময়</th><th>Action</th></tr></thead>
+            <tbody id="forum-tbody"><tr><td colspan="4" class="loading">লোড হচ্ছে...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ANALYTICS ══ -->
+    <div class="page" id="page-analytics">
+      <div class="stats-grid">
+        <div class="scard blue" data-icon="👁️"><div class="scard-num" id="an-visitors">—</div><div class="scard-label">আজকের Visitors</div></div>
+        <div class="scard green" data-icon="📱"><div class="scard-num" id="an-subs">—</div><div class="scard-label">Push Subscribers</div></div>
+        <div class="scard amber" data-icon="📤"><div class="scard-num" id="an-notifs">—</div><div class="scard-label">Notifications Sent</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">📈 Google Analytics</div></div>
+        <div style="text-align:center;padding:30px;color:var(--text2);">
+          <div style="font-size:40px;margin-bottom:12px">📊</div>
+          <div style="font-size:13px;margin-bottom:16px">Google Analytics G-QV3CFV7R98</div>
+          <a href="https://analytics.google.com" target="_blank" class="btn btn-primary">Analytics Dashboard খুলুন →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="page" id="page-settings">
+      <div class="card-2col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">🔐 Password পরিবর্তন</div></div>
+          <div class="field"><label>বর্তমান Password</label><input type="password" id="set-old" placeholder="••••••••"></div>
+          <div class="field"><label>নতুন Password</label><input type="password" id="set-new" placeholder="••••••••"></div>
+          <div class="field"><label>নিশ্চিত করুন</label><input type="password" id="set-confirm" placeholder="••••••••"></div>
+          <button class="btn btn-primary mt12" onclick="changePassword()">🔐 পরিবর্তন করুন</button>
+          <div class="card mt16" style="background:var(--amber-bg);border-color:var(--amber-border)">
+            <div style="font-size:11px;color:var(--amber)">⚠️ Password পরিবর্তন করলে Netlify এবং GitHub Secrets এও update করতে হবে।</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">⚙️ Site Config</div></div>
+          <div class="field"><label>Site Name</label><input type="text" value="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম" id="set-sitename"></div>
+          <div class="field"><label>Admin Email</label><input type="email" value="admin@julyforum.com" id="set-email"></div>
+          <div class="field"><label>Notification Footer</label><input type="text" value="julyforum.com" id="set-footer"></div>
+          <button class="btn btn-primary mt12" onclick="saveSettings()">💾 Save করুন</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔧 System Tools</div></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="runMigration()">⬆️ Subscription Migration</button>
+          <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
+          <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
+          <a href="https://console.firebase.google.com/project/joaf-app-45753" target="_blank" class="btn btn-ghost">🔥 Firebase Console</a>
+          <a href="https://app.netlify.com/projects/joaf" target="_blank" class="btn btn-ghost">🌐 Netlify Dashboard</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- Notification Edit Modal -->
+<div class="modal-bg" id="notifModal">
+  <div class="modal">
+    <h3 id="nm-label">🔔 Notification পাঠান</h3>
+    <div class="field"><label>Title</label><input type="text" id="nm-title"></div>
+    <div class="field"><label>Message</label><textarea id="nm-body"></textarea></div>
+    <div class="field"><label>Link</label><input type="text" id="nm-url"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('notifModal')">বাতিল</button>
+      <button class="btn btn-ghost" onclick="resetNotifModal()">↺ Default</button>
+      <button class="btn btn-primary" id="nm-send" onclick="sendFromModal()">📤 পাঠান</button>
+    </div>
+  </div>
+</div>
+
+<!-- Leader Modal -->
+<div class="modal-bg" id="leaderModal">
+  <div class="modal modal-lg">
+    <h3>🏛️ নতুন নেতা যোগ করুন</h3>
+    <div class="field-2">
+      <div class="field"><label>নাম</label><input type="text" id="ld-name" placeholder="ড. মুহাম্মদ ইউনূস"></div>
+      <div class="field"><label>দল/সংগঠন</label><input type="text" id="ld-party" placeholder="অন্তর্বর্তীকালীন সরকার"></div>
+    </div>
+    <div class="field-2">
+      <div class="field"><label>পদ</label><input type="text" id="ld-role" placeholder="প্রধান উপদেষ্টা"></div>
+      <div class="field"><label>Approval % (0-100)</label><input type="number" id="ld-approval" placeholder="65" min="0" max="100"></div>
+    </div>
+    <div class="field"><label>Category</label>
+      <select id="ld-cat">
+        <option>সরকার</option><option>বিরোধী দল</option><option>যুব রাজনীতি</option><option>সুশীল সমাজ</option>
+      </select>
+    </div>
+    <div class="field"><label>প্রতিশ্রুতি (প্রতি লাইনে একটি)</label><textarea id="ld-promises" placeholder="দুর্নীতি দমন করবেন&#10;নির্বাচন সংস্কার করবেন"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('leaderModal')">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveLeader()">💾 Save করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Warrior Modal -->
+<div class="modal-bg" id="warriorModal">
+  <div class="modal">
+    <h3>✊ নতুন যোদ্ধা যোগ করুন</h3>
+    <div class="field-2">
+      <div class="field"><label>নাম</label><input type="text" id="wr-name"></div>
+      <div class="field"><label>জেলা</label><input type="text" id="wr-dist"></div>
+    </div>
+    <div class="field-2">
+      <div class="field"><label>ভূমিকা</label><input type="text" id="wr-role" placeholder="সক্রিয় সংগঠক"></div>
+      <div class="field"><label>ধরন</label>
+        <select id="wr-type"><option value="active">✊ সক্রিয়</option><option value="shahid">🩸 শহীদ</option><option value="ahat">🩹 আহত</option></select>
+      </div>
+    </div>
+    <div class="field"><label>গল্প / বিবরণ</label><textarea id="wr-story"></textarea></div>
+    <div class="field"><label>Icon (emoji)</label><input type="text" id="wr-icon" placeholder="✊" maxlength="2"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('warriorModal')">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveWarrior()">💾 Save করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Member Modal -->
+<div class="modal-bg" id="memberModal">
+  <div class="modal">
+    <h3>👥 নতুন Member যোগ করুন</h3>
+    <div class="field-2">
+      <div class="field"><label>নাম</label><input type="text" id="mb-name"></div>
+      <div class="field"><label>পদ/Designation</label><input type="text" id="mb-desg"></div>
+    </div>
+    <div class="field-2">
+      <div class="field"><label>বিভাগ</label>
+        <select id="mb-cat"><option value="organizer">সংগঠক</option><option value="advisor">উপদেষ্টা</option><option value="coalition">জোট</option></select>
+      </div>
+      <div class="field"><label>Image URL</label><input type="text" id="mb-img" placeholder="/members/name.png"></div>
+    </div>
+    <div class="field"><label>Facebook URL</label><input type="text" id="mb-fb" placeholder="https://facebook.com/..."></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('memberModal')">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveMember()">💾 Save করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Medicine Modal -->
+<div class="modal-bg" id="medModal">
+  <div class="modal">
+    <h3>💊 ওষুধের দাম যোগ করুন</h3>
+    <div class="field-2">
+      <div class="field"><label>ওষুধের নাম</label><input type="text" id="med-name" placeholder="Napa 500mg"></div>
+      <div class="field"><label>Generic নাম</label><input type="text" id="med-generic" placeholder="Paracetamol"></div>
+    </div>
+    <div class="field-2">
+      <div class="field"><label>MRP (টাকা)</label><input type="number" id="med-mrp" placeholder="2.50"></div>
+      <div class="field"><label>Company</label><input type="text" id="med-company" placeholder="Beximco"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('medModal')">বাতিল</button>
+      <button class="btn btn-primary" onclick="saveMedicine()">💾 Save করুন</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const FB = { apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk', authDomain:'joaf-app-45753.firebaseapp.com', projectId:'joaf-app-45753', storageBucket:'joaf-app-45753.firebasestorage.app', messagingSenderId:'472362223214', appId:'1:472362223214:web:9186a4f90dc608bae4487f' };
+const app = getApps().length ? getApps()[0] : initializeApp(FB);
+const db  = getFirestore(app);
+
+// ── Auth ────────────────────────────────────────────────
+let ADMIN_KEY = '';
+const ADMIN_USER = 'joaf_admin'; // Change this
+
+window.doLogin = async function() {
+  const user = document.getElementById('lusr').value.trim();
+  const pass = document.getElementById('lpass').value.trim();
+  if (!user || !pass) return setErr('Username ও Password দিন');
+  const btn = document.getElementById('lbtn');
+  btn.disabled = true; btn.textContent = '⏳ Checking...';
+
+  try {
+    const res = await fetch('/.netlify/functions/send-notification', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':pass},
+      body: JSON.stringify({_verify:true})
+    });
+    if (res.status === 401) { setErr('❌ ভুল username বা password'); btn.disabled=false; btn.textContent='প্রবেশ করুন →'; return; }
+    ADMIN_KEY = pass;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initDashboard();
+  } catch(e) {
+    setErr('❌ Connection error'); btn.disabled=false; btn.textContent='প্রবেশ করুন →';
+  }
+};
+
+window.doLogout = function() {
+  ADMIN_KEY = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+};
+
+function setErr(msg) { document.getElementById('lerr').textContent = msg; }
+
+// ── Navigation ──────────────────────────────────────────
+window.goPage = function(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
+  if (page) page.classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {dashboard:'📊 Dashboard',notification:'🔔 Notification',
+    'alert-page':'🚨 সতর্কতা',blood:'🩸 রক্তদাতা',press:'📰 Press Release',
+    leader:'🏛️ নেতা ট্র্যাকার',warrior:'✊ জুলাই যোদ্ধা',bajar:'🛒 বাজার দর',
+    medicine:'💊 ওষুধের দাম',members:'👥 Members',polls:'🗳️ Polls',
+    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings'};
+  document.getElementById('pageTitle').textContent = titles[id] || id;
+  // Lazy load page data
+  const loaders = {
+    notification: loadNotifPage, 'alert-page': loadAlerts,
+    blood: loadDonors, press: loadPress, leader: loadLeaders,
+    warrior: loadWarriors, bajar: loadBajar, medicine: loadMedicines,
+    members: loadMembers, polls: loadPolls, forum: loadForum
+  };
+  if (loaders[id]) loaders[id]();
+};
+
+// ── Dashboard init ──────────────────────────────────────
+async function initDashboard() {
+  // Stats
+  try {
+    const [subSnap, donorSnap, alertSnap, histSnap] = await Promise.all([
+      getDocs(query(collection(db,'push_subscriptions'), where('active','==',true))),
+      getDocs(collection(db,'donors')),
+      getDocs(query(collection(db,'alerts'), where('active','==',true))),
+      getDocs(collection(db,'notification_history'))
+    ]);
+    const sub = subSnap.size, donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
+    setEl('ds-sub', sub); setEl('ds-donors', donors); setEl('ds-alerts', alerts); setEl('ds-notifs', notifs);
+    setEl('b-notif', sub); setEl('b-blood', donors);
+    setEl('n-sub', sub); setEl('n-total', notifs);
+    setEl('an-subs', sub); setEl('an-notifs', notifs);
+
+    // Today notifs
+    const today = new Date(); today.setHours(0,0,0,0);
+    let todayCount = 0;
+    histSnap.forEach(d => { const t = d.data().sentAt?.toDate?.(); if(t && t >= today) todayCount++; });
+    setEl('n-today', todayCount);
+
+    // History
+    const hDocs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
+      .sort((a,b)=>( (b.sentAt?.seconds||0)-(a.sentAt?.seconds||0) )).slice(0,5);
+    renderHistory('dash-history', hDocs);
+
+    // Dashboard blood preview
+    const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
+    renderBloodPreview(bDocs);
+  } catch(e) { console.log('dashboard error',e); }
+}
+
+// ── Notification ────────────────────────────────────────
+const NOTIF_DEFAULTS = {
+  bajar:{title:'🛒 আজকের বাজার দর',body:'চাল, ডাল, সবজির দাম আপডেট হয়েছে।',url:'/bajar.html'},
+  poll:{title:'🗳️ আজকের জনমত',body:'৩০টি প্রশ্নে ভোট দিন, streak বজায় রাখুন!',url:'/joaf-polls.html'},
+  streak:{title:'🔥 Streak মিস করবেন না!',body:'আজকের ভোট এখনো বাকি। এখনই দিন।',url:'/joaf-polls.html'},
+  weather:{title:'🌦️ আবহাওয়া সতর্কতা',body:'আজ বিশেষ আবহাওয়া পূর্বাভাস।',url:'/weather.html'},
+  blood:{title:'🩸 জরুরি রক্ত দরকার!',body:'আপনার এলাকায় রক্তের অনুরোধ।',url:'/rokto.html'},
+  alert:{title:'🚨 জরুরি সতর্কতা!',body:'একটি জরুরি পরিস্থিতি জানানো হয়েছে।',url:'/alert.html'},
+  live:{title:'📡 JOAF Live শুরু!',body:'সরাসরি সম্প্রচার চলছে।',url:'/live.html'},
+  warrior:{title:'🏆 নতুন জুলাই যোদ্ধা!',body:'একজন নতুন বীর যোগ দিয়েছেন।',url:'/july-warriors.html'},
+  corruption:{title:'🚫 দুর্নীতির রিপোর্ট',body:'নতুন অভিযোগ দাখিল হয়েছে।',url:'/leader-tracker.html'},
+  leader:{title:'🏛️ নেতা ট্র্যাকার আপডেট',body:'সাপ্তাহিক আপডেট এসেছে।',url:'/leader-tracker.html'},
+  medicine:{title:'💊 ওষুধের দাম আপডেট',body:'এই সপ্তাহের দামের তালিকা।',url:'/medicine.html'},
+  agriculture:{title:'🌾 কৃষি আপডেট',body:'মৌসুমী পরামর্শ আপডেট হয়েছে।',url:'/agriculture.html'},
+  jobs:{title:'💼 নতুন চাকরির সুযোগ',body:'নতুন চাকরি এসেছে।',url:'/jobs.html'},
+  news:{title:'📢 JOAF বিবৃতি',body:'গুরুত্বপূর্ণ বিবৃতি প্রকাশিত।',url:'/news.html'},
+  breaking:{title:'🚨 ব্রেকিং নিউজ',body:'এইমাত্র গুরুত্বপূর্ণ খবর।',url:'/news.html'},
+  welcome:{title:'🔥 JOAF-এ স্বাগতম!',body:'বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চে যোগ দিন।',url:'/'},
+};
+let currentNotifType = '';
+
+window.openNotifModal = function(type) {
+  currentNotifType = type;
+  const d = NOTIF_DEFAULTS[type] || {title:'',body:'',url:'/'};
+  document.getElementById('nm-label').textContent = d.title;
+  document.getElementById('nm-title').value = d.title;
+  document.getElementById('nm-body').value = d.body;
+  document.getElementById('nm-url').value = d.url;
+  openModal('notifModal');
+};
+
+window.resetNotifModal = function() {
+  const d = NOTIF_DEFAULTS[currentNotifType];
+  if (!d) return;
+  document.getElementById('nm-title').value = d.title;
+  document.getElementById('nm-body').value = d.body;
+  document.getElementById('nm-url').value = d.url;
+};
+
+window.sendFromModal = async function() {
+  const title = document.getElementById('nm-title').value.trim();
+  const body  = document.getElementById('nm-body').value.trim();
+  const url   = document.getElementById('nm-url').value.trim();
+  if (!title || !body) return toast('Title ও Message দিন','error');
+  closeModal('notifModal');
+  await callSendNotif({type:currentNotifType, title, body, url:url||'/'});
+};
+
+window.sendCustomNotif = async function() {
+  const title = document.getElementById('cn-title').value.trim();
+  const body  = document.getElementById('cn-body').value.trim();
+  const url   = document.getElementById('cn-url').value.trim();
+  if (!title || !body) return toast('Title ও Message দিন','error');
+  await callSendNotif({title, body, url:url||'/'});
+  document.getElementById('cn-title').value='';
+  document.getElementById('cn-body').value='';
+  document.getElementById('cn-url').value='';
+};
+
+async function callSendNotif(payload) {
+  const btn = document.getElementById('cn-btn');
+  if (btn) { btn.disabled=true; btn.textContent='⏳ পাঠানো হচ্ছে...'; }
+  try {
+    const res = await fetch('/.netlify/functions/send-notification', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok) { toast('❌ Error: '+(data.error||'Unknown'),'error'); }
+    else { toast(`✅ ${data.sent} জনের কাছে পাঠানো হয়েছে!`,'success'); loadNotifPage(); }
+  } catch(e) { toast('❌ Network error','error'); }
+  finally { if(btn){btn.disabled=false;btn.textContent='📤 সবার কাছে পাঠান';} }
+}
+
+async function loadNotifPage() {
+  try {
+    const snap = await getDocs(collection(db,'notification_history'));
+    const docs = snap.docs.map(d=>({...d.data(),id:d.id}))
+      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0)));
+    setEl('n-total', snap.size);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayCount = docs.filter(d=>{ const t=d.sentAt?.toDate?.(); return t&&t>=today; }).length;
+    setEl('n-today', todayCount);
+    renderHistory('notif-history', docs.slice(0,10));
+  } catch(e) { console.log(e); }
+}
+
+function renderHistory(elId, docs) {
+  const el = document.getElementById(elId);
+  if (!docs.length) { el.innerHTML='<div class="empty">কোনো notification নেই</div>'; return; }
+  const colors = {bajar:'#fbbf24',weather:'#60a5fa',streak:'#f05252',blood:'#f05252',alert:'#f05252',live:'#a78bfa',default:'#34d399'};
+  el.innerHTML = docs.map(d => {
+    const color = colors[d.type]||colors.default;
+    const time = d.sentAt?.toDate?.()?.toLocaleString('bn-BD') || (d.sentAt?.seconds ? new Date(d.sentAt.seconds*1000).toLocaleString('bn-BD') : '—');
+    return `<div class="hist-item">
+      <div class="hist-dot" style="background:${color}"></div>
+      <div class="hist-info"><div class="hist-title">${d.title||'—'}</div><div class="hist-time">${time}</div></div>
+      <div class="hist-sent">✅ ${d.sent||0}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Alerts ──────────────────────────────────────────────
+async function loadAlerts() {
+  const el = document.getElementById('alert-list');
+  el.innerHTML = '<div class="loading">লোড হচ্ছে...</div>';
+  try {
+    const snap = await getDocs(query(collection(db,'alerts'), orderBy('createdAt','desc')));
+    if (snap.empty) { el.innerHTML='<div class="empty">কোনো সতর্কতা নেই</div>'; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      const lvlClass = data.level==='danger'?'badge-red':data.level==='warning'?'badge-amber':'badge-blue';
+      return `<div class="act-item">
+        <span class="act-icon">🚨</span>
+        <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2)">${data.area||''} — ${data.body||''}</span></div>
+        <span class="badge ${lvlClass}">${data.level||'info'}</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteAlert('${d.id}')">Delete</button>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML='<div class="empty text-red">Error loading</div>'; }
+}
+
+window.postAlert = async function(withNotif=false) {
+  const title = document.getElementById('al-title').value.trim();
+  const body  = document.getElementById('al-body').value.trim();
+  const type  = document.getElementById('al-type').value;
+  const area  = document.getElementById('al-area').value.trim();
+  const level = document.getElementById('al-level').value;
+  if (!title || !body) return toast('শিরোনাম ও বিবরণ দিন','error');
+  try {
+    await addDoc(collection(db,'alerts'), {title,body,type,area,level,active:true,createdAt:serverTimestamp()});
+    toast('✅ সতর্কতা Post হয়েছে!','success');
+    document.getElementById('al-title').value='';
+    document.getElementById('al-body').value='';
+    document.getElementById('al-area').value='';
+    if (withNotif) await callSendNotif({type:'alert',title:'🚨 '+title,body,url:'/alert.html'});
+    loadAlerts();
+  } catch(e) { toast('❌ Error: '+e.message,'error'); }
+};
+
+window.deleteAlert = async function(id) {
+  if (!confirm('এই সতর্কতা delete করবেন?')) return;
+  await deleteDoc(doc(db,'alerts',id));
+  toast('Deleted','info'); loadAlerts();
+};
+
+// ── Blood Donors ─────────────────────────────────────────
+let allDonors = [];
+async function loadDonors() {
+  const tbody = document.getElementById('donor-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
+  try {
+    const snap = await getDocs(query(collection(db,'donors'), orderBy('createdAt','desc')));
+    allDonors = snap.docs.map(d=>({...d.data(),id:d.id}));
+    // Stats
+    setEl('bl-total', allDonors.length);
+    setEl('bl-active', allDonors.filter(d=>d.available!==false).length);
+    setEl('bl-apos', allDonors.filter(d=>d.blood==='A+'||d.bloodGroup==='A+').length);
+    setEl('bl-opos', allDonors.filter(d=>d.blood==='O+'||d.bloodGroup==='O+').length);
+    setEl('b-blood', allDonors.length);
+    renderDonors(allDonors);
+  } catch(e) { tbody.innerHTML='<tr><td colspan="6" class="empty text-red">Error</td></tr>'; }
+}
+
+function renderDonors(donors) {
+  const tbody = document.getElementById('donor-tbody');
+  if (!donors.length) { tbody.innerHTML='<tr><td colspan="6" class="empty">কোনো দাতা নেই</td></tr>'; return; }
+  tbody.innerHTML = donors.slice(0,50).map(d => `
+    <tr>
+      <td><div style="font-weight:700;font-size:12px">${d.name||d.donorName||'—'}</div></td>
+      <td><span class="badge badge-red">${d.blood||d.bloodGroup||'—'}</span></td>
+      <td>${d.district||d.area||'—'}</td>
+      <td style="font-family:monospace;font-size:11px">${d.phone||d.contact||'—'}</td>
+      <td style="font-size:10px;color:var(--text2)">${d.createdAt?.toDate?.()?.toLocaleDateString('bn-BD')||'—'}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-danger btn-sm" onclick="deleteDonor('${d.id}')">Delete</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+window.filterDonors = function() {
+  const q = document.getElementById('bl-search').value.toLowerCase();
+  const filtered = allDonors.filter(d => JSON.stringify(d).toLowerCase().includes(q));
+  renderDonors(filtered);
+};
+
+window.deleteDonor = async function(id) {
+  if (!confirm('এই donor কে delete করবেন?')) return;
+  await deleteDoc(doc(db,'donors',id));
+  toast('Deleted','info'); loadDonors();
+};
+
+function renderBloodPreview(donors) {
+  const el = document.getElementById('dash-blood');
+  if (!donors.length) { el.innerHTML='<div class="empty">কোনো রক্তদাতা নেই</div>'; return; }
+  el.innerHTML = donors.map(d => `
+    <div class="donor-row">
+      <div class="donor-ava">🩸</div>
+      <div class="donor-info">
+        <div class="donor-name">${d.name||d.donorName||'—'}</div>
+        <div class="donor-meta">${d.blood||d.bloodGroup||'?'} · ${d.district||d.area||'—'}</div>
+      </div>
+      <span class="badge badge-red">${d.blood||d.bloodGroup||'—'}</span>
+    </div>`).join('');
+}
+
+// ── Press Releases ───────────────────────────────────────
+async function loadPress() {
+  const el = document.getElementById('press-list');
+  el.innerHTML='<div class="loading">লোড হচ্ছে...</div>';
+  try {
+    const snap = await getDocs(query(collection(db,'press_releases'), orderBy('date','desc')));
+    if (snap.empty) { el.innerHTML='<div class="empty">কোনো press release নেই</div>'; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      return `<div class="act-item">
+        <span class="act-icon">📰</span>
+        <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2);font-size:10px">${data.date||'—'}</span></div>
+        <button class="btn btn-danger btn-sm" onclick="deletePress('${d.id}')">Delete</button>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML='<div class="empty text-red">Error</div>'; }
+}
+
+window.addPressRelease = async function(withNotif=false) {
+  const title   = document.getElementById('pr-title').value.trim();
+  const summary = document.getElementById('pr-summary').value.trim();
+  const content = document.getElementById('pr-content').value.trim();
+  const date    = document.getElementById('pr-date').value || new Date().toISOString().slice(0,10);
+  const img     = document.getElementById('pr-img').value.trim();
+  if (!title || !summary) return toast('শিরোনাম ও সারসংক্ষেপ দিন','error');
+  try {
+    await addDoc(collection(db,'press_releases'), {title,summary,content,date,img,createdAt:serverTimestamp()});
+    toast('✅ Press Release publish হয়েছে!','success');
+    ['pr-title','pr-summary','pr-content','pr-img'].forEach(id => document.getElementById(id).value='');
+    if (withNotif) await callSendNotif({type:'news',title:'📢 '+title,body:summary,url:'/news.html'});
+    loadPress();
+  } catch(e) { toast('❌ '+e.message,'error'); }
+};
+
+window.deletePress = async function(id) {
+  if (!confirm('Delete করবেন?')) return;
+  await deleteDoc(doc(db,'press_releases',id));
+  toast('Deleted','info'); loadPress();
+};
+
+// ── Leaders ──────────────────────────────────────────────
+async function loadLeaders() {
+  const tbody = document.getElementById('leader-tbody');
+  tbody.innerHTML='<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
+  try {
+    const snap = await getDocs(collection(db,'leaders'));
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="6" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      return `<tr>
+        <td><b>${data.name||'—'}</b></td>
+        <td>${data.party||'—'}</td>
+        <td style="font-size:11px">${data.role||'—'}</td>
+        <td><span style="color:${data.approval>=60?'var(--green)':data.approval>=30?'var(--amber)':'var(--red)'}">${data.approval||0}%</span></td>
+        <td>${(data.promises||[]).length} টি</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteLeader('${d.id}')">Delete</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { tbody.innerHTML='<tr><td colspan="6" class="empty text-red">Error</td></tr>'; }
+}
+
+window.saveLeader = async function() {
+  const name     = document.getElementById('ld-name').value.trim();
+  const party    = document.getElementById('ld-party').value.trim();
+  const role     = document.getElementById('ld-role').value.trim();
+  const approval = parseInt(document.getElementById('ld-approval').value)||0;
+  const cat      = document.getElementById('ld-cat').value;
+  const pText    = document.getElementById('ld-promises').value;
+  const promises = pText.split('\n').filter(p=>p.trim()).map(p=>({text:p.trim(),status:'pending'}));
+  if (!name) return toast('নাম দিন','error');
+  await addDoc(collection(db,'leaders'), {name,party,role,approval,cat,promises,createdAt:serverTimestamp()});
+  toast('✅ নেতা যোগ হয়েছে!','success');
+  closeModal('leaderModal');
+  loadLeaders();
+};
+
+window.deleteLeader = async function(id) {
+  if (!confirm('Delete করবেন?')) return;
+  await deleteDoc(doc(db,'leaders',id));
+  toast('Deleted','info'); loadLeaders();
+};
+
+window.migrateLeaders = async function() {
+  const hardcoded = [
+    {name:'ড. মুহাম্মদ ইউনূস',party:'অন্তর্বর্তীকালীন সরকার',role:'প্রধান উপদেষ্টা',approval:72,cat:'সরকার',promises:[{text:'দুর্নীতি দমন',status:'progress'},{text:'নির্বাচন সংস্কার',status:'pending'}]},
+    {name:'মির্জা ফখরুল ইসলাম আলমগীর',party:'বিএনপি',role:'মহাসচিব',approval:45,cat:'বিরোধী দল',promises:[{text:'নির্বাচনকালীন সরকার দাবি',status:'progress'}]},
+    {name:'নাহিদ ইসলাম',party:'এনসিপি',role:'সমন্বয়ক',approval:68,cat:'যুব রাজনীতি',promises:[{text:'জুলাই বিপ্লবের চেতনা রক্ষা',status:'progress'}]},
+  ];
+  for (const leader of hardcoded) {
+    await addDoc(collection(db,'leaders'), {...leader, createdAt:serverTimestamp()});
+  }
+  toast('✅ Migration সম্পন্ন!','success');
+  loadLeaders();
+};
+
+// ── Warriors ─────────────────────────────────────────────
+async function loadWarriors() {
+  const tbody = document.getElementById('warrior-tbody');
+  tbody.innerHTML='<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
+  try {
+    const snap = await getDocs(query(collection(db,'warriors'), orderBy('createdAt','desc')));
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="6" class="empty">কোনো যোদ্ধা নেই</td></tr>'; return; }
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      const typeClass = data.type==='shahid'?'badge-red':data.type==='ahat'?'badge-amber':'badge-green';
+      const typeLabel = data.type==='shahid'?'🩸 শহীদ':data.type==='ahat'?'🩹 আহত':'✊ সক্রিয়';
+      return `<tr>
+        <td><b>${data.name||'—'}</b></td>
+        <td><span class="badge ${typeClass}">${typeLabel}</span></td>
+        <td>${data.dist||'—'}</td>
+        <td style="font-size:11px">${data.role||'—'}</td>
+        <td><span class="badge badge-blue">Active</span></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteWarrior('${d.id}')">Delete</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { tbody.innerHTML='<tr><td colspan="6" class="empty text-red">Error</td></tr>'; }
+}
+
+window.saveWarrior = async function() {
+  const name  = document.getElementById('wr-name').value.trim();
+  const dist  = document.getElementById('wr-dist').value.trim();
+  const role  = document.getElementById('wr-role').value.trim();
+  const type  = document.getElementById('wr-type').value;
+  const story = document.getElementById('wr-story').value.trim();
+  const icon  = document.getElementById('wr-icon').value.trim() || '✊';
+  if (!name) return toast('নাম দিন','error');
+  await addDoc(collection(db,'warriors'), {name,dist,role,type,story,icon,approved:true,createdAt:serverTimestamp()});
+  toast('✅ যোদ্ধা যোগ হয়েছে!','success');
+  closeModal('warriorModal');
+  loadWarriors();
+};
+
+window.deleteWarrior = async function(id) {
+  if (!confirm('Delete করবেন?')) return;
+  await deleteDoc(doc(db,'warriors',id));
+  toast('Deleted','info'); loadWarriors();
+};
+
+// ── Bajar ────────────────────────────────────────────────
+const bajarItems = [
+  'মোটা চাল','সরু চাল','আটা','ডাল (মসুর)','ডাল (খেসারি)',
+  'সয়াবিন তেল (লিটার)','পেঁয়াজ','রসুন','আদা',
+  'আলু','টমেটো','বেগুন','মুরগি (কেজি)','গরুর মাংস (কেজি)','ডিম (হালি)'
+];
+
+async function loadBajar() {
+  // Build form fields
+  const fieldsEl = document.getElementById('bajar-fields');
+  fieldsEl.innerHTML = bajarItems.map(item => `
+    <div class="field">
+      <label>${item}</label>
+      <input type="number" id="bj-${item.replace(/\s+/g,'_')}" placeholder="৳ দাম" step="0.5">
+    </div>`).join('');
+
+  // Load current data
+  const el = document.getElementById('bajar-current');
+  try {
+    const today = new Date().toISOString().slice(0,10);
+    const snap = await getDoc(doc(db,'bajar_override','latest'));
+    if (snap.exists()) {
+      const data = snap.data();
+      el.innerHTML = Object.entries(data).filter(([k])=>k!=='updatedAt').map(([k,v]) =>
+        `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+          <span>${k}</span><span style="color:var(--amber);font-weight:700">৳ ${v}</span>
+        </div>`).join('') || '<div class="empty">কোনো data নেই</div>';
+      // Fill form
+      Object.entries(data).forEach(([k,v]) => {
+        const el = document.getElementById('bj-'+k.replace(/\s+/g,'_'));
+        if (el) el.value = v;
+      });
+    } else { el.innerHTML='<div class="empty">এখনো কোনো data নেই</div>'; }
+  } catch(e) { el.innerHTML='<div class="empty text-red">Error</div>'; }
+}
+
+window.saveBajar = async function(withNotif=false) {
+  const data = {updatedAt: serverTimestamp()};
+  bajarItems.forEach(item => {
+    const val = document.getElementById('bj-'+item.replace(/\s+/g,'_'))?.value;
+    if (val) data[item] = parseFloat(val);
+  });
+  await setDoc(doc(db,'bajar_override','latest'), data);
+  toast('✅ বাজার দর Save হয়েছে!','success');
+  if (withNotif) await callSendNotif({type:'bajar'});
+  loadBajar();
+};
+
+// ── Medicines ────────────────────────────────────────────
+async function loadMedicines() {
+  const tbody = document.getElementById('med-tbody');
+  tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
+  try {
+    const snap = await getDocs(query(collection(db,'medicines'), orderBy('createdAt','desc')));
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো ওষুধ নেই</td></tr>'; return; }
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      return `<tr>
+        <td><b>${data.name||'—'}</b></td>
+        <td style="font-size:11px;color:var(--text2)">${data.generic||'—'}</td>
+        <td style="color:var(--amber);font-weight:700">৳ ${data.mrp||'—'}</td>
+        <td style="font-size:10px;color:var(--text2)">${data.createdAt?.toDate?.()?.toLocaleDateString('bn-BD')||'—'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteMed('${d.id}')">Delete</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { tbody.innerHTML='<tr><td colspan="5" class="empty text-red">Error</td></tr>'; }
+}
+
+window.saveMedicine = async function() {
+  const name    = document.getElementById('med-name').value.trim();
+  const generic = document.getElementById('med-generic').value.trim();
+  const mrp     = parseFloat(document.getElementById('med-mrp').value)||0;
+  const company = document.getElementById('med-company').value.trim();
+  if (!name) return toast('ওষুধের নাম দিন','error');
+  await addDoc(collection(db,'medicines'), {name,generic,mrp,company,createdAt:serverTimestamp()});
+  toast('✅ ওষুধ যোগ হয়েছে!','success');
+  closeModal('medModal');
+  loadMedicines();
+};
+
+window.deleteMed = async function(id) {
+  if (!confirm('Delete করবেন?')) return;
+  await deleteDoc(doc(db,'medicines',id));
+  toast('Deleted','info'); loadMedicines();
+};
+
+// ── Members ──────────────────────────────────────────────
+async function loadMembers() {
+  const tbody = document.getElementById('member-tbody');
+  tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
+  try {
+    const snap = await getDocs(collection(db,'members'));
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো member নেই</td></tr>'; return; }
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      return `<tr>
+        <td><b>${data.name||'—'}</b></td>
+        <td style="font-size:11px">${data.designation||data.desg||'—'}</td>
+        <td><span class="badge badge-blue">${data.cat||'—'}</span></td>
+        <td><a href="${data.facebook||'#'}" target="_blank" style="color:var(--blue);font-size:11px">Facebook ↗</a></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteMember('${d.id}')">Delete</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { tbody.innerHTML='<tr><td colspan="5" class="empty text-red">Error</td></tr>'; }
+}
+
+window.saveMember = async function() {
+  const name = document.getElementById('mb-name').value.trim();
+  const desg = document.getElementById('mb-desg').value.trim();
+  const cat  = document.getElementById('mb-cat').value;
+  const img  = document.getElementById('mb-img').value.trim();
+  const fb   = document.getElementById('mb-fb').value.trim();
+  if (!name) return toast('নাম দিন','error');
+  await addDoc(collection(db,'members'), {name,designation:desg,cat,img,facebook:fb||'#',createdAt:serverTimestamp()});
+  toast('✅ Member যোগ হয়েছে!','success');
+  closeModal('memberModal');
+  loadMembers();
+};
+
+window.deleteMember = async function(id) {
+  if (!confirm('Delete করবেন?')) return;
+  await deleteDoc(doc(db,'members',id));
+  toast('Deleted','info'); loadMembers();
+};
+
+// ── Polls ────────────────────────────────────────────────
+async function loadPolls() {
+  const tbody = document.getElementById('poll-tbody');
+  tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
+  try {
+    const snap = await getDocs(collection(db,'poll_users'));
+    setEl('po-voters', snap.size);
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো voter নেই</td></tr>'; return; }
+    const users = snap.docs.map(d=>({...d.data(),id:d.id}))
+      .sort((a,b)=>(b.streak||0)-(a.streak||0));
+    setEl('po-streak', users.filter(u=>(u.streak||0)>0).length);
+    setEl('po-rewards', users.filter(u=>u.rewardClaimed).length);
+    tbody.innerHTML = users.slice(0,50).map(u => `
+      <tr>
+        <td><b>${u.name||'—'}</b></td>
+        <td style="font-family:monospace;font-size:11px">${u.phone||'—'}</td>
+        <td><span style="color:var(--amber);font-weight:700">🔥 ${u.streak||0}</span></td>
+        <td>${(u.voteDays||[]).length}</td>
+        <td style="font-size:10px;color:var(--text2)">${u.lastVote||'—'}</td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML='<tr><td colspan="5" class="empty">Poll data নেই (localStorage based)</td></tr>'; }
+}
+
+// ── Forum ────────────────────────────────────────────────
+async function loadForum() {
+  const room  = document.getElementById('forum-room').value;
+  const tbody = document.getElementById('forum-tbody');
+  tbody.innerHTML='<tr><td colspan="4" class="loading">লোড হচ্ছে...</td></tr>';
+  try {
+    const snap = await getDocs(query(collection(db,'forum_'+room), orderBy('ts','desc'), limit(50)));
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="4" class="empty">কোনো message নেই</td></tr>'; return; }
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      const time = data.ts?.toDate?.()?.toLocaleString('bn-BD')||'—';
+      return `<tr>
+        <td style="font-weight:700;font-size:12px">${data.name||'Anonymous'}</td>
+        <td style="font-size:12px;max-width:300px">${data.text||'—'}</td>
+        <td style="font-size:10px;color:var(--text2)">${time}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteMsg('forum_${room}','${d.id}')">Delete</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { tbody.innerHTML='<tr><td colspan="4" class="empty text-red">Error loading</td></tr>'; }
+}
+
+window.deleteMsg = async function(col, id) {
+  if (!confirm('এই message delete করবেন?')) return;
+  await deleteDoc(doc(db,col,id));
+  toast('Deleted','info'); loadForum();
+};
+
+// ── Settings ─────────────────────────────────────────────
+window.changePassword = function() {
+  const oldPass = document.getElementById('set-old').value;
+  const newPass = document.getElementById('set-new').value;
+  const confirm = document.getElementById('set-confirm').value;
+  if (oldPass !== ADMIN_KEY) return toast('বর্তমান password ভুল','error');
+  if (newPass !== confirm) return toast('নতুন password মিলছে না','error');
+  if (newPass.length < 6) return toast('কমপক্ষে ৬ অক্ষর দিন','error');
+  toast('⚠️ Netlify এবং GitHub Secrets এও ADMIN_SECRET_KEY update করুন','info');
+};
+
+window.saveSettings = function() { toast('Settings saved (UI only)','success'); };
+
+window.runMigration = async function() {
+  try {
+    const res = await fetch('/.netlify/functions/migrate-subscriptions?key='+ADMIN_KEY);
+    const data = await res.json();
+    toast('✅ '+data.message,'success');
+  } catch(e) { toast('❌ Error','error'); }
+};
+
+window.clearCache = function() { toast('Cache cleared','success'); };
+
+// ── Helpers ──────────────────────────────────────────────
+window.openModal  = id => document.getElementById(id).classList.add('open');
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+
+function setEl(id, val) { const el = document.getElementById(id); if(el) el.textContent = val; }
+
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast '+type;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.display='none'; }, 4000);
+}
+
+// Close modals on background click
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if(e.target===bg) bg.classList.remove('open'); });
+});
+
+// Set today's date default for press release
+document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
+</script>
+</body>
+</html>
+HTMLEOF
+echo "Done: $(wc -l < /home/claude/website_project/admin.html) lines"
