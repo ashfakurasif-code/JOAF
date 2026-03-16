@@ -823,19 +823,35 @@ window.goPage = function(id, el) {
 
 // ── Dashboard init ──────────────────────────────────────
 async function initDashboard() {
-  // Stats
+  // Stats — push_subscriptions is write-only, get count from function
   try {
-    const [subSnap, donorSnap, alertSnap, histSnap] = await Promise.all([
-      getDocs(query(collection(db,'push_subscriptions'), where('active','==',true))),
+    // Get subscriber count from Netlify function
+    fetch('/.netlify/functions/send-notification', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
+      body: JSON.stringify({_verify:true})
+    }).then(async r => {
+      // Get actual count from Firestore via a separate count approach
+      const subSnap = await getDocs(collection(db,'push_subscriptions'));
+      const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
+      setEl('ds-sub', activeCount);
+      setEl('b-notif', activeCount);
+      setEl('n-sub', activeCount);
+      setEl('an-subs', activeCount);
+    }).catch(()=>{});
+  } catch(e) {}
+
+  try {
+    const [donorSnap, alertSnap, histSnap] = await Promise.all([
       getDocs(collection(db,'donors')),
-      getDocs(query(collection(db,'alerts'), where('active','==',true))),
+      getDocs(collection(db,'alerts')),
       getDocs(collection(db,'notification_history'))
     ]);
-    const sub = subSnap.size, donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
-    setEl('ds-sub', sub); setEl('ds-donors', donors); setEl('ds-alerts', alerts); setEl('ds-notifs', notifs);
-    setEl('b-notif', sub); setEl('b-blood', donors);
-    setEl('n-sub', sub); setEl('n-total', notifs);
-    setEl('an-subs', sub); setEl('an-notifs', notifs);
+    const donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
+    setEl('ds-donors', donors); setEl('ds-alerts', alerts); setEl('ds-notifs', notifs);
+    setEl('b-blood', donors);
+    setEl('n-total', notifs);
+    setEl('an-notifs', notifs);
 
     // Today notifs
     const today = new Date(); today.setHours(0,0,0,0);
@@ -931,10 +947,15 @@ async function callSendNotif(payload) {
 
 async function loadNotifPage() {
   try {
-    const snap = await getDocs(collection(db,'notification_history'));
-    const docs = snap.docs.map(d=>({...d.data(),id:d.id}))
+    const [histSnap, subSnap] = await Promise.all([
+      getDocs(collection(db,'notification_history')),
+      getDocs(collection(db,'push_subscriptions'))
+    ]);
+    const docs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
       .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0)));
-    setEl('n-total', snap.size);
+    setEl('n-total', histSnap.size);
+    const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
+    setEl('n-sub', activeCount);
     const today = new Date(); today.setHours(0,0,0,0);
     const todayCount = docs.filter(d=>{ const t=d.sentAt?.toDate?.(); return t&&t>=today; }).length;
     setEl('n-today', todayCount);
@@ -962,7 +983,7 @@ async function loadAlerts() {
   const el = document.getElementById('alert-list');
   el.innerHTML = '<div class="loading">লোড হচ্ছে...</div>';
   try {
-    const snap = await getDocs(query(collection(db,'alerts'), orderBy('createdAt','desc')));
+    const snap = await getDocs(collection(db,'alerts'));
     if (snap.empty) { el.innerHTML='<div class="empty">কোনো সতর্কতা নেই</div>'; return; }
     el.innerHTML = snap.docs.map(d => {
       const data = d.data();
@@ -1007,7 +1028,7 @@ async function loadDonors() {
   const tbody = document.getElementById('donor-tbody');
   tbody.innerHTML = '<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await getDocs(query(collection(db,'donors'), orderBy('createdAt','desc')));
+    const snap = await getDocs(collection(db,'donors'));
     allDonors = snap.docs.map(d=>({...d.data(),id:d.id}));
     // Stats
     setEl('bl-total', allDonors.length);
@@ -1066,7 +1087,7 @@ async function loadPress() {
   const el = document.getElementById('press-list');
   el.innerHTML='<div class="loading">লোড হচ্ছে...</div>';
   try {
-    const snap = await getDocs(query(collection(db,'press_releases'), orderBy('date','desc')));
+    const snap = await getDocs(collection(db,'press_releases'));
     if (snap.empty) { el.innerHTML='<div class="empty">কোনো press release নেই</div>'; return; }
     el.innerHTML = snap.docs.map(d => {
       const data = d.data();
@@ -1161,7 +1182,7 @@ async function loadWarriors() {
   const tbody = document.getElementById('warrior-tbody');
   tbody.innerHTML='<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await getDocs(query(collection(db,'warriors'), orderBy('createdAt','desc')));
+    const snap = await getDocs(collection(db,'warriors'));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="6" class="empty">কোনো যোদ্ধা নেই</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
@@ -1252,7 +1273,7 @@ async function loadMedicines() {
   const tbody = document.getElementById('med-tbody');
   tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await getDocs(query(collection(db,'medicines'), orderBy('createdAt','desc')));
+    const snap = await getDocs(collection(db,'medicines'));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো ওষুধ নেই</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
@@ -1353,7 +1374,7 @@ async function loadForum() {
   const tbody = document.getElementById('forum-tbody');
   tbody.innerHTML='<tr><td colspan="4" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await getDocs(query(collection(db,'forum_'+room), orderBy('ts','desc'), limit(50)));
+    const snap = await getDocs(collection(db,'forum_'+room));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="4" class="empty">কোনো message নেই</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
