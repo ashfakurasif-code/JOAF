@@ -946,18 +946,19 @@ const JOAFComponents = {
         } catch(e) {}
       } else if (d.isIOSChrome) {
         window.location.href = 'x-safari-https://www.julyforum.com';
-      } else {
+      } else if (navigator.share) {
         try { await navigator.share({title:'JOAF — জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', url:'https://www.julyforum.com'}); } catch(e) {}
       }
     };
 
-    if (window._deferredPWA) {
-      _showPrompt();
-    } else {
+    // সব সময় prompt দেখাবে — beforeinstallprompt আসুক বা না আসুক
+    _showPrompt();
+
+    // যদি পরে event আসে — deferredPWA capture করে রাখব
+    if (!window._deferredPWA) {
       window.addEventListener('beforeinstallprompt', e => {
         e.preventDefault();
         window._deferredPWA = e;
-        _showPrompt();
       });
     }
   },
