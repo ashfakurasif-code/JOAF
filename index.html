@@ -798,7 +798,7 @@ function getRoleClass(role) {
         <div class="member-card-img-wrap">
           <img class="member-card-img" src="${m.img}" alt="${m.name}"
                onerror="this.src='/logoc7c3.png'" loading="lazy"
-               style="object-position:${m.imgPosition||'top center'}">
+               style="${m.imgPosition ? 'object-position:'+m.imgPosition : ''}">
           <span class="member-role-badge">${m.role.split('(')[0].trim()}</span>
           <span class="member-num-badge">${i+1}</span>
         </div>
