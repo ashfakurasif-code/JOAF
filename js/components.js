@@ -964,14 +964,14 @@ const JOAFComponents = {
       }
     };
 
-    // সব সময় prompt দেখাবে — beforeinstallprompt আসুক বা না আসুক
-    _showPrompt();
-
-    // যদি পরে event আসে — deferredPWA capture করে রাখব
-    if (!window._deferredPWA) {
+    // _deferredPWA থাকলেই prompt দেখাবে — না থাকলে browser already installed
+    if (window._deferredPWA) {
+      _showPrompt();
+    } else {
       window.addEventListener('beforeinstallprompt', e => {
         e.preventDefault();
         window._deferredPWA = e;
+        _showPrompt();
       });
     }
   },
