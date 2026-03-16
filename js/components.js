@@ -1290,7 +1290,7 @@ async function joafSendAlertNotification(data) {
 }
 
 // ── Admin Email via EmailJS ──────────────────────────
-async function joafSendAdminEmail(data) {
+window.joafSendAdminEmail = async function joafSendAdminEmail(data) {
   try {
     // Load EmailJS
     if (!window.emailjs) {

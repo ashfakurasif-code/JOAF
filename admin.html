@@ -800,6 +800,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 </div>
 
+<!-- Alert Info Modal -->
+<div class="modal-bg" id="alertInfoModal">
+  <div class="modal modal-lg">
+    <h3>🚨 সতর্কতার বিবরণ</h3>
+    <div id="alertInfoContent"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('alertInfoModal')">বন্ধ করুন</button>
+    </div>
+  </div>
+</div>
+
 <!-- File Upload Modal -->
 <div class="modal-bg" id="uploadModal">
   <div class="modal">
@@ -1077,14 +1088,25 @@ async function loadAlerts() {
   try {
     const snap = await getDocs(collection(db,'alerts'));
     if (snap.empty) { el.innerHTML='<div class="empty">কোনো সতর্কতা নেই</div>'; return; }
-    el.innerHTML = snap.docs.map(d => {
-      const data = d.data();
-      const lvlClass = data.level==='danger'?'badge-red':data.level==='warning'?'badge-amber':'badge-blue';
-      return `<div class="act-item">
-        <span class="act-icon">🚨</span>
-        <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2)">${data.area||''} — ${data.body||''}</span></div>
-        <span class="badge ${lvlClass}">${data.level||'info'}</span>
-        <button class="btn btn-danger btn-sm" onclick="deleteAlert('${d.id}')">Delete</button>
+    // Sort by createdAt desc in JS
+    const docs = snap.docs.map(d=>({...d.data(),id:d.id}))
+      .sort((a,b)=>((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
+    el.innerHTML = docs.map(d => {
+      const lvlClass = d.level==='danger'?'badge-red':d.level==='warning'?'badge-amber':'badge-blue';
+      const time = d.createdAt?.toDate?.()?.toLocaleString('bn-BD') || (d.createdAt?.seconds ? new Date(d.createdAt.seconds*1000).toLocaleString('bn-BD') : '—');
+      return `<div style="background:var(--bg4);border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px">🚨</span>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <b style="font-size:13px">${d.title||'—'}</b>
+              <span class="badge ${lvlClass}">${d.level||'info'}</span>
+            </div>
+            <div style="font-size:10px;color:var(--text2);margin-top:2px">📍 ${d.area||d.location||'—'} · 🕐 ${time}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="showAlertInfo(${JSON.stringify(d).replace(/'/g,'&apos;')})">ℹ️ Info</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAlert('${d.id}')">Delete</button>
+        </div>
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML='<div class="empty text-red">Error loading</div>'; }
@@ -1577,6 +1599,26 @@ window.inlineUpload = async function(input, targetFieldId, folder) {
     if(statusEl) { statusEl.textContent = '❌ '+e.message; statusEl.style.color = 'var(--red)'; }
     toast('❌ Upload failed: '+e.message,'error');
   }
+};
+
+window.showAlertInfo = function(d) {
+  const lvlClass = d.level==='danger'?'badge-red':d.level==='warning'?'badge-amber':'badge-blue';
+  const time = d.createdAt?.seconds ? new Date(d.createdAt.seconds*1000).toLocaleString('bn-BD') : '—';
+  const imgHtml = d.imageUrl ? `<img src="${d.imageUrl}" style="width:100%;border-radius:10px;margin-top:12px;max-height:300px;object-fit:cover;border:1px solid var(--border)">` : '';
+  document.getElementById('alertInfoContent').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="badge ${lvlClass}">${d.level||'info'}</span>
+      <span class="badge badge-blue">${d.type||'—'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;font-size:13px">
+      <span style="color:var(--text2)">শিরোনাম</span><b>${d.title||'—'}</b>
+      <span style="color:var(--text2)">এলাকা</span><span>${d.area||d.location||'—'}</span>
+      <span style="color:var(--text2)">বিবরণ</span><span>${d.body||d.description||'—'}</span>
+      <span style="color:var(--text2)">সময়</span><span>${time}</span>
+    </div>
+    ${imgHtml}
+  `;
+  openModal('alertInfoModal');
 };
 
 window.previewFile = function(input) {
