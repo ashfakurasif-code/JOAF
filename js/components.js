@@ -1513,8 +1513,6 @@ const _LOC_BULLETS = [
 function _joafShowLocationPrompt() {
   if (!navigator.geolocation) return;
   if (document.getElementById('joaf-loc-wrap')) return;
-  // Install prompt দেখা অবস্থায় আসবে না
-  if (document.getElementById('joaf-pwa-prompt')) return;
   // দুটোই granted হলে আর দেখাবে না
   if (localStorage.getItem('joaf-push-granted') && localStorage.getItem('joaf-loc-granted')) return;
   if (navigator.permissions) {
