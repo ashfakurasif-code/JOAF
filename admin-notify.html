@@ -215,14 +215,43 @@ const db  = getFirestore(app);
 // Admin key session
 let ADMIN_KEY = '';
 
-window.login = function() {
+window.login = async function() {
   const key = document.getElementById('adminKey').value.trim();
   if (!key) return showToast('Key দিন', 'error');
-  ADMIN_KEY = key;
-  document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  loadStats();
-  loadHistory();
+
+  // Server এ verify করো — ভুল key হলে ঢুকতে দেবে না
+  const loginBtn = document.querySelector('.login-btn');
+  loginBtn.textContent = '⏳ Checking...';
+  loginBtn.disabled = true;
+
+  try {
+    const res = await fetch('/.netlify/functions/send-notification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Key': key,
+      },
+      body: JSON.stringify({ _verify: true, type: 'welcome' }),
+    });
+
+    if (res.status === 401) {
+      showToast('❌ ভুল password!', 'error');
+      loginBtn.textContent = 'প্রবেশ করুন';
+      loginBtn.disabled = false;
+      return;
+    }
+
+    // Key correct — dashboard দেখাও
+    ADMIN_KEY = key;
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadStats();
+    loadHistory();
+  } catch(e) {
+    showToast('❌ Connection error', 'error');
+    loginBtn.textContent = 'প্রবেশ করুন';
+    loginBtn.disabled = false;
+  }
 };
 
 // Default messages for each type

@@ -73,7 +73,12 @@ exports.handler = async (event) => {
     const db = admin.firestore();
 
     const body = JSON.parse(event.body);
-    const { type, title: customTitle, body: customBody, url: customUrl } = body;
+    const { type, title: customTitle, body: customBody, url: customUrl, _verify } = body;
+
+    // শুধু key verify করতে চাইলে — notification পাঠাবে না
+    if (_verify) {
+      return { statusCode: 200, headers, body: JSON.stringify({ verified: true }) };
+    }
 
     // Predefined type বা custom message
     let notifData;
