@@ -78,7 +78,7 @@
       <p class="overlay-ch" id="overlayCh">একটি চ্যানেল বেছে নিন</p>
       <p class="overlay-text" id="overlayStatus"></p>
     </div>
-    <video id="liveVideo" controls playsinline style="display:none;"></video>
+    <video id="liveVideo" controls playsinline></video>
   </div>
   <div class="player-bar" id="playerBar">
     <span class="player-bar-name" id="playerBarName">—</span>
@@ -265,6 +265,9 @@ function tryUrl(idx, attempt) {
 
   function showVideo() {
     overlay.classList.add('hidden');
+    video.style.display = 'block';
+    video.style.visibility = 'visible';
+    video.style.opacity = '1';
     barUrl.textContent = `✅ link ${attempt+1}/${urls.length} কাজ করছে`;
     video.play().catch(()=>{});
   }
