@@ -172,7 +172,7 @@ const JOAF = {
     { id:"farhana-sharmin-shuchi",    name:"ফারহানা শারমিন শুচি",        role:"সভাপতি",                         img:"/img/farhana-sharmin-shuchi.jpg",    facebook:"https://www.facebook.com/share/15yL2rq5XL/" },
     { id:"shirin-chowdhury",          name:"শিরিন চৌধুরী",               role:"সাধারণ সম্পাদক",                 img:"/img/shirin-chowdhury.jpg",          facebook:"https://www.facebook.com/share/15yL2rq5XL/" },
     { id:"muhtashimur-rahman-shihab", name:"মো. মুহতাশিমুর রহমান শিহাব",role:"মূখ্য সংগঠক",                    img:"/img/muhtashimur-rahman-shihab.jpg", facebook:"https://www.facebook.com/share/15yL2rq5XL/" },
-    { id:"munsi-mokhles-uddin-ashik", name:"মুন্সী মোখলেস উদ্দীন আশিক", role:"সিনিয়র যুগ্ম মূখ্য সংগঠক",     img:"/img/munsi-mokhles-uddin-ashik.jpg",facebook:"https://www.facebook.com/share/15yL2rq5XL/" },
+    { id:"munsi-mokhles-uddin-ashik", name:"মুন্সী মোখলেস উদ্দীন আশিক", role:"সিনিয়র যুগ্ম মূখ্য সংগঠক",     img:"/img/munsi-mokhles-uddin-ashik.jpg",facebook:"https://www.facebook.com/share/15yL2rq5XL/", imgPosition:"top" },
     { id:"tarannum-binte-zakir",      name:"তারান্নুম বিনতে জাকির",       role:"যুগ্ম মূখ্য সংগঠক",             img:"/img/tarannum-binte-zakir.jpg",     facebook:"https://www.facebook.com/share/15yL2rq5XL/" },
     { id:"mohammad-saiful-howladar",  name:"মোহাম্মদ সাইফুল হাওলাদার",  role:"যুগ্ম মূখ্য সংগঠক — দক্ষিণাঞ্চল",img:"/members/mohammad-saiful-howladar.png",facebook:"https://www.facebook.com/share/16yx91kkw4/" },
     { id:"ashfakur-rahman-himu",      name:"আশফাকুর রহমান হিমু",         role:"মূখ্য সংগঠক (গুজবরোধী সেল)",    img:"/img/ashfakur-rahman-himu.png",     facebook:"https://www.facebook.com/share/15yL2rq5XL/" },
