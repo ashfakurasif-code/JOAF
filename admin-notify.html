@@ -54,6 +54,17 @@ body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-heig
 .toast.success{background:#065f46;color:#6ee7b7;}
 .toast.error{background:#7f1d1d;color:#fca5a5;}
 
+/* Edit Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:#1e293b;border-radius:16px;padding:24px;width:100%;max-width:480px;}
+.modal h3{font-size:16px;font-weight:900;margin-bottom:4px;}
+.modal p{font-size:12px;color:#64748b;margin-bottom:16px;}
+.modal-btns{display:flex;gap:8px;margin-top:16px;}
+.modal-send{flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;}
+.modal-cancel{padding:12px 16px;background:#334155;color:#94a3b8;border:none;border-radius:10px;font-size:14px;cursor:pointer;}
+.modal-reset{padding:12px 16px;background:#0f172a;color:#64748b;border:1px solid #334155;border-radius:10px;font-size:12px;cursor:pointer;}
+
 /* History */
 .history-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;}
 .history-item{background:#0f172a;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
@@ -108,22 +119,22 @@ body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-heig
   <div class="section">
     <h2>⚡ Quick Send</h2>
     <div class="quick-grid">
-      <button class="quick-btn" onclick="quickSend('bajar')"><span>🛒</span>বাজার দর</button>
-      <button class="quick-btn" onclick="quickSend('weather')"><span>🌦️</span>আবহাওয়া</button>
-      <button class="quick-btn" onclick="quickSend('poll')"><span>🗳️</span>Poll Reminder</button>
-      <button class="quick-btn" onclick="quickSend('streak')"><span>🔥</span>Streak Alert</button>
-      <button class="quick-btn" onclick="quickSend('blood')"><span>🩸</span>রক্তের জরুরি</button>
-      <button class="quick-btn" onclick="quickSend('alert')"><span>🚨</span>জরুরি সতর্কতা</button>
-      <button class="quick-btn" onclick="quickSend('live')"><span>📡</span>JOAF Live</button>
-      <button class="quick-btn" onclick="quickSend('warrior')"><span>🏆</span>জুলাই যোদ্ধা</button>
-      <button class="quick-btn" onclick="quickSend('corruption')"><span>🚫</span>দুর্নীতি রিপোর্ট</button>
-      <button class="quick-btn" onclick="quickSend('leader')"><span>🏛️</span>নেতা ট্র্যাকার</button>
-      <button class="quick-btn" onclick="quickSend('medicine')"><span>💊</span>ওষুধের দাম</button>
-      <button class="quick-btn" onclick="quickSend('agriculture')"><span>🌾</span>কৃষি আপডেট</button>
-      <button class="quick-btn" onclick="quickSend('jobs')"><span>💼</span>নতুন চাকরি</button>
-      <button class="quick-btn" onclick="quickSend('breaking')"><span>🚨</span>Breaking News</button>
-      <button class="quick-btn" onclick="quickSend('news')"><span>📢</span>JOAF বিবৃতি</button>
-      <button class="quick-btn" onclick="quickSend('welcome')"><span>👋</span>Welcome</button>
+      <button class="quick-btn" onclick="openModal('bajar')"><span>🛒</span>বাজার দর</button>
+      <button class="quick-btn" onclick="openModal('weather')"><span>🌦️</span>আবহাওয়া</button>
+      <button class="quick-btn" onclick="openModal('poll')"><span>🗳️</span>Poll Reminder</button>
+      <button class="quick-btn" onclick="openModal('streak')"><span>🔥</span>Streak Alert</button>
+      <button class="quick-btn" onclick="openModal('blood')"><span>🩸</span>রক্তের জরুরি</button>
+      <button class="quick-btn" onclick="openModal('alert')"><span>🚨</span>জরুরি সতর্কতা</button>
+      <button class="quick-btn" onclick="openModal('live')"><span>📡</span>JOAF Live</button>
+      <button class="quick-btn" onclick="openModal('warrior')"><span>🏆</span>জুলাই যোদ্ধা</button>
+      <button class="quick-btn" onclick="openModal('corruption')"><span>🚫</span>দুর্নীতি রিপোর্ট</button>
+      <button class="quick-btn" onclick="openModal('leader')"><span>🏛️</span>নেতা ট্র্যাকার</button>
+      <button class="quick-btn" onclick="openModal('medicine')"><span>💊</span>ওষুধের দাম</button>
+      <button class="quick-btn" onclick="openModal('agriculture')"><span>🌾</span>কৃষি আপডেট</button>
+      <button class="quick-btn" onclick="openModal('jobs')"><span>💼</span>নতুন চাকরি</button>
+      <button class="quick-btn" onclick="openModal('breaking')"><span>🚨</span>Breaking News</button>
+      <button class="quick-btn" onclick="openModal('news')"><span>📢</span>JOAF বিবৃতি</button>
+      <button class="quick-btn" onclick="openModal('welcome')"><span>👋</span>Welcome</button>
     </div>
   </div>
 
@@ -158,6 +169,31 @@ body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-heig
 </div>
 </div>
 
+<!-- Edit Modal -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <h3 id="modalTypeLabel">🔔 Notification Edit</h3>
+    <p>Default message edit করুন বা সেভাবেই পাঠান</p>
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="modalTitle" placeholder="Notification title...">
+    </div>
+    <div class="field">
+      <label>Message</label>
+      <textarea id="modalBody" placeholder="Notification message..."></textarea>
+    </div>
+    <div class="field">
+      <label>Link (optional)</label>
+      <input type="text" id="modalUrl" placeholder="/alert.html">
+    </div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">বাতিল</button>
+      <button class="modal-reset" onclick="resetModal()">↺ Default</button>
+      <button class="modal-send" onclick="sendFromModal()">📤 পাঠান</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -189,9 +225,60 @@ window.login = function() {
   loadHistory();
 };
 
-window.quickSend = async function(type) {
-  if (!confirm(`"${type}" notification সবার কাছে পাঠাবেন?`)) return;
-  await sendNotification({ type });
+// Default messages for each type
+const DEFAULTS = {
+  bajar:      { title: '🛒 আজকের বাজার দর', body: 'চাল, ডাল, সবজির দাম আপডেট হয়েছে। জানুন কোথায় কত সস্তা।', url: '/bajar.html' },
+  poll:       { title: '🗳️ আজকের জনমত', body: '৩০টি প্রশ্নে ভোট দিন, streak বজায় রাখুন — পুরস্কার আপনার জন্য!', url: '/joaf-polls.html' },
+  streak:     { title: '🔥 Streak মিস করবেন না!', body: 'আজকের ভোট এখনো বাকি। এখনই দিন — streak ভাঙলে শুরু থেকে!', url: '/joaf-polls.html' },
+  weather:    { title: '🌦️ আবহাওয়া সতর্কতা', body: 'আজ আপনার এলাকায় বিশেষ আবহাওয়া পূর্বাভাস। কৃষক ও জেলেরা সতর্ক থাকুন।', url: '/weather.html' },
+  blood:      { title: '🩸 জরুরি রক্ত দরকার!', body: 'আপনার এলাকায় কেউ রক্তের জন্য অনুরোধ করেছেন। একটু সাহায্য করুন।', url: '/rokto.html' },
+  alert:      { title: '🚨 জরুরি সতর্কতা!', body: 'আপনার এলাকায় একটি জরুরি পরিস্থিতি জানানো হয়েছে। এখনই দেখুন।', url: '/alert.html' },
+  live:       { title: '📡 JOAF Live শুরু হয়েছে!', body: 'এখনই দেখুন — সরাসরি সম্প্রচার চলছে।', url: '/live.html' },
+  warrior:    { title: '🏆 নতুন জুলাই যোদ্ধা!', body: 'একজন নতুন বীর সৈনিক আমাদের directory তে যোগ দিয়েছেন।', url: '/july-warriors.html' },
+  corruption: { title: '🚫 দুর্নীতির রিপোর্ট', body: 'একটি নতুন দুর্নীতির অভিযোগ দাখিল হয়েছে। জানুন বিস্তারিত।', url: '/leader-tracker.html' },
+  leader:     { title: '🏛️ নেতা ট্র্যাকার আপডেট', body: 'প্রতিশ্রুতি vs বাস্তবতা — সাপ্তাহিক আপডেট এসেছে।', url: '/leader-tracker.html' },
+  medicine:   { title: '💊 ওষুধের দাম আপডেট', body: 'এই সপ্তাহের ওষুধের দামের তালিকা আপডেট হয়েছে।', url: '/medicine.html' },
+  agriculture:{ title: '🌾 কৃষি আপডেট', body: 'এই মৌসুমের কৃষি পরামর্শ ও বাজার দর আপডেট হয়েছে।', url: '/agriculture.html' },
+  jobs:       { title: '💼 নতুন চাকরির সুযোগ', body: 'আপনার পছন্দের ক্যাটাগরিতে নতুন চাকরি এসেছে।', url: '/jobs.html' },
+  news:       { title: '📢 JOAF বিবৃতি', body: 'JOAF এর পক্ষ থেকে একটি গুরুত্বপূর্ণ বিবৃতি প্রকাশিত হয়েছে।', url: '/news.html' },
+  breaking:   { title: '🚨 ব্রেকিং নিউজ', body: 'এইমাত্র একটি গুরুত্বপূর্ণ খবর এসেছে। এখনই দেখুন।', url: '/news.html' },
+  reward:     { title: '🎉 পুরস্কার অর্জন!', body: 'অভিনন্দন! আপনি ৩০ দিনের streak সম্পন্ন করেছেন।', url: '/joaf-polls.html' },
+  welcome:    { title: '🔥 JOAF-এ স্বাগতম!', body: 'আপনি এখন বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চের অংশ।', url: '/' },
+};
+
+let currentModalType = '';
+
+window.openModal = function(type) {
+  currentModalType = type;
+  const d = DEFAULTS[type] || { title: '', body: '', url: '/' };
+  document.getElementById('modalTypeLabel').textContent = d.title;
+  document.getElementById('modalTitle').value = d.title;
+  document.getElementById('modalBody').value = d.body;
+  document.getElementById('modalUrl').value = d.url;
+  document.getElementById('editModal').classList.add('open');
+};
+
+window.closeModal = function() {
+  document.getElementById('editModal').classList.remove('open');
+  currentModalType = '';
+};
+
+window.resetModal = function() {
+  if (!currentModalType) return;
+  const d = DEFAULTS[currentModalType];
+  if (!d) return;
+  document.getElementById('modalTitle').value = d.title;
+  document.getElementById('modalBody').value = d.body;
+  document.getElementById('modalUrl').value = d.url;
+};
+
+window.sendFromModal = async function() {
+  const title = document.getElementById('modalTitle').value.trim();
+  const body  = document.getElementById('modalBody').value.trim();
+  const url   = document.getElementById('modalUrl').value.trim();
+  if (!title || !body) return showToast('Title ও Message দিন', 'error');
+  closeModal();
+  await sendNotification({ type: currentModalType, title, body, url: url || '/' });
 };
 
 window.sendCustom = async function() {
