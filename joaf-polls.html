@@ -432,8 +432,15 @@ const REWARD_AMT  = 50; // ৳
 
 // ── Utils ─────────────────────────────────────────────────────
 const bn = n => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
-const today = () => new Date().toISOString().slice(0, 10);
-const yest  = () => { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); };
+// Bangladesh is UTC+6 — use local date, not UTC
+const today = () => {
+  const d = new Date(Date.now() + 6*3600000); // shift to UTC+6
+  return d.toISOString().slice(0, 10);
+};
+const yest  = () => {
+  const d = new Date(Date.now() + 6*3600000 - 86400000);
+  return d.toISOString().slice(0, 10);
+};
 
 const LS = {
   get: k => { try { return JSON.parse(localStorage.getItem('j_'+k)); } catch { return null; } },
@@ -474,7 +481,18 @@ function doLogin() {
   };
   u.name = name; u.phone = phone;
   LS.set(uid, u); LS.set('cu', uid);
-  loadUser(uid);
+  // Try to restore from Firestore (new device recovery)
+  if (typeof window._restorePollUser === 'function') {
+    window._restorePollUser(uid).then(restored => {
+      if (restored) {
+        restored.name = name; // keep typed name
+        LS.set(uid, restored);
+      }
+      loadUser(uid);
+    });
+  } else {
+    loadUser(uid);
+  }
 }
 
 function doFbLogin() {
@@ -551,6 +569,7 @@ function loadUser(uid) {
   }
 
   CU = u;
+  if (typeof window._syncPollUser === 'function') window._syncPollUser(CU);
   document.getElementById('loginSection').style.display = 'none';
   document.getElementById('userSection').style.display  = 'block';
   refreshDash();
@@ -717,20 +736,20 @@ function recordVote(pid, oi) {
 
   // Streak: mark day complete when all 30 polls voted
   if (tv >= POLLS_COUNT && CU.lastVote !== ts) {
+    // Streak logic BEFORE updating lastVote
+    if (CU.lastVote === yest()) {
+      CU.streak = (CU.streak||0) + 1;
+    } else if (!CU.lastVote) {
+      CU.streak = 1;
+    } else {
+      CU.streak = 1; // missed a day, reset
+    }
+
     CU.lastVote = ts;
 
     // Track voted days for calendar
     if (!CU.voteDays) CU.voteDays = [];
     if (!CU.voteDays.includes(ts)) CU.voteDays.push(ts);
-
-    // Streak logic
-    if (CU.lastVote === ts) {
-      CU.streak = (CU.streak||0) + 1;
-    } else if (CU.lastVote === yest()) {
-      CU.streak = (CU.streak||0) + 1;
-    } else {
-      CU.streak = 1;
-    }
 
     CU.maxStreak = Math.max(CU.maxStreak||0, CU.streak);
 
@@ -746,6 +765,7 @@ function recordVote(pid, oi) {
   }
 
   LS.set(CU.id, CU);
+  if (tv >= POLLS_COUNT && typeof window._syncPollUser === 'function') window._syncPollUser(CU);
   refreshDash();
   renderStreakCal();
   renderEarnings();
@@ -754,20 +774,31 @@ function recordVote(pid, oi) {
 
 // ── Groq API poll generation ──────────────────────────────────
 function getCacheKey() {
-  // True 12-hour window from last generation time
-  const TWELVE_HOURS = 12 * 60 * 60 * 1000;
-  const lastGen = LS.get('polls_last_gen') || 0;
-  const now = Date.now();
-  if (!lastGen || (now - lastGen) >= TWELVE_HOURS) {
-    // New session — save timestamp, use new key
-    const key = `polls_${now}`;
-    LS.set('polls_last_gen', now);
-    LS.set('polls_current_key', key);
-    return key;
-  }
-  // Still within 12 hours — return same key
-  return LS.get('polls_current_key') || `polls_${lastGen}`;
+  // New polls every day — key is just today's date
+  return 'polls_' + today();
 }
+
+// Clean up old cached polls and vote distributions (older than today)
+function cleanOldPollsCache() {
+  try {
+    const todayStr = today();
+    const keys = LS.keys();
+    keys.forEach(k => {
+      // Delete old daily poll caches
+      if (k.startsWith('polls_2') && k !== 'polls_' + todayStr) {
+        LS.del(k);
+      }
+      // Delete old vote distributions tied to old dates (fb_2026-03-16_0 etc)
+      if (k.startsWith('vd_fb_') && !k.includes(todayStr)) {
+        LS.del(k);
+      }
+    });
+    // Clean legacy keys
+    LS.del('polls_last_gen');
+    LS.del('polls_current_key');
+  } catch(e) {}
+}
+cleanOldPollsCache();
 
 const FALLBACK_POLLS = [
   {id:'fb1', q:'জুলাই ২০২৪ গণ-অভ্যুত্থানের পর পরিস্থিতি কেমন হয়েছে?',           cat:'জুলাই অভ্যুত্থান', opts:['ভালো হয়েছে','কিছুটা ভালো','খারাপ হয়েছে']},
@@ -808,7 +839,12 @@ async function genPolls() {
   if (cached && Array.isArray(cached) && cached.length >= 20) return cached;
 
   // No key → fallback immediately
-  if (!GROQ_KEY || GROQ_KEY === 'YOUR_GROQ_API_KEY') return FALLBACK_POLLS;
+  if (!GROQ_KEY || GROQ_KEY === 'YOUR_GROQ_API_KEY') {
+    // Give fallback polls date-based IDs so votes don't bleed across days
+    const dated = FALLBACK_POLLS.map((p,i) => ({...p, id: 'fb_'+today()+'_'+i}));
+    LS.set(ck, dated);
+    return dated;
+  }
 
   const prompt = `তুমি বাংলাদেশের একজন নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ ${today()}।
 
@@ -1052,14 +1088,88 @@ window.addEventListener('load', async () => {
 </script>
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, addDoc, setDoc, getDoc, doc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
 const _db = getFirestore(_fa);
+
+// ── Pageview tracking ──
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;
 const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+
+// ── votes object cleanup — শুধু শেষ ৭ দিন রাখো ──
+function pruneOldVotes(u) {
+  if (!u || !u.votes) return u;
+  const keep = new Set();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(Date.now() + 6*3600000 - i*86400000);
+    keep.add(d.toISOString().slice(0,10));
+  }
+  const pruned = {};
+  Object.keys(u.votes).forEach(k => { if (keep.has(k)) pruned[k] = u.votes[k]; });
+  u.votes = pruned;
+  return u;
+}
+
+// ── Firestore sync ──
+window._syncPollUser = function(u) {
+  if (!u || !u.id || u.isGuest) return;
+  const clean = pruneOldVotes({...u});
+  setDoc(doc(_db, 'poll_users', u.id), {
+    name:         clean.name        || '',
+    phone:        clean.phone       || '',
+    streak:       clean.streak      || 0,
+    maxStreak:    clean.maxStreak   || 0,
+    lastVote:     clean.lastVote    || null,
+    voteDays:     clean.voteDays    || [],
+    totalVotes:   clean.totalVotes  || 0,
+    cycles:       clean.cycles      || 0,
+    claimedCycles:clean.claimedCycles||0,
+    votes:        clean.votes       || {},
+    rewardClaimed:clean.rewardClaimed||false,
+    fbVerified:   clean.fbVerified  ||false,
+    updatedAt:    serverTimestamp()
+  }, {merge: true}).catch(()=>{});
+  // Also prune in localStorage
+  LS.set(clean.id, clean);
+};
+
+// ── Restore from Firestore if new device (localStorage empty) ──
+window._restorePollUser = async function(uid) {
+  if (!uid || uid.startsWith('guest_')) return null;
+  try {
+    const snap = await getDoc(doc(_db, 'poll_users', uid));
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    // Only restore if Firestore has more progress than localStorage
+    const local = LS.get(uid);
+    const fsStreak = data.streak || 0;
+    const lsStreak = local?.streak || 0;
+    if (fsStreak > lsStreak || !local) {
+      const restored = {
+        id: uid,
+        name:          data.name         || '',
+        phone:         data.phone        || '',
+        streak:        data.streak       || 0,
+        maxStreak:     data.maxStreak    || 0,
+        lastVote:      data.lastVote     || null,
+        voteDays:      data.voteDays     || [],
+        totalVotes:    data.totalVotes   || 0,
+        cycles:        data.cycles       || 0,
+        claimedCycles: data.claimedCycles|| 0,
+        votes:         data.votes        || {},
+        rewardClaimed: data.rewardClaimed||false,
+        fbVerified:    data.fbVerified   ||false,
+        photo:         local?.photo      || '',
+      };
+      LS.set(uid, restored);
+      return restored;
+    }
+    return null;
+  } catch(e) { return null; }
+};
 </script>
 </body>
 </html>
