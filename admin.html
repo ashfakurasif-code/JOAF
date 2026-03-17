@@ -1547,27 +1547,46 @@ window.runLeaderAiUpdate = async function() {
   const btn = document.getElementById('leader-ai-btn');
   const status = document.getElementById('leader-ai-status');
   btn.disabled = true;
-  btn.textContent = '⏳ AI চলছে...';
-  status.textContent = 'Groq AI analyze করছে...';
   status.style.color = 'var(--amber)';
+
+  let totalUpdated = 0, batchStart = 0;
   try {
-    const res = await fetch('/.netlify/functions/update-leaders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
-      body: JSON.stringify({ action: 'update' }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      toast(`✅ ${data.updated} জন নেতার data AI দিয়ে update হয়েছে!`, 'success');
-      status.textContent = `✅ ${data.updated} জন updated (${data.date})`;
-      status.style.color = 'var(--green)';
-      loadLeaders();
-    } else {
-      throw new Error(data.error || 'Unknown error');
+    while (true) {
+      btn.textContent = `⏳ ${batchStart+1}-${batchStart+10} analyze করছে...`;
+      status.textContent = `${totalUpdated} জন updated, চলছে...`;
+
+      const res = await fetch('/.netlify/functions/update-leaders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+        body: JSON.stringify({ batchStart }),
+      });
+
+      // Check if response is JSON (not HTML error page)
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        throw new Error('Function error — Netlify env variables সেট আছে কিনা চেক করুন। Details: ' + text.substring(0, 200));
+      }
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Unknown error');
+
+      totalUpdated += data.updated || 0;
+
+      if (!data.hasMore) break;
+      batchStart = data.nextBatch;
+
+      // Small pause between batches
+      await new Promise(r => setTimeout(r, 1000));
     }
+
+    toast(`✅ ${totalUpdated} জন নেতার data AI দিয়ে update হয়েছে!`, 'success');
+    status.textContent = `✅ ${totalUpdated} জন updated`;
+    status.style.color = 'var(--green)';
+    loadLeaders();
   } catch(e) {
     toast('❌ AI Update failed: ' + e.message, 'error');
-    status.textContent = '❌ Failed: ' + e.message;
+    status.textContent = '❌ ' + e.message.substring(0, 80);
     status.style.color = 'var(--red)';
   }
   btn.disabled = false;
