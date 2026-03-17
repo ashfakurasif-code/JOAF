@@ -337,99 +337,101 @@ addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_s
 // ── GROQ CONFIG ──
 const GROQ_KEY = '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';
 const GROQ_MODELS = ['llama-3.3-70b-versatile','llama3-70b-8192','mixtral-8x7b-32768'];
-const ISSUE_CACHE = {}; // cache per issue per day
+const BD_TODAY = () => new Date(Date.now()+6*3600000).toISOString().slice(0,10);
 
-async function groqIssueAnalysis(issue) {
-  const today = new Date(Date.now()+6*3600000).toISOString().slice(0,10);
-  const cacheKey = issue.id + '_' + today;
-  if (ISSUE_CACHE[cacheKey]) return ISSUE_CACHE[cacheKey];
+// ── Cache: localStorage per day ──
+const CP = 'joaf_lt2_';
+const cGet = k => { try{const d=JSON.parse(localStorage.getItem(CP+k));if(d&&d.date===BD_TODAY())return d.data;}catch(e){}return null;};
+const cSet = (k,v) => { try{localStorage.setItem(CP+k,JSON.stringify({date:BD_TODAY(),data:v}));}catch(e){}};
 
-  const prompt = `তুমি বাংলাদেশের নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ ${today}।
+// ── ISSUES: AI-generated or fallback ──
+let ISSUES = [];
 
-বিষয়: "${issue.title}"
-বর্তমান পরিস্থিতি: ${issue.desc}
-
-এই বিষয়ে বাংলাদেশের বর্তমান প্রেক্ষাপটে সবচেয়ে relevant মানুষদের বিশ্লেষণ দাও।
-
-শুধু নিচের JSON return করো, আর কিছু না:
-{
-  "summary": "এই issue-এর বর্তমান অবস্থার ২-৩ বাক্যের সারসংক্ষেপ",
-  "temperature": "critical|hot|warm|cool",
-  "progress": 45,
-  "people": [
-    {
-      "name": "পূর্ণ নাম বাংলায়",
-      "role": "পদ বা পরিচয়",
-      "party_or_org": "দল বা প্রতিষ্ঠান",
-      "position": "এই issue-এ তার অবস্থান বা ভূমিকা ১ বাক্যে",
-      "stance": "supporter|opponent|neutral|responsible|critic",
-      "impact": 1-10,
-      "icon": "একটি emoji"
-    }
-  ],
-  "key_fact": "সবচেয়ে গুরুত্বপূর্ণ একটি তথ্য বা সংখ্যা",
-  "public_demand": "জনগণ এখন কী চাইছে এক বাক্যে",
-  "outlook": "positive|negative|uncertain"
-}
-
-নিয়ম:
-- people: ৫-৮ জন, শুধু এই issue-এ সত্যিই relevant
-- নেতা, মন্ত্রী, বিশেষজ্ঞ, ব্যবসায়ী, activist — যেই হোক
-- সব বাংলায়, নিরপেক্ষ ও তথ্যভিত্তিক
-- মার্চ ২০২৬ পর্যন্ত সর্বশেষ তথ্য`;
-
+async function groqCall(prompt, maxTokens=4000) {
   for (const model of GROQ_MODELS) {
     try {
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-        body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.3,max_tokens:1500})
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+        body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.3,max_tokens:maxTokens})
       });
       if(!r.ok) continue;
       const d = await r.json();
       let txt = d.choices?.[0]?.message?.content||'';
       txt = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
-      const match = txt.match(/\{[\s\S]*\}/);
-      if(match){
-        const parsed = JSON.parse(match[0]);
-        ISSUE_CACHE[cacheKey] = parsed;
-        return parsed;
-      }
+      const am = txt.match(/\[[\s\S]*\]/); if(am){try{return JSON.parse(am[0]);}catch(e){}}
+      const om = txt.match(/\{[\s\S]*\}/); if(om){try{return JSON.parse(om[0]);}catch(e){}}
     } catch(e){continue;}
   }
   return null;
 }
-const ISSUES = [
-  { id:'election', icon:'🗳️', title:'নির্বাচন', temp:'hot', heat:78,
-    desc:'সংস্কার কমিশনের কাজ চলছে। রোডম্যাপ নিয়ে অনিশ্চয়তা এখনো আছে।',
-    status:'নির্বাচনী রোডম্যাপ চলমান', progress:45 },
-  { id:'price', icon:'🛒', title:'দ্রব্যমূল্য', temp:'critical', heat:91,
-    desc:'চাল, তেল, পেঁয়াজ সহ নিত্যপণ্যের দাম এখনো সাধারণ মানুষের নাগালের বাইরে।',
-    status:'নিয়ন্ত্রণে ব্যর্থতা অব্যাহত', progress:18 },
-  { id:'july_trial', icon:'⚖️', title:'জুলাই বিচার', temp:'hot', heat:82,
-    desc:'গণঅভ্যুত্থানে হতাহতদের বিচার প্রক্রিয়া শুরু হয়েছে, তবে ধীরগতি।',
-    status:'বিচার প্রক্রিয়া চলমান', progress:35 },
-  { id:'economy', icon:'📉', title:'অর্থনীতি', temp:'hot', heat:75,
-    desc:'রিজার্ভ সংকট কিছুটা কমেছে, তবে বিনিয়োগ ও কর্মসংস্থান এখনো নাজুক।',
-    status:'আংশিক উন্নতি', progress:42 },
-  { id:'constitution', icon:'📜', title:'সংবিধান সংস্কার', temp:'warm', heat:60,
-    desc:'সংস্কার কমিশন প্রতিবেদন দিয়েছে। বাস্তবায়ন শুরু হয়নি।',
-    status:'প্রতিবেদন জমা, বাস্তবায়ন বাকি', progress:55 },
-  { id:'safety', icon:'🛡️', title:'জননিরাপত্তা', temp:'warm', heat:58,
-    desc:'আইনশৃঙ্খলা পরিস্থিতির উন্নতি হয়েছে, তবে পুলিশ সংস্কার অসম্পূর্ণ।',
-    status:'মোটামুটি স্থিতিশীল', progress:52 },
-  { id:'education', icon:'🎓', title:'শিক্ষা সংস্কার', temp:'cool', heat:40,
-    desc:'পাঠ্যক্রম পর্যালোচনা চলছে। নতুন শিক্ষা নীতির কাজ শুরু হয়েছে।',
-    status:'ধীরে এগোচ্ছে', progress:38 },
-  { id:'media', icon:'📰', title:'মিডিয়া স্বাধীনতা', temp:'cool', heat:45,
-    desc:'গণমাধ্যমের উপর সাবেক সরকারের চাপ নেই। স্বাধীনতা বেড়েছে।',
-    status:'উল্লেখযোগ্য উন্নতি', progress:68 },
-  { id:'women', icon:'👩', title:'নারী অধিকার', temp:'warm', heat:55,
-    desc:'নারী সহিংসতার ঘটনা কমেনি। বেশ কয়েকটি আইন সংস্কারের প্রস্তাব আছে।',
-    status:'উদ্বেগজনক পরিস্থিতি', progress:30 },
+
+async function generateIssues() {
+  const cached = cGet('issues_v2');
+  if (cached && cached.length >= 15) { ISSUES = cached; return; }
+  const today = BD_TODAY();
+  const prompt = `তুমি বাংলাদেশের নিরপেক্ষ বিশ্লেষক। আজ ${today}। বাংলাদেশের মানুষ এই মুহূর্তে যে ২৪টি বিষয় নিয়ে সবচেয়ে বেশি চিন্তিত বা ক্ষুব্ধ — রাজনীতি, অর্থনীতি, সমাজ, শিক্ষা, স্বাস্থ্য, পরিবেশ, প্রযুক্তি সব মিলিয়ে — তার তালিকা দাও।
+
+শুধু JSON array:
+[{"id":"snake_id","icon":"emoji","title":"ছোট বাংলা শিরোনাম","temp":"critical|hot|warm|cool","heat":85,"desc":"এক বাক্য পরিস্থিতি","status":"সংক্ষিপ্ত status","progress":40,"category":"রাজনীতি|অর্থনীতি|সমাজ|শিক্ষা|স্বাস্থ্য|পরিবেশ|প্রযুক্তি|নিরাপত্তা"}]
+
+নিয়ম: heat ১-১০০, progress ০-১০০, ঠিক ২৪টি, সব বাংলায়`;
+  const data = await groqCall(prompt, 2500);
+  if (data && Array.isArray(data) && data.length >= 15) {
+    ISSUES = data; cSet('issues_v2', data);
+  } else {
+    ISSUES = FALLBACK_ISSUES;
+  }
+}
+
+async function groqIssueAnalysis(issue) {
+  const cacheKey = 'iss_' + issue.id;
+  const cached = cGet(cacheKey);
+  if (cached) return cached;
+  const today = BD_TODAY();
+  const prompt = `তুমি বাংলাদেশের নিরপেক্ষ বিশ্লেষক। আজ ${today}।
+
+বিষয়: "${issue.title}" — ${issue.desc}
+
+এই বিষয়ে বাংলাদেশে এই মুহূর্তে সবচেয়ে relevant ৬০ জন মানুষের বিশ্লেষণ দাও।
+শুধু নেতা না — মন্ত্রী, উপদেষ্টা, ব্যবসায়ী, বিশেষজ্ঞ, সাংবাদিক, activist, আমলা, সুশীল সমাজ সবাই।
+
+শুধু JSON:
+{"summary":"৩ বাক্য বিশ্লেষণ","temperature":"critical|hot|warm|cool","progress":45,"key_fact":"গুরুত্বপূর্ণ তথ্য বা সংখ্যা","public_demand":"জনগণের দাবি","outlook":"positive|negative|uncertain","people":[{"name":"পূর্ণ নাম","role":"পদ","party_or_org":"দল বা প্রতিষ্ঠান","position":"এই issue-এ ভূমিকা","stance":"supporter|opponent|neutral|responsible|critic","impact":8,"icon":"emoji","category":"রাজনীতিবিদ|সরকারি|ব্যবসায়ী|বিশেষজ্ঞ|সাংবাদিক|activist|আমলা|সুশীল"}]}
+
+ঠিক ৬০ জন people দিতে হবে, বিভিন্ন category থেকে।`;
+  const data = await groqCall(prompt, 6000);
+  if (data && data.people && data.people.length >= 20) { cSet(cacheKey, data); return data; }
+  return null;
+}
+
+// ── FALLBACK ISSUES ──
+const FALLBACK_ISSUES = [
+  {id:'election',icon:'🗳️',title:'নির্বাচন',temp:'hot',heat:82,desc:'সংস্কার শেষে নির্বাচনী রোডম্যাপ নিয়ে রাজনৈতিক টানাপোড়েন।',status:'রোডম্যাপ অনিশ্চিত',progress:42,category:'রাজনীতি'},
+  {id:'price',icon:'🛒',title:'দ্রব্যমূল্য',temp:'critical',heat:95,desc:'চাল ৭০-৮০ টাকা কেজি। নিত্যপণ্য সাধারণ মানুষের নাগালের বাইরে।',status:'নিয়ন্ত্রণে ব্যর্থতা',progress:15,category:'অর্থনীতি'},
+  {id:'july_trial',icon:'⚖️',title:'জুলাই বিচার',temp:'hot',heat:88,desc:'গণঅভ্যুত্থানে হত্যার বিচার ধীরগতিতে চলছে।',status:'বিচার চলছে',progress:32,category:'রাজনীতি'},
+  {id:'unemployment',icon:'💼',title:'বেকারত্ব',temp:'critical',heat:90,desc:'শিক্ষিত তরুণদের বেকারত্ব রেকর্ড পর্যায়ে।',status:'সংকট গভীর',progress:20,category:'অর্থনীতি'},
+  {id:'economy',icon:'📉',title:'অর্থনৈতিক সংকট',temp:'hot',heat:80,desc:'রিজার্ভ বেড়েছে, বিনিয়োগ ও কর্মসংস্থান নাজুক।',status:'আংশিক উন্নতি',progress:40,category:'অর্থনীতি'},
+  {id:'constitution',icon:'📜',title:'সংবিধান সংস্কার',temp:'warm',heat:65,desc:'কমিশন প্রতিবেদন জমা। বাস্তবায়ন শুরু হয়নি।',status:'প্রতিবেদন জমা',progress:55,category:'রাজনীতি'},
+  {id:'women',icon:'👩',title:'নারী নিরাপত্তা',temp:'hot',heat:77,desc:'ধর্ষণ ও নারী সহিংসতা উদ্বেগজনক পর্যায়ে।',status:'সংকট অব্যাহত',progress:25,category:'সমাজ'},
+  {id:'health',icon:'🏥',title:'স্বাস্থ্যসেবা',temp:'hot',heat:75,desc:'সরকারি হাসপাতালে সেবার মান নিম্ন। ওষুধ দামী।',status:'উদ্বেগজনক',progress:30,category:'স্বাস্থ্য'},
+  {id:'education',icon:'🎓',title:'শিক্ষা সংকট',temp:'warm',heat:70,desc:'পাঠ্যক্রম সংস্কার চলছে। মানের প্রশ্ন রয়েছে।',status:'সংস্কার চলছে',progress:35,category:'শিক্ষা'},
+  {id:'banking',icon:'🏦',title:'ব্যাংক সংকট',temp:'hot',heat:76,desc:'খেলাপি ঋণ রেকর্ড। কয়েকটি ব্যাংক দেউলিয়াপ্রায়।',status:'সংস্কার চলছে',progress:33,category:'অর্থনীতি'},
+  {id:'corruption',icon:'🔍',title:'দুর্নীতি দমন',temp:'hot',heat:78,desc:'দুদক সক্রিয়। বড় মামলার বিচার চলছে।',status:'আংশিক উন্নতি',progress:38,category:'রাজনীতি'},
+  {id:'safety',icon:'🛡️',title:'জননিরাপত্তা',temp:'warm',heat:60,desc:'আইনশৃঙ্খলা উন্নত। পুলিশ সংস্কার অসম্পূর্ণ।',status:'মোটামুটি স্থিতিশীল',progress:55,category:'নিরাপত্তা'},
+  {id:'environment',icon:'🌊',title:'জলবায়ু সংকট',temp:'hot',heat:72,desc:'বন্যা ও ঘূর্ণিঝড়ের ঝুঁকি বেড়েছে। উপকূল হুমকিতে।',status:'জরুরি পদক্ষেপ দরকার',progress:28,category:'পরিবেশ'},
+  {id:'rohingya',icon:'🏕️',title:'রোহিঙ্গা সংকট',temp:'warm',heat:62,desc:'১২ লাখ+ শরণার্থী। প্রত্যাবাসন অনিশ্চিত।',status:'সমাধানহীন',progress:12,category:'সমাজ'},
+  {id:'youth_politics',icon:'🔥',title:'তরুণ রাজনীতি',temp:'hot',heat:80,desc:'NCP ও ছাত্র সংগঠন নতুন রাজনৈতিক শক্তি।',status:'উত্থান ঘটছে',progress:60,category:'রাজনীতি'},
+  {id:'judiciary',icon:'🏛️',title:'বিচার বিভাগ',temp:'warm',heat:65,desc:'বিচারব্যবস্থার স্বাধীনতা ও দ্রুততার জন্য সংস্কার চলছে।',status:'সংস্কার চলছে',progress:42,category:'রাজনীতি'},
+  {id:'agriculture',icon:'🌾',title:'কৃষি সংকট',temp:'warm',heat:68,desc:'সার ও সেচ খরচে কৃষক দুর্দশায়।',status:'কৃষক দুর্দশা',progress:30,category:'অর্থনীতি'},
+  {id:'drug',icon:'💊',title:'মাদক সমস্যা',temp:'hot',heat:74,desc:'ইয়াবার ব্যাপক বিস্তারে তরুণ প্রজন্ম বিপদে।',status:'সংকট গভীর',progress:28,category:'সমাজ'},
+  {id:'internet',icon:'🌐',title:'ডিজিটাল অধিকার',temp:'warm',heat:58,desc:'সাইবার আইন সংস্কারের দাবি। ডিজিটাল স্বাধীনতার প্রশ্ন।',status:'আলোচনা চলছে',progress:45,category:'প্রযুক্তি'},
+  {id:'housing',icon:'🏠',title:'আবাসন সংকট',temp:'warm',heat:65,desc:'ঢাকায় বাড়িভাড়া অস্বাভাবিক। নিম্ন আয়ের মানুষ বিপদে।',status:'উদ্বেগজনক',progress:20,category:'সমাজ'},
+  {id:'media',icon:'📰',title:'মিডিয়া স্বাধীনতা',temp:'cool',heat:48,desc:'সাংবাদিকদের উপর চাপ কমেছে। স্বাধীনতা বেড়েছে।',status:'উন্নতি হয়েছে',progress:70,category:'সমাজ'},
+  {id:'road_safety',icon:'🚗',title:'সড়ক দুর্ঘটনা',temp:'warm',heat:60,desc:'প্রতিদিন গড়ে ১৫+ মৃত্যু। আইন প্রয়োগ দুর্বল।',status:'সংকট অব্যাহত',progress:22,category:'নিরাপত্তা'},
+  {id:'child_rights',icon:'👶',title:'শিশু অধিকার',temp:'warm',heat:58,desc:'শিশুশ্রম ও নির্যাতন অব্যাহত। আইন থাকলেও প্রয়োগ কম।',status:'উদ্বেগজনক',progress:35,category:'সমাজ'},
+  {id:'freedom_speech',icon:'🗣️',title:'মত প্রকাশ',temp:'warm',heat:62,desc:'ডিজিটাল আইন বাতিলের দাবি। সাইবার অপব্যবহারের শঙ্কা।',status:'সংস্কার চলছে',progress:50,category:'সমাজ'},
 ];
 
-// ── LEADERS fallback data ──
 const FALLBACK_LEADERS = [
   {id:'yunus',name:'ড. মুহাম্মদ ইউনূস',party:'অন্তর্বর্তীকালীন সরকার',role:'প্রধান উপদেষ্টা',icon:'👴',cat:'সরকার',approval:68,viral:true,
     promises:[{text:'নির্বাচন কমিশন সংস্কার',status:'done'},{text:'সংবিধান সংস্কার কমিশন গঠন',status:'done'},{text:'বিচার বিভাগ সংস্কার',status:'progress'},{text:'দুর্নীতি দমন শক্তিশালীকরণ',status:'progress'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'pending'},{text:'নির্বাচনী রোডম্যাপ ঘোষণা',status:'progress'}],
@@ -537,6 +539,8 @@ function catColor(cat) {
 
 // ── LOAD LEADERS ──
 async function loadLeaders() {
+  // First generate AI issues, then load leaders in parallel
+  await generateIssues();
   try {
     const snap = await getDocs(collection(_db,'leaders'));
     if (snap.size >= 5) {
@@ -578,19 +582,27 @@ window.showTab = function(id, el) {
 
 // ══ RENDER: HEATMAP ══
 function renderHeatmap() {
-  document.getElementById('heatmap-grid').innerHTML = ISSUES.map(issue => {
+  const sorted = [...ISSUES].sort((a,b)=>(b.heat||0)-(a.heat||0));
+  const catColors = {'রাজনীতি':'#1e40af','অর্থনীতি':'#b45309','সমাজ':'#15803d','শিক্ষা':'#6d28d9','স্বাস্থ্য':'#b91c1c','পরিবেশ':'#166534','প্রযুক্তি':'#0369a1','নিরাপত্তা':'#92400e'};
+  document.getElementById('heatmap-grid').innerHTML = sorted.map((issue,idx) => {
     const col = issue.temp==='critical'?'#ef4444':issue.temp==='hot'?'#f97316':issue.temp==='warm'?'#f59e0b':'#22c55e';
-    const tempLabel = issue.temp==='critical'?'🔴 সংকটজনক':issue.temp==='hot'?'🟠 উত্তপ্ত':issue.temp==='warm'?'🟡 উদ্বেগজনক':'🟢 স্বাভাবিক';
+    const tempLabel = issue.temp==='critical'?'🔴 সংকট':issue.temp==='hot'?'🟠 উত্তপ্ত':issue.temp==='warm'?'🟡 উদ্বেগ':'🟢 স্বাভাবিক';
+    const catColor = catColors[issue.category]||'#374151';
     return `<div class="issue-card ${issue.temp}" onclick="showIssueDetail('${issue.id}')">
       <div class="ic-top">
         <div class="ic-icon">${issue.icon}</div>
-        <div class="ic-temp temp-${issue.temp}">${tempLabel}</div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <div class="ic-temp temp-${issue.temp}">${tempLabel}</div>
+          ${issue.category?`<div style="padding:2px 7px;border-radius:50px;font-size:9px;font-weight:700;background:${catColor}18;color:${catColor}">${issue.category}</div>`:''}
+        </div>
       </div>
       <div class="ic-title">${issue.title}</div>
       <div class="ic-desc">${issue.desc}</div>
-      <div class="ic-bar"><div class="ic-fill" style="width:${issue.progress}%;background:${col}"></div></div>
-      <div class="ic-meta"><span>${issue.status}</span><span>অগ্রগতি ${issue.progress}%</span></div>
-      <div style="font-size:10px;color:var(--ink4);margin-top:6px">👆 tap করে AI বিশ্লেষণ দেখুন</div>
+      <div class="ic-bar"><div class="ic-fill" style="width:${issue.progress||0}%;background:${col}"></div></div>
+      <div class="ic-meta"><span>${issue.status}</span><span>🌡️ ${issue.heat||0}/100</span></div>
+      <div style="font-size:10px;color:var(--ink4);margin-top:6px;display:flex;align-items:center;gap:4px">
+        <span>👆 tap — AI বিশ্লেষণ · ৬০+ relevant মানুষ</span>
+      </div>
     </div>`;
   }).join('');
 }
