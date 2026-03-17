@@ -1290,7 +1290,7 @@ async function joafSendAlertNotification(data) {
 }
 
 // ── Admin Email via EmailJS ──────────────────────────
-window.joafSendAdminEmail = async function joafSendAdminEmail(data) {
+async function joafSendAdminEmail(data) {
   try {
     // Load EmailJS
     if (!window.emailjs) {
@@ -1300,7 +1300,7 @@ window.joafSendAdminEmail = async function joafSendAdminEmail(data) {
         s.onload = res; s.onerror = rej;
         document.head.appendChild(s);
       });
-      emailjs.init({ publicKey: 'b_Nbf71K4V-kb20_3' });
+      emailjs.init('FmIBBVHHHu8qEL38O');
     }
 
     // Emergency services by type
@@ -1322,7 +1322,6 @@ window.joafSendAdminEmail = async function joafSendAdminEmail(data) {
       reporter: data.reporter || 'অজ্ঞাত',
       emergency_contact: emergencyEmails[data.type] || '',
       site_url: 'https://julyforum.com/alert.html'
-    }, { publicKey: 'b_Nbf71K4V-kb20_3' }
     });
   } catch(e) { console.log('Email send failed:', e); }
 }

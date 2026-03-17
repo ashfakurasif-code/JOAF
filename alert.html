@@ -184,10 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script src="/js/components.js?v=6.6"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-  if (window.emailjs) { emailjs.init('FmIBBVHHHu8qEL38O'); }
-</script>
 <script src="/js/main.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 
@@ -350,23 +346,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
       createdAt: serverTimestamp()
     });
 
-    // Admin email notification via EmailJS — await করা হচ্ছে
-    try {
-      if (window.emailjs) {
-        await window.emailjs.send('service_1x9gz1r', 'template_qlcgmz6', {
-          to_email: 'info@julyforum.com',
-          alert_type: selectedType || 'অন্যান্য',
-          alert_title: title,
-          alert_desc: description,
-          alert_location: location,
-          alert_photo: imageUrl || 'কোনো ছবি নেই',
-          reporter: reporter || 'অজ্ঞাত',
-          emergency_contact: '',
-          site_url: 'https://julyforum.com/alert.html'
-        });
-      }
-    } catch(e) { console.log('Email error:', e); }
-    alert('\u2705 সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
+    alert('✅ সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
     closeModal();
     document.getElementById('f_title').value = '';
     document.getElementById('f_desc').value = '';
