@@ -1300,7 +1300,7 @@ window.joafSendAdminEmail = async function joafSendAdminEmail(data) {
         s.onload = res; s.onerror = rej;
         document.head.appendChild(s);
       });
-      emailjs.init('FmIBBVHHHu8qEL38O');
+      emailjs.init('b_Nbf71K4V-kb20_3');
     }
 
     // Emergency services by type
