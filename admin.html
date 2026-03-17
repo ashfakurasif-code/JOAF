@@ -61,7 +61,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 #app{display:none;min-height:100vh;}
 
 /* SIDEBAR */
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;z-index:200;display:flex;flex-direction:column;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;z-index:200;display:flex;flex-direction:column;transition:transform .25s cubic-bezier(.4,0,.2,1);}
 .sidebar::-webkit-scrollbar{width:3px;}
 .sidebar::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
 .slogo{padding:18px 16px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
@@ -79,6 +79,10 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .nbadge.green{background:var(--green);color:#000;}
 .sfoot{padding:12px 6px;border-top:1px solid var(--border);}
 
+/* Sidebar overlay (mobile) */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199;backdrop-filter:blur(2px);}
+.sidebar-overlay.open{display:block;}
+
 /* TOPBAR */
 .main{margin-left:var(--sidebar-w);min-height:100vh;display:flex;flex-direction:column;}
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-shrink:0;}
@@ -87,10 +91,44 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .topbar-right{display:flex;align-items:center;gap:8px;}
 .tbtn{padding:6px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;transition:.12s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
 .tbtn:hover{color:var(--text);border-color:var(--border3);}
+.ham-btn{display:none;background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--text);flex-direction:column;gap:4px;align-items:center;justify-content:center;}
+.ham-btn span{display:block;width:20px;height:2px;background:currentColor;border-radius:2px;transition:.2s;}
 
 /* PAGES */
 .page{padding:22px;display:none;flex:1;}
 .page.active{display:block;}
+
+/* ══ MOBILE RESPONSIVE ══════════════════════════ */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .ham-btn{display:flex;}
+  .topbar{padding:10px 14px;}
+  .topbar-right .tbtn:not(:last-child){display:none;}
+  .page{padding:14px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px;}
+  .scard{padding:12px;}
+  .scard-num{font-size:20px;}
+  .card{padding:14px;}
+  .card-2col{grid-template-columns:1fr!important;}
+  .field-2,.field-3{grid-template-columns:1fr!important;}
+  .modal{padding:16px;border-radius:12px;}
+  .modal-lg{max-width:100%;}
+  .tbl-wrap{font-size:11px;}
+  th,td{padding:7px 8px;}
+  .qgrid{grid-template-columns:repeat(2,1fr)!important;}
+  .btn-row{gap:6px;}
+  .btn-row .btn{font-size:11px;padding:7px 10px;}
+  .an-tab{padding:5px 8px;font-size:10px;}
+  table th:nth-child(4),table td:nth-child(4),
+  table th:nth-child(5),table td:nth-child(5){display:none;}
+}
+@media(max-width:400px){
+  .stats-grid{grid-template-columns:1fr 1fr!important;}
+  .scard-num{font-size:18px;}
+  .topbar-left h2{font-size:13px;}
+}
 
 /* ══ COMPONENTS ══════════════════════════════════ */
 
@@ -250,7 +288,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div id="app">
 
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="slogo">
       <div class="slogo-ic">⚡</div>
       <div class="slogo-text">
@@ -290,10 +328,16 @@ tr:hover td{background:rgba(255,255,255,.02);}
     </div>
   </div>
 
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
+        <button class="ham-btn" id="hamBtn" onclick="toggleSidebar()">
+          <span></span><span></span><span></span>
+        </button>
         <h2 id="pageTitle">Dashboard</h2>
       </div>
       <div class="topbar-right">
@@ -1011,6 +1055,18 @@ window.doLogout = function() {
 
 function setErr(msg) { document.getElementById('lerr').textContent = msg; }
 
+// ── Sidebar mobile toggle ────────────────────────────────
+window.toggleSidebar = function() {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('sidebarOverlay');
+  s.classList.toggle('open');
+  o.classList.toggle('open');
+};
+window.closeSidebar = function() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+};
+
 // ── Navigation ──────────────────────────────────────────
 window.goPage = function(id, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1032,6 +1088,7 @@ window.goPage = function(id, el) {
     members: loadMembers, polls: loadPolls, forum: loadForum, analytics: loadAnalytics
   };
   if (loaders[id]) loaders[id]();
+  if(window.innerWidth <= 768) closeSidebar();
   // Stop analytics real-time listener when leaving that page
   if(id !== 'analytics' && typeof stopAnalyticsListener === 'function') stopAnalyticsListener();
 };
