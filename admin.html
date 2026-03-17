@@ -422,7 +422,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="card">
           <div class="card-header">
             <div><div class="card-title">সক্রিয় সতর্কতা</div></div>
-            <button class="btn btn-ghost btn-sm" onclick="loadAlerts()">↻ Refresh</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn btn-ghost btn-sm" id="alert-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);" onclick="bulkDeleteAlerts()">🗑️ Selected Delete</button>
+              <button class="btn btn-ghost btn-sm" id="alert-sel-all" style="display:none;" onclick="toggleSelectAllAlerts()">☑️ সব Select</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadAlerts()">↻ Refresh</button>
+            </div>
           </div>
           <div id="alert-list"><div class="loading">লোড হচ্ছে...</div></div>
         </div>
@@ -441,15 +445,16 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="card">
         <div class="card-header">
           <div><div class="card-title">🩸 রক্তদাতা তালিকা</div></div>
-          <div class="flex">
+          <div class="flex" style="display:flex;gap:6px;align-items:center;">
+            <button class="btn btn-ghost btn-sm" id="donor-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);" onclick="bulkDeleteDonors()">🗑️ Selected Delete</button>
             <input type="text" id="bl-search" placeholder="নাম / গ্রুপ / জেলা..." style="padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;outline:none;width:180px;" oninput="filterDonors()">
             <button class="btn btn-ghost btn-sm" onclick="loadDonors()">↻</button>
           </div>
         </div>
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>নাম</th><th>রক্তের গ্রুপ</th><th>জেলা</th><th>ফোন</th><th>তারিখ</th><th>Action</th></tr></thead>
-            <tbody id="donor-tbody"><tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr></tbody>
+            <thead><tr><th style="width:32px"><input type="checkbox" id="donor-check-all" onchange="toggleDonorCheckAll(this)" style="cursor:pointer;accent-color:var(--accent)"></th><th>নাম</th><th>রক্তের গ্রুপ</th><th>জেলা</th><th>ফোন</th><th>তারিখ</th><th>Action</th></tr></thead>
+            <tbody id="donor-tbody"><tr><td colspan="7" class="loading">লোড হচ্ছে...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -496,12 +501,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="card">
         <div class="card-header">
           <div><div class="card-title">🏛️ নেতা ট্র্যাকার</div><div class="card-sub">Firestore এ data save হলে সাইটে automatically দেখাবে</div></div>
-          <button class="btn btn-primary btn-sm" onclick="openModal('leaderModal')">+ নতুন নেতা</button>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="btn btn-ghost btn-sm" id="leader-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);" onclick="bulkDeleteLeaders()">🗑️ Selected Delete</button>
+            <button class="btn btn-primary btn-sm" onclick="openModal('leaderModal')">+ নতুন নেতা</button>
+          </div>
         </div>
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>নাম</th><th>দল</th><th>পদ</th><th>Approval</th><th>প্রতিশ্রুতি</th><th>Action</th></tr></thead>
-            <tbody id="leader-tbody"><tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr></tbody>
+            <thead><tr><th style="width:32px"><input type="checkbox" id="leader-chk-all" onchange="document.querySelectorAll('.leader-chk').forEach(c=>c.checked=this.checked);onLeaderCheck();" style="cursor:pointer;accent-color:var(--accent)"></th><th>নাম</th><th>দল</th><th>পদ</th><th>Approval</th><th>প্রতিশ্রুতি</th><th>Action</th></tr></thead>
+            <tbody id="leader-tbody"><tr><td colspan="7" class="loading">লোড হচ্ছে...</td></tr></tbody>
           </table>
         </div>
         <div class="card mt16" style="background:var(--amber-bg);border-color:var(--amber-border)">
@@ -516,12 +524,15 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="card">
         <div class="card-header">
           <div><div class="card-title">✊ জুলাই যোদ্ধা</div></div>
-          <button class="btn btn-primary btn-sm" onclick="openModal('warriorModal')">+ নতুন যোদ্ধা</button>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="btn btn-ghost btn-sm" id="warrior-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);" onclick="bulkDeleteWarriors()">🗑️ Selected Delete</button>
+            <button class="btn btn-primary btn-sm" onclick="openModal('warriorModal')">+ নতুন যোদ্ধা</button>
+          </div>
         </div>
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>নাম</th><th>ধরন</th><th>জেলা</th><th>ভূমিকা</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody id="warrior-tbody"><tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr></tbody>
+            <thead><tr><th style="width:32px"><input type="checkbox" id="warrior-chk-all" onchange="document.querySelectorAll('.warrior-chk').forEach(c=>c.checked=this.checked);onWarriorCheck();" style="cursor:pointer;accent-color:var(--accent)"></th><th>নাম</th><th>ধরন</th><th>জেলা</th><th>ভূমিকা</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="warrior-tbody"><tr><td colspan="7" class="loading">লোড হচ্ছে...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -674,6 +685,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
 </div><!-- /app -->
 
 <!-- ══ MODALS ══ -->
+
+<!-- Alert Info Modal -->
+<div class="modal-bg" id="alertInfoModal">
+  <div class="modal modal-lg">
+    <h3>🚨 সতর্কতার বিস্তারিত তথ্য</h3>
+    <div id="alert-info-body"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal('alertInfoModal')">✕ বন্ধ করুন</button>
+    </div>
+  </div>
+</div>
 
 <!-- Notification Edit Modal -->
 <div class="modal-bg" id="notifModal">
@@ -1076,19 +1098,68 @@ async function loadAlerts() {
   el.innerHTML = '<div class="loading">লোড হচ্ছে...</div>';
   try {
     const snap = await getDocs(collection(db,'alerts'));
-    if (snap.empty) { el.innerHTML='<div class="empty">কোনো সতর্কতা নেই</div>'; return; }
+    if (snap.empty) { el.innerHTML='<div class="empty">কোনো সতর্কতা নেই</div>'; ['alert-sel-all','alert-bulk-del'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';}); return; }
+    ['alert-sel-all','alert-bulk-del'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='';});
+    document.getElementById('alert-bulk-del').style.display='none';
     el.innerHTML = snap.docs.map(d => {
       const data = d.data();
       const lvlClass = data.level==='danger'?'badge-red':data.level==='warning'?'badge-amber':'badge-blue';
-      return `<div class="act-item">
+      const time = data.createdAt?.toDate?.()?.toLocaleString('bn-BD')||'—';
+      return `<div class="act-item" id="alert-row-${d.id}" style="gap:8px;">
+        <input type="checkbox" class="alert-chk" data-id="${d.id}" onchange="onAlertCheck()" style="cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
         <span class="act-icon">🚨</span>
-        <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2)">${data.area||''} — ${data.body||''}</span></div>
+        <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2);font-size:11px">${data.area||''} ${data.area&&data.body?'—':''} ${(data.body||'').substring(0,60)}${(data.body||'').length>60?'...':''}</span></div>
         <span class="badge ${lvlClass}">${data.level||'info'}</span>
-        <button class="btn btn-danger btn-sm" onclick="deleteAlert('${d.id}')">Delete</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--blue);border-color:var(--blue-border);background:var(--blue-bg);" onclick='showAlertInfo(${JSON.stringify({id:d.id,...data,createdAt:time})})'>ℹ️ Info</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAlert('${d.id}')">🗑️</button>
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML='<div class="empty text-red">Error loading</div>'; }
 }
+
+window.showAlertInfo = function(data) {
+  const lvlLabel = data.level==='danger'?'🔴 বিপদ':data.level==='warning'?'🟡 সতর্কতা':'🔵 তথ্য';
+  const typeEmoji = data.type==='flood'?'🌊':data.type==='fire'?'🔥':data.type==='health'?'🏥':'🚨';
+  document.getElementById('alert-info-body').innerHTML = `
+    <div style="display:grid;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--border);">
+        <span style="font-size:32px">${typeEmoji}</span>
+        <div><div style="font-size:15px;font-weight:900;">${data.title||'—'}</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">${lvlLabel}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">ধরন</div><div style="font-size:12px;font-weight:700;">${data.type||'—'}</div></div>
+        <div style="padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">এলাকা</div><div style="font-size:12px;font-weight:700;">${data.area||'সকল এলাকা'}</div></div>
+        <div style="padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">স্ট্যাটাস</div><div style="font-size:12px;font-weight:700;">${data.active?'✅ সক্রিয়':'❌ নিষ্ক্রিয়'}</div></div>
+        <div style="padding:10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">তারিখ</div><div style="font-size:11px;">${data.createdAt||'—'}</div></div>
+      </div>
+      <div style="padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">বিবরণ</div><div style="font-size:12px;line-height:1.6;">${data.body||'—'}</div></div>
+    </div>`;
+  document.getElementById('alertInfoModal').classList.add('open');
+};
+
+window.onAlertCheck = function() {
+  const checked = document.querySelectorAll('.alert-chk:checked').length;
+  const bulkBtn = document.getElementById('alert-bulk-del');
+  if (bulkBtn) bulkBtn.style.display = checked > 0 ? '' : 'none';
+};
+
+window.toggleSelectAllAlerts = function() {
+  const chks = document.querySelectorAll('.alert-chk');
+  const allChecked = [...chks].every(c=>c.checked);
+  chks.forEach(c=>c.checked=!allChecked);
+  onAlertCheck();
+};
+
+window.bulkDeleteAlerts = async function() {
+  const ids = [...document.querySelectorAll('.alert-chk:checked')].map(c=>c.dataset.id);
+  if (!ids.length) return;
+  if (!confirm(`${ids.length}টি সতর্কতা delete করবেন?`)) return;
+  try {
+    await Promise.all(ids.map(id=>deleteDoc(doc(db,'alerts',id))));
+    toast(`✅ ${ids.length}টি delete হয়েছে`,'success');
+    loadAlerts();
+  } catch(e) { toast('❌ Error: '+e.message,'error'); }
+};
 
 window.postAlert = async function(withNotif=false) {
   const title = document.getElementById('al-title').value.trim();
@@ -1129,24 +1200,49 @@ async function loadDonors() {
     setEl('bl-opos', allDonors.filter(d=>d.blood==='O+'||d.bloodGroup==='O+').length);
     setEl('b-blood', allDonors.length);
     renderDonors(allDonors);
-  } catch(e) { tbody.innerHTML='<tr><td colspan="6" class="empty text-red">Error</td></tr>'; }
+  } catch(e) { tbody.innerHTML='<tr><td colspan="7" class="empty text-red">Error</td></tr>'; }
 }
 
 function renderDonors(donors) {
   const tbody = document.getElementById('donor-tbody');
-  if (!donors.length) { tbody.innerHTML='<tr><td colspan="6" class="empty">কোনো দাতা নেই</td></tr>'; return; }
+  if (!donors.length) { tbody.innerHTML='<tr><td colspan="7" class="empty">কোনো দাতা নেই</td></tr>'; return; }
   tbody.innerHTML = donors.slice(0,50).map(d => `
     <tr>
+      <td><input type="checkbox" class="donor-chk" data-id="${d.id}" onchange="onDonorCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
       <td><div style="font-weight:700;font-size:12px">${d.name||d.donorName||'—'}</div></td>
       <td><span class="badge badge-red">${d.blood||d.bloodGroup||'—'}</span></td>
       <td>${d.district||d.area||'—'}</td>
       <td style="font-family:monospace;font-size:11px">${d.phone||d.contact||'—'}</td>
       <td style="font-size:10px;color:var(--text2)">${d.createdAt?.toDate?.()?.toLocaleDateString('bn-BD')||'—'}</td>
       <td><div class="td-actions">
-        <button class="btn btn-danger btn-sm" onclick="deleteDonor('${d.id}')">Delete</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDonor('${d.id}')">🗑️</button>
       </div></td>
     </tr>`).join('');
 }
+
+window.toggleDonorCheckAll = function(cb) {
+  document.querySelectorAll('.donor-chk').forEach(c=>c.checked=cb.checked);
+  onDonorCheck();
+};
+
+window.onDonorCheck = function() {
+  const checked = document.querySelectorAll('.donor-chk:checked').length;
+  const bulkBtn = document.getElementById('donor-bulk-del');
+  if (bulkBtn) bulkBtn.style.display = checked > 0 ? '' : 'none';
+  const allChk = document.getElementById('donor-check-all');
+  if (allChk) { const all = document.querySelectorAll('.donor-chk').length; allChk.indeterminate = checked>0&&checked<all; allChk.checked = checked===all&&all>0; }
+};
+
+window.bulkDeleteDonors = async function() {
+  const ids = [...document.querySelectorAll('.donor-chk:checked')].map(c=>c.dataset.id);
+  if (!ids.length) return;
+  if (!confirm(`${ids.length}জন donor delete করবেন?`)) return;
+  try {
+    await Promise.all(ids.map(id=>deleteDoc(doc(db,'donors',id))));
+    toast(`✅ ${ids.length}জন delete হয়েছে`,'success');
+    loadDonors();
+  } catch(e) { toast('❌ Error: '+e.message,'error'); }
+};
 
 window.filterDonors = function() {
   const q = document.getElementById('bl-search').value.toLowerCase();
@@ -1181,16 +1277,31 @@ async function loadPress() {
   try {
     const snap = await getDocs(collection(db,'press_releases'));
     if (snap.empty) { el.innerHTML='<div class="empty">কোনো press release নেই</div>'; return; }
-    el.innerHTML = snap.docs.map(d => {
+    el.innerHTML = `<div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;">
+      <input type="checkbox" id="press-chk-all" onchange="togglePressAll(this)" style="cursor:pointer;accent-color:var(--accent)">
+      <span style="font-size:11px;color:var(--text2)">সব Select</span>
+      <button class="btn btn-ghost btn-sm" id="press-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);margin-left:8px;" onclick="bulkDeletePress()">🗑️ Selected Delete</button>
+    </div>` + snap.docs.map(d => {
       const data = d.data();
-      return `<div class="act-item">
+      return `<div class="act-item" style="gap:8px;">
+        <input type="checkbox" class="press-chk" data-id="${d.id}" onchange="onPressCheck()" style="cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
         <span class="act-icon">📰</span>
-        <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2);font-size:10px">${data.date||'—'}</span></div>
-        <button class="btn btn-danger btn-sm" onclick="deletePress('${d.id}')">Delete</button>
+        <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2);font-size:10px">${data.date||'—'} ${data.summary?'· '+(data.summary.substring(0,50))+'...':''}</span></div>
+        <button class="btn btn-danger btn-sm" onclick="deletePress('${d.id}')">🗑️</button>
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML='<div class="empty text-red">Error</div>'; }
 }
+
+window.togglePressAll = function(cb) { document.querySelectorAll('.press-chk').forEach(c=>c.checked=cb.checked); onPressCheck(); };
+window.onPressCheck = function() { const n=document.querySelectorAll('.press-chk:checked').length; const b=document.getElementById('press-bulk-del'); if(b) b.style.display=n>0?'':'none'; };
+window.bulkDeletePress = async function() {
+  const ids=[...document.querySelectorAll('.press-chk:checked')].map(c=>c.dataset.id);
+  if(!ids.length) return;
+  if(!confirm(`${ids.length}টি press release delete করবেন?`)) return;
+  await Promise.all(ids.map(id=>deleteDoc(doc(db,'press_releases',id))));
+  toast(`✅ ${ids.length}টি delete হয়েছে`,'success'); loadPress();
+};
 
 window.addPressRelease = async function(withNotif=false) {
   const title   = document.getElementById('pr-title').value.trim();
@@ -1217,10 +1328,10 @@ window.deletePress = async function(id) {
 // ── Leaders ──────────────────────────────────────────────
 async function loadLeaders() {
   const tbody = document.getElementById('leader-tbody');
-  tbody.innerHTML='<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
+  tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await getDocs(collection(db,'leaders'));
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="6" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
       return `<tr>
@@ -1229,11 +1340,21 @@ async function loadLeaders() {
         <td style="font-size:11px">${data.role||'—'}</td>
         <td><span style="color:${data.approval>=60?'var(--green)':data.approval>=30?'var(--amber)':'var(--red)'}">${data.approval||0}%</span></td>
         <td>${(data.promises||[]).length} টি</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteLeader('${d.id}')">Delete</button></td>
+        <td><input type="checkbox" class="leader-chk" data-id="${d.id}" onchange="onLeaderCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteLeader('${d.id}')">🗑️</button></td>
       </tr>`;
     }).join('');
-  } catch(e) { tbody.innerHTML='<tr><td colspan="6" class="empty text-red">Error</td></tr>'; }
+  } catch(e) { tbody.innerHTML='<tr><td colspan="8" class="empty text-red">Error</td></tr>'; }
 }
+
+window.onLeaderCheck = function() { const n=document.querySelectorAll('.leader-chk:checked').length; const b=document.getElementById('leader-bulk-del'); if(b) b.style.display=n>0?'':'none'; };
+window.bulkDeleteLeaders = async function() {
+  const ids=[...document.querySelectorAll('.leader-chk:checked')].map(c=>c.dataset.id);
+  if(!ids.length) return;
+  if(!confirm(ids.length+'জন নেতা delete করবেন?')) return;
+  await Promise.all(ids.map(id=>deleteDoc(doc(db,'leaders',id))));
+  toast('✅ '+ids.length+'জন delete হয়েছে','success'); loadLeaders();
+};
 
 window.saveLeader = async function() {
   const name     = document.getElementById('ld-name').value.trim();
@@ -1272,10 +1393,10 @@ window.migrateLeaders = async function() {
 // ── Warriors ─────────────────────────────────────────────
 async function loadWarriors() {
   const tbody = document.getElementById('warrior-tbody');
-  tbody.innerHTML='<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
+  tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await getDocs(collection(db,'warriors'));
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="6" class="empty">কোনো যোদ্ধা নেই</td></tr>'; return; }
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">কোনো যোদ্ধা নেই</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
       const typeClass = data.type==='shahid'?'badge-red':data.type==='ahat'?'badge-amber':'badge-green';
@@ -1286,11 +1407,21 @@ async function loadWarriors() {
         <td>${data.dist||'—'}</td>
         <td style="font-size:11px">${data.role||'—'}</td>
         <td><span class="badge badge-blue">Active</span></td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteWarrior('${d.id}')">Delete</button></td>
+        <td><input type="checkbox" class="warrior-chk" data-id="${d.id}" onchange="onWarriorCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteWarrior('${d.id}')">🗑️</button></td>
       </tr>`;
     }).join('');
-  } catch(e) { tbody.innerHTML='<tr><td colspan="6" class="empty text-red">Error</td></tr>'; }
+  } catch(e) { tbody.innerHTML='<tr><td colspan="8" class="empty text-red">Error</td></tr>'; }
 }
+
+window.onWarriorCheck = function() { const n=document.querySelectorAll('.warrior-chk:checked').length; const b=document.getElementById('warrior-bulk-del'); if(b) b.style.display=n>0?'':'none'; };
+window.bulkDeleteWarriors = async function() {
+  const ids=[...document.querySelectorAll('.warrior-chk:checked')].map(c=>c.dataset.id);
+  if(!ids.length) return;
+  if(!confirm(ids.length+'জন যোদ্ধা delete করবেন?')) return;
+  await Promise.all(ids.map(id=>deleteDoc(doc(db,'warriors',id))));
+  toast('✅ '+ids.length+'জন delete হয়েছে','success'); loadWarriors();
+};
 
 window.saveWarrior = async function() {
   const name  = document.getElementById('wr-name').value.trim();
