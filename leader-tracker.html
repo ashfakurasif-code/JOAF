@@ -334,44 +334,99 @@ const _db = getFirestore(_fa);
 const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/iPad/i.test(_ua)?'tablet':'desktop',_ref=document.referrer,_src=_ref.includes('google')?'Google':_ref.includes('facebook')?'Facebook':_ref?'Referral':'Direct';
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 
-// ── ISSUES data (static — updated by admin) ──
+// ── GROQ CONFIG ──
+const GROQ_KEY = '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';
+const GROQ_MODELS = ['llama-3.3-70b-versatile','llama3-70b-8192','mixtral-8x7b-32768'];
+const ISSUE_CACHE = {}; // cache per issue per day
+
+async function groqIssueAnalysis(issue) {
+  const today = new Date(Date.now()+6*3600000).toISOString().slice(0,10);
+  const cacheKey = issue.id + '_' + today;
+  if (ISSUE_CACHE[cacheKey]) return ISSUE_CACHE[cacheKey];
+
+  const prompt = `তুমি বাংলাদেশের নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ ${today}।
+
+বিষয়: "${issue.title}"
+বর্তমান পরিস্থিতি: ${issue.desc}
+
+এই বিষয়ে বাংলাদেশের বর্তমান প্রেক্ষাপটে সবচেয়ে relevant মানুষদের বিশ্লেষণ দাও।
+
+শুধু নিচের JSON return করো, আর কিছু না:
+{
+  "summary": "এই issue-এর বর্তমান অবস্থার ২-৩ বাক্যের সারসংক্ষেপ",
+  "temperature": "critical|hot|warm|cool",
+  "progress": 45,
+  "people": [
+    {
+      "name": "পূর্ণ নাম বাংলায়",
+      "role": "পদ বা পরিচয়",
+      "party_or_org": "দল বা প্রতিষ্ঠান",
+      "position": "এই issue-এ তার অবস্থান বা ভূমিকা ১ বাক্যে",
+      "stance": "supporter|opponent|neutral|responsible|critic",
+      "impact": 1-10,
+      "icon": "একটি emoji"
+    }
+  ],
+  "key_fact": "সবচেয়ে গুরুত্বপূর্ণ একটি তথ্য বা সংখ্যা",
+  "public_demand": "জনগণ এখন কী চাইছে এক বাক্যে",
+  "outlook": "positive|negative|uncertain"
+}
+
+নিয়ম:
+- people: ৫-৮ জন, শুধু এই issue-এ সত্যিই relevant
+- নেতা, মন্ত্রী, বিশেষজ্ঞ, ব্যবসায়ী, activist — যেই হোক
+- সব বাংলায়, নিরপেক্ষ ও তথ্যভিত্তিক
+- মার্চ ২০২৬ পর্যন্ত সর্বশেষ তথ্য`;
+
+  for (const model of GROQ_MODELS) {
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+        body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.3,max_tokens:1500})
+      });
+      if(!r.ok) continue;
+      const d = await r.json();
+      let txt = d.choices?.[0]?.message?.content||'';
+      txt = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+      const match = txt.match(/\{[\s\S]*\}/);
+      if(match){
+        const parsed = JSON.parse(match[0]);
+        ISSUE_CACHE[cacheKey] = parsed;
+        return parsed;
+      }
+    } catch(e){continue;}
+  }
+  return null;
+}
 const ISSUES = [
   { id:'election', icon:'🗳️', title:'নির্বাচন', temp:'hot', heat:78,
     desc:'সংস্কার কমিশনের কাজ চলছে। রোডম্যাপ নিয়ে অনিশ্চয়তা এখনো আছে।',
-    status:'নির্বাচনী রোডম্যাপ চলমান', progress:45,
-    leaders:['ড. ইউনূস','নাহিদ ইসলাম','মির্জা ফখরুল'] },
+    status:'নির্বাচনী রোডম্যাপ চলমান', progress:45 },
   { id:'price', icon:'🛒', title:'দ্রব্যমূল্য', temp:'critical', heat:91,
     desc:'চাল, তেল, পেঁয়াজ সহ নিত্যপণ্যের দাম এখনো সাধারণ মানুষের নাগালের বাইরে।',
-    status:'নিয়ন্ত্রণে ব্যর্থতা অব্যাহত', progress:18,
-    leaders:['ড. সালেহউদ্দিন','ড. ইউনূস'] },
+    status:'নিয়ন্ত্রণে ব্যর্থতা অব্যাহত', progress:18 },
   { id:'july_trial', icon:'⚖️', title:'জুলাই বিচার', temp:'hot', heat:82,
     desc:'গণঅভ্যুত্থানে হতাহতদের বিচার প্রক্রিয়া শুরু হয়েছে, তবে ধীরগতি।',
-    status:'বিচার প্রক্রিয়া চলমান', progress:35,
-    leaders:['নাহিদ ইসলাম','আসিফ মাহমুদ','ড. ইউনূস'] },
+    status:'বিচার প্রক্রিয়া চলমান', progress:35 },
   { id:'economy', icon:'📉', title:'অর্থনীতি', temp:'hot', heat:75,
     desc:'রিজার্ভ সংকট কিছুটা কমেছে, তবে বিনিয়োগ ও কর্মসংস্থান এখনো নাজুক।',
-    status:'আংশিক উন্নতি', progress:42,
-    leaders:['ড. সালেহউদ্দিন','মাহবুবুল আলম'] },
+    status:'আংশিক উন্নতি', progress:42 },
   { id:'constitution', icon:'📜', title:'সংবিধান সংস্কার', temp:'warm', heat:60,
     desc:'সংস্কার কমিশন প্রতিবেদন দিয়েছে। বাস্তবায়ন শুরু হয়নি।',
-    status:'প্রতিবেদন জমা, বাস্তবায়ন বাকি', progress:55,
-    leaders:['ড. আলী রীয়াজ','ড. ইউনূস'] },
+    status:'প্রতিবেদন জমা, বাস্তবায়ন বাকি', progress:55 },
   { id:'safety', icon:'🛡️', title:'জননিরাপত্তা', temp:'warm', heat:58,
     desc:'আইনশৃঙ্খলা পরিস্থিতির উন্নতি হয়েছে, তবে পুলিশ সংস্কার অসম্পূর্ণ।',
-    status:'মোটামুটি স্থিতিশীল', progress:52,
-    leaders:['সাখাওয়াত হোসেন'] },
+    status:'মোটামুটি স্থিতিশীল', progress:52 },
   { id:'education', icon:'🎓', title:'শিক্ষা সংস্কার', temp:'cool', heat:40,
     desc:'পাঠ্যক্রম পর্যালোচনা চলছে। নতুন শিক্ষা নীতির কাজ শুরু হয়েছে।',
-    status:'ধীরে এগোচ্ছে', progress:38,
-    leaders:['আসিফ মাহমুদ','নাহিদ ইসলাম'] },
+    status:'ধীরে এগোচ্ছে', progress:38 },
   { id:'media', icon:'📰', title:'মিডিয়া স্বাধীনতা', temp:'cool', heat:45,
     desc:'গণমাধ্যমের উপর সাবেক সরকারের চাপ নেই। স্বাধীনতা বেড়েছে।',
-    status:'উল্লেখযোগ্য উন্নতি', progress:68,
-    leaders:['সৈয়দা রিজওয়ানা','তৌহিদ হোসেন'] },
+    status:'উল্লেখযোগ্য উন্নতি', progress:68 },
   { id:'women', icon:'👩', title:'নারী অধিকার', temp:'warm', heat:55,
     desc:'নারী সহিংসতার ঘটনা কমেনি। বেশ কয়েকটি আইন সংস্কারের প্রস্তাব আছে।',
-    status:'উদ্বেগজনক পরিস্থিতি', progress:30,
-    leaders:['সৈয়দা রিজওয়ানা','খুশী কবির'] },
+    status:'উদ্বেগজনক পরিস্থিতি', progress:30 },
 ];
 
 // ── LEADERS fallback data ──
@@ -535,35 +590,85 @@ function renderHeatmap() {
       <div class="ic-desc">${issue.desc}</div>
       <div class="ic-bar"><div class="ic-fill" style="width:${issue.progress}%;background:${col}"></div></div>
       <div class="ic-meta"><span>${issue.status}</span><span>অগ্রগতি ${issue.progress}%</span></div>
-      <div class="ic-leaders">${issue.leaders.map(l=>`<span class="ic-leader-tag">${l}</span>`).join('')}</div>
+      <div style="font-size:10px;color:var(--ink4);margin-top:6px">👆 tap করে AI বিশ্লেষণ দেখুন</div>
     </div>`;
   }).join('');
 }
 
-window.showIssueDetail = function(id) {
+window.showIssueDetail = async function(id) {
   const issue = ISSUES.find(i=>i.id===id);
   if (!issue) return;
-  const relatedLeaders = ALL_LEADERS.filter(l=>issue.leaders.some(n=>l.name.includes(n.split(' ')[0])));
+
+  // Open modal with loading state
   document.getElementById('modal-inner').innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
       <span style="font-size:40px">${issue.icon}</span>
-      <div><div style="font-size:20px;font-weight:900">${issue.title}</div><div style="font-size:12px;color:var(--ink3);margin-top:3px">${issue.status}</div></div>
+      <div><div style="font-size:20px;font-weight:900">${issue.title}</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:3px">${issue.desc}</div></div>
     </div>
-    <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:14px;">
-      <div style="font-size:13px;color:var(--ink2);line-height:1.6">${issue.desc}</div>
-      <div style="margin-top:12px;background:var(--border);border-radius:50px;height:10px;overflow:hidden">
-        <div style="width:${issue.progress}%;height:100%;border-radius:50px;background:${issue.temp==='critical'?'#ef4444':issue.temp==='hot'?'#f97316':issue.temp==='warm'?'#f59e0b':'#22c55e'};transition:width .8s"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink4);margin-top:5px"><span>০%</span><span>অগ্রগতি ${issue.progress}%</span><span>১০০%</span></div>
-    </div>
-    ${relatedLeaders.length ? `<div style="font-size:12px;font-weight:800;color:var(--ink2);margin-bottom:10px">সংশ্লিষ্ট নেতারা</div>
-    ${relatedLeaders.map(l=>{const g=calcGrade(l);return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border-radius:12px;margin-bottom:8px;border:1px solid var(--border)">
-      <span style="font-size:24px">${l.icon}</span>
-      <div style="flex:1"><div style="font-size:12px;font-weight:800">${l.name}</div><div style="font-size:10px;color:var(--ink3)">${l.party}</div></div>
-      <div style="background:${gradeBg(g.grade)};color:${gradeColor(g.grade)};padding:4px 10px;border-radius:8px;font-size:14px;font-weight:900">${g.grade}</div>
-      <div style="font-size:14px;font-weight:900;color:${l.approval>=60?'var(--green)':l.approval>=40?'var(--amber)':'var(--red-m)'}">${l.approval}%</div>
-    </div>`; }).join('')}` : ''}`;
+    <div id="ai-loading" style="text-align:center;padding:32px;color:var(--ink3)">
+      <div style="font-size:28px;margin-bottom:10px">🤖</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px">AI বিশ্লেষণ চলছে...</div>
+      <div style="font-size:11px;color:var(--ink4)">Groq AI দিয়ে সর্বশেষ তথ্য বিশ্লেষণ করছে</div>
+    </div>`;
   document.getElementById('detail-modal').classList.add('open');
+
+  const ai = await groqIssueAnalysis(issue);
+
+  if (!ai) {
+    document.getElementById('ai-loading').innerHTML = `<div style="color:var(--red-m)">⚠️ AI বিশ্লেষণ পাওয়া যায়নি। পরে আবার চেষ্টা করুন।</div>`;
+    return;
+  }
+
+  const stanceLabel = s => s==='supporter'?'✅ সমর্থক':s==='opponent'?'❌ বিরোধী':s==='responsible'?'⚠️ দায়ী':s==='critic'?'🔍 সমালোচক':'⚖️ নিরপেক্ষ';
+  const stanceBg    = s => s==='supporter'?'#dcfce7':s==='opponent'?'#fee2e2':s==='responsible'?'#fef3c7':s==='critic'?'#ede9fe':'#f1f5f9';
+  const stanceColor = s => s==='supporter'?'#15803d':s==='opponent'?'#b91c1c':s==='responsible'?'#b45309':s==='critic'?'#6d28d9':'#374151';
+  const outlookIcon = ai.outlook==='positive'?'📈':ai.outlook==='negative'?'📉':'📊';
+  const tempColor = ai.temperature==='critical'?'#ef4444':ai.temperature==='hot'?'#f97316':ai.temperature==='warm'?'#f59e0b':'#22c55e';
+
+  document.getElementById('ai-loading').outerHTML = `
+    <div style="background:var(--surface2);border-radius:14px;padding:14px;margin-bottom:16px;border:1px solid var(--border);">
+      <div style="font-size:12px;line-height:1.7;color:var(--ink2)">${ai.summary||''}</div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <div style="background:#fff;border-radius:10px;padding:8px 12px;border:1px solid var(--border);flex:1;min-width:100px;text-align:center;">
+          <div style="font-size:20px;font-weight:900;color:${tempColor}">${ai.progress||0}%</div>
+          <div style="font-size:10px;color:var(--ink4)">অগ্রগতি</div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:8px 12px;border:1px solid var(--border);flex:1;min-width:100px;text-align:center;">
+          <div style="font-size:20px">${outlookIcon}</div>
+          <div style="font-size:10px;color:var(--ink4)">${ai.outlook==='positive'?'আশাব্যঞ্জক':ai.outlook==='negative'?'উদ্বেগজনক':'অনিশ্চিত'}</div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:8px 12px;border:1px solid var(--border);flex:2;min-width:160px;">
+          <div style="font-size:10px;color:var(--ink4);margin-bottom:3px">📢 জনগণের দাবি</div>
+          <div style="font-size:11px;font-weight:700;color:var(--ink)">${ai.public_demand||''}</div>
+        </div>
+      </div>
+      ${ai.key_fact?`<div style="margin-top:10px;padding:8px 12px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:10px;border-left:3px solid var(--blue-m);font-size:11px;color:#1e40af;font-weight:700;">💡 ${ai.key_fact}</div>`:''}
+    </div>
+
+    <div style="font-size:13px;font-weight:900;color:var(--ink);margin-bottom:12px;">এই বিষয়ে relevant মানুষেরা</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${(ai.people||[]).map(p=>`
+        <div style="background:#fff;border-radius:14px;padding:12px 14px;border:1.5px solid var(--border);display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:${stanceBg(p.stance)};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${p.icon||'👤'}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
+              <div style="font-size:13px;font-weight:900;color:var(--ink)">${p.name}</div>
+              <span style="padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700;background:${stanceBg(p.stance)};color:${stanceColor(p.stance)}">${stanceLabel(p.stance)}</span>
+            </div>
+            <div style="font-size:11px;color:var(--blue-m);font-weight:700">${p.party_or_org||''}</div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:2px">${p.role||''}</div>
+            <div style="font-size:11px;color:var(--ink2);margin-top:5px;line-height:1.5;padding:6px 8px;background:var(--surface2);border-radius:8px;">${p.position||''}</div>
+          </div>
+          <div style="flex-shrink:0;text-align:center;">
+            <div style="font-size:16px;font-weight:900;color:${p.impact>=7?'#15803d':p.impact>=4?'#b45309':'#b91c1c'}">${p.impact}/10</div>
+            <div style="font-size:9px;color:var(--ink4)">প্রভাব</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:14px;padding:10px 14px;background:var(--surface3);border-radius:10px;font-size:10px;color:var(--ink4);text-align:center;">
+      🤖 Groq AI দ্বারা বিশ্লেষিত · মার্চ ২০২৬ · তথ্য আনুমানিক ও শিক্ষামূলক উদ্দেশ্যে
+    </div>`;
 };
 
 // ══ RENDER: REPORT CARDS ══
