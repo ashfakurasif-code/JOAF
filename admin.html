@@ -562,9 +562,17 @@ tr:hover td{background:rgba(255,255,255,.02);}
             <tbody id="leader-tbody"><tr><td colspan="7" class="loading">লোড হচ্ছে...</td></tr></tbody>
           </table>
         </div>
-        <div class="card mt16" style="background:var(--amber-bg);border-color:var(--amber-border)">
-          <div style="font-size:12px;color:var(--amber)">⚠️ <b>Migration দরকার:</b> বর্তমানে নেতাদের data <code>leader-tracker.html</code> এ hardcoded আছে। Firestore এ migrate করলে এখান থেকে edit করা যাবে। Migration button নিচে আছে।</div>
-          <button class="btn btn-warning btn-sm mt12" onclick="migrateLeaders()">⬆️ Firestore এ Migrate করুন</button>
+        <div class="card mt16" style="background:var(--blue-bg);border-color:var(--blue-border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-size:12px;font-weight:800;color:var(--blue)">🤖 AI Auto-Update</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">প্রতিদিন রাত ১২টায় Groq AI নেতাদের latest data automatically update করে। এখনই update করতে নিচের button চাপুন।</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div id="leader-ai-status" style="font-size:11px;color:var(--text2)"></div>
+              <button class="btn btn-primary btn-sm" onclick="runLeaderAiUpdate()" id="leader-ai-btn">🤖 AI দিয়ে Update করুন</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1535,17 +1543,80 @@ window.deleteLeader = async function(id) {
   toast('Deleted','info'); loadLeaders();
 };
 
-window.migrateLeaders = async function() {
-  const hardcoded = [
-    {name:'ড. মুহাম্মদ ইউনূস',party:'অন্তর্বর্তীকালীন সরকার',role:'প্রধান উপদেষ্টা',approval:72,cat:'সরকার',promises:[{text:'দুর্নীতি দমন',status:'progress'},{text:'নির্বাচন সংস্কার',status:'pending'}]},
-    {name:'মির্জা ফখরুল ইসলাম আলমগীর',party:'বিএনপি',role:'মহাসচিব',approval:45,cat:'বিরোধী দল',promises:[{text:'নির্বাচনকালীন সরকার দাবি',status:'progress'}]},
-    {name:'নাহিদ ইসলাম',party:'এনসিপি',role:'সমন্বয়ক',approval:68,cat:'যুব রাজনীতি',promises:[{text:'জুলাই বিপ্লবের চেতনা রক্ষা',status:'progress'}]},
-  ];
-  for (const leader of hardcoded) {
-    await addDoc(collection(db,'leaders'), {...leader, createdAt:serverTimestamp()});
+window.runLeaderAiUpdate = async function() {
+  const btn = document.getElementById('leader-ai-btn');
+  const status = document.getElementById('leader-ai-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ AI চলছে...';
+  status.textContent = 'Groq AI analyze করছে...';
+  status.style.color = 'var(--amber)';
+  try {
+    const res = await fetch('/.netlify/functions/update-leaders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify({ action: 'update' }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      toast(`✅ ${data.updated} জন নেতার data AI দিয়ে update হয়েছে!`, 'success');
+      status.textContent = `✅ ${data.updated} জন updated (${data.date})`;
+      status.style.color = 'var(--green)';
+      loadLeaders();
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch(e) {
+    toast('❌ AI Update failed: ' + e.message, 'error');
+    status.textContent = '❌ Failed: ' + e.message;
+    status.style.color = 'var(--red)';
   }
-  toast('✅ Migration সম্পন্ন!','success');
-  loadLeaders();
+  btn.disabled = false;
+  btn.textContent = '🤖 AI দিয়ে Update করুন';
+};
+
+window.migrateLeaders = async function() {
+  if (!confirm('Firestore-এ সব নেতার latest data migrate করবেন? পুরনো data replace হবে না, নতুন add হবে।')) return;
+  const leaders = [
+    {id:'yunus',name:'ড. মুহাম্মদ ইউনূস',party:'অন্তর্বর্তীকালীন সরকার',role:'প্রধান উপদেষ্টা',icon:'👴',cat:'সরকার',approval:68,viral:true,
+      promises:[{text:'নির্বাচন কমিশন সংস্কার',status:'done'},{text:'বিচার বিভাগ সংস্কার',status:'progress'},{text:'দুর্নীতি দমন কমিশন শক্তিশালীকরণ',status:'progress'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'pending'},{text:'সংবিধান সংস্কার কমিশন গঠন',status:'done'},{text:'নতুন নির্বাচনী রোডম্যাপ',status:'progress'}],
+      statements:[{text:'আমরা একটি বৈষম্যহীন বাংলাদেশ গড়তে চাই।',date:'মার্চ ২০২৬'},{text:'নির্বাচন সংস্কার ছাড়া কোনো নির্বাচন নয়।',date:'ফেব্রুয়ারি ২০২৬'}],
+      controversies:[{text:'রামপাল বিদ্যুৎকেন্দ্র চুক্তি নবায়ন নিয়ে সমালোচনা।',date:'জানুয়ারি ২০২৬'}],
+      virals:[{text:'জুলাই গণঅভ্যুত্থানের পর নোবেলজয়ী হিসেবে সরকার প্রধান হওয়া আন্তর্জাতিক মনোযোগ আকর্ষণ করে।',icon:'🌍',date:'আগস্ট ২০২৪'}]},
+    {id:'nahid',name:'নাহিদ ইসলাম',party:'জাতীয় নাগরিক পার্টি (NCP)',role:'আহ্বায়ক',icon:'🧑',cat:'যুব রাজনীতি',approval:71,viral:true,
+      promises:[{text:'জুলাই গণঅভ্যুত্থানের বিচার নিশ্চিত',status:'progress'},{text:'ছাত্র-জনতার অধিকার রক্ষা',status:'done'},{text:'দুর্নীতিমুক্ত রাষ্ট্র গঠন',status:'pending'},{text:'নতুন রাজনৈতিক দল গঠন',status:'done'},{text:'তরুণদের রাজনীতিতে অন্তর্ভুক্তি',status:'progress'}],
+      statements:[{text:'জুলাই বিপ্লবের চেতনা রক্ষা করা আমাদের দায়িত্ব।',date:'মার্চ ২০২৬'}],
+      controversies:[],
+      virals:[{text:'কোটা সংস্কার আন্দোলনের মুখপাত্র হিসেবে জাতীয় পরিচিতি লাভ।',icon:'✊',date:'জুলাই ২০২৪'},{text:'NCP গঠনের ঘোষণায় তরুণ প্রজন্মের ব্যাপক সাড়া।',icon:'🔥',date:'ফেব্রুয়ারি ২০২৬'}]},
+    {id:'fakhrul',name:'মির্জা ফখরুল ইসলাম আলমগীর',party:'বিএনপি',role:'মহাসচিব',icon:'👤',cat:'বিরোধী দল',approval:42,
+      promises:[{text:'নির্বাচনকালীন তত্ত্বাবধায়ক সরকার',status:'progress'},{text:'রাজবন্দী মুক্তি',status:'done'},{text:'গণতন্ত্র পুনরুদ্ধার',status:'progress'},{text:'বিএনপি চেয়ারপারসনের মুক্তি',status:'done'}],
+      statements:[{text:'জনগণের ভোটের অধিকার প্রতিষ্ঠাই আমাদের একমাত্র লক্ষ্য।',date:'মার্চ ২০২৬'}],
+      controversies:[{text:'দলীয় কোন্দল ও নেতৃত্বের সংকট নিয়ে প্রশ্ন।',date:'ফেব্রুয়ারি ২০২৬'}],
+      virals:[{text:'খালেদা জিয়ার মুক্তির পর দলের পুনর্গঠনে নেতৃত্ব দেওয়া।',icon:'🎯',date:'২০২৪'}]},
+    {id:'shafiqur',name:'শফিকুর রহমান',party:'জামায়াতে ইসলামী',role:'আমির',icon:'🧔',cat:'বিরোধী দল',approval:35,
+      promises:[{text:'ইসলামী মূল্যবোধভিত্তিক রাষ্ট্র',status:'pending'},{text:'দুর্নীতিমুক্ত প্রশাসন',status:'pending'},{text:'নির্বাচনে অংশগ্রহণ নিশ্চিত',status:'progress'}],
+      statements:[{text:'আমরা গণতান্ত্রিক পথেই এগিয়ে যাব।',date:'মার্চ ২০২৬'}],
+      controversies:[{text:'১৯৭১ সালের ভূমিকা নিয়ে ঐতিহাসিক বিতর্ক অব্যাহত।',date:'চলমান'}],
+      virals:[]},
+    {id:'asif',name:'আসিফ মাহমুদ',party:'জাতীয় নাগরিক পার্টি (NCP)',role:'যুগ্ম আহ্বায়ক',icon:'👦',cat:'যুব রাজনীতি',approval:65,viral:true,
+      promises:[{text:'শিক্ষা সংস্কার আন্দোলন',status:'progress'},{text:'তরুণ উদ্যোক্তাদের সহায়তা',status:'pending'},{text:'ছাত্র রাজনীতির সংস্কার',status:'progress'}],
+      statements:[{text:'তরুণরাই পরিবর্তনের মূল শক্তি।',date:'মার্চ ২০২৬'}],
+      controversies:[],
+      virals:[{text:'জুলাই আন্দোলনে অগ্রণী ভূমিকায় তরুণ প্রজন্মের আইকন।',icon:'⚡',date:'জুলাই ২০২৪'}]},
+    {id:'ali_riaz',name:'ড. আলী রীয়াজ',party:'সংবিধান সংস্কার কমিশন',role:'প্রধান',icon:'📚',cat:'সুশীল সমাজ',approval:60,
+      promises:[{text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশ',status:'done'},{text:'নির্বাচন ব্যবস্থার সুপারিশ',status:'done'},{text:'মৌলিক অধিকার সংস্কার',status:'progress'}],
+      statements:[{text:'সংবিধান সংস্কার ছাড়া টেকসই গণতন্ত্র সম্ভব নয়।',date:'জানুয়ারি ২০২৬'}],
+      controversies:[],
+      virals:[{text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশে ব্যাপক আলোচনা।',icon:'📋',date:'জানুয়ারি ২০২৬'}]},
+  ];
+  try {
+    const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    for (const leader of leaders) {
+      const {id, ...data} = leader;
+      await setDoc(doc(db,'leaders', id), {...data, createdAt:serverTimestamp()});
+    }
+    toast('✅ '+leaders.length+'জন নেতার latest data migrate হয়েছে!','success');
+    loadLeaders();
+  } catch(e) { toast('❌ Error: '+e.message,'error'); }
 };
 
 // ── Warriors ─────────────────────────────────────────────

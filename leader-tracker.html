@@ -10,103 +10,441 @@
 <div id="joaf-preloader" role="status" class="hidden"></div>
 <div id="joaf-header"></div><div id="joaf-ticker"></div>
 <style>
-.lt-hero{background:linear-gradient(135deg,#1e3a5f,#1d4ed8);padding:36px 0 24px;color:#fff;text-align:center;}
-.lt-hero h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;}
-.lt-hero p{font-size:13px;opacity:.8;margin-top:6px;}
-.leader-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 14px rgba(0,0,0,.08);margin-bottom:14px;border:1.5px solid #f0f0f0;}
-.leader-top{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;}
-.leader-avatar{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
-.leader-name{font-size:15px;font-weight:900;color:#1a1a2e;margin-bottom:2px;}
-.leader-party{font-size:12px;color:#1d4ed8;font-weight:700;margin-bottom:3px;}
-.leader-role{font-size:11px;color:#6b7280;}
-.promise-section h5{font-size:12px;font-weight:800;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
-.promise-item{display:flex;gap:8px;margin-bottom:8px;font-size:12px;color:#374151;line-height:1.5;}
-.promise-done{color:#166534;}
-.promise-pending{color:#92400e;}
-.promise-broken{color:#991b1b;}
-.score-bar{background:#f3f4f6;border-radius:50px;height:8px;margin-top:10px;overflow:hidden;}
-.score-fill{height:100%;border-radius:50px;transition:width .6s;}
-.score-label{display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-top:4px;}
-.approval-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:50px;margin-top:8px;}
-.appr-high{background:#dcfce7;color:#166534;}
-.appr-mid{background:#fef3c7;color:#92400e;}
-.appr-low{background:#fee2e2;color:#991b1b;}
-.cat-tabs{display:flex;gap:7px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none;}
-.cat-tab{flex-shrink:0;padding:6px 13px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
-.cat-tab.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+:root{--blue:#1d4ed8;--green:#16a34a;--red:#dc2626;--amber:#d97706;--gray:#6b7280;}
+.lt-hero{background:linear-gradient(135deg,#0f172a,#1e3a8a);padding:40px 0 28px;color:#fff;text-align:center;}
+.lt-hero h1{font-size:clamp(1.5rem,4vw,2.2rem);font-weight:900;letter-spacing:-.5px;}
+.lt-hero p{font-size:13px;opacity:.75;margin-top:6px;}
+.lt-stats{display:flex;gap:24px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+.lt-stat{text-align:center;}
+.lt-stat-num{font-size:24px;font-weight:900;}
+.lt-stat-lbl{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.5px;}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:8px;overflow-x:auto;padding:16px 0 8px;scrollbar-width:none;align-items:center;flex-wrap:wrap;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.ftab{flex-shrink:0;padding:6px 14px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;color:#374151;}
+.ftab.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a;}
+.search-box{padding:7px 14px;border-radius:50px;border:1.5px solid #e5e7eb;font-size:12px;outline:none;font-family:inherit;margin-left:auto;width:180px;}
+.search-box:focus{border-color:#1d4ed8;}
+
+/* Leader card */
+.leader-card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 2px 16px rgba(0,0,0,.07);margin-bottom:14px;border:1.5px solid #f1f5f9;transition:.2s;}
+.leader-card:hover{box-shadow:0 4px 24px rgba(0,0,0,.12);transform:translateY(-1px);}
+.lc-top{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;}
+.lc-avatar{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;position:relative;}
+.lc-verified{position:absolute;bottom:-4px;right:-4px;background:#1d4ed8;color:#fff;border-radius:50%;width:18px;height:18px;font-size:9px;display:flex;align-items:center;justify-content:center;}
+.lc-name{font-size:15px;font-weight:900;color:#0f172a;margin-bottom:2px;}
+.lc-party{font-size:12px;color:#1d4ed8;font-weight:700;margin-bottom:2px;}
+.lc-role{font-size:11px;color:#6b7280;}
+.lc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:50px;font-size:10px;font-weight:700;}
+.badge-blue{background:#dbeafe;color:#1e40af;}
+.badge-green{background:#dcfce7;color:#166534;}
+.badge-red{background:#fee2e2;color:#991b1b;}
+.badge-amber{background:#fef3c7;color:#92400e;}
+.badge-gray{background:#f3f4f6;color:#374151;}
+.badge-viral{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;}
+
+/* Approval meter */
+.appr-section{margin-bottom:14px;}
+.appr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.appr-label{font-size:11px;font-weight:700;color:#374151;}
+.appr-pct{font-size:18px;font-weight:900;}
+.appr-bar{background:#f1f5f9;border-radius:50px;height:10px;overflow:hidden;}
+.appr-fill{height:100%;border-radius:50px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+/* Tabs inside card */
+.lc-tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid #f1f5f9;padding-bottom:8px;}
+.lc-tab{padding:5px 12px;border-radius:8px;border:none;background:none;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#6b7280;transition:.12s;}
+.lc-tab.active{background:#eff6ff;color:#1d4ed8;}
+
+/* Promises */
+.promise-item{display:flex;gap:8px;padding:8px 10px;border-radius:10px;margin-bottom:6px;font-size:12px;line-height:1.5;align-items:flex-start;}
+.promise-done{background:#f0fdf4;color:#166534;}
+.promise-progress{background:#fffbeb;color:#92400e;}
+.promise-pending{background:#f8fafc;color:#475569;}
+.promise-broken{background:#fff1f2;color:#be123c;}
+.p-icon{flex-shrink:0;font-size:13px;margin-top:1px;}
+
+/* Statements */
+.stmt-item{padding:10px 12px;background:#f8fafc;border-radius:10px;margin-bottom:8px;border-left:3px solid #1d4ed8;}
+.stmt-text{font-size:12px;color:#1e293b;line-height:1.6;font-style:italic;}
+.stmt-meta{font-size:10px;color:#94a3b8;margin-top:4px;}
+
+/* Controversies */
+.ctv-item{padding:10px 12px;background:#fff7ed;border-radius:10px;margin-bottom:8px;border-left:3px solid #f97316;}
+.ctv-text{font-size:12px;color:#7c2d12;line-height:1.5;}
+.ctv-meta{font-size:10px;color:#c2410c;margin-top:4px;}
+
+/* Viral moments */
+.viral-item{display:flex;gap:10px;padding:10px;background:linear-gradient(135deg,#fefce8,#fef9c3);border-radius:10px;margin-bottom:8px;border:1px solid #fde68a;align-items:flex-start;}
+.viral-icon{font-size:20px;flex-shrink:0;}
+.viral-text{font-size:12px;color:#713f12;line-height:1.5;}
+.viral-date{font-size:10px;color:#a16207;margin-top:2px;}
+
+/* Grid */
+.leaders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+@media(max-width:600px){.leaders-grid{grid-template-columns:1fr;}}
+
+/* Sort bar */
+.sort-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.sort-btn{padding:5px 12px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#374151;}
+.sort-btn.active{background:#0f172a;color:#fff;border-color:#0f172a;}
+.result-count{font-size:11px;color:#94a3b8;margin-left:auto;}
+
+/* Skeleton */
+.skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{height:220px;margin-bottom:14px;}
+
 .note-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:#1e3a8a;border:1.5px solid #93c5fd;}
+.empty-state{text-align:center;padding:48px 24px;color:#94a3b8;}
+.empty-state .es-icon{font-size:48px;margin-bottom:12px;}
+.last-updated{font-size:10px;color:#94a3b8;text-align:right;margin-top:4px;}
 </style>
-<div class="lt-hero"><div class="container">
-  <h1>🏛️ নেতা ট্র্যাকার</h1>
-  <p>প্রতিশ্রুতি vs বাস্তবতা — জনগণের বিচার</p>
-</div></div>
+
+<div class="lt-hero">
+  <div class="container">
+    <h1>🏛️ নেতা ট্র্যাকার</h1>
+    <p>প্রতিশ্রুতি vs বাস্তবতা — জনগণের বিচার</p>
+    <div class="lt-stats">
+      <div class="lt-stat"><div class="lt-stat-num" id="st-total">—</div><div class="lt-stat-lbl">মোট নেতা</div></div>
+      <div class="lt-stat"><div class="lt-stat-num" id="st-done">—</div><div class="lt-stat-lbl">প্রতিশ্রুতি পূরণ</div></div>
+      <div class="lt-stat"><div class="lt-stat-num" id="st-progress">—</div><div class="lt-stat-lbl">চলমান</div></div>
+      <div class="lt-stat"><div class="lt-stat-num" id="st-avg">—%</div><div class="lt-stat-lbl">গড় জনসমর্থন</div></div>
+    </div>
+  </div>
+</div>
+
 <section class="section"><div class="container">
-  <div class="note-card">📌 এটি একটি তথ্যভিত্তিক platform। সব তথ্য সর্বসাধারণের জন্য উন্মুক্ত সূত্র থেকে সংগ্রহ করা হয়েছে।</div>
-  <div class="cat-tabs" id="catTabs"></div>
-  <div id="leaderList"></div>
+  <div class="note-card">📌 এটি একটি তথ্যভিত্তিক platform। সব তথ্য সর্বসাধারণের জন্য উন্মুক্ত সূত্র থেকে সংগ্রহ করা হয়েছে। Admin panel থেকে যেকোনো সময় update করা যাবে।</div>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="ftab active" onclick="setFilter('সব',this)">সব</button>
+    <button class="ftab" onclick="setFilter('সরকার',this)">🏛️ সরকার</button>
+    <button class="ftab" onclick="setFilter('বিরোধী দল',this)">⚖️ বিরোধী দল</button>
+    <button class="ftab" onclick="setFilter('যুব রাজনীতি',this)">🔥 যুব রাজনীতি</button>
+    <button class="ftab" onclick="setFilter('সুশীল সমাজ',this)">🤝 সুশীল সমাজ</button>
+    <input class="search-box" id="searchBox" placeholder="🔍 নাম বা দল..." oninput="renderLeaders()">
+  </div>
+
+  <div class="sort-bar">
+    <span style="font-size:11px;font-weight:700;color:#374151;">সাজাও:</span>
+    <button class="sort-btn active" onclick="setSort('approval',this)">👥 জনসমর্থন</button>
+    <button class="sort-btn" onclick="setSort('promises',this)">✅ প্রতিশ্রুতি</button>
+    <button class="sort-btn" onclick="setSort('name',this)">অ-ক</button>
+    <span class="result-count" id="resultCount"></span>
+  </div>
+
+  <div class="leaders-grid" id="leaderList">
+    <div class="skeleton skel-card"></div>
+    <div class="skeleton skel-card"></div>
+    <div class="skeleton skel-card"></div>
+  </div>
+  <div class="last-updated" id="lastUpdated"></div>
 </div></section>
+
 <div id="joaf-footer"></div>
 <script src="/js/modernizr-2.8.3.min.js"></script>
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
-<script>
-const LEADERS=[
-  {name:'ড. মুহাম্মদ ইউনূস',party:'অন্তর্বর্তীকালীন সরকার',role:'প্রধান উপদেষ্টা',icon:'👴',cat:'সরকার',approval:72,promises:[
-    {text:'নির্বাচন কমিশন সংস্কার',status:'done'},{text:'দুর্নীতি দমন কমিশন শক্তিশালীকরণ',status:'progress'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'pending'},{text:'বিচার বিভাগ সংস্কার',status:'progress'},
-  ]},
-  {name:'মির্জা ফখরুল ইসলাম আলমগীর',party:'বিএনপি',role:'মহাসচিব',icon:'👤',cat:'বিরোধী দল',approval:45,promises:[
-    {text:'নির্বাচনকালীন তত্ত্বাবধায়ক সরকার',status:'pending'},{text:'রাজবন্দী মুক্তি',status:'progress'},{text:'গণতন্ত্র পুনরুদ্ধার',status:'pending'},
-  ]},
-  {name:'নাহিদ ইসলাম',party:'এনসিপি',role:'সমন্বয়ক',icon:'🧑',cat:'যুব রাজনীতি',approval:68,promises:[
-    {text:'জুলাই গণঅভ্যুত্থানের বিচার',status:'progress'},{text:'ছাত্র-জনতার অধিকার রক্ষা',status:'done'},{text:'দুর্নীতিমুক্ত রাষ্ট্র গঠন',status:'pending'},
-  ]},
-];
-const CATS=['সব','সরকার','বিরোধী দল','যুব রাজনীতি'];
-let activeCat='সব';
-function renderTabs(){
-  document.getElementById('catTabs').innerHTML=CATS.map(c=>
-    `<button class="cat-tab${c===activeCat?' active':''}" onclick="setCat('${c}')">${c}</button>`).join('');
-}
-function setCat(c){activeCat=c;renderTabs();renderLeaders();}
-function renderLeaders(){
-  const list=LEADERS.filter(l=>activeCat==='সব'||l.cat===activeCat);
-  const sIcon=s=>s==='done'?'✅':s==='progress'?'🔄':'⏳';
-  const sCls=s=>s==='done'?'promise-done':s==='progress'?'promise-pending':'';
-  document.getElementById('leaderList').innerHTML=list.map(l=>{
-    const done=l.promises.filter(p=>p.status==='done').length;
-    const total=l.promises.length;
-    const pct=Math.round(done/total*100);
-    const aprCls=l.approval>=60?'appr-high':l.approval>=40?'appr-mid':'appr-low';
-    return `<div class="leader-card">
-      <div class="leader-top">
-        <div class="leader-avatar">${l.icon}</div>
-        <div style="flex:1">
-          <div class="leader-name">${l.name}</div>
-          <div class="leader-party">${l.party}</div>
-          <div class="leader-role">${l.role}</div>
-          <span class="approval-badge ${aprCls}">👥 ${l.approval}% জনসমর্থন</span>
-        </div>
-      </div>
-      <div class="promise-section">
-        <h5>প্রতিশ্রুতি (${done}/${total} পূরণ)</h5>
-        ${l.promises.map(p=>`<div class="promise-item ${sCls(p.status)}">${sIcon(p.status)} ${p.text}</div>`).join('')}
-        <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${pct>=60?'#16a34a':pct>=30?'#d97706':'#dc2626'}"></div></div>
-        <div class="score-label"><span>প্রতিশ্রুতি পূরণ</span><span>${pct}%</span></div>
-      </div>
-    </div>`;
-  }).join('');
-}
-renderTabs();renderLeaders();
-</script><script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
 const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
 const _db = getFirestore(_fa);
-const _ua = navigator.userAgent;
-const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
-const _ref = document.referrer;
-const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
+
+// ── Pageview ──
+const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/iPad/i.test(_ua)?'tablet':'desktop',_ref=document.referrer,_src=_ref.includes('google')?'Google':_ref.includes('facebook')?'Facebook':_ref?'Referral':'Direct';
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+
+// ── State ──
+let ALL_LEADERS = [];
+let activeFilter = 'সব';
+let activeSort   = 'approval';
+let activeTab    = {}; // per-card tab state
+
+// ── Fallback data (latest as of March 2026) ──
+const FALLBACK = [
+  {
+    id:'yunus', name:'ড. মুহাম্মদ ইউনূস', party:'অন্তর্বর্তীকালীন সরকার',
+    role:'প্রধান উপদেষ্টা', icon:'👴', cat:'সরকার', approval:68, viral:true,
+    promises:[
+      {text:'নির্বাচন কমিশন সংস্কার',status:'done'},
+      {text:'বিচার বিভাগ সংস্কার',status:'progress'},
+      {text:'দুর্নীতি দমন কমিশন শক্তিশালীকরণ',status:'progress'},
+      {text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'pending'},
+      {text:'সংবিধান সংস্কার কমিশন গঠন',status:'done'},
+      {text:'নতুন নির্বাচনী রোডম্যাপ',status:'progress'},
+    ],
+    statements:[
+      {text:'আমরা একটি বৈষম্যহীন বাংলাদেশ গড়তে চাই।',date:'মার্চ ২০২৬'},
+      {text:'নির্বাচন সংস্কার ছাড়া কোনো নির্বাচন নয়।',date:'ফেব্রুয়ারি ২০২৬'},
+    ],
+    controversies:[
+      {text:'রামপাল বিদ্যুৎকেন্দ্র চুক্তি নবায়ন নিয়ে সমালোচনা।',date:'জানুয়ারি ২০২৬'},
+    ],
+    virals:[
+      {text:'জুলাই গণঅভ্যুত্থানের পর নোবেলজয়ী হিসেবে সরকার প্রধান হওয়া আন্তর্জাতিক মনোযোগ আকর্ষণ করে।',icon:'🌍',date:'আগস্ট ২০২৪'},
+    ],
+  },
+  {
+    id:'nahid', name:'নাহিদ ইসলাম', party:'জাতীয় নাগরিক পার্টি (NCP)',
+    role:'আহ্বায়ক', icon:'🧑', cat:'যুব রাজনীতি', approval:71, viral:true,
+    promises:[
+      {text:'জুলাই গণঅভ্যুত্থানের বিচার নিশ্চিত',status:'progress'},
+      {text:'ছাত্র-জনতার অধিকার রক্ষা',status:'done'},
+      {text:'দুর্নীতিমুক্ত রাষ্ট্র গঠন',status:'pending'},
+      {text:'নতুন রাজনৈতিক দল গঠন',status:'done'},
+      {text:'তরুণদের রাজনীতিতে অন্তর্ভুক্তি',status:'progress'},
+    ],
+    statements:[
+      {text:'জুলাই বিপ্লবের চেতনা রক্ষা করা আমাদের দায়িত্ব।',date:'মার্চ ২০২৬'},
+      {text:'আমরা পুরনো রাজনীতির ধারায় ফিরে যাব না।',date:'ফেব্রুয়ারি ২০২৬'},
+    ],
+    controversies:[],
+    virals:[
+      {text:'কোটা সংস্কার আন্দোলনের মুখপাত্র হিসেবে জাতীয় পরিচিতি লাভ।',icon:'✊',date:'জুলাই ২০২৪'},
+      {text:'NCP গঠনের ঘোষণায় তরুণ প্রজন্মের ব্যাপক সাড়া।',icon:'🔥',date:'ফেব্রুয়ারি ২০২৬'},
+    ],
+  },
+  {
+    id:'fakhrul', name:'মির্জা ফখরুল ইসলাম আলমগীর', party:'বিএনপি',
+    role:'মহাসচিব', icon:'👤', cat:'বিরোধী দল', approval:42,
+    promises:[
+      {text:'নির্বাচনকালীন তত্ত্বাবধায়ক সরকার',status:'progress'},
+      {text:'রাজবন্দী মুক্তি',status:'done'},
+      {text:'গণতন্ত্র পুনরুদ্ধার',status:'progress'},
+      {text:'বিএনপি চেয়ারপারসনের মুক্তি',status:'done'},
+    ],
+    statements:[
+      {text:'জনগণের ভোটের অধিকার প্রতিষ্ঠাই আমাদের একমাত্র লক্ষ্য।',date:'মার্চ ২০২৬'},
+    ],
+    controversies:[
+      {text:'দলীয় কোন্দল ও নেতৃত্বের সংকট নিয়ে প্রশ্ন।',date:'ফেব্রুয়ারি ২০২৬'},
+    ],
+    virals:[
+      {text:'খালেদা জিয়ার মুক্তির পর দলের পুনর্গঠনে নেতৃত্ব দেওয়া।',icon:'🎯',date:'২০২৪'},
+    ],
+  },
+  {
+    id:'shafiqur', name:'শফিকুর রহমান', party:'জামায়াতে ইসলামী',
+    role:'আমির', icon:'🧔', cat:'বিরোধী দল', approval:35,
+    promises:[
+      {text:'ইসলামী মূল্যবোধভিত্তিক রাষ্ট্র',status:'pending'},
+      {text:'দুর্নীতিমুক্ত প্রশাসন',status:'pending'},
+      {text:'নির্বাচনে অংশগ্রহণ নিশ্চিত',status:'progress'},
+    ],
+    statements:[
+      {text:'আমরা গণতান্ত্রিক পথেই এগিয়ে যাব।',date:'মার্চ ২০২৬'},
+    ],
+    controversies:[
+      {text:'১৯৭১ সালের ভূমিকা নিয়ে ঐতিহাসিক বিতর্ক অব্যাহত।',date:'চলমান'},
+    ],
+    virals:[],
+  },
+  {
+    id:'asif', name:'আসিফ মাহমুদ', party:'জাতীয় নাগরিক পার্টি (NCP)',
+    role:'যুগ্ম আহ্বায়ক', icon:'👦', cat:'যুব রাজনীতি', approval:65,
+    promises:[
+      {text:'শিক্ষা সংস্কার আন্দোলন',status:'progress'},
+      {text:'তরুণ উদ্যোক্তাদের সহায়তা',status:'pending'},
+      {text:'ছাত্র রাজনীতির সংস্কার',status:'progress'},
+    ],
+    statements:[
+      {text:'তরুণরাই পরিবর্তনের মূল শক্তি।',date:'মার্চ ২০২৬'},
+    ],
+    controversies:[],
+    virals:[
+      {text:'জুলাই আন্দোলনে অগ্রণী ভূমিকায় তরুণ প্রজন্মের আইকন।',icon:'⚡',date:'জুলাই ২০২৪'},
+    ],
+  },
+  {
+    id:'yunus_reform', name:'ড. আলী রীয়াজ', party:'সংবিধান সংস্কার কমিশন',
+    role:'প্রধান', icon:'📚', cat:'সুশীল সমাজ', approval:60,
+    promises:[
+      {text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশ',status:'done'},
+      {text:'নির্বাচন ব্যবস্থার সুপারিশ',status:'done'},
+      {text:'মৌলিক অধিকার সংস্কার',status:'progress'},
+    ],
+    statements:[
+      {text:'সংবিধান সংস্কার ছাড়া টেকসই গণতন্ত্র সম্ভব নয়।',date:'জানুয়ারি ২০২৬'},
+    ],
+    controversies:[],
+    virals:[
+      {text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশে ব্যাপক আলোচনা।',icon:'📋',date:'জানুয়ারি ২০২৬'},
+    ],
+  },
+  {
+    id:'badruddoza', name:'ড. বদরুদ্দোজা চৌধুরী', party:'বিকল্পধারা',
+    role:'প্রতিষ্ঠাতা', icon:'👴', cat:'সুশীল সমাজ', approval:38,
+    promises:[
+      {text:'জাতীয় ঐক্য গঠন',status:'pending'},
+      {text:'সংলাপভিত্তিক রাজনীতি',status:'progress'},
+    ],
+    statements:[
+      {text:'সব দলকে ঐক্যবদ্ধ হতে হবে।',date:'ফেব্রুয়ারি ২০২৬'},
+    ],
+    controversies:[],
+    virals:[],
+  },
+  {
+    id:'zunaid', name:'জুনাইদ আহমেদ পলক', party:'আওয়ামী লীগ',
+    role:'সাবেক প্রতিমন্ত্রী', icon:'👤', cat:'বিরোধী দল', approval:12, viral:false,
+    promises:[
+      {text:'ডিজিটাল বাংলাদেশ ৩.০',status:'broken'},
+      {text:'তরুণ প্রজন্মের কর্মসংস্থান',status:'broken'},
+    ],
+    statements:[
+      {text:'আমরা ফিরে আসব।',date:'২০২৪'},
+    ],
+    controversies:[
+      {text:'জুলাই গণঅভ্যুত্থান দমনে ভূমিকার জন্য মামলা।',date:'আগস্ট ২০২৪'},
+      {text:'ইন্টারনেট বন্ধের সিদ্ধান্তে সংশ্লিষ্টতার অভিযোগ।',date:'জুলাই ২০২৪'},
+    ],
+    virals:[],
+  },
+];
+
+// ── Load from Firestore, fallback to hardcoded ──
+async function loadLeaders() {
+  try {
+    const snap = await getDocs(collection(_db,'leaders'));
+    if (snap.size >= 3) {
+      ALL_LEADERS = snap.docs.map(d => ({id:d.id, ...d.data()}));
+      const ts = snap.docs[0]?.data()?.createdAt?.toDate?.();
+      if (ts) document.getElementById('lastUpdated').textContent = 'সর্বশেষ আপডেট: ' + ts.toLocaleDateString('bn-BD');
+    } else {
+      ALL_LEADERS = FALLBACK;
+      document.getElementById('lastUpdated').textContent = 'ডিফল্ট ডেটা — Admin থেকে migrate করুন';
+    }
+  } catch(e) {
+    ALL_LEADERS = FALLBACK;
+  }
+  renderStats();
+  renderLeaders();
+}
+
+// ── Stats ──
+function renderStats() {
+  const total = ALL_LEADERS.length;
+  let done=0, progress=0, totalAppr=0;
+  ALL_LEADERS.forEach(l => {
+    (l.promises||[]).forEach(p => {
+      if(p.status==='done') done++;
+      if(p.status==='progress') progress++;
+    });
+    totalAppr += (l.approval||0);
+  });
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-done').textContent = done;
+  document.getElementById('st-progress').textContent = progress;
+  document.getElementById('st-avg').textContent = Math.round(totalAppr/total) + '%';
+}
+
+// ── Filter & Sort ──
+window.setFilter = function(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderLeaders();
+};
+window.setSort = function(s, el) {
+  activeSort = s;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderLeaders();
+};
+window.setCardTab = function(id, tab) {
+  activeTab[id] = tab;
+  renderLeaders();
+};
+
+function renderLeaders() {
+  const q = document.getElementById('searchBox')?.value?.toLowerCase() || '';
+  let list = ALL_LEADERS.filter(l => {
+    if(activeFilter !== 'সব' && l.cat !== activeFilter) return false;
+    if(q && !l.name.toLowerCase().includes(q) && !(l.party||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // Sort
+  if(activeSort === 'approval') list.sort((a,b)=>(b.approval||0)-(a.approval||0));
+  else if(activeSort === 'promises') {
+    list.sort((a,b)=>{
+      const pa=(a.promises||[]).filter(p=>p.status==='done').length/(a.promises||[1]).length;
+      const pb=(b.promises||[]).filter(p=>p.status==='done').length/(b.promises||[1]).length;
+      return pb-pa;
+    });
+  } else list.sort((a,b)=>a.name.localeCompare(b.name,'bn'));
+
+  document.getElementById('resultCount').textContent = list.length + ' জন নেতা';
+
+  if(!list.length) {
+    document.getElementById('leaderList').innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="es-icon">🔍</div><div>কোনো নেতা পাওয়া যায়নি</div></div>`;
+    return;
+  }
+
+  document.getElementById('leaderList').innerHTML = list.map(l => makeCard(l)).join('');
+}
+
+function makeCard(l) {
+  const tab = activeTab[l.id] || 'promises';
+  const promises = l.promises || [];
+  const done = promises.filter(p=>p.status==='done').length;
+  const pct = promises.length ? Math.round(done/promises.length*100) : 0;
+  const apprColor = l.approval>=60?'#16a34a':l.approval>=40?'#d97706':'#dc2626';
+  const apprFill  = l.approval>=60?'#16a34a':l.approval>=40?'#f59e0b':'#ef4444';
+
+  const pIcon = s => s==='done'?'✅':s==='progress'?'🔄':s==='broken'?'❌':'⏳';
+  const pCls  = s => s==='done'?'promise-done':s==='progress'?'promise-progress':s==='broken'?'promise-broken':'promise-pending';
+
+  const tabs = ['promises','statements','controversies','virals'];
+  const tabLabels = {promises:`✅ প্রতিশ্রুতি (${done}/${promises.length})`,statements:'💬 বক্তব্য',controversies:'⚠️ বিতর্ক',virals:'🔥 Viral'};
+
+  const tabContent = {
+    promises: promises.length ? promises.map(p=>`<div class="promise-item ${pCls(p.status)}"><span class="p-icon">${pIcon(p.status)}</span>${p.text}</div>`).join('') : '<div style="color:#94a3b8;font-size:12px;padding:8px">কোনো প্রতিশ্রুতি নেই</div>',
+    statements: (l.statements||[]).length ? (l.statements||[]).map(s=>`<div class="stmt-item"><div class="stmt-text">"${s.text}"</div><div class="stmt-meta">📅 ${s.date||''}</div></div>`).join('') : '<div style="color:#94a3b8;font-size:12px;padding:8px">কোনো উল্লেখযোগ্য বক্তব্য নেই</div>',
+    controversies: (l.controversies||[]).length ? (l.controversies||[]).map(c=>`<div class="ctv-item"><div class="ctv-text">⚠️ ${c.text}</div><div class="ctv-meta">📅 ${c.date||''}</div></div>`).join('') : '<div style="color:#94a3b8;font-size:12px;padding:8px">কোনো উল্লেখযোগ্য বিতর্ক নেই</div>',
+    virals: (l.virals||[]).length ? (l.virals||[]).map(v=>`<div class="viral-item"><div class="viral-icon">${v.icon||'🔥'}</div><div><div class="viral-text">${v.text}</div><div class="viral-date">📅 ${v.date||''}</div></div></div>`).join('') : '<div style="color:#94a3b8;font-size:12px;padding:8px">কোনো viral moment নেই</div>',
+  };
+
+  return `<div class="leader-card">
+    <div class="lc-top">
+      <div class="lc-avatar">${l.icon||'👤'}${l.viral?'<div class="lc-verified">🔥</div>':''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="lc-name">${l.name}</div>
+        <div class="lc-party">${l.party||''}</div>
+        <div class="lc-role">${l.role||''}</div>
+        <div class="lc-badges">
+          <span class="badge badge-blue">${l.cat||''}</span>
+          ${l.viral?'<span class="badge badge-viral">🔥 Viral</span>':''}
+          ${pct>=60?'<span class="badge badge-green">✅ বিশ্বস্ত</span>':pct<=20&&promises.length?'<span class="badge badge-red">⚠️ দুর্বল</span>':''}
+        </div>
+      </div>
+    </div>
+
+    <div class="appr-section">
+      <div class="appr-row">
+        <span class="appr-label">👥 জনসমর্থন</span>
+        <span class="appr-pct" style="color:${apprColor}">${l.approval||0}%</span>
+      </div>
+      <div class="appr-bar"><div class="appr-fill" style="width:${l.approval||0}%;background:${apprFill}"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:10px;color:#94a3b8">প্রতিশ্রুতি পূরণ: ${pct}%</span>
+        <span style="font-size:10px;color:#94a3b8">${done}/${promises.length} পূরণ</span>
+      </div>
+    </div>
+
+    <div class="lc-tabs">
+      ${tabs.map(t=>`<button class="lc-tab${tab===t?' active':''}" onclick="setCardTab('${l.id}','${t}')">${tabLabels[t]}</button>`).join('')}
+    </div>
+    <div class="lc-content">${tabContent[tab]||''}</div>
+  </div>`;
+}
+
+loadLeaders();
 </script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
 </body></html>
