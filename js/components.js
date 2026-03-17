@@ -1322,6 +1322,7 @@ window.joafSendAdminEmail = async function joafSendAdminEmail(data) {
       reporter: data.reporter || 'অজ্ঞাত',
       emergency_contact: emergencyEmails[data.type] || '',
       site_url: 'https://julyforum.com/alert.html'
+    }, { publicKey: 'b_Nbf71K4V-kb20_3' }
     });
   } catch(e) { console.log('Email send failed:', e); }
 }
