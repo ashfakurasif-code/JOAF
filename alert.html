@@ -350,22 +350,20 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
       createdAt: serverTimestamp()
     });
 
-    // Admin email notification via EmailJS — directly call, no setTimeout
+    // Admin email notification via EmailJS — await করা হচ্ছে
     try {
-      const emailPayload = {
-        to_email: 'info@julyforum.com',
-        alert_type: selectedType || 'অন্যান্য',
-        alert_title: title,
-        alert_desc: description,
-        alert_location: location,
-        alert_photo: imageUrl || 'কোনো ছবি নেই',
-        reporter: reporter || 'অজ্ঞাত',
-        emergency_contact: '',
-        site_url: 'https://julyforum.com/alert.html'
-      };
       if (window.emailjs) {
-        window.emailjs.send('service_1x9gz1r', 'template_qlcgmz6', emailPayload)
-          .catch(e => console.log('Email error:', e));
+        await window.emailjs.send('service_1x9gz1r', 'template_qlcgmz6', {
+          to_email: 'info@julyforum.com',
+          alert_type: selectedType || 'অন্যান্য',
+          alert_title: title,
+          alert_desc: description,
+          alert_location: location,
+          alert_photo: imageUrl || 'কোনো ছবি নেই',
+          reporter: reporter || 'অজ্ঞাত',
+          emergency_contact: '',
+          site_url: 'https://julyforum.com/alert.html'
+        });
       }
     } catch(e) { console.log('Email error:', e); }
     alert('\u2705 সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
