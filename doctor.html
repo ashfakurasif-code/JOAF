@@ -102,4 +102,15 @@ function filterDocs(){
 }
 renderTabs();filterDocs();
 </script><script src="/js/rainbow-swirl-cursor.js" defer></script>
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _db = getFirestore(_fa);
+const _ua = navigator.userAgent;
+const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
+const _ref = document.referrer;
+const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
+addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+</script>
 </body></html>

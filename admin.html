@@ -21,6 +21,12 @@
 html{scroll-behavior:smooth;}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
+/* Analytics tabs */
+.an-tab{padding:5px 12px;border-radius:6px;border:none;background:transparent;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s;}
+.an-tab.active{background:var(--bg5);color:var(--text);}
+.an-tab:hover:not(.active){color:var(--text);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
 /* Upload */
 .upload-zone{border:2px dashed var(--border2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:.15s;position:relative;}
 .upload-zone:hover{border-color:var(--accent);background:var(--red-bg);}
@@ -631,19 +637,112 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
     <!-- ══ ANALYTICS ══ -->
     <div class="page" id="page-analytics">
-      <div class="stats-grid">
-        <div class="scard blue" data-icon="👁️"><div class="scard-num" id="an-visitors">—</div><div class="scard-label">আজকের Visitors</div></div>
-        <div class="scard green" data-icon="📱"><div class="scard-num" id="an-subs">—</div><div class="scard-label">Push Subscribers</div></div>
-        <div class="scard amber" data-icon="📤"><div class="scard-num" id="an-notifs">—</div><div class="scard-label">Notifications Sent</div></div>
+
+      <!-- Top stat cards -->
+      <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px">
+        <div class="scard blue"   data-icon="👁️"><div class="scard-num" id="an-today">—</div><div class="scard-label">আজকের Visit</div><div class="scard-sub" id="an-today-sub" style="color:var(--text2)">লোড হচ্ছে...</div></div>
+        <div class="scard purple" data-icon="⏱️"><div class="scard-num" id="an-hour">—</div><div class="scard-label">শেষ ঘণ্টায়</div><div class="scard-sub" id="an-hour-sub" style="color:var(--text2)">vs আগের ঘণ্টা</div></div>
+        <div class="scard amber"  data-icon="📅"><div class="scard-num" id="an-week">—</div><div class="scard-label">এই সপ্তাহ</div><div class="scard-sub" id="an-week-sub" style="color:var(--text2)">৭ দিন</div></div>
+        <div class="scard green"  data-icon="📱"><div class="scard-num" id="an-subs">—</div><div class="scard-label">Push Subscribers</div><div class="scard-sub" style="color:var(--green)">সক্রিয়</div></div>
+        <div class="scard red"    data-icon="📤"><div class="scard-num" id="an-notifs">—</div><div class="scard-label">Notifications</div><div class="scard-sub" style="color:var(--text2)">মোট পাঠানো</div></div>
       </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">📈 Google Analytics</div></div>
-        <div style="text-align:center;padding:30px;color:var(--text2);">
-          <div style="font-size:40px;margin-bottom:12px">📊</div>
-          <div style="font-size:13px;margin-bottom:16px">Google Analytics G-QV3CFV7R98</div>
-          <a href="https://analytics.google.com" target="_blank" class="btn btn-primary">Analytics Dashboard খুলুন →</a>
+
+      <!-- Time range tabs + refresh -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;gap:4px;background:var(--bg3);padding:3px;border-radius:9px;border:1px solid var(--border);">
+          <button class="an-tab active" data-range="60" onclick="setAnRange(60,this)">শেষ ঘণ্টা</button>
+          <button class="an-tab" data-range="1440" onclick="setAnRange(1440,this)">আজ</button>
+          <button class="an-tab" data-range="10080" onclick="setAnRange(10080,this)">৭ দিন</button>
+          <button class="an-tab" data-range="43200" onclick="setAnRange(43200,this)">৩০ দিন</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="loadAnalytics()">↻ Refresh</button>
+      </div>
+
+      <div class="card-2col" style="gap:14px">
+
+        <!-- Visitors over time chart -->
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-header">
+            <div><div class="card-title" id="an-chart-title">⏱️ শেষ ৬০ মিনিটের Visit (মিনিট অনুযায়ী)</div></div>
+            <div id="an-live-dot" style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);transition:color .3s">
+              <span style="width:7px;height:7px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 1.5s ease infinite"></span>Live
+              <span id="an-live-count" style="display:none;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:1px 7px;border-radius:50px;font-size:10px;font-weight:800"></span>
+            </div>
+          </div>
+          <div style="position:relative;height:180px">
+            <canvas id="an-chart"></canvas>
+            <div id="an-chart-empty" style="display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--text2)">
+              <span style="font-size:28px">📭</span>
+              <span style="font-size:12px">এখনো কোনো visit data নেই — <code>pageviews</code> collection খালি</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page breakdown -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">📄 Top Pages</div></div>
+          <div id="an-pages"><div class="loading">লোড হচ্ছে...</div></div>
+        </div>
+
+        <!-- User categories -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">🗂️ User Categories</div></div>
+          <div style="position:relative;height:160px;margin-bottom:8px"><canvas id="an-cat-chart"></canvas></div>
+          <div id="an-cat-legend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+        </div>
+
+        <!-- Device breakdown -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">📱 Device Type</div></div>
+          <div style="position:relative;height:160px;margin-bottom:8px"><canvas id="an-device-chart"></canvas></div>
+          <div id="an-device-legend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+        </div>
+
+        <!-- Recent visits live feed -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">🕐 সাম্প্রতিক Visit</div><span style="font-size:10px;color:var(--text2)">শেষ ২০টি</span></div>
+          <div id="an-feed" style="max-height:220px;overflow-y:auto"><div class="loading">লোড হচ্ছে...</div></div>
+        </div>
+
+        <!-- GA embed link -->
+        <div class="card" style="grid-column:1/-1;background:var(--blue-bg);border-color:var(--blue-border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:var(--blue)">📈 Google Analytics</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px">Tracking ID: G-QV3CFV7R98 · Realtime + historical data</div>
+            </div>
+            <a href="https://analytics.google.com/analytics/web/#/p420623440/reports/intelligenthome" target="_blank" class="btn btn-primary btn-sm">GA Dashboard খুলুন →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Setup guide (shown only when no data) -->
+      <div id="an-setup" style="display:none" class="card mt16" style="border-color:var(--amber-border);background:var(--amber-bg)">
+        <div class="card-title" style="color:var(--amber);margin-bottom:10px">⚙️ Visitor Tracking সেটআপ করুন</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7">
+          আপনার <code>index.html</code> বা সব page-এর <code>&lt;/body&gt;</code> এর আগে এই code যোগ করুন:<br><br>
+          <code style="display:block;background:var(--bg);padding:10px;border-radius:8px;font-size:11px;white-space:pre-wrap;border:1px solid var(--border)">&lt;script type="module"&gt;
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const FB = { apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk', authDomain:'joaf-app-45753.firebaseapp.com', projectId:'joaf-app-45753' };
+const app = getApps().length ? getApps()[0] : initializeApp(FB);
+const db  = getFirestore(app);
+const ua  = navigator.userAgent;
+const dev = /Mobile|Android|iPhone|iPad/i.test(ua) ? 'mobile' : /Tablet|iPad/i.test(ua) ? 'tablet' : 'desktop';
+const ref = document.referrer;
+const src = ref.includes('google')?'Google':ref.includes('facebook')?'Facebook':ref.includes('t.co')||ref.includes('twitter')?'Twitter':ref?'Referral':'Direct';
+addDoc(collection(db,'pageviews'), {
+  page: location.pathname || '/',
+  device: dev,
+  source: src,
+  referrer: ref || '',
+  ts: serverTimestamp()
+});
+&lt;/script&gt;</code>
         </div>
       </div>
+
     </div>
 
     <!-- ══ SETTINGS ══ -->
@@ -871,7 +970,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FB = { apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk', authDomain:'joaf-app-45753.firebaseapp.com', projectId:'joaf-app-45753', storageBucket:'joaf-app-45753.firebasestorage.app', messagingSenderId:'472362223214', appId:'1:472362223214:web:9186a4f90dc608bae4487f' };
 const app = getApps().length ? getApps()[0] : initializeApp(FB);
@@ -930,9 +1029,11 @@ window.goPage = function(id, el) {
     notification: loadNotifPage, 'alert-page': loadAlerts,
     blood: loadDonors, press: loadPress, leader: loadLeaders,
     warrior: loadWarriors, bajar: loadBajar, medicine: loadMedicines,
-    members: loadMembers, polls: loadPolls, forum: loadForum
+    members: loadMembers, polls: loadPolls, forum: loadForum, analytics: loadAnalytics
   };
   if (loaders[id]) loaders[id]();
+  // Stop analytics real-time listener when leaving that page
+  if(id !== 'analytics' && typeof stopAnalyticsListener === 'function') stopAnalyticsListener();
 };
 
 // ── Dashboard init ──────────────────────────────────────
@@ -1797,6 +1898,160 @@ window.resetUpload = function() {
   document.getElementById('up-message').value = '';
 };
 
+// ── Analytics ─────────────────────────────────────────────
+let anRange = 60;
+let anChartInst = null, anCatInst = null, anDevInst = null;
+let anUnsubscribe = null;
+let anAllDocs = [];
+let anLiveCount = 0;
+
+const PAGE_LABELS = {
+  '/':'মূলপাতা','/index.html':'মূলপাতা','/rokto.html':'রক্তদাতা',
+  '/alert.html':'সতর্কতা','/bajar.html':'বাজার দর','/news.html':'সংবাদ',
+  '/community.html':'কমিউনিটি','/events.html':'ইভেন্ট','/leader-tracker.html':'নেতা ট্র্যাকার',
+  '/july-warriors.html':'জুলাই যোদ্ধা','/hospital.html':'হাসপাতাল',
+  '/doctor.html':'ডাক্তার','/medicine.html':'ওষুধ','/weather.html':'আবহাওয়া',
+  '/forum.html':'ফোরাম','/donate.html':'ডোনেট','/jobs.html':'চাকরি',
+  '/freelance.html':'ফ্রিল্যান্স','/membership.html':'সদস্যপদ','/joaf-polls.html':'পোল'
+};
+const SRC_COLORS = {'Direct':'#60a5fa','Google':'#34d399','Facebook':'#f05252','Twitter':'#a78bfa','Referral':'#fbbf24','Other':'#7878a0'};
+const DEV_COLORS = {'mobile':'#f05252','desktop':'#60a5fa','tablet':'#fbbf24'};
+
+window.setAnRange = function(mins, el) {
+  anRange = mins;
+  document.querySelectorAll('.an-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const titles = {60:'⏱️ শেষ ৬০ মিনিটের Visit (মিনিট অনুযায়ী)',1440:'🕐 আজকের Visit (ঘণ্টা অনুযায়ী)',10080:'📅 শেষ ৭ দিনের Visit',43200:'📅 শেষ ৩০ দিনের Visit'};
+  const titleEl = document.getElementById('an-chart-title');
+  if(titleEl) titleEl.textContent = titles[mins]||'Visit';
+  renderAnalytics();
+};
+
+function startAnalyticsListener() {
+  if(anUnsubscribe) return;
+  try {
+    anUnsubscribe = onSnapshot(collection(db,'pageviews'), snap => {
+      const wasEmpty = anAllDocs.length === 0;
+      anAllDocs = snap.docs.map(d=>({...d.data(), id:d.id, tsMs: d.data().ts?.toMillis?.()||0}));
+      // Flash live dot on new additions (skip the initial load)
+      if(!wasEmpty) {
+        snap.docChanges().forEach(change => {
+          if(change.type === 'added') {
+            anLiveCount++;
+            const dot = document.getElementById('an-live-dot');
+            if(dot) { dot.style.color='var(--accent)'; setTimeout(()=>{dot.style.color='var(--green)';},700); }
+            const badge = document.getElementById('an-live-count');
+            if(badge) { badge.textContent='+'+anLiveCount+' live'; badge.style.display=''; }
+          }
+        });
+      }
+      if(document.getElementById('page-analytics')?.classList.contains('active')) renderAnalytics();
+    });
+  } catch(e) { console.warn('Analytics listener error:', e); }
+}
+
+function stopAnalyticsListener() {
+  if(anUnsubscribe) { anUnsubscribe(); anUnsubscribe = null; }
+  anLiveCount = 0;
+}
+
+async function loadAnalytics() {
+  if(typeof Chart === 'undefined') return setTimeout(loadAnalytics, 400);
+  startAnalyticsListener();
+  renderAnalytics();
+}
+
+function renderAnalytics() {
+  if(typeof Chart === 'undefined') return;
+  try {
+    const now = new Date();
+    const cutoff = new Date(now - anRange * 60000);
+    const inRange = anAllDocs.filter(d => d.tsMs >= cutoff.getTime());
+
+    const setup = document.getElementById('an-setup');
+    if(setup) setup.style.display = anAllDocs.length > 0 ? 'none' : 'block';
+
+    // Stat cards
+    const todayStart    = new Date(now); todayStart.setHours(0,0,0,0);
+    const hourStart     = new Date(now - 3600000);
+    const prevHourStart = new Date(now - 7200000);
+    const weekStart     = new Date(now - 7*24*3600000);
+    const todayCount    = anAllDocs.filter(d=>d.tsMs>=todayStart.getTime()).length;
+    const hourCount     = anAllDocs.filter(d=>d.tsMs>=hourStart.getTime()).length;
+    const prevHourCount = anAllDocs.filter(d=>d.tsMs>=prevHourStart.getTime()&&d.tsMs<hourStart.getTime()).length;
+    const weekCount     = anAllDocs.filter(d=>d.tsMs>=weekStart.getTime()).length;
+    setEl('an-today', todayCount); setEl('an-hour', hourCount); setEl('an-week', weekCount);
+    const hourDiff = hourCount - prevHourCount;
+    const hourSub = document.getElementById('an-hour-sub');
+    if(hourSub){hourSub.textContent=(hourDiff>=0?'▲ +':'▼ ')+hourDiff+' আগের ঘণ্টা থেকে';hourSub.style.color=hourDiff>=0?'var(--green)':'var(--red)';}
+    const todaySub = document.getElementById('an-today-sub');
+    if(todaySub){const yest=anAllDocs.filter(d=>d.tsMs>=todayStart.getTime()-86400000&&d.tsMs<todayStart.getTime()).length;const diff=todayCount-yest;todaySub.textContent=(diff>=0?'▲ +':'▼ ')+diff+' গতকাল থেকে';todaySub.style.color=diff>=0?'var(--green)':'var(--red)';}
+
+    // Timeline chart
+    let labels=[], data=[];
+    if(anRange<=60){
+      for(let i=59;i>=0;i--){const b=new Date(now-i*60000);labels.push(i%5===0?(60-i)+'m':'');data.push(inRange.filter(d=>d.tsMs>=b.getTime()-60000&&d.tsMs<b.getTime()).length);}
+    } else if(anRange<=1440){
+      for(let i=23;i>=0;i--){const b=new Date(now-i*3600000);labels.push(b.getHours()+':00');data.push(inRange.filter(d=>d.tsMs>=b.getTime()-3600000&&d.tsMs<b.getTime()).length);}
+    } else {
+      const days=anRange<=10080?7:30;
+      for(let i=days-1;i>=0;i--){const b=new Date(now-i*86400000);const bd=new Date(b);bd.setHours(0,0,0,0);const be=new Date(bd.getTime()+86400000);labels.push((b.getMonth()+1)+'/'+(b.getDate()));data.push(inRange.filter(d=>d.tsMs>=bd.getTime()&&d.tsMs<be.getTime()).length);}
+    }
+    const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    const gridColor=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+    const textColor=isDark?'#7878a0':'#888';
+    const ctx=document.getElementById('an-chart');
+    if(ctx){
+      if(anChartInst){anChartInst.data.labels=labels;anChartInst.data.datasets[0].data=data;anChartInst.update('none');}
+      else anChartInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Visits',data,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.1)',borderWidth:2,fill:true,tension:0.4,pointRadius:2,pointHoverRadius:5}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f1019',titleColor:'#eeeef5',bodyColor:'#7878a0',borderColor:'rgba(255,255,255,.08)',borderWidth:1}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:10},maxTicksLimit:14}},y:{grid:{color:gridColor},ticks:{color:textColor,font:{size:10},stepSize:1,precision:0},beginAtZero:true}}}});
+    }
+
+    // Top pages
+    const pageCounts={};
+    inRange.forEach(d=>{const k=d.page||'/';pageCounts[k]=(pageCounts[k]||0)+1;});
+    const sorted=Object.entries(pageCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const maxPg=sorted[0]?.[1]||1;
+    const pagesEl=document.getElementById('an-pages');
+    if(pagesEl) pagesEl.innerHTML=sorted.length?sorted.map(([p,n])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="font-weight:600;color:var(--text)">${PAGE_LABELS[p]||p}</span><span style="color:var(--text2)">${n}</span></div><div style="height:5px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.round(n/maxPg*100)}%;background:var(--blue);border-radius:3px"></div></div></div>`).join(''):'<div class="empty">এই সময়ে কোনো data নেই</div>';
+
+    // Source donut
+    const srcCounts={};
+    inRange.forEach(d=>{const s=d.source||'Direct';srcCounts[s]=(srcCounts[s]||0)+1;});
+    if(!Object.keys(srcCounts).length) srcCounts['কোনো data নেই']=1;
+    const catCtx=document.getElementById('an-cat-chart');
+    if(catCtx){
+      const catKeys=Object.keys(srcCounts),catVals=Object.values(srcCounts),catColors=catKeys.map(k=>SRC_COLORS[k]||'#7878a0');
+      if(anCatInst){anCatInst.data.labels=catKeys;anCatInst.data.datasets[0].data=catVals;anCatInst.data.datasets[0].backgroundColor=catColors;anCatInst.update('none');}
+      else anCatInst=new Chart(catCtx,{type:'doughnut',data:{labels:catKeys,datasets:[{data:catVals,backgroundColor:catColors,borderWidth:2,borderColor:'var(--bg3)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',animation:{duration:300},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f1019',titleColor:'#eeeef5',bodyColor:'#7878a0'}}}});
+      const legEl=document.getElementById('an-cat-legend');
+      if(legEl) legEl.innerHTML=catKeys.map((k,i)=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)"><span style="width:8px;height:8px;border-radius:50%;background:${catColors[i]};flex-shrink:0"></span>${k} (${catVals[i]})</span>`).join('');
+    }
+
+    // Device donut
+    const devCounts={};
+    inRange.forEach(d=>{const s=d.device||'desktop';devCounts[s]=(devCounts[s]||0)+1;});
+    if(!Object.keys(devCounts).length) devCounts['কোনো data নেই']=1;
+    const devCtx=document.getElementById('an-device-chart');
+    if(devCtx){
+      const devKeys=Object.keys(devCounts),devVals=Object.values(devCounts),devColors=devKeys.map(k=>DEV_COLORS[k]||'#7878a0');
+      if(anDevInst){anDevInst.data.labels=devKeys;anDevInst.data.datasets[0].data=devVals;anDevInst.data.datasets[0].backgroundColor=devColors;anDevInst.update('none');}
+      else anDevInst=new Chart(devCtx,{type:'doughnut',data:{labels:devKeys,datasets:[{data:devVals,backgroundColor:devColors,borderWidth:2,borderColor:'var(--bg3)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',animation:{duration:300},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f1019',titleColor:'#eeeef5',bodyColor:'#7878a0'}}}});
+      const devLegEl=document.getElementById('an-device-legend');
+      if(devLegEl) devLegEl.innerHTML=devKeys.map((k,i)=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)"><span style="width:8px;height:8px;border-radius:50%;background:${devColors[i]};flex-shrink:0"></span>${k==='mobile'?'📱 মোবাইল':k==='tablet'?'📲 ট্যাবলেট':'🖥️ ডেস্কটপ'} (${devVals[i]})</span>`).join('');
+    }
+
+    // Recent feed
+    const feedEl=document.getElementById('an-feed');
+    const recent=[...anAllDocs].sort((a,b)=>b.tsMs-a.tsMs).slice(0,20);
+    if(feedEl) feedEl.innerHTML=recent.length?recent.map(d=>{
+      const t=d.tsMs?new Date(d.tsMs).toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'}):'—';
+      const devIcon=d.device==='mobile'?'📱':d.device==='tablet'?'📲':'🖥️';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px">${devIcon}</span><div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${PAGE_LABELS[d.page]||d.page||'/'}</div><div style="font-size:10px;color:${SRC_COLORS[d.source]||'var(--text2)'}">${d.source||'Direct'}</div></div><span style="font-size:10px;color:var(--text2);flex-shrink:0">${t}</span></div>`;
+    }).join(''):'<div class="empty">কোনো visit নেই</div>';
+
+  } catch(e) { console.error('renderAnalytics error:',e); }
+}
+
 // ── Close modals on background click
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if(e.target===bg) bg.classList.remove('open'); });
@@ -1805,5 +2060,6 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 // Set today's date default for press release
 document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </body>
 </html>
