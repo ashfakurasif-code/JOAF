@@ -31,6 +31,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:var(--
 .hero-pulse{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;color:rgba(255,255,255,.5);}
 .pulse-dot{width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse-anim 2s ease infinite;}
 @keyframes pulse-anim{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* ── NAV TABS ── */
 .nav-tabs{background:#fff;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06);}
@@ -388,20 +389,37 @@ async function groqIssueAnalysis(issue) {
   const cached = cGet(cacheKey);
   if (cached) return cached;
   const today = BD_TODAY();
-  const prompt = `তুমি বাংলাদেশের নিরপেক্ষ বিশ্লেষক। আজ ${today}।
 
+  // Step 1: Summary + first 20 people
+  const p1 = `তুমি বাংলাদেশের নিরপেক্ষ বিশ্লেষক। আজ ${today}।
 বিষয়: "${issue.title}" — ${issue.desc}
 
-এই বিষয়ে বাংলাদেশে এই মুহূর্তে সবচেয়ে relevant ৬০ জন মানুষের বিশ্লেষণ দাও।
-শুধু নেতা না — মন্ত্রী, উপদেষ্টা, ব্যবসায়ী, বিশেষজ্ঞ, সাংবাদিক, activist, আমলা, সুশীল সমাজ সবাই।
+শুধু JSON (markdown ছাড়া):
+{"summary":"৩ বাক্য বিশ্লেষণ","temperature":"critical|hot|warm|cool","progress":45,"key_fact":"গুরুত্বপূর্ণ তথ্য","public_demand":"জনগণের দাবি","outlook":"positive|negative|uncertain","people":[{"name":"নাম","role":"পদ","party_or_org":"দল/প্রতিষ্ঠান","position":"এই issue-এ ভূমিকা","stance":"supporter|opponent|neutral|responsible|critic","impact":8,"icon":"emoji","category":"রাজনীতিবিদ|সরকারি|ব্যবসায়ী|বিশেষজ্ঞ|সাংবাদিক|activist|আমলা|সুশীল"}]}
 
-শুধু JSON:
-{"summary":"৩ বাক্য বিশ্লেষণ","temperature":"critical|hot|warm|cool","progress":45,"key_fact":"গুরুত্বপূর্ণ তথ্য বা সংখ্যা","public_demand":"জনগণের দাবি","outlook":"positive|negative|uncertain","people":[{"name":"পূর্ণ নাম","role":"পদ","party_or_org":"দল বা প্রতিষ্ঠান","position":"এই issue-এ ভূমিকা","stance":"supporter|opponent|neutral|responsible|critic","impact":8,"icon":"emoji","category":"রাজনীতিবিদ|সরকারি|ব্যবসায়ী|বিশেষজ্ঞ|সাংবাদিক|activist|আমলা|সুশীল"}]}
+২০ জন people দাও — নেতা, মন্ত্রী, বিশেষজ্ঞ, ব্যবসায়ী, activist মিলিয়ে।`;
 
-ঠিক ৬০ জন people দিতে হবে, বিভিন্ন category থেকে।`;
-  const data = await groqCall(prompt, 6000);
-  if (data && data.people && data.people.length >= 20) { cSet(cacheKey, data); return data; }
-  return null;
+  const d1 = await groqCall(p1, 3000);
+  if (!d1 || !d1.people) return null;
+
+  // Step 2: Get 40 more people (different from batch 1)
+  const existing = (d1.people||[]).map(p=>p.name).join(', ');
+  const p2 = `তুমি বাংলাদেশের নিরপেক্ষ বিশ্লেষক। আজ ${today}।
+বিষয়: "${issue.title}" — ${issue.desc}
+
+এই বিষয়ে আরো ৪০ জন relevant মানুষ দাও। এরা ইতিমধ্যে আছে: ${existing}
+
+শুধু JSON array (markdown ছাড়া):
+[{"name":"নাম","role":"পদ","party_or_org":"দল/প্রতিষ্ঠান","position":"ভূমিকা","stance":"supporter|opponent|neutral|responsible|critic","impact":7,"icon":"emoji","category":"রাজনীতিবিদ|সরকারি|ব্যবসায়ী|বিশেষজ্ঞ|সাংবাদিক|activist|আমলা|সুশীল"}]
+
+৪০ জন, আগের তালিকায় নেই এমন, বিভিন্ন category।`;
+
+  const d2 = await groqCall(p2, 3500);
+  const extra = Array.isArray(d2) ? d2 : (d2 && Array.isArray(d2.people) ? d2.people : []);
+
+  const result = { ...d1, people: [...(d1.people||[]), ...extra] };
+  cSet(cacheKey, result);
+  return result;
 }
 
 // ── FALLBACK ISSUES ──
@@ -618,17 +636,50 @@ window.showIssueDetail = async function(id) {
       <div><div style="font-size:20px;font-weight:900">${issue.title}</div>
       <div style="font-size:12px;color:var(--ink3);margin-top:3px">${issue.desc}</div></div>
     </div>
-    <div id="ai-loading" style="text-align:center;padding:32px;color:var(--ink3)">
-      <div style="font-size:28px;margin-bottom:10px">🤖</div>
-      <div style="font-size:13px;font-weight:700;margin-bottom:6px">AI বিশ্লেষণ চলছে...</div>
-      <div style="font-size:11px;color:var(--ink4)">Groq AI দিয়ে সর্বশেষ তথ্য বিশ্লেষণ করছে</div>
+    <div id="ai-loading" style="text-align:center;padding:28px 20px;color:var(--ink3)">
+      <div style="font-size:32px;margin-bottom:14px;animation:spin 2s linear infinite;display:inline-block">🤖</div>
+      <div style="font-size:13px;font-weight:800;color:var(--ink);margin-bottom:8px" id="ai-step-title">বিশ্লেষণ শুরু হচ্ছে...</div>
+      <div style="background:var(--surface3);border-radius:50px;height:6px;overflow:hidden;margin:10px 0;">
+        <div id="ai-progress-bar" style="height:100%;background:#3b82f6;border-radius:50px;width:10%;transition:width .5s"></div>
+      </div>
+      <div style="font-size:11px;color:var(--ink4)" id="ai-step-sub">Groq AI কে প্রশ্ন পাঠানো হচ্ছে...</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:14px">
+        <div id="step1-dot" style="padding:4px 12px;border-radius:50px;font-size:10px;font-weight:700;background:#dbeafe;color:#1e40af">① বিশ্লেষণ</div>
+        <div style="font-size:10px;color:var(--ink4);padding:4px 0">→</div>
+        <div id="step2-dot" style="padding:4px 12px;border-radius:50px;font-size:10px;font-weight:700;background:var(--surface3);color:var(--ink4)">② ৬০+ মানুষ</div>
+      </div>
     </div>`;
   document.getElementById('detail-modal').classList.add('open');
+
+  // Animate progress during loading
+  const updateStep = (step, pct, title, sub) => {
+    const bar = document.getElementById('ai-progress-bar');
+    const t = document.getElementById('ai-step-title');
+    const s = document.getElementById('ai-step-sub');
+    const s1 = document.getElementById('step1-dot');
+    const s2 = document.getElementById('step2-dot');
+    if(bar) bar.style.width = pct+'%';
+    if(t) t.textContent = title;
+    if(s) s.textContent = sub;
+    if(s1 && step>=1) s1.style.background='#dcfce7', s1.style.color='#15803d', s1.textContent='✅ বিশ্লেষণ';
+    if(s2 && step>=2) s2.style.background='#dbeafe', s2.style.color='#1e40af', s2.textContent='⏳ ৬০+ মানুষ';
+    if(s2 && step>=3) s2.style.background='#dcfce7', s2.style.color='#15803d', s2.textContent='✅ ৬০+ মানুষ';
+  };
+
+  setTimeout(()=>updateStep(0,25,'প্রথম বিশ্লেষণ চলছে...','summary ও প্রথম ২০ জন বের করছে...'),300);
+  setTimeout(()=>updateStep(1,55,'প্রথম ধাপ সম্পন্ন','আরো ৪০ জন relevant মানুষ খুঁজছে...'),3000);
+  setTimeout(()=>updateStep(2,85,'প্রায় শেষ...','ফলাফল সাজানো হচ্ছে...'),6000);
 
   const ai = await groqIssueAnalysis(issue);
 
   if (!ai) {
-    document.getElementById('ai-loading').innerHTML = `<div style="color:var(--red-m)">⚠️ AI বিশ্লেষণ পাওয়া যায়নি। পরে আবার চেষ্টা করুন।</div>`;
+    document.getElementById('ai-loading').innerHTML = `
+      <div style="padding:20px;text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">😔</div>
+        <div style="font-size:13px;font-weight:800;color:var(--red-m);margin-bottom:8px">AI বিশ্লেষণ পাওয়া যায়নি</div>
+        <div style="font-size:11px;color:var(--ink3);margin-bottom:14px">Groq API rate limit বা network সমস্যা। কিছুক্ষণ পর আবার try করুন।</div>
+        <button onclick="document.getElementById('detail-modal').classList.remove('open')" style="padding:8px 20px;background:var(--ink);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">বন্ধ করুন</button>
+      </div>`;
     return;
   }
 
@@ -679,7 +730,9 @@ window.showIssueDetail = async function(id) {
         </div>`).join('')}
     </div>
     <div style="margin-top:14px;padding:10px 14px;background:var(--surface3);border-radius:10px;font-size:10px;color:var(--ink4);text-align:center;">
-      🤖 Groq AI দ্বারা বিশ্লেষিত · মার্চ ২০২৬ · তথ্য আনুমানিক ও শিক্ষামূলক উদ্দেশ্যে
+      🤖 Groq AI বিশ্লেষিত · ${BD_TODAY()} · ${(ai.people||[]).length} জন relevant মানুষ · 
+      <span onclick="cSet('iss_${issue.id}',null);closeModal({target:document.getElementById('detail-modal')});setTimeout(()=>showIssueDetail('${issue.id}'),200)" style="color:var(--blue-m);cursor:pointer;font-weight:700">🔄 Refresh</span>
+      · তথ্য আনুমানিক ও শিক্ষামূলক
     </div>`;
 };
 
