@@ -84,17 +84,17 @@ const JOAFComponents = {
             </a>
 
             <!-- CENTER (mobile only): pill tag + tagline — replaces hamburger -->
-            <div class="joaf-mob-center d-xl-none">
+            <div class="joaf-mob-center d-md-none">
               <div class="joaf-mob-pill"><span class="joaf-mob-pill-dot"></span>জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</div>
               <div class="joaf-mob-tagline">দেশ আগে, দল পরে — আমরা ফিরে এসেছি।</div>
             </div>
 
             <!-- RIGHT: Desktop nav | Mobile: CTA pill buttons -->
             <div class="joaf-header-right">
-              <nav class="joaf-desktop-nav d-none d-xl-flex" id="main-menu" role="navigation" aria-label="প্রধান নেভিগেশন">
+              <nav class="joaf-desktop-nav d-none d-md-flex" id="main-menu" role="navigation" aria-label="প্রধান নেভিগেশন">
                 <ul>${navItems}</ul>
               </nav>
-              <div class="joaf-mob-cta d-flex d-xl-none">
+              <div class="joaf-mob-cta d-flex d-md-none">
                 <a href="/membership.html" class="joaf-cta-pill joaf-cta-join">
                   <i class="zmdi zmdi-account-add"></i><span>সদস্য হোন</span>
                 </a>
@@ -109,7 +109,7 @@ const JOAFComponents = {
     </header>
 
     <!-- FLOATING HAMBURGER — fixed bottom-left, always visible on mobile -->
-    <button class="joaf-fab-ham d-xl-none" id="joafHamBtn"
+    <button class="joaf-fab-ham d-md-none" id="joafHamBtn"
       aria-label="মেনু খুলুন" aria-expanded="false" aria-controls="joafMobileNav">
       <span class="joaf-fab-bar"></span>
       <span class="joaf-fab-bar"></span>
