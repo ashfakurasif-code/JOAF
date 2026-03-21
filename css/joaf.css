@@ -76,15 +76,15 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .joaf-header-top{background:linear-gradient(135deg,var(--dark),var(--dark2));padding:5px 0;}
 .joaf-header-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;}
 .joaf-header-meta span{color:rgba(255,255,255,.8);font-size:12px;display:flex;align-items:center;gap:5px;}
-.joaf-header-main{padding:0;overflow:hidden;}
-.joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;overflow:hidden;}
+.joaf-header-main{padding:0;overflow:visible;}
+.joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;}
 .joaf-header-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .joaf-logo img{max-width:95px;height:auto;display:block;padding:4px 0;}
 .joaf-logo:hover img{transform:scale(1.06);}
 
 /* DESKTOP NAV */
-.joaf-desktop-nav{display:flex;align-items:center;overflow:hidden;max-width:100%;}
-.joaf-desktop-nav>ul{display:flex;list-style:none;margin:0;padding:0;gap:0;align-items:center;flex-wrap:nowrap;overflow:hidden;}
+.joaf-desktop-nav{display:flex;align-items:center;}
+.joaf-desktop-nav>ul{display:flex;list-style:none;margin:0;padding:0;gap:0;align-items:center;}
 .joaf-desktop-nav>ul>li{position:relative;}
 .joaf-desktop-nav>ul>li>a{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;padding:6px 7px;white-space:nowrap;color:var(--text);text-decoration:none;position:relative;transition:color .25s;}
 .joaf-desktop-nav>ul>li>a::after{content:'';position:absolute;bottom:0;left:7px;right:7px;height:2.5px;background:linear-gradient(90deg,var(--brand),var(--gold));border-radius:2px;transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
@@ -111,9 +111,6 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .joaf-hamburger--open .joaf-hamburger-bar:nth-child(1){transform:translateY(7.5px) rotate(45deg);}
 .joaf-hamburger--open .joaf-hamburger-bar:nth-child(2){opacity:0;width:0;}
 .joaf-hamburger--open .joaf-hamburger-bar:nth-child(3){transform:translateY(-7.5px) rotate(-45deg);}
-
-/* RESPONSIVE NAV — desktop nav only on wide screens */
-
 
 /* MOBILE NAV */
 .joaf-mobile-nav{position:fixed;inset:0;z-index:99999;pointer-events:none;}
