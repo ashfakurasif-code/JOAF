@@ -76,8 +76,8 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .joaf-header-top{background:linear-gradient(135deg,var(--dark),var(--dark2));padding:5px 0;}
 .joaf-header-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;}
 .joaf-header-meta span{color:rgba(255,255,255,.8);font-size:12px;display:flex;align-items:center;gap:5px;}
-.joaf-header-main{padding:0;overflow:visible;}
-.joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;}
+.joaf-header-main{padding:0;overflow:hidden;}
+.joaf-header-row{display:flex;align-items:center;justify-content:space-between;min-height:54px;gap:8px;flex-wrap:nowrap;overflow:hidden;}
 .joaf-header-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .joaf-logo img{max-width:95px;height:auto;display:block;padding:4px 0;}
 .joaf-logo:hover img{transform:scale(1.06);}
@@ -111,6 +111,9 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .joaf-hamburger--open .joaf-hamburger-bar:nth-child(1){transform:translateY(7.5px) rotate(45deg);}
 .joaf-hamburger--open .joaf-hamburger-bar:nth-child(2){opacity:0;width:0;}
 .joaf-hamburger--open .joaf-hamburger-bar:nth-child(3){transform:translateY(-7.5px) rotate(-45deg);}
+
+/* RESPONSIVE NAV — desktop nav only on wide screens */
+/* Desktop nav breakpoint handled by Bootstrap d-xl-flex */
 
 /* MOBILE NAV */
 .joaf-mobile-nav{position:fixed;inset:0;z-index:99999;pointer-events:none;}
@@ -884,4 +887,12 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
   .d-md-none  { display: none  !important; }
   .d-md-flex  { display: flex  !important; }
   .d-md-block { display: block !important; }
+}
+@media (min-width: 1200px) {
+  .d-xl-none  { display: none  !important; }
+  .d-xl-flex  { display: flex  !important; }
+  .d-xl-block { display: block !important; }
+}
+@media (max-width: 1199px) {
+  .d-none.d-xl-flex { display: none !important; }
 }
