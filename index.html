@@ -268,32 +268,163 @@
   }
   .see-all-btn:hover{transform:translateY(-3px);color:#fff;box-shadow:0 12px 32px rgba(144,22,31,.4);}
 
-  /* ── Person cards ─────────────────────────────────────────── */
-  .person-card{
-    background:#fff;border-radius:18px;overflow:hidden;
-    box-shadow:0 4px 20px rgba(0,0,0,.09);
-    transition:all .35s ease;height:100%;
+  /* ══ ADVISOR CARD — Glassmorphism floating style ═══════════ */
+  @keyframes adv-glow-border{
+    0%,100%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
   }
-  .person-card:hover{transform:translateY(-6px);box-shadow:0 16px 44px rgba(0,0,0,.13);}
-  .person-card .card-img-wrap{height:220px;overflow:hidden;position:relative;}
-  .person-card .card-img-wrap img{
+  @keyframes adv-shimmer{
+    0%{transform:translateX(-100%) skewX(-12deg);}
+    100%{transform:translateX(250%) skewX(-12deg);}
+  }
+  @keyframes adv-float-in{
+    from{opacity:0;transform:translateY(28px) scale(.96);}
+    to{opacity:1;transform:translateY(0) scale(1);}
+  }
+  .adv-card-wrap{padding:20px 8px 8px;}
+  .adv-card{
+    position:relative;border-radius:22px;
+    background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(240,245,255,.85));
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    box-shadow:0 8px 32px rgba(144,22,31,.10),0 2px 8px rgba(0,0,0,.06);
+    transition:transform .45s cubic-bezier(.34,1.56,.64,1),box-shadow .45s ease;
+    overflow:visible;text-align:center;
+    animation:adv-float-in .5s both;
+  }
+  .adv-card::before{
+    content:'';position:absolute;inset:-2px;border-radius:24px;z-index:-1;
+    background:linear-gradient(270deg,#90161f,#c9a227,#075e55,#2563eb,#90161f);
+    background-size:300% 300%;
+    animation:adv-glow-border 4s ease infinite;
+    opacity:0;transition:opacity .4s;
+  }
+  .adv-card:hover::before{opacity:1;}
+  .adv-card:hover{transform:translateY(-10px) scale(1.025);box-shadow:0 24px 60px rgba(144,22,31,.18),0 4px 16px rgba(0,0,0,.08);}
+  .adv-avatar-wrap{
+    position:relative;margin:-36px auto 0;
+    width:96px;height:96px;
+    border-radius:50%;
+    padding:3px;
+    background:linear-gradient(135deg,#90161f,#c9a227,#075e55);
+    box-shadow:0 8px 28px rgba(144,22,31,.28);
+    transition:transform .45s cubic-bezier(.34,1.56,.64,1),box-shadow .45s;
+  }
+  .adv-card:hover .adv-avatar-wrap{transform:translateY(-6px) scale(1.06);box-shadow:0 14px 36px rgba(144,22,31,.38);}
+  .adv-avatar-wrap img{
     width:100%;height:100%;object-fit:cover;object-position:top center;
-    transition:transform .5s ease;filter:brightness(1.04);
+    border-radius:50%;border:3px solid #fff;display:block;
   }
-  .person-card:hover .card-img-wrap img{transform:scale(1.06);}
-  .person-card .card-info{padding:14px 16px 8px;}
-  .person-card .card-info h3{font-size:14px;font-weight:800;margin-bottom:4px;color:var(--brand);}
-  .person-card .card-info p{font-size:12px;color:var(--muted);margin:0;line-height:1.5;}
-  .card-socials{padding:8px 16px 14px;display:flex;gap:7px;}
-  .card-socials a{
-    width:30px;height:30px;border-radius:50%;
+  .adv-card-body{padding:14px 16px 18px;}
+  .adv-name{font-size:14px;font-weight:900;color:#1a1a2e;margin:10px 0 5px;line-height:1.35;}
+  .adv-desig-badge{
+    display:inline-block;padding:4px 12px;border-radius:50px;
+    background:linear-gradient(135deg,rgba(144,22,31,.10),rgba(7,94,85,.10));
+    border:1px solid rgba(144,22,31,.18);
+    font-size:10.5px;font-weight:700;color:#90161f;
+    margin-bottom:13px;letter-spacing:.2px;line-height:1.5;
+  }
+  .adv-socials{display:flex;gap:8px;justify-content:center;}
+  .adv-socials a{
+    width:32px;height:32px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
-    font-size:14px;text-decoration:none;transition:all .2s;
+    font-size:14px;text-decoration:none;transition:all .25s;
+    position:relative;overflow:hidden;
   }
-  .card-socials .fb{background:#eef0f8;color:#3b5998;}
-  .card-socials .fb:hover{background:#3b5998;color:#fff;}
-  .card-socials .info-btn{background:#eef8f6;color:var(--accent);}
-  .card-socials .info-btn:hover{background:var(--accent);color:#fff;}
+  .adv-socials a::after{
+    content:'';position:absolute;inset:0;border-radius:50%;
+    background:rgba(255,255,255,0);transition:background .25s;
+  }
+  .adv-socials .adv-fb{background:#e8edf8;color:#3b5998;}
+  .adv-socials .adv-fb:hover{background:#3b5998;color:#fff;transform:scale(1.15);}
+  .adv-socials .adv-info{background:#eef8f5;color:var(--accent);}
+  .adv-socials .adv-info:hover{background:var(--accent);color:#fff;transform:scale(1.15);}
+  /* Idle shimmer sweep */
+  .adv-card-shimmer{
+    position:absolute;inset:0;border-radius:22px;overflow:hidden;pointer-events:none;z-index:1;
+  }
+  .adv-card-shimmer::after{
+    content:'';position:absolute;top:0;left:-100%;width:40%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+    transform:skewX(-12deg);
+    animation:adv-shimmer 3.5s ease-in-out infinite;
+  }
+
+  /* ══ COALITION CARD — Dark political banner style ═══════════ */
+  @keyframes coal-sweep{
+    from{transform:scaleY(0);transform-origin:bottom;}
+    to{transform:scaleY(1);transform-origin:bottom;}
+  }
+  @keyframes coal-slide-in{
+    from{opacity:0;transform:translateX(-20px);}
+    to{opacity:1;transform:translateX(0);}
+  }
+  .coal-card{
+    position:relative;border-radius:16px;overflow:hidden;
+    background:linear-gradient(145deg,#0f0f1e,#1a1a2e);
+    box-shadow:0 6px 28px rgba(0,0,0,.28);
+    display:flex;flex-direction:row;align-items:stretch;
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1),box-shadow .4s ease;
+    min-height:130px;
+  }
+  .coal-card:hover{transform:translateY(-7px) scale(1.02);box-shadow:0 20px 52px rgba(0,0,0,.4),0 0 0 1.5px rgba(201,162,39,.3);}
+  /* animated left accent bar */
+  .coal-accent-bar{
+    width:5px;flex-shrink:0;
+    background:linear-gradient(180deg,#c9a227,#90161f,#075e55);
+    background-size:100% 200%;
+    animation:adv-glow-border 3s ease infinite;
+    transition:width .35s;
+  }
+  .coal-card:hover .coal-accent-bar{width:7px;}
+  /* photo column */
+  .coal-photo{
+    width:100px;flex-shrink:0;position:relative;overflow:hidden;
+  }
+  .coal-photo img{
+    width:100%;height:100%;object-fit:cover;object-position:top center;
+    display:block;transition:transform .5s ease,filter .4s;
+    filter:brightness(.9) saturate(1.1);
+  }
+  .coal-card:hover .coal-photo img{transform:scale(1.08);filter:brightness(1) saturate(1.2);}
+  .coal-photo::after{
+    content:'';position:absolute;right:0;top:0;bottom:0;width:28px;
+    background:linear-gradient(to right,transparent,#1a1a2e);
+  }
+  /* info column */
+  .coal-info{flex:1;padding:14px 14px 12px 10px;display:flex;flex-direction:column;justify-content:center;gap:6px;}
+  .coal-party-flag{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:3px 10px;border-radius:4px;
+    background:rgba(201,162,39,.15);border-left:3px solid #c9a227;
+    font-size:9.5px;font-weight:900;color:#c9a227;letter-spacing:.4px;
+    text-transform:uppercase;width:fit-content;
+    animation:coal-slide-in .4s both;
+  }
+  .coal-name{font-size:13px;font-weight:900;color:#fff;line-height:1.35;margin:0;}
+  .coal-name-sub{font-size:10.5px;color:rgba(255,255,255,.45);font-weight:600;margin:0;}
+  .coal-actions{display:flex;gap:6px;margin-top:4px;}
+  .coal-actions a{
+    width:28px;height:28px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;text-decoration:none;transition:all .22s;
+  }
+  .coal-actions .coal-fb{background:rgba(59,89,152,.2);color:#8ba3d4;}
+  .coal-actions .coal-fb:hover{background:#3b5998;color:#fff;transform:scale(1.12);}
+  .coal-actions .coal-info-btn{background:rgba(7,94,85,.2);color:#4ec9b0;}
+  .coal-actions .coal-info-btn:hover{background:var(--accent);color:#fff;transform:scale(1.12);}
+  /* hover sweep effect on coal card */
+  .coal-card::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(201,162,39,.05),transparent 60%);
+    opacity:0;transition:opacity .35s;pointer-events:none;
+  }
+  .coal-card:hover::after{opacity:1;}
+  @media(max-width:575px){
+    .coal-photo{width:80px;}
+    .coal-info{padding:10px 10px 10px 8px;}
+    .coal-name{font-size:12px;}
+    .adv-avatar-wrap{width:80px;height:80px;margin-top:-30px;}
+  }
 
   /* ── Section bg alternating ───────────────────────────────── */
   .bg-subtle{background:linear-gradient(180deg,#f8f9fa 0%,#f0f4f8 100%);}
@@ -843,18 +974,21 @@ function initFilter() {
   const grid = document.getElementById('advisors-grid');
   if (!grid) return;
   grid.innerHTML = JOAF.advisors.map((m, i) => `
-    <div class="col-6 col-md-4 col-lg-3 joaf-reveal" style="transition-delay:${(i%4)*.1}s">
-      <div class="person-card">
-        <div class="card-img-wrap">
-          <img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.src='/logoc7c3.png'">
-        </div>
-        <div class="card-info">
-          <h3>${m.name}</h3>
-          <p>${m.designation}</p>
-        </div>
-        <div class="card-socials">
-          <a href="${m.facebook}" target="_blank" rel="noopener" class="fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
-          <a href="${m.profilePage||'#'}" class="info-btn" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
+    <div class="col-6 col-md-4 col-lg-3 joaf-reveal" style="transition-delay:${(i%4)*.12}s">
+      <div class="adv-card-wrap">
+        <div class="adv-card" style="animation-delay:${i*.08}s">
+          <div class="adv-card-shimmer"></div>
+          <div class="adv-avatar-wrap">
+            <img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+          </div>
+          <div class="adv-card-body">
+            <div class="adv-name">${m.name}</div>
+            <div class="adv-desig-badge">${m.designation}</div>
+            <div class="adv-socials">
+              <a href="${m.facebook}" target="_blank" rel="noopener" class="adv-fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
+              <a href="${m.profilePage||'#'}" class="adv-info" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
+            </div>
+          </div>
         </div>
       </div>
     </div>`).join('');
@@ -865,18 +999,19 @@ function initFilter() {
   const grid = document.getElementById('coalition-grid');
   if (!grid) return;
   grid.innerHTML = JOAF.coalition.map((m, i) => `
-    <div class="col-6 col-md-4 col-lg-3 joaf-reveal" style="transition-delay:${(i%4)*.1}s">
-      <div class="person-card">
-        <div class="card-img-wrap">
+    <div class="col-12 col-sm-6 col-lg-4 joaf-reveal" style="transition-delay:${(i%3)*.12}s">
+      <div class="coal-card" style="animation-delay:${i*.07}s">
+        <div class="coal-accent-bar"></div>
+        <div class="coal-photo">
           <img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.src='/logoc7c3.png'">
         </div>
-        <div class="card-info">
-          <h3>${m.name}</h3>
-          <p>${m.party}</p>
-        </div>
-        <div class="card-socials">
-          <a href="${m.facebook}" target="_blank" rel="noopener" class="fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
-          <a href="${m.profilePage||'#'}" class="info-btn" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
+        <div class="coal-info">
+          <div class="coal-party-flag">⚑ ${m.party}</div>
+          <div class="coal-name">${m.name}</div>
+          <div class="coal-actions">
+            <a href="${m.facebook}" target="_blank" rel="noopener" class="coal-fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
+            <a href="${m.profilePage||'#'}" class="coal-info-btn" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
+          </div>
         </div>
       </div>
     </div>`).join('');
