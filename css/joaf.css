@@ -1,7 +1,8 @@
 /* ============================================================
    JOAF v8.0 — Energetic & Dynamic Design System
    ============================================================ */
-@font-face{font-family:'SolaimanLipi';src:url('path/to/SolaimanLipi.woff2') format('woff2'),url('path/to/SolaimanLipi.woff') format('woff');font-display:swap;}
+@import url('https://fonts.maateen.me/bensen-handwriting/font.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap');
 :root{
   --brand:#90161f;--brand2:#b91c1c;--brand-glow:rgba(144,22,31,.4);
   --accent:#075e55;--accent2:#15803d;--accent-glow:rgba(7,94,85,.4);
@@ -15,7 +16,7 @@
   --tr:.3s cubic-bezier(.4,0,.2,1);
   --tr-spring:.55s cubic-bezier(.34,1.56,.64,1);
   --tr-bounce:.6s cubic-bezier(.68,-.55,.265,1.55);
-  --font:'SolaimanLipi','Noto Sans Bengali','Siyam Rupali',Arial,sans-serif;
+  --font:'BenSen Handwriting','Noto Sans Bengali','Siyam Rupali',Arial,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;}
 a,button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}

@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JOAF News Card Studio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Noto+Sans+Bengali:wght@700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --br:#90161f;--bg:#0e0e0e;--s:#181818;--s2:#222;--s3:#2a2a2a;
+  --b:rgba(255,255,255,.07);--b2:rgba(255,255,255,.14);
+  --t:#f0f0f0;--t2:#888;--t3:#444;
+  --gr:#16a34a;--am:#f59e0b;--rd:#ef4444;--bl:#3b82f6;
+}
+body{font-family:'Hind Siliguri',sans-serif;background:var(--bg);color:var(--t);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* HEADER */
+.hdr{background:var(--s);border-bottom:1px solid var(--b2);padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.hdr-logo{width:28px;height:28px;background:var(--br);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:13px;}
+.hdr h1{font-size:13px;font-weight:700;}
+.hdr p{font-size:10px;color:var(--t3);}
+.hdr-r{margin-left:auto;display:flex;gap:6px;}
+
+/* LAYOUT */
+.studio{flex:1;display:flex;overflow:hidden;}
+
+/* SIDEBAR — minimal */
+.sidebar{width:240px;flex-shrink:0;background:var(--s);border-right:1px solid var(--b);overflow-y:auto;display:flex;flex-direction:column;}
+.sidebar::-webkit-scrollbar{width:3px;}.sidebar::-webkit-scrollbar-thumb{background:var(--s3);}
+
+/* CANVAS */
+.cvwrap{flex:1;background:#050505;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+#cv{display:block;cursor:default;position:relative;}
+
+/* UPLOAD */
+.up-ovl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:20;background:var(--bg);}
+.up-zone{width:340px;border:2px dashed var(--b2);border-radius:16px;padding:32px 24px;text-align:center;cursor:pointer;transition:.2s;position:relative;background:var(--s);}
+.up-zone:hover,.up-zone.dg{border-color:var(--br);background:rgba(144,22,31,.06);}
+.up-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.up-icon{font-size:40px;margin-bottom:8px;}
+.up-zone h2{font-size:15px;font-weight:700;margin-bottom:4px;}
+.up-zone p{font-size:11px;color:var(--t2);line-height:1.6;}
+
+/* AI */
+.ai-ovl{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:rgba(0,0,0,.88);}
+.ai-ovl.show{display:flex;}
+.ai-box{background:var(--s);border:1px solid var(--b2);border-radius:16px;padding:24px 28px;text-align:center;min-width:270px;}
+.spin{font-size:36px;animation:sp 1.5s linear infinite;margin-bottom:8px;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ai-rows{margin-top:10px;display:flex;flex-direction:column;gap:5px;text-align:left;}
+.ar{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--t3);}
+.ar.on{color:var(--am);}.ar.ok{color:var(--gr);}
+.ar-d{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.ar.on .ar-d{animation:pp 1s ease infinite;}
+@keyframes pp{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* TOOLBAR — floating above canvas */
+.toolbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid var(--b2);border-radius:50px;padding:5px 10px;}
+.tool-btn{padding:4px 10px;border-radius:50px;border:none;background:transparent;color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.tool-btn:hover{color:var(--t);background:rgba(255,255,255,.08);}
+.tool-btn.on{background:var(--br);color:#fff;}
+.tool-sep{width:1px;background:var(--b2);margin:2px 2px;}
+
+/* CONTEXT PANEL — appears near selected element */
+.ctx-panel{position:absolute;z-index:15;background:rgba(10,10,10,.96);backdrop-filter:blur(10px);border:1px solid var(--b2);border-radius:12px;padding:10px 12px;min-width:200px;display:none;box-shadow:0 8px 32px rgba(0,0,0,.6);}
+.ctx-panel.show{display:block;}
+.ctx-title{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.ctx-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ctx-row label{font-size:10px;color:var(--t2);min-width:50px;}
+.ctx-row input[type=range]{flex:1;accent-color:var(--br);height:3px;}
+.ctx-row .cv{font-size:10px;color:var(--am);min-width:30px;text-align:right;}
+.sw-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;}
+.sw{width:16px;height:16px;border-radius:3px;cursor:pointer;border:2px solid transparent;flex-shrink:0;}
+.sw:hover{transform:scale(1.2);}
+.sw.on{border-color:#fff;}
+.sw-c{width:16px;height:16px;border-radius:3px;border:1px solid var(--b2);overflow:hidden;position:relative;cursor:pointer;flex-shrink:0;}
+.sw-c input{position:absolute;inset:-4px;opacity:0;cursor:pointer;width:200%;height:200%;}
+.ctx-close{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:12px;padding:2px;}
+
+/* SIDEBAR FORM */
+.sec{border-bottom:1px solid var(--b);padding:10px 12px;}
+.sec h3{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.f{margin-bottom:6px;}
+.f label{font-size:10px;color:var(--t2);display:block;margin-bottom:2px;}
+.fi,.fta,.fsl{width:100%;padding:6px 8px;background:var(--s2);border:1.5px solid var(--b);border-radius:7px;color:var(--t);font-size:12px;font-family:inherit;outline:none;}
+.fi:focus,.fta:focus,.fsl:focus{border-color:var(--br);}
+.fta{resize:vertical;min-height:50px;}
+.fsl option{background:var(--s2);}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+
+/* PRESETS */
+.pr-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.pr{border-radius:7px;overflow:hidden;cursor:pointer;border:2px solid transparent;}
+.pr.on{border-color:var(--br);}
+.pr-t{height:34px;display:flex;align-items:center;justify-content:center;}
+.pr-n{font-size:9px;text-align:center;padding:2px;background:var(--s2);color:var(--t2);}
+
+/* SHOW/HIDE TOGGLES */
+.vis-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.vis-btn{padding:3px 9px;border-radius:50px;border:1.5px solid var(--b2);background:var(--s2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--t2);transition:.1s;}
+.vis-btn.on{background:var(--br);color:#fff;border-color:var(--br);}
+
+/* BUTTONS */
+.btn{padding:6px 13px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:.12s;display:inline-flex;align-items:center;gap:5px;}
+.btn-r{background:var(--br);color:#fff;}
+.btn-g{background:var(--s3);color:var(--t2);border:1px solid var(--b);}
+.btn-g:hover{color:var(--t);}
+.btn-gr{background:var(--gr);color:#fff;}
+.btn-f{width:100%;justify-content:center;}
+.btn-sm{padding:4px 9px;font-size:11px;}
+
+/* ZOOM */
+.zoom-ctrl{position:absolute;bottom:10px;right:10px;display:flex;gap:4px;z-index:10;}
+
+/* MODAL */
+.mod-bg{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+.mod-bg.op{display:flex;}
+.mod{background:var(--s);border:1px solid var(--b2);border-radius:16px;padding:22px;max-width:450px;width:100%;}
+.mod h2{font-size:15px;font-weight:900;margin-bottom:4px;}
+.mod p{font-size:11px;color:var(--t2);margin-bottom:14px;}
+.cks{display:flex;flex-direction:column;gap:7px;margin-bottom:18px;}
+.ck{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--s2);border-radius:8px;border:1px solid var(--b);cursor:pointer;}
+.ck input{width:14px;height:14px;accent-color:var(--gr);flex-shrink:0;margin-top:1px;}
+.ck label{font-size:11px;line-height:1.5;cursor:pointer;}
+.ck.ok{border-color:rgba(22,163,74,.35);}
+
+/* TOAST */
+.toast{position:fixed;bottom:16px;right:16px;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;z-index:99999;display:none;animation:fup .2s;}
+.toast.ok{background:#071407;color:var(--gr);border:1px solid rgba(22,163,74,.3);}
+.toast.er{background:#140808;color:var(--rd);border:1px solid rgba(239,68,68,.3);}
+@keyframes fup{from{transform:translateY(8px);opacity:0}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">J</div>
+  <div><h1>JOAF News Card Studio</h1><p>Upload → AI → Canvas-এ সব edit → Download</p></div>
+  <div class="hdr-r">
+    <button class="btn btn-g btn-sm" onclick="resetAll()">↺ Reset</button>
+    <button class="btn btn-r btn-sm" onclick="openPF()">⬇️ Download</button>
+  </div>
+</div>
+
+<div class="studio">
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+  <div class="sec">
+    <h3>📝 Content</h3>
+    <div class="f"><label>Category</label>
+      <select class="fsl" id="eCat" onchange="draw()">
+        <option value="breaking">🔴 BREAKING NEWS</option>
+        <option value="exclusive">⚡ EXCLUSIVE</option>
+        <option value="update">📢 আপডেট</option>
+        <option value="analysis">🔍 বিশ্লেষণ</option>
+        <option value="alert">🚨 সতর্কতা</option>
+        <option value="positive">✅ সুখবর</option>
+      </select></div>
+    <div class="f"><label>Headline</label>
+      <textarea class="fta" id="eHl" oninput="draw()" style="min-height:58px;font-weight:700;font-size:13px" placeholder="মূল শিরোনাম..."></textarea></div>
+    <div class="f"><label>Sub-headline <span style="color:var(--t3)">(optional)</span></label>
+      <textarea class="fta" id="eSub" oninput="draw()" style="min-height:38px" placeholder="বিবরণ..."></textarea></div>
+    <div class="fg2">
+      <div class="f"><label>Source</label><input class="fi" id="eSrc" value="JOAF News" oninput="draw()"></div>
+      <div class="f"><label>তারিখ</label><input class="fi" id="eDt" oninput="draw()"></div>
+    </div>
+    <div class="f"><label>📍 Location</label><input class="fi" id="eLoc" placeholder="ঢাকা" oninput="draw()"></div>
+  </div>
+
+  <div class="sec">
+    <h3>🎨 Style</h3>
+    <div class="pr-row" id="prRow"></div>
+    <div class="f" style="margin-top:8px"><label>Card Size</label>
+      <select class="fsl" id="eSize" onchange="draw()">
+        <option value="1080,1080">◻ Square 1080×1080</option>
+        <option value="1080,1350">▭ Portrait 1080×1350</option>
+        <option value="1080,1920">▯ Story 1080×1920</option>
+        <option value="1920,1080">▬ Wide 1920×1080</option>
+      </select></div>
+  </div>
+
+  <div class="sec">
+    <h3>👁 Show / Hide</h3>
+    <div class="vis-row" id="visRow">
+      <button class="vis-btn on" id="vTop" onclick="toggleVis('vTop','showTop')">Top Bar</button>
+      <button class="vis-btn on" id="vStr" onclick="toggleVis('vStr','showStr')">Stripe</button>
+      <button class="vis-btn on" id="vFt"  onclick="toggleVis('vFt','showFt')">Footer</button>
+      <button class="vis-btn on" id="vCat" onclick="toggleVis('vCat','showCat')">Badge</button>
+      <button class="vis-btn on" id="vSub" onclick="toggleVis('vSub','showSub')">Sub-hl</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div style="font-size:10px;color:var(--t2);line-height:1.6;margin-bottom:8px">
+      💡 <b style="color:var(--t)">Canvas-এ সব করুন:</b><br>
+      · Crop handles (হলুদ) drag<br>
+      · Element click → context menu<br>
+      · Image drag to pan<br>
+      · Scroll to zoom image
+    </div>
+  </div>
+
+  <div class="sec" style="margin-top:auto">
+    <button class="btn btn-gr btn-f" onclick="openPF()" style="margin-bottom:5px">✅ Check & Download</button>
+    <button class="btn btn-g btn-f" onclick="qDL()">⚡ Quick JPG</button>
+  </div>
+</div>
+
+<!-- CANVAS AREA -->
+<div class="cvwrap" id="cvwrap">
+
+  <!-- FLOATING TOOLBAR -->
+  <div class="toolbar" id="toolbar">
+    <button class="tool-btn on" id="tMove" onclick="setTool('move')">✋ Move</button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" id="tCrop" onclick="setTool('crop')">✂️ Crop</button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" id="tImg" onclick="setTool('img')">🖼️ Image</button>
+    <div class="tool-sep"></div>
+    <span style="font-size:10px;color:var(--t3);padding:0 4px" id="toolHint">element click করুন</span>
+  </div>
+
+  <!-- CONTEXT PANELS -->
+  <div class="ctx-panel" id="ctxBadge">
+    <button class="ctx-close" onclick="closeCtx()">✕</button>
+    <div class="ctx-title">🔴 Category Badge</div>
+    <div class="ctx-row"><label>BG</label><div class="sw-row" id="swCB"></div></div>
+    <div class="ctx-row"><label>Text</label><input type="color" id="eCTxt" value="#ffffff" oninput="draw()" style="width:30px;height:20px;border-radius:4px;border:1px solid var(--b2);cursor:pointer;background:none;flex-shrink:0"></div>
+    <div class="ctx-row"><label>Size</label><input type="range" id="sCS" min="9" max="22" value="13" oninput="draw()"><span class="cv" id="vCS">13px</span></div>
+  </div>
+
+  <div class="ctx-panel" id="ctxHl">
+    <button class="ctx-close" onclick="closeCtx()">✕</button>
+    <div class="ctx-title">🔤 Headline</div>
+    <div class="ctx-row"><label>Color</label><div class="sw-row" id="swHL"></div></div>
+    <div class="ctx-row"><label>Size</label><input type="range" id="sHS" min="14" max="76" value="38" oninput="draw()"><span class="cv" id="vHS">38px</span></div>
+    <div class="ctx-row"><label>Line H</label><input type="range" id="sHLH" min="8" max="22" value="12" oninput="draw()"><span class="cv" id="vHLH">1.2</span></div>
+    <div class="ctx-row"><label>Bg Op</label><input type="range" id="sHBO" min="0" max="100" value="0" oninput="draw()"><span class="cv" id="vHBO">0%</span></div>
+    <div class="ctx-row"><label>Bg Color</label><div class="sw-row" id="swHBG"></div></div>
+  </div>
+
+  <div class="ctx-panel" id="ctxTop">
+    <button class="ctx-close" onclick="closeCtx()">✕</button>
+    <div class="ctx-title">🏷️ Top Bar</div>
+    <div class="ctx-row"><label>BG</label><input type="color" id="eTopBg" value="#ffffff" oninput="draw()" style="width:30px;height:20px;border-radius:4px;border:1px solid var(--b2);cursor:pointer;background:none;flex-shrink:0"></div>
+    <div class="ctx-row"><label>Text</label><input type="color" id="eTopTxt" value="#000000" oninput="draw()" style="width:30px;height:20px;border-radius:4px;border:1px solid var(--b2);cursor:pointer;background:none;flex-shrink:0"></div>
+    <div class="ctx-row"><label>Logo BG</label><div class="sw-row" id="swLB"></div></div>
+    <div class="ctx-row"><label>Height</label><input type="range" id="sTH" min="40" max="120" value="72" oninput="draw()"><span class="cv" id="vTH">72px</span></div>
+    <div class="ctx-row"><label>Logo</label><input type="range" id="sLS" min="24" max="80" value="44" oninput="draw()"><span class="cv" id="vLS">44px</span></div>
+    <div class="ctx-row"><label>Font</label><input type="range" id="sTBF" min="8" max="28" value="18" oninput="draw()"><span class="cv" id="vTBF">18px</span></div>
+    <div class="ctx-row"><label>Source Sz</label><input type="range" id="sSrcF" min="6" max="22" value="12" oninput="draw()"><span class="cv" id="vSrcF">12px</span></div>
+    <div class="ctx-row"><label>Date Sz</label><input type="range" id="sDtF" min="6" max="20" value="11" oninput="draw()"><span class="cv" id="vDtF">11px</span></div>
+  </div>
+
+  <div class="ctx-panel" id="ctxFt">
+    <button class="ctx-close" onclick="closeCtx()">✕</button>
+    <div class="ctx-title">📌 Footer</div>
+    <div class="ctx-row"><label>BG</label><div class="sw-row" id="swFC"></div></div>
+    <div class="ctx-row"><label>Text</label><input type="color" id="eFTxt" value="#ffffff" oninput="draw()" style="width:30px;height:20px;border-radius:4px;border:1px solid var(--b2);cursor:pointer;background:none;flex-shrink:0"></div>
+    <div class="ctx-row"><label>Accent</label><div class="sw-row" id="swAC"></div></div>
+    <div class="ctx-row"><label>Height</label><input type="range" id="sFH" min="30" max="90" value="52" oninput="draw()"><span class="cv" id="vFH">52px</span></div>
+    <div class="ctx-row"><label>Font</label><input type="range" id="sFF" min="8" max="24" value="14" oninput="draw()"><span class="cv" id="vFF">14px</span></div>
+  </div>
+
+  <div class="ctx-panel" id="ctxImg">
+    <button class="ctx-close" onclick="closeCtx()">✕</button>
+    <div class="ctx-title">🖼️ Image</div>
+    <div class="ctx-row"><label>Scale</label><input type="range" id="sIsc" min="50" max="300" value="100" oninput="draw()"><span class="cv" id="vIsc">100%</span></div>
+    <div class="ctx-row"><label>Bright</label><input type="range" id="sBr" min="20" max="200" value="100" oninput="draw()"><span class="cv" id="vBr">100%</span></div>
+    <div class="ctx-row"><label>Contrast</label><input type="range" id="sCn" min="20" max="200" value="100" oninput="draw()"><span class="cv" id="vCn">100%</span></div>
+    <div class="ctx-row"><label>Overlay</label><input type="range" id="sOv" min="0" max="98" value="65" oninput="draw()"><span class="cv" id="vOv">65%</span></div>
+    <div style="margin-top:6px;display:flex;gap:5px">
+      <button class="btn btn-g btn-sm" onclick="resetImgPan()" style="font-size:10px">↺ Center</button>
+      <button class="btn btn-g btn-sm" onclick="resetImgScale()" style="font-size:10px">↺ Scale</button>
+    </div>
+  </div>
+
+  <!-- UPLOAD OVERLAY -->
+  <div class="up-ovl" id="upOvl">
+    <div class="up-zone" id="upZone">
+      <input type="file" id="fIn" accept="image/*" onchange="onFile(event)">
+      <div class="up-icon">📸</div>
+      <h2>News Screenshot আপলোড করুন</h2>
+      <p>TV channel বা news portal screenshot<br>drag & drop বা click</p>
+    </div>
+    <div style="font-size:11px;color:var(--t3)">🔒 কোথাও upload হয় না · সম্পূর্ণ private</div>
+  </div>
+
+  <!-- AI OVERLAY -->
+  <div class="ai-ovl" id="aiOvl">
+    <div class="ai-box">
+      <div class="spin">🤖</div>
+      <div style="font-size:14px;font-weight:800;margin-bottom:3px" id="aiT">AI বিশ্লেষণ চলছে</div>
+      <div style="font-size:11px;color:var(--t2)">Groq Llama Vision...</div>
+      <div class="ai-rows">
+        <div class="ar on" id="as1"><div class="ar-d"></div>Image পড়ছে</div>
+        <div class="ar" id="as2"><div class="ar-d"></div>Headline বের করছে</div>
+        <div class="ar" id="as3"><div class="ar-d"></div>Crop নির্ধারণ করছে</div>
+        <div class="ar" id="as4"><div class="ar-d"></div>Style ঠিক করছে</div>
+      </div>
+      <div id="aiErr" style="display:none;margin-top:10px;padding:8px;background:rgba(239,68,68,.1);border-radius:7px;color:#ffaaaa;font-size:11px;line-height:1.5"></div>
+      <div id="aiAct" style="display:none;flex-direction:column;gap:5px;margin-top:10px">
+        <button class="btn btn-g btn-f" onclick="runAI()">🔄 আবার চেষ্টা</button>
+        <button class="btn btn-g btn-f" onclick="skipAI()">⏭ Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="cv"></canvas>
+
+  <div class="zoom-ctrl">
+    <button class="btn btn-g btn-sm" onclick="zm(-.15)">−</button>
+    <span id="zLbl" style="font-size:10px;color:var(--t2);padding:3px 8px;background:var(--s);border-radius:5px;border:1px solid var(--b)">100%</span>
+    <button class="btn btn-g btn-sm" onclick="zm(+.15)">+</button>
+    <button class="btn btn-g btn-sm" onclick="fitZ()">⊞</button>
+  </div>
+</div>
+</div>
+
+<!-- PREFLIGHT -->
+<div class="mod-bg" id="modal">
+  <div class="mod">
+    <h2>✅ Download-এর আগে চেক করুন</h2>
+    <p>সব box tick করলেই download হবে</p>
+    <div class="cks" id="ckList"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g" style="flex:1" onclick="clMod()">বাতিল</button>
+      <button class="btn btn-gr" style="flex:1" id="dlBtn" onclick="confDL()" disabled>⬇️ JPG Download</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const GK='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';
+const VMS=['meta-llama/llama-4-scout-17b-16e-instruct','llama-3.2-11b-vision-preview'];
+
+// ── STATE ──
+let SRC=null, SB64=null, ZL=1;
+let CT=0.20, CB=0.05, CL=0.00, CR=0.00; // crop fractions (each independent)
+let imgPanX=0, imgPanY=0, imgScale=1.0;   // image pan + scale
+let EP={badge:null, hl:null, sub:null};    // element free positions {x,y} or null=default
+let DEF={badge:{x:0,y:0}, hl:{x:0,y:0}, sub:{x:0,y:0}}; // computed defaults
+
+let tool='move'; // 'move' | 'crop' | 'img'
+let drag=null;   // current drag action
+let showTop=true, showStr=true, showFt=true, showCat=true, showSub=true;
+
+// Colors
+let aC='#e02020', fC='#e02020', lBC='#e02020', hlC='#ffffff', cBC='#e02020', hlBgC='#000000';
+
+const PRESETS=[
+  {n:'Breaking',bg:'#0d0205',tBg:'#fff',tTxt:'#000',ft:'#e02020',ac:'#e02020',ov:65},
+  {n:'Dark',    bg:'#080808',tBg:'#fff',tTxt:'#000',ft:'#f59e0b',ac:'#f59e0b',ov:70},
+  {n:'Gold',    bg:'#0d0800',tBg:'#fff',tTxt:'#000',ft:'#c9a227',ac:'#c9a227',ov:68},
+  {n:'White',   bg:'#f0f0f0',tBg:'#90161f',tTxt:'#fff',ft:'#90161f',ac:'#90161f',ov:18},
+  {n:'Navy',    bg:'#060b1a',tBg:'#fff',tTxt:'#000',ft:'#1d4ed8',ac:'#3b82f6',ov:68},
+  {n:'Forest',  bg:'#020d06',tBg:'#fff',tTxt:'#000',ft:'#166534',ac:'#4ade80',ov:70},
+];
+let cP=0;
+
+const SWS=['#e02020','#90161f','#f59e0b','#c9a227','#22c55e','#3b82f6','#8b5cf6','#f97316','#ff1744','#ffffff','#000000'];
+const HCS=['#ffffff','#ffff00','#ffe082','#f0f0f0','#bbf7d0','#bfdbfe','#111111','#ff6b6b'];
+const HBGS=['#000000','#111111','#90161f','#1a1a1a','#ffffff'];
+
+// ── INIT ──
+(function(){
+  const d=new Date(Date.now()+6*3600000);
+  const mn=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+  document.getElementById('eDt').value=`${d.getDate()} ${mn[d.getMonth()]}, ${d.getFullYear()}`;
+  bldPR();
+  bSw('swAC',SWS,c=>{aC=c;draw();});
+  bSw('swFC',SWS,c=>{fC=c;draw();});
+  bSw('swLB',SWS,c=>{lBC=c;draw();});
+  bSw('swHL',HCS,c=>{hlC=c;draw();});
+  bSw('swCB',SWS,c=>{cBC=c;draw();});
+  bSw('swHBG',HBGS,c=>{hlBgC=c;draw();});
+  // Range input live labels
+  const rl=[['sCS','vCS','px'],['sHS','vHS','px'],['sHLH','vHLH','','lh'],['sHBO','vHBO','%'],['sTH','vTH','px'],['sLS','vLS','px'],['sTBF','vTBF','px'],['sSrcF','vSrcF','px'],['sDtF','vDtF','px'],['sFH','vFH','px'],['sFF','vFF','px'],['sIsc','vIsc','%'],['sBr','vBr','%'],['sCn','vCn','%'],['sOv','vOv','%']];
+  rl.forEach(([sid,vid,unit,type])=>{
+    const el=document.getElementById(sid);
+    if(!el)return;
+    el.addEventListener('input',()=>{
+      const v=el.value;
+      document.getElementById(vid).textContent=type==='lh'?(v/10).toFixed(1):v+unit;
+    });
+  });
+  // Upload drag-drop
+  const uz=document.getElementById('upZone');
+  uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('dg');});
+  uz.addEventListener('dragleave',()=>uz.classList.remove('dg'));
+  uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('dg');const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))lFile(f);});
+  // Canvas events
+  const cv=document.getElementById('cv');
+  cv.addEventListener('mousedown',mD);
+  cv.addEventListener('mousemove',mM);
+  cv.addEventListener('mouseup',mU);
+  cv.addEventListener('mouseleave',mU);
+  cv.addEventListener('click',cvClick);
+  cv.addEventListener('wheel',onWheel,{passive:false});
+  cv.addEventListener('touchstart',e=>{e.preventDefault();mD(e.touches[0]);},{passive:false});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();mM(e.touches[0]);},{passive:false});
+  cv.addEventListener('touchend',mU);
+  apP(0,false);
+  window.addEventListener('resize',fitZ);
+})();
+
+// ── PRESETS ──
+function bldPR(){
+  document.getElementById('prRow').innerHTML=PRESETS.map((p,i)=>
+    `<div class="pr${i===cP?' on':''}" onclick="apP(${i})">
+      <div class="pr-t" style="background:${p.bg}"><span style="color:${p.ac};font-size:16px">●</span></div>
+      <div class="pr-n">${p.n}</div></div>`).join('');
+}
+function apP(i,rd=true){
+  cP=i;const p=PRESETS[i];
+  aC=p.ac;fC=p.ft;lBC=p.ac;cBC=p.ac;
+  document.getElementById('eTopBg').value=p.tBg;
+  document.getElementById('eTopTxt').value=p.tTxt;
+  document.getElementById('sOv').value=p.ov;document.getElementById('vOv').textContent=p.ov+'%';
+  bldPR();if(rd)draw();
+}
+function bSw(id,colors,cb){
+  document.getElementById(id).innerHTML=colors.map(c=>
+    `<div class="sw" style="background:${c}" onclick="(${cb.toString()})('${c}');document.querySelectorAll('#${id} .sw').forEach(e=>e.classList.remove('on'));this.classList.add('on')"></div>`
+  ).join('')+`<div class="sw-c"><input type="color" onchange="(${cb.toString()})(this.value)"></div>`;
+}
+
+// ── VISIBILITY ──
+function toggleVis(btnId,varName){
+  const map={showTop,showStr,showFt,showCat,showSub};
+  const vals={showTop,showStr,showFt,showCat,showSub};
+  if(varName==='showTop')showTop=!showTop;
+  else if(varName==='showStr')showStr=!showStr;
+  else if(varName==='showFt')showFt=!showFt;
+  else if(varName==='showCat')showCat=!showCat;
+  else if(varName==='showSub')showSub=!showSub;
+  const v=varName==='showTop'?showTop:varName==='showStr'?showStr:varName==='showFt'?showFt:varName==='showCat'?showCat:showSub;
+  document.getElementById(btnId).classList.toggle('on',v);
+  draw();
+}
+
+// ── TOOL ──
+function setTool(t){
+  tool=t;
+  ['tMove','tCrop','tImg'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById(t==='move'?'tMove':t==='crop'?'tCrop':'tImg').classList.add('on');
+  const hints={move:'element click করুন',crop:'handle drag করুন',img:'drag=pan · scroll=zoom'};
+  document.getElementById('toolHint').textContent=hints[t]||'';
+  closeCtx();
+  if(t==='img'){showCtx('ctxImg',null,null);}
+  draw();
+}
+
+// ── CONTEXT PANELS ──
+function showCtx(id,x,y){
+  document.querySelectorAll('.ctx-panel').forEach(p=>p.classList.remove('show'));
+  const p=document.getElementById(id);
+  p.classList.add('show');
+  if(x!==null&&y!==null){
+    const wr=document.getElementById('cvwrap');
+    const wr2=wr.getBoundingClientRect();
+    const cv=document.getElementById('cv');
+    const cvr=cv.getBoundingClientRect();
+    // Convert card coords to screen coords
+    const[cw,ch]=gSz();
+    const sx=cvr.left+(x/cw)*cvr.width-wr2.left;
+    const sy=cvr.top+(y/ch)*cvr.height-wr2.top;
+    const pw=220, ph=200;
+    let px=Math.min(sx+8, wr2.width-pw-8);
+    let py=Math.min(sy+8, wr2.height-ph-8);
+    if(px<4)px=4;if(py<4)py=4;
+    p.style.left=px+'px';p.style.top=py+'px';
+  } else {
+    p.style.left='auto';p.style.top='auto';p.style.right='8px';p.style.bottom='50px';
+  }
+}
+function closeCtx(){document.querySelectorAll('.ctx-panel').forEach(p=>p.classList.remove('show'));}
+
+// ── CANVAS COORD (display→card pixels) ──
+function gSz(){return document.getElementById('eSize').value.split(',').map(Number);}
+function cvXY(e){
+  const cv=document.getElementById('cv');
+  const r=cv.getBoundingClientRect();
+  const[cw,ch]=gSz();
+  // IMPORTANT: use getBoundingClientRect for actual displayed size
+  return{x:(e.clientX-r.left)*(cw/r.width), y:(e.clientY-r.top)*(ch/r.height)};
+}
+
+// ── CROP HANDLES ──
+function cropHnds(){
+  const[cw,ch]=gSz();
+  const T=CT*ch,B=CB*ch,L=CL*cw,R=CR*cw;
+  const mx=(L+(cw-R))/2, my=(T+(ch-B))/2;
+  return[
+    {id:'T',x:mx,  y:T,    cur:'ns-resize', label:'top'},
+    {id:'B',x:mx,  y:ch-B, cur:'ns-resize', label:'bottom'},
+    {id:'L',x:L,   y:my,   cur:'ew-resize', label:'left'},
+    {id:'R',x:cw-R,y:my,   cur:'ew-resize', label:'right'},
+  ];
+}
+
+// ── HIT TEST ELEMENTS ──
+function hitTest(x,y){
+  const[cw,ch]=gSz();
+  // Check crop handles first (large hit area)
+  const th=Math.max(cw,ch)*0.055;
+  const ch2=cropHnds();
+  const hitH=ch2.find(h=>Math.hypot(h.x-x,h.y-y)<th);
+  if(hitH)return{type:'crop',handle:hitH.id};
+  // Top bar zone
+  const tbH=g('sTH')*cw/1080;
+  if(y<tbH)return{type:'topbar'};
+  // Footer zone
+  const ftH=g('sFH')*cw/1080;
+  if(y>ch-ftH)return{type:'footer'};
+  // Badge (use DEF if EP.badge null)
+  const bx=EP.badge?.x??DEF.badge.x, by=EP.badge?.y??DEF.badge.y;
+  if(showCat&&x>=bx-10&&x<=bx+200&&y>=by-10&&y<=by+50)return{type:'badge'};
+  // Headline
+  const hx=EP.hl?.x??DEF.hl.x, hy=EP.hl?.y??DEF.hl.y;
+  if(x>=hx-10&&x<=cw-30&&y>=hy-50&&y<=hy+120)return{type:'hl'};
+  // Sub
+  const sx=EP.sub?.x??DEF.sub.x, sy=EP.sub?.y??DEF.sub.y;
+  if(showSub&&x>=sx-10&&x<=cw-30&&y>=sy-20&&y<=sy+60)return{type:'sub'};
+  // Image (fallback)
+  return{type:'img'};
+}
+
+// ── MOUSE DOWN ──
+function mD(e){
+  if(!SRC)return;
+  const{x,y}=cvXY(e);
+  const hit=hitTest(x,y);
+
+  if(hit.type==='crop'){
+    drag={type:'crop_'+hit.handle,ox:x,oy:y};
+    return;
+  }
+  if(tool==='crop'){
+    // In crop mode, clicking anywhere starts a crop drag based on proximity
+    const ch2=cropHnds();
+    const[cw,ch]=gSz();
+    // Find nearest edge
+    const dists={
+      T:Math.abs(y-CT*ch),
+      B:Math.abs(y-(1-CB)*ch),
+      L:Math.abs(x-CL*cw),
+      R:Math.abs(x-(1-CR)*cw),
+    };
+    const nearest=Object.entries(dists).reduce((a,b)=>b[1]<a[1]?b:a);
+    drag={type:'crop_'+nearest[0],ox:x,oy:y};
+    return;
+  }
+  if(tool==='img'||hit.type==='img'){
+    drag={type:'img',ox:x,oy:y,sx:imgPanX,sy:imgPanY};
+    return;
+  }
+  if(hit.type==='badge'||hit.type==='hl'||hit.type==='sub'){
+    const cur=hit.type==='badge'?(EP.badge||DEF.badge):hit.type==='hl'?(EP.hl||DEF.hl):(EP.sub||DEF.sub);
+    drag={type:'elem_'+hit.type,ox:x,oy:y,sx:cur.x,sy:cur.y};
+    return;
+  }
+  if(hit.type==='topbar'){drag={type:'noop'};}
+}
+
+// ── MOUSE MOVE ──
+function mM(e){
+  if(!SRC)return;
+  const{x,y}=cvXY(e);
+  const[cw,ch]=gSz();
+  const cl=(v,mn=0,mx=.72)=>Math.max(mn,Math.min(mx,v));
+
+  if(drag&&drag.type!=='noop'){
+    const dx=x-drag.ox, dy=y-drag.oy;
+    if(drag.type==='crop_T'){CT=cl(y/ch);syncCrSliders();}
+    else if(drag.type==='crop_B'){CB=cl((ch-y)/ch);syncCrSliders();}
+    else if(drag.type==='crop_L'){CL=cl(x/cw);syncCrSliders();}
+    else if(drag.type==='crop_R'){CR=cl((cw-x)/cw);syncCrSliders();}
+    else if(drag.type==='img'){imgPanX=drag.sx+dx;imgPanY=drag.sy+dy;}
+    else if(drag.type.startsWith('elem_')){
+      const id=drag.type.slice(5);
+      EP[id]={x:drag.sx+dx,y:drag.sy+dy};
+    }
+    draw();return;
+  }
+
+  // Cursor
+  if(!drag){
+    const th=Math.max(cw,ch)*0.055;
+    const near=cropHnds().find(h=>Math.hypot(h.x-x,h.y-y)<th);
+    if(near){document.getElementById('cv').style.cursor=near.cur;return;}
+    const hit=hitTest(x,y);
+    const cursors={topbar:'pointer',footer:'pointer',badge:'grab',hl:'grab',sub:'grab',img:tool==='img'?'grab':'default'};
+    document.getElementById('cv').style.cursor=cursors[hit.type]||'default';
+  }
+}
+function mU(){drag=null;}
+
+// ── CLICK (for context panels) ──
+function cvClick(e){
+  if(!SRC)return;
+  if(drag)return;
+  const{x,y}=cvXY(e);
+  const hit=hitTest(x,y);
+  const ctxMap={topbar:'ctxTop',footer:'ctxFt',badge:'ctxBadge',hl:'ctxHl',sub:'ctxHl',img:'ctxImg'};
+  if(ctxMap[hit.type]){
+    showCtx(ctxMap[hit.type],x,y);
+  }
+}
+
+// ── WHEEL = zoom image ──
+function onWheel(e){
+  if(!SRC)return;
+  e.preventDefault();
+  const delta=e.deltaY>0?-0.05:0.05;
+  imgScale=Math.max(0.3,Math.min(3,imgScale+delta));
+  document.getElementById('sIsc').value=Math.round(imgScale*100);
+  document.getElementById('vIsc').textContent=Math.round(imgScale*100)+'%';
+  draw();
+}
+function resetImgPan(){imgPanX=0;imgPanY=0;draw();}
+function resetImgScale(){imgScale=1;document.getElementById('sIsc').value=100;document.getElementById('vIsc').textContent='100%';draw();}
+
+// ── CROP SLIDERS ──
+function syncCrSliders(){
+  [['CT','sCT_dummy'],['CB','sCB_dummy'],['CL','sCL_dummy'],['CR','sCR_dummy']].forEach(([v])=>{});
+  // Update sidebar if present (not in this version, but kept for extensibility)
+}
+function setCrop(t,b,l,r){CT=t/100;CB=b/100;CL=l/100;CR=r/100;draw();}
+
+// ── ZOOM ──
+function fitZ(){
+  if(!SRC)return;
+  const wr=document.getElementById('cvwrap');
+  const[cw,ch]=gSz();
+  ZL=Math.min((wr.offsetWidth-40)/cw,(wr.offsetHeight-60)/ch,1);
+  apZ();
+}
+function zm(d){ZL=Math.max(.15,Math.min(3,ZL+d));apZ();}
+function apZ(){
+  const[cw,ch]=gSz();
+  const cv=document.getElementById('cv');
+  cv.style.width=Math.round(cw*ZL)+'px';
+  cv.style.height=Math.round(ch*ZL)+'px';
+  document.getElementById('zLbl').textContent=Math.round(ZL*100)+'%';
+}
+
+// ── FILE / AI ──
+function onFile(ev){const f=ev.target.files[0];if(f)lFile(f);}
+function lFile(file){
+  const r=new FileReader();
+  r.onload=ev=>{const img=new Image();img.onload=()=>{SRC=img;SB64=ev.target.result;stAI();};img.src=ev.target.result;};
+  r.readAsDataURL(file);
+}
+function stAI(){
+  document.getElementById('upOvl').style.display='none';
+  document.getElementById('aiOvl').classList.add('show');
+  document.getElementById('aiErr').style.display='none';
+  document.getElementById('aiAct').style.display='none';
+  runAI();
+}
+async function runAI(){
+  sAS(1);
+  const b64=SB64.split(',')[1],mime=SB64.split(';')[0].split(':')[1];
+  const prompt=`তুমি বাংলাদেশি news card designer AI। এই image টি TV channel বা news portal screenshot।
+শুধু JSON দাও:
+{"headline":"মূল headline বাংলায় সর্বোচ্চ ৮০ অক্ষর","sub":"sub বা খালি","category":"breaking|exclusive|update|analysis|alert|positive","source":"channel নাম text only","location":"স্থান বা খালি","crop_top":20,"crop_bottom":10,"crop_left":0,"crop_right":0,"style":0,"overlay":65}
+crop=% channel logo/watermark যেখানে সেদিক বেশি (0-65); style=0-5`;
+  try{
+    let res=null;
+    for(const m of VMS){
+      try{
+        const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+GK},
+          body:JSON.stringify({model:m,messages:[{role:'user',content:[
+            {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`}},
+            {type:'text',text:prompt}]}],max_tokens:400,temperature:0.1})});
+        if(!r.ok)continue;
+        const d=await r.json();
+        let txt=d.choices?.[0]?.message?.content||'';
+        txt=txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+        const mm=txt.match(/\{[\s\S]*\}/);
+        if(mm){res=JSON.parse(mm[0]);break;}
+      }catch(e){continue;}
+    }
+    if(!res)throw new Error('parse failed');
+    sAS(2);
+    if(res.headline)document.getElementById('eHl').value=res.headline;
+    if(res.sub)document.getElementById('eSub').value=res.sub;
+    if(res.category)document.getElementById('eCat').value=res.category;
+    if(res.source)document.getElementById('eSrc').value=res.source;
+    if(res.location)document.getElementById('eLoc').value=res.location;
+    sAS(3);
+    CT=Math.min(.68,+(res.crop_top||20)/100);
+    CB=Math.min(.68,+(res.crop_bottom||5)/100);
+    CL=Math.min(.68,+(res.crop_left||0)/100);
+    CR=Math.min(.68,+(res.crop_right||0)/100);
+    sAS(4);
+    apP(Math.min(5,Math.max(0,+(res.style||0))),false);
+    if(res.overlay){document.getElementById('sOv').value=res.overlay;document.getElementById('vOv').textContent=res.overlay+'%';}
+    await new Promise(r=>setTimeout(r,400));
+    document.getElementById('aiOvl').classList.remove('show');
+    fitZ();draw();
+  }catch(err){
+    document.getElementById('aiT').textContent='⚠️ AI Error';
+    document.getElementById('aiErr').textContent='সমস্যা: '+err.message;
+    document.getElementById('aiErr').style.display='block';
+    document.getElementById('aiAct').style.display='flex';
+  }
+}
+function skipAI(){document.getElementById('aiOvl').classList.remove('show');fitZ();draw();}
+function sAS(n){[1,2,3,4].forEach(i=>{const el=document.getElementById('as'+i);el.className='ar'+(i<n?' ok':i===n?' on':'');});}
+
+// ── HELPERS ──
+function g(id){return +document.getElementById(id)?.value||0;}
+function gSz(){return document.getElementById('eSize').value.split(',').map(Number);}
+
+// ── DRAW ──
+let dT;
+function draw(){clearTimeout(dT);dT=setTimeout(()=>_draw(false),80);}
+async function _draw(fe){const cv=document.getElementById('cv');await dFull(cv,fe);if(!fe)apZ();}
+
+async function dFull(cv,fe=false){
+  const[W,H]=gSz();cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  const sc=W/1080;
+
+  const pad   =44*sc;
+  const tbH   =g('sTH')*sc;
+  const lsz   =g('sLS')*sc;
+  const ftH   =g('sFH')*sc;
+  const hlSz  =g('sHS')*sc;
+  const hlLH  =g('sHLH')/10;
+  const cSz   =g('sCS')*sc;
+  const cPX   =11*sc;
+  const cPY   =7*sc;
+  const ovl   =g('sOv')/100;
+  const brt   =g('sBr')||100;
+  const cnt   =g('sCn')||100;
+  const isc   =(g('sIsc')||100)/100;
+  const hBO   =g('sHBO')/100;
+  const tBg   =document.getElementById('eTopBg').value;
+  const tTxt  =document.getElementById('eTopTxt').value;
+  const fTxt  =document.getElementById('eFTxt').value;
+  const cTxt  =document.getElementById('eCTxt').value;
+  const hl    =document.getElementById('eHl').value||'শিরোনাম এখানে লিখুন';
+  const sub   =document.getElementById('eSub').value;
+  const src   =document.getElementById('eSrc').value||'JOAF News';
+  const dt    =document.getElementById('eDt').value;
+  const loc   =document.getElementById('eLoc').value;
+  const catV  =document.getElementById('eCat').value;
+  const catTxt={breaking:'🔴 BREAKING NEWS',exclusive:'⚡ EXCLUSIVE',update:'📢 আপডেট',analysis:'🔍 বিশ্লেষণ',alert:'🚨 সতর্কতা',positive:'✅ সুখবর'}[catV]||'📢';
+  const bg    =PRESETS[cP].bg;
+
+  // 1. BG
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // 2. SOURCE IMAGE
+  if(SRC){
+    const sx=Math.round(SRC.width*CL), sy=Math.round(SRC.height*CT);
+    const sw=Math.round(SRC.width*(1-CL-CR)), sh=Math.round(SRC.height*(1-CT-CB));
+    if(sw>2&&sh>2){
+      const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
+      const tc=tmp.getContext('2d');
+      tc.filter=`brightness(${brt}%) contrast(${cnt}%)`;
+      tc.drawImage(SRC,sx,sy,sw,sh,0,0,sw,sh);
+      // Cover fit + pan + scale
+      const ir=sw/sh, cr=W/H;
+      let dw,dh;
+      if(ir>cr){dw=H*ir*isc;dh=H*isc;}else{dw=W*isc;dh=W/ir*isc;}
+      const bDx=(W-dw)/2+imgPanX;
+      const bDy=(H-dh)/2+imgPanY;
+      ctx.drawImage(tmp,0,0,sw,sh,bDx,bDy,dw,dh);
+      // Overlay
+      const g2=ctx.createLinearGradient(0,0,0,H);
+      g2.addColorStop(0,`rgba(0,0,0,${ovl*0.28})`);
+      g2.addColorStop(0.4,`rgba(0,0,0,${ovl*0.6})`);
+      g2.addColorStop(1,`rgba(0,0,0,${Math.min(ovl+0.22,0.98)})`);
+      ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);
+    }
+  }
+
+  // 3. CROP HANDLES (preview only)
+  if(!fe&&SRC){
+    const T=CT*H,B=CB*H,L=CL*W,R=CR*W;
+    // Dim cropped zones
+    ctx.fillStyle='rgba(0,0,0,.5)';
+    if(T>4)ctx.fillRect(0,0,W,T);
+    if(B>4)ctx.fillRect(0,H-B,W,B);
+    if(L>4)ctx.fillRect(0,T,L,H-T-B);
+    if(R>4)ctx.fillRect(W-R,T,R,H-T-B);
+    // Lines
+    ctx.strokeStyle='#f59e0b';ctx.lineWidth=2;ctx.setLineDash([10,6]);
+    if(T>4){ctx.beginPath();ctx.moveTo(0,T);ctx.lineTo(W,T);ctx.stroke();}
+    if(B>4){ctx.beginPath();ctx.moveTo(0,H-B);ctx.lineTo(W,H-B);ctx.stroke();}
+    if(L>4){ctx.beginPath();ctx.moveTo(L,0);ctx.lineTo(L,H);ctx.stroke();}
+    if(R>4){ctx.beginPath();ctx.moveTo(W-R,0);ctx.lineTo(W-R,H);ctx.stroke();}
+    ctx.setLineDash([]);
+    // BIG handles — easy to grab
+    cropHnds().forEach(h=>{
+      ctx.fillStyle='#f59e0b';
+      ctx.strokeStyle='rgba(0,0,0,.8)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(h.x,h.y,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(0,0,0,.7)';ctx.font=`bold ${Math.round(10*sc)}px sans-serif`;
+      ctx.textAlign='center';ctx.fillText(h.label||h.id,h.x,h.y+4*sc);
+    });
+  }
+
+  // 4. TOP BAR
+  if(showTop){
+    ctx.fillStyle=tBg;ctx.fillRect(0,0,W,tbH);
+    const lbX=pad,lbY=(tbH-lsz)/2;
+    ctx.fillStyle=lBC;rr(ctx,lbX,lbY,lsz,lsz,lsz*0.18);ctx.fill();
+    await lgCtx(ctx,lbX+lsz*0.08,lbY+lsz*0.08,lsz*0.84,lsz*0.84);
+    const tx=lbX+lsz+9*sc;
+    ctx.fillStyle=tTxt;ctx.textAlign='left';
+    ctx.font=`900 ${Math.round(g('sTBF')*sc)}px 'Hind Siliguri',sans-serif`;ctx.fillText('JOAF',tx,lbY+lsz*0.44);
+    ctx.fillStyle=tTxt+'99';ctx.font=`${Math.round((g('sTBF')-8)*sc)}px 'Hind Siliguri',sans-serif`;
+    ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম',tx,lbY+lsz*0.64);
+    ctx.fillText('julyforum.com',tx,lbY+lsz*0.84);
+    ctx.textAlign='right';
+    if(src&&src!=='JOAF News'){
+      const st='সূত্র: '+src;
+      ctx.font=`700 ${Math.round(g('sSrcF')*sc)}px 'Hind Siliguri',sans-serif`;
+      const sbw=ctx.measureText(st).width+18*sc;
+      ctx.fillStyle=aC+'22';rr(ctx,W-pad-sbw,lbY+lsz*0.04,sbw,lsz*0.38,4*sc);ctx.fill();
+      ctx.fillStyle=aC;ctx.fillText(st,W-pad-8*sc,lbY+lsz*0.33);
+    }
+    ctx.fillStyle=tTxt+'77';ctx.font=`${Math.round(g('sDtF')*sc)}px 'Hind Siliguri',sans-serif`;
+    ctx.fillText(dt,W-pad,lbY+lsz*0.63);
+    if(loc)ctx.fillText('📍 '+loc,W-pad,lbY+lsz*0.83);
+  }
+
+  // 5. ACCENT STRIPE
+  if(showStr){ctx.fillStyle=aC;ctx.fillRect(0,0,5*sc,H);}
+
+  // 6. FOOTER
+  const footY=H-ftH;
+  if(showFt){
+    ctx.fillStyle=fC;ctx.fillRect(0,footY,W,ftH);
+    ctx.fillStyle=fTxt;ctx.textAlign='left';
+    ctx.font=`700 ${Math.round(g('sFF')*sc)}px 'Hind Siliguri',sans-serif`;
+    ctx.fillText('JOAF • দেশ আগে, দল পরে',pad,footY+ftH*0.65);
+    ctx.textAlign='right';
+    ctx.font=`500 ${Math.round((g('sFF')-1)*sc)}px 'Hind Siliguri',sans-serif`;
+    ctx.fillText('julyforum.com',W-pad,footY+ftH*0.65);
+  }
+
+  // 7. TEXT CONTENT
+  const topEnd=showTop?tbH:0;
+  const botEnd=showFt?footY:H;
+
+  ctx.font=`900 ${hlSz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
+  const hlLines=wrp(ctx,hl,W-pad*2);
+  const hlBH=hlLines.length*hlSz*hlLH;
+  const subSz=hlSz*0.50;
+  const subLines=sub&&showSub?wrp(ctx,sub,W-pad*2,subSz):[];
+  const subBH=subLines.length?subLines.length*subSz*1.38+6*sc:0;
+  ctx.font=`800 ${cSz}px 'Hind Siliguri',sans-serif`;
+  const cbW=showCat?ctx.measureText(catTxt).width+cPX*2:0;
+  const cbH=showCat?cSz+cPY*2:0;
+  const gap=10*sc;
+  const totalH=cbH+(showCat?gap:0)+hlBH+(subBH?gap*0.5+subBH:0);
+
+  // Default bottom-anchored positions
+  const defBY=botEnd-totalH-18*sc;
+  const defHY=defBY+(showCat?cbH+gap:0);
+  const defSY=defHY+hlBH+gap*0.5;
+  DEF.badge={x:pad,y:defBY};DEF.hl={x:pad,y:defHY};DEF.sub={x:pad,y:defSY};
+
+  const bX=EP.badge?.x??pad, bY=EP.badge?.y??defBY;
+  const hX=EP.hl?.x??pad,    hY=EP.hl?.y??defHY;
+  const sX=EP.sub?.x??pad,   sY=EP.sub?.y??defSY;
+
+  // Gradient
+  const gTop=Math.min(bY,hY)-50*sc;
+  const gr3=ctx.createLinearGradient(0,gTop,0,botEnd);
+  gr3.addColorStop(0,'rgba(0,0,0,0)');
+  gr3.addColorStop(0.3,SRC?'rgba(0,0,0,.88)':bg+'ee');
+  gr3.addColorStop(1,SRC?'rgba(0,0,0,.97)':bg);
+  ctx.fillStyle=gr3;ctx.fillRect(0,gTop,W,botEnd-gTop);
+
+  // BADGE
+  if(showCat){
+    ctx.font=`800 ${cSz}px 'Hind Siliguri',sans-serif`;ctx.textAlign='left';
+    ctx.fillStyle=cBC;rr(ctx,bX,bY,cbW,cbH,4*sc);ctx.fill();
+    ctx.fillStyle=cTxt;ctx.fillText(catTxt,bX+cPX,bY+cPY+cSz*0.88);
+  }
+
+  // HEADLINE
+  ctx.font=`900 ${hlSz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;ctx.textAlign='left';
+  if(hBO>0){
+    ctx.globalAlpha=hBO;ctx.fillStyle=hlBgC;
+    hlLines.slice(0,5).forEach((ln,i)=>{
+      const lw=ctx.measureText(ln).width;
+      ctx.fillRect(hX-4*sc,hY+i*hlSz*hlLH-hlSz*0.82,lw+8*sc,hlSz*1.1);
+    });
+    ctx.globalAlpha=1;
+  }
+  ctx.fillStyle=hlC;
+  hlLines.slice(0,5).forEach((ln,i)=>ctx.fillText(ln,hX,hY+i*hlSz*hlLH));
+
+  // SUB
+  if(subLines.length){
+    ctx.font=`400 ${subSz}px 'Hind Siliguri',sans-serif`;ctx.fillStyle=hlC+'bb';
+    subLines.slice(0,3).forEach((ln,i)=>ctx.fillText(ln,sX,sY+i*subSz*1.38));
+  }
+
+  // Selection indicator (preview only)
+  if(!fe&&drag?.type?.startsWith('elem_')){
+    const id=drag.type.slice(5);
+    ctx.strokeStyle='#3b82f6';ctx.lineWidth=2;ctx.setLineDash([5,4]);
+    if(id==='badge')ctx.strokeRect(bX-3,bY-3,cbW+6,cbH+6);
+    else if(id==='hl')ctx.strokeRect(hX-4,hY-hlSz*0.85,W-pad,hlBH+6);
+    else ctx.strokeRect(sX-4,sY-subSz*0.85,W-pad,subBH+6);
+    ctx.setLineDash([]);
+  }
+}
+
+async function lgCtx(ctx,x,y,w2,h2){
+  return new Promise(res=>{
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{ctx.drawImage(img,x,y,w2,h2);res();};
+    img.onerror=()=>{
+      ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font=`900 ${Math.round(w2*0.38)}px sans-serif`;
+      ctx.fillText('J',x+w2/2,y+h2/2);ctx.textBaseline='alphabetic';res();
+    };
+    img.src='/logoc7c3.png';
+  });
+}
+function rr(ctx,x,y,w2,h2,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w2-r,y);ctx.quadraticCurveTo(x+w2,y,x+w2,y+r);
+  ctx.lineTo(x+w2,y+h2-r);ctx.quadraticCurveTo(x+w2,y+h2,x+w2-r,y+h2);
+  ctx.lineTo(x+r,y+h2);ctx.quadraticCurveTo(x,y+h2,x,y+h2-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function wrp(ctx,text,maxW,sz){
+  const pv=ctx.font;if(sz)ctx.font=`400 ${sz}px 'Hind Siliguri',sans-serif`;
+  const words=text.split(' ');const lines=[];let cur='';
+  for(const w of words){const t=cur?cur+' '+w:w;if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;}
+  if(cur)lines.push(cur);if(sz)ctx.font=pv;return lines;
+}
+
+// ── PREFLIGHT ──
+const CKS=[
+  {id:'c1',t:'Source channel-এর logo বা watermark crop হয়েছে — দেখা যাচ্ছে না?'},
+  {id:'c2',t:'JOAF লোগো ও "জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম" top bar-এ আছে?'},
+  {id:'c3',t:'Category badge headline-এর উপরে আছে, ঢেকে যায়নি?'},
+  {id:'c4',t:'Headline পরিষ্কার ও বড়, card-এর নিচের দিকে?'},
+  {id:'c5',t:'Footer-এ "JOAF • দেশ আগে, দল পরে" ও julyforum.com আছে?'},
+  {id:'c6',t:'Source = শুধু text — অন্য channel-এর logo বা branding নেই?'},
+];
+function openPF(){
+  if(!SRC){toast('আগে image upload করুন!','er');return;}
+  document.getElementById('ckList').innerHTML=CKS.map(c=>
+    `<div class="ck" id="w${c.id}" onclick="ckT('${c.id}')">
+      <input type="checkbox" id="${c.id}" onclick="event.stopPropagation();ckT('${c.id}')">
+      <label for="${c.id}">${c.t}</label></div>`).join('');
+  document.getElementById('dlBtn').disabled=true;
+  document.getElementById('modal').classList.add('op');
+}
+function ckT(id){
+  const cb=document.getElementById(id);cb.checked=!cb.checked;
+  document.getElementById('w'+id).classList.toggle('ok',cb.checked);
+  document.getElementById('dlBtn').disabled=!CKS.every(c=>document.getElementById(c.id).checked);
+}
+function clMod(){document.getElementById('modal').classList.remove('op');}
+async function confDL(){clMod();await doDL();}
+async function qDL(){await doDL();}
+async function doDL(){
+  toast('⏳ JPG তৈরি হচ্ছে...');
+  const fc=document.createElement('canvas');await dFull(fc,true);
+  const[W,H]=gSz();
+  const nm=document.getElementById('eHl').value.substring(0,16).replace(/[^\u0980-\u09FFa-zA-Z0-9]/g,'_');
+  const a=document.createElement('a');a.download=`JOAF_${nm}_${W}x${H}.jpg`;
+  a.href=fc.toDataURL('image/jpeg',0.96);a.click();
+  toast('✅ Download শুরু হয়েছে!');
+}
+function toast(msg,t='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+t;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
+
+function resetAll(){
+  SRC=null;SB64=null;CT=0.20;CB=0.05;CL=0;CR=0;
+  imgPanX=0;imgPanY=0;imgScale=1;
+  EP={badge:null,hl:null,sub:null};
+  document.getElementById('eHl').value='';document.getElementById('eSub').value='';
+  document.getElementById('eSrc').value='JOAF News';document.getElementById('eLoc').value='';
+  document.getElementById('fIn').value='';
+  document.getElementById('upOvl').style.display='flex';
+  document.getElementById('aiOvl').classList.remove('show');
+  closeCtx();apP(0,false);
+}
+</script>
+</body>
+</html>
