@@ -93,6 +93,46 @@ const SOURCES = [
 let activeSrc = 'all';
 let allNews = [];
 
+function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
+
+function timeAgo(dateStr){
+  const diff = (Date.now() - new Date(dateStr)) / 60000;
+  if(diff<1) return 'এইমাত্র';
+  if(diff<60) return bn(Math.floor(diff))+' মিনিট আগে';
+  if(diff<1440) return bn(Math.floor(diff/60))+' ঘন্টা আগে';
+  return bn(Math.floor(diff/1440))+' দিন আগে';
+}
+
+function renderTabs(){
+  document.getElementById('srcTabs').innerHTML = SOURCES.map(s=>
+    `<button class="src-tab${s.id===activeSrc?' active':''}" onclick="setSrc('${s.id}')">${s.icon} ${s.name}</button>`
+  ).join('');
+}
+
+function setSrc(id){
+  activeSrc=id;
+  renderTabs();
+  renderNews();
+}
+
+function renderNews(){
+  const news = activeSrc==='all' ? allNews :
+    allNews.filter(n=>n.srcId===activeSrc);
+  const el = document.getElementById('newsContainer');
+  if(!news.length){el.innerHTML='<div class="loading-news">সংবাদ পাওয়া যাচ্ছে না</div>';return;}
+  el.innerHTML = news.slice(0,20).map(n=>`
+    <div class="news-card" onclick="window.open('${n.link}','_blank')">
+      <div class="news-img-placeholder">${n.srcIcon}</div>
+      <div class="news-body">
+        ${n.isBreaking?'<span class="news-breaking-badge">🔴 Breaking</span>':''}
+        <div class="news-src">${n.srcName}</div>
+        <div class="news-title">${n.title}</div>
+        <div class="news-time">${timeAgo(n.pubDate)}</div>
+      </div>
+    </div>`).join('') +
+    `<button class="load-more" onclick="loadMore()">আরো সংবাদ দেখুন ▼</button>`;
+}
+
 // Netlify function দিয়ে server-side RSS fetch — CORS/block সমস্যা নেই
 async function fetchAllRSS() {
   const res = await fetch('/.netlify/functions/fetch-rss', {
@@ -111,7 +151,6 @@ async function loadAllNews(){
   }
   allNews.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
 
-  // Breaking news ticker
   // Breaking bar — সব source মিলিয়ে সবচেয়ে সাম্প্রতিক ১০টা headline
   const latest10 = allNews.slice(0, 10);
   if(latest10.length){
