@@ -103,9 +103,6 @@ async function fetchAllRSS() {
   return data.items || [];
 }
 
-  return [];
-}
-
 async function loadAllNews(){
   try {
     allNews = await fetchAllRSS();
