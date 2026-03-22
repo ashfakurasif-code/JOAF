@@ -93,103 +93,36 @@ const SOURCES = [
 let activeSrc = 'all';
 let allNews = [];
 
-// Multiple CORS proxies — একটা fail করলে পরেরটা try করবে
-const CORS_PROXIES = [
-  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-];
-
-function parseRSS(xmlText, src) {
-  try {
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(xmlText, 'text/xml');
-    const items = [...xml.querySelectorAll('item')];
-    return items.slice(0, 15).map(item => {
-      const title   = item.querySelector('title')?.textContent?.trim() || '';
-      const link    = item.querySelector('link')?.textContent?.trim() ||
-                      item.querySelector('guid')?.textContent?.trim() || '#';
-      const pubDate = item.querySelector('pubDate')?.textContent?.trim() || new Date().toISOString();
-      return {
-        title, link, pubDate,
-        srcId:      src.id,
-        srcName:    src.name,
-        srcIcon:    src.icon,
-        isBreaking: title.toLowerCase().includes('breaking') || title.includes('জরুরি'),
-      };
-    });
-  } catch(e) { return []; }
+// Netlify function দিয়ে server-side RSS fetch — CORS/block সমস্যা নেই
+async function fetchAllRSS() {
+  const res = await fetch('/.netlify/functions/fetch-rss', {
+    signal: AbortSignal.timeout(15000)
+  });
+  if (!res.ok) throw new Error('RSS function failed');
+  const data = await res.json();
+  return data.items || [];
 }
 
-function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
-
-function timeAgo(dateStr){
-  const diff = (Date.now() - new Date(dateStr)) / 60000;
-  if(diff<1) return 'এইমাত্র';
-  if(diff<60) return bn(Math.floor(diff))+' মিনিট আগে';
-  if(diff<1440) return bn(Math.floor(diff/60))+' ঘন্টা আগে';
-  return bn(Math.floor(diff/1440))+' দিন আগে';
-}
-
-function renderTabs(){
-  document.getElementById('srcTabs').innerHTML = SOURCES.map(s=>
-    `<button class="src-tab${s.id===activeSrc?' active':''}" onclick="setSrc('${s.id}')">${s.icon} ${s.name}</button>`
-  ).join('');
-}
-
-function setSrc(id){
-  activeSrc=id;
-  renderTabs();
-  renderNews();
-}
-
-function renderNews(){
-  const news = activeSrc==='all' ? allNews :
-    allNews.filter(n=>n.srcId===activeSrc);
-  const el = document.getElementById('newsContainer');
-  if(!news.length){el.innerHTML='<div class="loading-news">সংবাদ পাওয়া যাচ্ছে না</div>';return;}
-  el.innerHTML = news.slice(0,20).map(n=>`
-    <div class="news-card" onclick="window.open('${n.link}','_blank')">
-      <div class="news-img-placeholder">${n.srcIcon}</div>
-      <div class="news-body">
-        ${n.isBreaking?'<span class="news-breaking-badge">🔴 Breaking</span>':''}
-        <div class="news-src">${n.srcName}</div>
-        <div class="news-title">${n.title}</div>
-        <div class="news-time">${timeAgo(n.pubDate)}</div>
-      </div>
-    </div>`).join('') +
-    `<button class="load-more" onclick="loadMore()">আরো সংবাদ দেখুন ▼</button>`;
-}
-
-async function fetchSource(src) {
-  for (const proxy of CORS_PROXIES) {
-    try {
-      const res  = await fetch(proxy(src.rss), { signal: AbortSignal.timeout(7000) });
-      if (!res.ok) continue;
-      const data = await res.json();
-      const xml  = data.contents ?? (typeof data === 'string' ? data : null);
-      if (!xml || xml.length < 50) continue;
-      const items = parseRSS(xml, src);
-      if (items.length > 0) return items;
-    } catch(e) { continue; }
-  }
   return [];
 }
 
 async function loadAllNews(){
-  const srcs = SOURCES.filter(s=>s.id!=='all');
-  const results = await Promise.allSettled(srcs.map(s=>fetchSource(s)));
-  allNews = results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
+  try {
+    allNews = await fetchAllRSS();
+  } catch(e) {
+    allNews = [];
+  }
   allNews.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
 
   // Breaking news ticker
-  const breaking = allNews.filter(n=>n.isBreaking).slice(0,3);
-  if(breaking.length){
+  // Breaking bar — isBreaking headlines first, then fill with latest news, max 10
+  const breaking = allNews.filter(n=>n.isBreaking);
+  const tickerItems = breaking.length
+    ? [...breaking, ...allNews.filter(n=>!n.isBreaking)].slice(0,10)
+    : allNews.slice(0,10);
+  if(tickerItems.length){
     document.getElementById('breakingText').textContent =
-      breaking.map(n=>n.title).join(' ◆ ');
-  } else if(allNews.length){
-    document.getElementById('breakingText').textContent =
-      allNews.slice(0,3).map(n=>n.title).join(' ◆ ');
+      tickerItems.map(n=>n.title).join('  ◆  ');
   }
 
   renderNews();
