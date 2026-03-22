@@ -280,6 +280,22 @@ async function initWeather() {
   }, 100);
 }
 
+window.loadByCity = async function(city) {
+  if (!city) return;
+  const [lat, lng] = COORDS[city] || COORDS['Dhaka'];
+  const name = CITY_BN[city] || city;
+  document.getElementById('wxDesc').textContent = 'লোড হচ্ছে...';
+  document.getElementById('wxTemp').textContent = '—°';
+  document.getElementById('forecastList').innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>লোড হচ্ছে...</div>';
+  document.getElementById('farmAdvice').innerHTML  = '<div class="loading-state"><div class="loading-spinner"></div>লোড হচ্ছে...</div>';
+  try {
+    const data = await fetchWeather(lat, lng);
+    renderWeather(data, name, lat, lng);
+  } catch(e) {
+    document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
+  }
+};
+
 initWeather();
 </script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
