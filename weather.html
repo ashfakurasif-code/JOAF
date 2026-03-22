@@ -162,7 +162,7 @@ function updateMap(lat, lng, label) {
 function renderWeather(data, locLabel, lat, lng) {
   const c = data.current;
   const daily = data.daily;
-  if (!c || !daily || !daily.date || !daily.temperature_2m_max) {
+  if (!c || !daily || !daily.time || !daily.temperature_2m_max) {
     document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
     document.getElementById('forecastList').innerHTML = '<div class="loading-state">তথ্য পাওয়া যাচ্ছে না</div>';
     document.getElementById('farmAdvice').innerHTML = '<div class="loading-state">তথ্য পাওয়া যাচ্ছে না</div>';
@@ -200,7 +200,7 @@ function renderWeather(data, locLabel, lat, lng) {
 
   // 7-day forecast
   document.getElementById('forecastList').innerHTML =
-    daily.date.slice(0,7).map((date, i) => {
+    daily.time.slice(0,7).map((date, i) => {
       const dt  = new Date(date + 'T12:00:00');
       const max = Math.round(daily.temperature_2m_max[i]);
       const min = Math.round(daily.temperature_2m_min[i]);
