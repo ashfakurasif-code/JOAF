@@ -255,59 +255,65 @@ function renderOnce(data, name, lat, lng) {
   renderWeather(data, name, lat, lng);
 }
 
-// Try multiple IP geolocation services in order
+// Try multiple IP geolocation services in parallel — fastest one wins
 async function getIPLocation() {
   const services = [
     async () => {
-      const r = await fetch('https://freeipapi.com/api/json/', {signal: AbortSignal.timeout(4000)});
+      const r = await fetch('https://ipwho.is/', {signal: AbortSignal.timeout(5000)});
+      const d = await r.json();
+      if (!d.latitude || !d.success) throw new Error('no lat');
+      return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'};
+    },
+    async () => {
+      const r = await fetch('https://ipapi.co/json/', {signal: AbortSignal.timeout(5000)});
+      const d = await r.json();
+      if (!d.latitude) throw new Error('no lat');
+      return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'};
+    },
+    async () => {
+      const r = await fetch('https://freeipapi.com/api/json/', {signal: AbortSignal.timeout(5000)});
       const d = await r.json();
       if (!d.latitude) throw new Error('no lat');
       return {lat: d.latitude, lng: d.longitude, name: d.cityName || d.regionName || 'আপনার এলাকা'};
     },
     async () => {
-      const r = await fetch('https://ipapi.co/json/', {signal: AbortSignal.timeout(4000)});
+      const r = await fetch('https://get.geojs.io/v1/ip/geo.json', {signal: AbortSignal.timeout(5000)});
       const d = await r.json();
       if (!d.latitude) throw new Error('no lat');
-      return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'};
-    },
-    async () => {
-      const r = await fetch('https://ipwho.is/', {signal: AbortSignal.timeout(4000)});
-      const d = await r.json();
-      if (!d.latitude) throw new Error('no lat');
-      return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'};
+      return {lat: parseFloat(d.latitude), lng: parseFloat(d.longitude), name: d.city || d.region || 'আপনার এলাকা'};
     },
   ];
-  for (const svc of services) {
-    try { return await svc(); } catch(e) { continue; }
-  }
-  throw new Error('All IP services failed');
+  // সব একসাথে চালাও — যেটা আগে সফল হবে সেটাই নাও
+  return Promise.any(services.map(s => s()));
 }
 
 async function initWeather() {
+  // IP location আর GPS একসাথে চালাও
+  const tryIP = async () => {
+    const ip = await getIPLocation();
+    if (_rendered) return;
+    const data = await fetchWeather(ip.lat, ip.lng);
+    renderOnce(data, ip.name, ip.lat, ip.lng);
+  };
+
   const tryGPS = async () => {
     if (!navigator.geolocation) throw new Error('no geo');
     const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, {timeout: 6000})
+      navigator.geolocation.getCurrentPosition(res, rej, {timeout: 8000, maximumAge: 60000})
     );
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
+    if (_rendered) return; // IP ইতোমধ্যে দেখিয়ে ফেলেছে
     const data = await fetchWeather(lat, lng);
     let name = 'আপনার এলাকা';
     try { const ip = await getIPLocation(); name = ip.name; } catch(e) {}
     renderOnce(data, name, lat, lng);
   };
 
-  const tryIP = async () => {
-    const ip   = await getIPLocation();
-    if (_rendered) return;
-    const data = await fetchWeather(ip.lat, ip.lng);
-    renderOnce(data, ip.name, ip.lat, ip.lng);
-  };
+  // IP আর GPS parallel এ — যেটা আগে জিতবে সেটাই দেখাবে
+  await Promise.any([tryIP(), tryGPS()]).catch(() => {});
 
-  // GPS আর IP parallel এ চলবে — যেটা আগে জিতবে সেটাই দেখাবে
-  await Promise.any([tryGPS(), tryIP()]).catch(() => {});
-
-  // দুটোই fail হলে Dhaka
+  // দুটোই fail হলে Dhaka fallback
   if (!_rendered) {
     try {
       const [lat,lng] = COORDS['Dhaka'];
@@ -315,7 +321,7 @@ async function initWeather() {
       renderOnce(data, 'ঢাকা', lat, lng);
     } catch(e) {
       document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
-      document.getElementById('forecastList').innerHTML = '<div class="loading-state">সংযোগ সমস্যা</div>';
+      document.getElementById('forecastList').innerHTML = '<div class="loading-state">সংযোগ সমস্যা। জেলা বেছে নিন।</div>';
       document.getElementById('farmAdvice').innerHTML  = '<div class="loading-state">সংযোগ সমস্যা</div>';
     }
   }
