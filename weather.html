@@ -248,109 +248,37 @@ async function fetchWeather(lat, lng) {
   return res.json();
 }
 
-let _rendered = false;
-function renderOnce(data, name, lat, lng) {
-  if (_rendered) return;
-  _rendered = true;
-  renderWeather(data, name, lat, lng);
-}
-
-// পেজ লোড হওয়ার সাথে সাথেই Dhaka weather দেখাও
-async function showDefaultWeather() {
+async function initWeather() {
+  // ধাপ ১: আগে Dhaka weather দেখাও
   try {
     const [lat, lng] = COORDS['Dhaka'];
     const data = await fetchWeather(lat, lng);
-    if (!_rendered) renderOnce(data, 'ঢাকা', lat, lng);
-  } catch(e) {}
-}
-
-// Try multiple IP geolocation services in parallel — fastest one wins
-async function getIPLocation() {
-  const services = [
-    async () => {
-      const r = await fetch('https://ipwho.is/', {signal: AbortSignal.timeout(5000)});
-      const d = await r.json();
-      if (!d.latitude || !d.success) throw new Error('no lat');
-      return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'};
-    },
-    async () => {
-      const r = await fetch('https://ipapi.co/json/', {signal: AbortSignal.timeout(5000)});
-      const d = await r.json();
-      if (!d.latitude) throw new Error('no lat');
-      return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'};
-    },
-    async () => {
-      const r = await fetch('https://freeipapi.com/api/json/', {signal: AbortSignal.timeout(5000)});
-      const d = await r.json();
-      if (!d.latitude) throw new Error('no lat');
-      return {lat: d.latitude, lng: d.longitude, name: d.cityName || d.regionName || 'আপনার এলাকা'};
-    },
-    async () => {
-      const r = await fetch('https://get.geojs.io/v1/ip/geo.json', {signal: AbortSignal.timeout(5000)});
-      const d = await r.json();
-      if (!d.latitude) throw new Error('no lat');
-      return {lat: parseFloat(d.latitude), lng: parseFloat(d.longitude), name: d.city || d.region || 'আপনার এলাকা'};
-    },
-  ];
-  // সব একসাথে চালাও — যেটা আগে সফল হবে সেটাই নাও
-  return Promise.any(services.map(s => s()));
-}
-
-async function initWeather() {
-  // ১. সাথে সাথেই Dhaka weather দেখাও — কোনো delay নেই
-  showDefaultWeather();
-
-  // ২. Background-এ real location খোঁজো — পেলে silently update করো
-  try {
-    const ip = await Promise.any([
-      fetch('https://ipwho.is/', {signal: AbortSignal.timeout(5000)}).then(r => r.json()).then(d => { if (!d.latitude || !d.success) throw 0; return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'}; }),
-      fetch('https://ipapi.co/json/', {signal: AbortSignal.timeout(5000)}).then(r => r.json()).then(d => { if (!d.latitude) throw 0; return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'}; }),
-      fetch('https://get.geojs.io/v1/ip/geo.json', {signal: AbortSignal.timeout(5000)}).then(r => r.json()).then(d => { if (!d.latitude) throw 0; return {lat: parseFloat(d.latitude), lng: parseFloat(d.longitude), name: d.city || d.region || 'আপনার এলাকা'}; }),
-    ]);
-    // Real location পাওয়া গেছে — update করো (rendered হলেও)
-    const data = await fetchWeather(ip.lat, ip.lng);
-    _rendered = false; // allow update
-    renderOnce(data, ip.name, ip.lat, ip.lng);
+    renderWeather(data, 'ঢাকা', lat, lng);
   } catch(e) {
-    // IP fail — GPS চেষ্টা করো
+    document.getElementById('wxDesc').textContent = 'সংযোগ সমস্যা';
+    document.getElementById('wxLoc').textContent = '📍 ইন্টারনেট সংযোগ চেক করুন';
+    return;
+  }
+
+  // ধাপ ২: Background-এ real location বের করো
+  setTimeout(async () => {
     try {
-      if (navigator.geolocation) {
-        const pos = await new Promise((res, rej) =>
-          navigator.geolocation.getCurrentPosition(res, rej, {timeout: 8000, maximumAge: 60000})
-        );
+      const ip = await Promise.any([
+        fetch('https://ipwho.is/',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude||!d.success)throw 0;return{lat:d.latitude,lng:d.longitude,name:d.city||d.region||"আপনার এলাকা"};}),
+        fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude)throw 0;return{lat:d.latitude,lng:d.longitude,name:d.city||d.region||"আপনার এলাকা"};}),
+        fetch('https://get.geojs.io/v1/ip/geo.json',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude)throw 0;return{lat:parseFloat(d.latitude),lng:parseFloat(d.longitude),name:d.city||d.region||"আপনার এলাকা"};}),
+      ]);
+      const data = await fetchWeather(ip.lat, ip.lng);
+      renderWeather(data, ip.name, ip.lat, ip.lng);
+    } catch(e) {
+      try {
+        if (!navigator.geolocation) return;
+        const pos = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:8000,maximumAge:60000}));
         const data = await fetchWeather(pos.coords.latitude, pos.coords.longitude);
-        _rendered = false;
-        renderOnce(data, 'আপনার এলাকা', pos.coords.latitude, pos.coords.longitude);
-      }
-    } catch(e2) {} // GPS-ও fail — Dhaka-ই থাকবে
-  }
-}
-
-window.loadByCity = async function(city) {
-  if (!city) return;
-  const [lat,lng] = COORDS[city] || COORDS['Dhaka'];
-  const name = CITY_BN[city] || city;
-  document.getElementById('wxDesc').textContent = 'লোড হচ্ছে...';
-  document.getElementById('forecastList').innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>লোড হচ্ছে...</div>';
-  document.getElementById('farmAdvice').innerHTML  = '<div class="loading-state"><div class="loading-spinner"></div>লোড হচ্ছে...</div>';
-  try {
-    const data = await fetchWeather(lat, lng);
-    renderWeather(data, name, lat, lng);
-  } catch(e) {
-    document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
-  }
-};
-
-function requestWxNotif() {
-  if (!('Notification' in window)) return;
-  Notification.requestPermission().then(p => {
-    if (p === 'granted')
-      navigator.serviceWorker.ready.then(r =>
-        r.showNotification('🌤️ আবহাওয়া Alert চালু!', {
-          body:'প্রতিদিন সকালে আবহাওয়া পাবেন।', icon:'/logoc7c3.png'
-        })
-      );
-  });
+        renderWeather(data, 'আপনার এলাকা', pos.coords.latitude, pos.coords.longitude);
+      } catch(e2) {}
+    }
+  }, 100);
 }
 
 initWeather();
