@@ -885,3 +885,8 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
   .d-md-flex  { display: flex  !important; }
   .d-md-block { display: block !important; }
 }
+/* Mobile dropdown toggle */
+.mnav-has-sub > .mnav-link .mnav-arrow{transition:transform .25s ease,opacity .2s;}
+.mnav-sub-list{list-style:none;margin:0;padding:0;max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.mnav-has-sub.mnav-open > .mnav-link .mnav-arrow{transform:rotate(90deg);opacity:.9;}
+.mnav-has-sub.mnav-open > .mnav-sub-list{max-height:500px;}

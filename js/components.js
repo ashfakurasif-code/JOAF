@@ -57,11 +57,12 @@ const JOAFComponents = {
       }
 
       return `<li class="mnav-item${item.dropdown?' mnav-has-sub':''}" style="${style}">
-        <a href="${item.href}" class="mnav-link${isActive?' mnav-link--active':''}" onclick="if(window._joafClose)window._joafClose()">
+        <a href="${item.href}" class="mnav-link${isActive?' mnav-link--active':''}" ${item.dropdown?'':'onclick="if(window._joafClose)window._joafClose()"'}>
           <span class="mnav-label">${item.label}</span>
           <span class="mnav-arrow">${item.dropdown ? '▾' : '›'}</span>
         </a>
-      </li>${subs}`;
+        ${item.dropdown ? `<ul class="mnav-sub-list">${subs}</ul>` : ''}
+      </li>`;
     }).join('');
 
     return `
@@ -372,6 +373,18 @@ const JOAFComponents = {
     if(closeBtn)closeBtn.addEventListener('click',doClose);
     if(backdrop)backdrop.addEventListener('click',doClose);
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&open)doClose();});
+
+    // Mobile dropdown toggle — parent click করলে sub-list দেখাবে/লুকাবে
+    document.querySelectorAll('.mnav-has-sub > .mnav-link').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const parent = link.closest('.mnav-has-sub');
+        const isOpen = parent.classList.contains('mnav-open');
+        document.querySelectorAll('.mnav-has-sub').forEach(el => el.classList.remove('mnav-open'));
+        if (!isOpen) parent.classList.add('mnav-open');
+      });
+    });
   },
 
   // ── MUTE BUTTON — THE CORRECT WAY ────────────────────────
