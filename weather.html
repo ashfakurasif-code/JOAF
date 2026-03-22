@@ -264,9 +264,10 @@ async function initWeather() {
   setTimeout(async () => {
     try {
       const ip = await Promise.any([
-        fetch('https://ipwho.is/',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude||!d.success)throw 0;return{lat:d.latitude,lng:d.longitude,name:d.city||d.region||"আপনার এলাকা"};}),
-        fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude)throw 0;return{lat:d.latitude,lng:d.longitude,name:d.city||d.region||"আপনার এলাকা"};}),
-        fetch('https://get.geojs.io/v1/ip/geo.json',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude)throw 0;return{lat:parseFloat(d.latitude),lng:parseFloat(d.longitude),name:d.city||d.region||"আপনার এলাকা"};}),
+        fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude)throw 0;return{lat:d.latitude,lng:d.longitude,name:d.city||d.region||'আপনার এলাকা'};}),
+        fetch('https://get.geojs.io/v1/ip/geo.json',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude)throw 0;return{lat:parseFloat(d.latitude),lng:parseFloat(d.longitude),name:d.city||d.region||'আপনার এলাকা'};}),
+        fetch('https://freeipapi.com/api/json/',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(!d.latitude)throw 0;return{lat:d.latitude,lng:d.longitude,name:d.cityName||d.regionName||'আপনার এলাকা'};}),
+        fetch('https://ip-api.com/json/?fields=status,city,regionName,lat,lon',{signal:AbortSignal.timeout(6000)}).then(r=>r.json()).then(d=>{if(d.status!=='success')throw 0;return{lat:d.lat,lng:d.lon,name:d.city||d.regionName||'আপনার এলাকা'};}),
       ]);
       const data = await fetchWeather(ip.lat, ip.lng);
       renderWeather(data, ip.name, ip.lat, ip.lng);
