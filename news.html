@@ -115,14 +115,11 @@ async function loadAllNews(){
   allNews.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
 
   // Breaking news ticker
-  // Breaking bar — isBreaking headlines first, then fill with latest news, max 10
-  const breaking = allNews.filter(n=>n.isBreaking);
-  const tickerItems = breaking.length
-    ? [...breaking, ...allNews.filter(n=>!n.isBreaking)].slice(0,10)
-    : allNews.slice(0,10);
-  if(tickerItems.length){
+  // Breaking bar — সব source মিলিয়ে সবচেয়ে সাম্প্রতিক ১০টা headline
+  const latest10 = allNews.slice(0, 10);
+  if(latest10.length){
     document.getElementById('breakingText').textContent =
-      tickerItems.map(n=>n.title).join('  ◆  ');
+      latest10.map(n=>n.title).join('  ◆  ');
   }
 
   renderNews();
