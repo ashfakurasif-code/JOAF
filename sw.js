@@ -96,12 +96,21 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   if (e.action === 'close') return;
+
+  // 'view' action বা title click — দুটোই একই কাজ করবে
   const url = (e.notification.data && e.notification.data.url) || '/';
+  const fullUrl = self.location.origin + url;
+
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cls => {
-      const c = cls.find(c => c.url.includes(url));
-      if (c) return c.focus();
-      return clients.openWindow(url);
+      // ইতোমধ্যে সেই page খোলা আছে কিনা দেখো
+      const existing = cls.find(c => c.url === fullUrl || c.url.startsWith(fullUrl));
+      if (existing) {
+        existing.focus();
+        return existing.navigate ? existing.navigate(fullUrl) : existing.focus();
+      }
+      // নতুন window/tab খোলো
+      return clients.openWindow(fullUrl);
     })
   );
 });
