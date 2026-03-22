@@ -268,186 +268,32 @@
   }
   .see-all-btn:hover{transform:translateY(-3px);color:#fff;box-shadow:0 12px 32px rgba(144,22,31,.4);}
 
-  /* ══ ADVISOR CARD — Circular Focus style ═══════════════════ */
-  @keyframes ring-pulse{
-    0%,100%{transform:scale(1);opacity:.5;}
-    50%{transform:scale(1.08);opacity:.2;}
+  /* ── Person cards ─────────────────────────────────────────── */
+  .person-card{
+    background:#fff;border-radius:18px;overflow:hidden;
+    box-shadow:0 4px 20px rgba(0,0,0,.09);
+    transition:all .35s ease;height:100%;
   }
-  @keyframes ring-pulse2{
-    0%,100%{transform:scale(1);opacity:.3;}
-    50%{transform:scale(1.15);opacity:.08;}
-  }
-  @keyframes bd-flag-spin{
-    from{transform:translate(-50%,-50%) rotate(0deg);}
-    to{transform:translate(-50%,-50%) rotate(360deg);}
-  }
-  @keyframes adv-fade-up{
-    from{opacity:0;transform:translateY(20px);}
-    to{opacity:1;transform:translateY(0);}
-  }
-  .adv-card{
-    position:relative;border-radius:20px;overflow:hidden;
-    background:#fff;
-    box-shadow:0 4px 24px rgba(0,0,0,.08);
-    transition:transform .4s cubic-bezier(.34,1.56,.64,1),box-shadow .4s ease;
-    text-align:center;padding:32px 20px 22px;
-    animation:adv-fade-up .5s both;
-  }
-  .adv-card:hover{transform:translateY(-10px) scale(1.025);box-shadow:0 22px 55px rgba(0,106,78,.18),0 0 0 2px rgba(0,106,78,.15);}
-  /* concentric ring bg — BD flag green rings */
-  .adv-rings{
-    position:absolute;top:50%;left:50%;
-    width:220px;height:220px;
-    transform:translate(-50%,-50%);
-    pointer-events:none;z-index:0;
-  }
-  .adv-ring{
-    position:absolute;border-radius:50%;border:1.5px solid rgba(0,106,78,.12);
-    top:50%;left:50%;transform:translate(-50%,-50%);
-  }
-  .adv-ring:nth-child(1){width:100px;height:100px;animation:ring-pulse 3s ease-in-out infinite;}
-  .adv-ring:nth-child(2){width:150px;height:150px;animation:ring-pulse 3s ease-in-out infinite .6s;}
-  .adv-ring:nth-child(3){width:200px;height:200px;animation:ring-pulse2 3s ease-in-out infinite 1.2s;}
-  .adv-ring:nth-child(4){width:260px;height:260px;animation:ring-pulse2 3s ease-in-out infinite 1.8s;}
-  /* BD flag red circle indicator */
-  .adv-flag-dot{
-    position:absolute;top:14px;right:14px;z-index:3;
-    width:22px;height:22px;border-radius:50%;
-    background:#f42a41;
-    box-shadow:0 0 0 3px rgba(0,106,78,.25),0 2px 8px rgba(244,42,65,.4);
-    animation:ring-pulse 2.5s ease-in-out infinite;
-  }
-  /* circular photo */
-  .adv-photo-wrap{
-    position:relative;z-index:2;
-    width:130px;height:130px;
-    border-radius:50%;
-    margin:0 auto 16px;
-    padding:3px;
-    background:conic-gradient(#006a4e 0deg 180deg,#f42a41 180deg 360deg);
-    box-shadow:0 8px 28px rgba(0,106,78,.22);
-    transition:transform .4s cubic-bezier(.34,1.56,.64,1),box-shadow .4s;
-  }
-  .adv-card:hover .adv-photo-wrap{
-    transform:scale(1.07);
-    box-shadow:0 16px 42px rgba(0,106,78,.3);
-    animation:bd-flag-spin 4s linear infinite;
-  }
-  .adv-photo-inner{
-    width:100%;height:100%;border-radius:50%;overflow:hidden;
-    border:3px solid #fff;background:#e8e8e8;
-  }
-  .adv-photo-inner img{
-    width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
-  }
-  /* info */
-  .adv-name{position:relative;z-index:2;font-size:14.5px;font-weight:900;color:#1a1a2e;margin:0 0 7px;line-height:1.4;}
-  .adv-desig{
-    position:relative;z-index:2;
-    display:inline-block;padding:4px 14px;border-radius:50px;
-    background:linear-gradient(135deg,rgba(0,106,78,.08),rgba(244,42,65,.07));
-    border:1px solid rgba(0,106,78,.18);
-    font-size:10.5px;font-weight:700;color:#006a4e;
-    margin-bottom:14px;line-height:1.5;
-  }
-  .adv-socials{position:relative;z-index:2;display:flex;gap:8px;justify-content:center;}
-  .adv-socials a{
-    width:32px;height:32px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:14px;text-decoration:none;transition:all .25s;
-  }
-  .adv-socials .adv-fb{background:#e8edf8;color:#3b5998;}
-  .adv-socials .adv-fb:hover{background:#3b5998;color:#fff;transform:scale(1.14);}
-  .adv-socials .adv-info{background:rgba(0,106,78,.1);color:#006a4e;}
-  .adv-socials .adv-info:hover{background:#006a4e;color:#fff;transform:scale(1.14);}
-
-  /* ══ COALITION CARD — Flag/Banner style ═════════════════════ */
-  @keyframes stripe-slide{
-    from{background-position:0 0;}
-    to{background-position:0 60px;}
-  }
-  @keyframes coal-in{
-    from{opacity:0;transform:translateX(-14px);}
-    to{opacity:1;transform:translateX(0);}
-  }
-  .coal-card{
-    position:relative;border-radius:16px;overflow:hidden;
-    background:#fff;
-    box-shadow:0 4px 22px rgba(0,0,0,.10);
-    display:flex;flex-direction:row;align-items:stretch;
-    transition:transform .4s cubic-bezier(.34,1.56,.64,1),box-shadow .4s ease;
-    min-height:300px;
-  }
-  .coal-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 22px 52px rgba(0,0,0,.15);}
-  /* left colored stripe — party color set inline via style attr */
-  .coal-stripe{
-    width:54px;flex-shrink:0;position:relative;overflow:hidden;
-    display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:12px;
-    transition:width .35s ease;
-  }
-  .coal-card:hover .coal-stripe{width:60px;}
-  .coal-stripe-inner{
-    position:absolute;inset:0;
-  }
-  /* animated diagonal stripe pattern overlay */
-  .coal-stripe-inner::after{
-    content:'';position:absolute;inset:0;
-    background-image:repeating-linear-gradient(
-      -45deg,
-      rgba(255,255,255,.06) 0px,
-      rgba(255,255,255,.06) 6px,
-      transparent 6px,
-      transparent 18px
-    );
-    animation:stripe-slide 2s linear infinite;
-  }
-  .coal-stripe-label{
-    position:relative;z-index:2;
-    writing-mode:vertical-rl;
-    text-orientation:mixed;
-    transform:rotate(180deg);
-    font-size:9px;font-weight:900;color:rgba(255,255,255,.75);
-    letter-spacing:.6px;text-transform:uppercase;
-  }
-  /* photo — tall, takes 70% of card */
-  .coal-photo{
-    flex:1;position:relative;overflow:hidden;min-height:300px;
-  }
-  .coal-photo img{
+  .person-card:hover{transform:translateY(-6px);box-shadow:0 16px 44px rgba(0,0,0,.13);}
+  .person-card .card-img-wrap{height:220px;overflow:hidden;position:relative;}
+  .person-card .card-img-wrap img{
     width:100%;height:100%;object-fit:cover;object-position:top center;
-    display:block;transition:transform .5s ease,filter .4s;
-    filter:brightness(.96) saturate(1.05);
+    transition:transform .5s ease;filter:brightness(1.04);
   }
-  .coal-card:hover .coal-photo img{transform:scale(1.06);filter:brightness(1.02) saturate(1.1);}
-  /* overlay at bottom of photo */
-  .coal-photo-overlay{
-    position:absolute;bottom:0;left:0;right:0;
-    padding:42px 14px 14px;
-    background:linear-gradient(to top,rgba(10,10,20,.88) 0%,rgba(10,10,20,.5) 55%,transparent 100%);
-  }
-  .coal-party-tag{
-    display:inline-flex;align-items:center;gap:5px;
-    padding:3px 10px 3px 8px;border-radius:4px;
-    font-size:9px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;
-    margin-bottom:6px;width:fit-content;
-    animation:coal-in .5s both;
-    border-left:3px solid currentColor;
-  }
-  .coal-name{font-size:13.5px;font-weight:900;color:#fff;line-height:1.35;margin:0 0 8px;}
-  .coal-btn-row{display:flex;gap:6px;}
-  .coal-btn-row a{
-    width:28px;height:28px;border-radius:8px;
+  .person-card:hover .card-img-wrap img{transform:scale(1.06);}
+  .person-card .card-info{padding:14px 16px 8px;}
+  .person-card .card-info h3{font-size:14px;font-weight:800;margin-bottom:4px;color:var(--brand);}
+  .person-card .card-info p{font-size:12px;color:var(--muted);margin:0;line-height:1.5;}
+  .card-socials{padding:8px 16px 14px;display:flex;gap:7px;}
+  .card-socials a{
+    width:30px;height:30px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
-    font-size:13px;text-decoration:none;transition:all .22s;
-    background:rgba(255,255,255,.15);color:#fff;
+    font-size:14px;text-decoration:none;transition:all .2s;
   }
-  .coal-btn-row a:hover{background:rgba(255,255,255,.35);transform:scale(1.12);}
-  @media(max-width:575px){
-    .coal-photo{min-height:240px;}
-    .coal-stripe{width:44px;}
-    .adv-photo-wrap{width:110px;height:110px;}
-    .adv-name{font-size:13px;}
-  }
+  .card-socials .fb{background:#eef0f8;color:#3b5998;}
+  .card-socials .fb:hover{background:#3b5998;color:#fff;}
+  .card-socials .info-btn{background:#eef8f6;color:var(--accent);}
+  .card-socials .info-btn:hover{background:var(--accent);color:#fff;}
 
   /* ── Section bg alternating ───────────────────────────────── */
   .bg-subtle{background:linear-gradient(180deg,#f8f9fa 0%,#f0f4f8 100%);}
@@ -997,25 +843,18 @@ function initFilter() {
   const grid = document.getElementById('advisors-grid');
   if (!grid) return;
   grid.innerHTML = JOAF.advisors.map((m, i) => `
-    <div class="col-6 col-md-4 col-lg-3 joaf-reveal" style="transition-delay:${(i%4)*.12}s">
-      <div class="adv-card" style="animation-delay:${i*.08}s">
-        <div class="adv-rings">
-          <div class="adv-ring"></div>
-          <div class="adv-ring"></div>
-          <div class="adv-ring"></div>
-          <div class="adv-ring"></div>
+    <div class="col-6 col-md-4 col-lg-3 joaf-reveal" style="transition-delay:${(i%4)*.1}s">
+      <div class="person-card">
+        <div class="card-img-wrap">
+          <img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.src='/logoc7c3.png'">
         </div>
-        <div class="adv-flag-dot"></div>
-        <div class="adv-photo-wrap">
-          <div class="adv-photo-inner">
-            <img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.src='/logoc7c3.png'">
-          </div>
+        <div class="card-info">
+          <h3>${m.name}</h3>
+          <p>${m.designation}</p>
         </div>
-        <div class="adv-name">${m.name}</div>
-        <div class="adv-desig">${m.designation}</div>
-        <div class="adv-socials">
-          <a href="${m.facebook}" target="_blank" rel="noopener" class="adv-fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
-          <a href="${m.profilePage||'#'}" class="adv-info" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
+        <div class="card-socials">
+          <a href="${m.facebook}" target="_blank" rel="noopener" class="fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
+          <a href="${m.profilePage||'#'}" class="info-btn" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
         </div>
       </div>
     </div>`).join('');
@@ -1025,41 +864,22 @@ function initFilter() {
 (function() {
   const grid = document.getElementById('coalition-grid');
   if (!grid) return;
-  // party color map — based on party flag research
-  const partyColors = {
-    'ইনকিলাব মঞ্চ':      {bg:'linear-gradient(180deg,#006a4e,#004d38)',text:'rgba(255,255,255,.8)',tag:'rgba(244,42,65,.9)',tagText:'#fff'},
-    'জুলাই মঞ্চ':         {bg:'linear-gradient(180deg,#006a4e,#004d38)',text:'rgba(255,255,255,.8)',tag:'rgba(244,42,65,.9)',tagText:'#fff'},
-    'গণপরিষদ':            {bg:'linear-gradient(180deg,#006a4e,#004d38)',text:'rgba(255,255,255,.8)',tag:'rgba(244,42,65,.9)',tagText:'#fff'},
-    'আহ্বায়ক, ভাসানী পরিষদ':{bg:'linear-gradient(180deg,#7b1113,#5c0d0f)',text:'rgba(255,255,255,.8)',tag:'rgba(255,255,255,.2)',tagText:'#fff'},
-    'এবি পার্টি':          {bg:'linear-gradient(180deg,#1a5c2e,#0f3d1e)',text:'rgba(255,255,255,.8)',tag:'rgba(255,255,255,.2)',tagText:'#fff'},
-    'এনসিপি':              {bg:'linear-gradient(180deg,#1a3a6b,#0f2447)',text:'rgba(255,255,255,.8)',tag:'rgba(255,215,0,.85)',tagText:'#1a1a1a'},
-    'বাংলাদেশ ইসলামী ছাত্রশিবির':{bg:'linear-gradient(180deg,#1a5c2e,#0f3d1e)',text:'rgba(255,255,255,.8)',tag:'rgba(255,255,255,.2)',tagText:'#fff'},
-    'বাংলাদেশ জাতীয় পার্টি':{bg:'linear-gradient(180deg,#006a4e,#004d38)',text:'rgba(255,255,255,.8)',tag:'rgba(244,42,65,.9)',tagText:'#fff'},
-    'সমাজতান্ত্রিক ছাত্র ফ্রন্ট':{bg:'linear-gradient(180deg,#8b1a1a,#5c0d0d)',text:'rgba(255,255,255,.8)',tag:'rgba(255,255,255,.2)',tagText:'#fff'},
-  };
-  const def = {bg:'linear-gradient(180deg,#006a4e,#004d38)',text:'rgba(255,255,255,.8)',tag:'rgba(244,42,65,.9)',tagText:'#fff'};
-  grid.innerHTML = JOAF.coalition.map((m, i) => {
-    const c = partyColors[m.party] || def;
-    return `
-    <div class="col-12 col-sm-6 col-lg-4 joaf-reveal" style="transition-delay:${(i%3)*.12}s">
-      <div class="coal-card">
-        <div class="coal-stripe" style="background:${c.bg}">
-          <div class="coal-stripe-inner"></div>
-          <span class="coal-stripe-label">${m.party}</span>
-        </div>
-        <div class="coal-photo">
+  grid.innerHTML = JOAF.coalition.map((m, i) => `
+    <div class="col-6 col-md-4 col-lg-3 joaf-reveal" style="transition-delay:${(i%4)*.1}s">
+      <div class="person-card">
+        <div class="card-img-wrap">
           <img src="${m.img}" alt="${m.name}" loading="lazy" onerror="this.src='/logoc7c3.png'">
-          <div class="coal-photo-overlay">
-            <div class="coal-party-tag" style="background:${c.tag};color:${c.tagText};border-color:${c.tagText}">⚑ ${m.party}</div>
-            <div class="coal-name">${m.name}</div>
-            <div class="coal-btn-row">
-              <a href="${m.facebook}" target="_blank" rel="noopener" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
-              <a href="${m.profilePage||'#'}" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
-            </div>
-          </div>
+        </div>
+        <div class="card-info">
+          <h3>${m.name}</h3>
+          <p>${m.party}</p>
+        </div>
+        <div class="card-socials">
+          <a href="${m.facebook}" target="_blank" rel="noopener" class="fb" aria-label="Facebook"><i class="zmdi zmdi-facebook"></i></a>
+          <a href="${m.profilePage||'#'}" class="info-btn" aria-label="বিস্তারিত"><i class="zmdi zmdi-info"></i></a>
         </div>
       </div>
-    </div>`; }).join('');
+    </div>`).join('');
 })();
 
 // ── Press releases (latest 4) ──────────────────────────────
