@@ -255,6 +255,15 @@ function renderOnce(data, name, lat, lng) {
   renderWeather(data, name, lat, lng);
 }
 
+// পেজ লোড হওয়ার সাথে সাথেই Dhaka weather দেখাও
+async function showDefaultWeather() {
+  try {
+    const [lat, lng] = COORDS['Dhaka'];
+    const data = await fetchWeather(lat, lng);
+    if (!_rendered) renderOnce(data, 'ঢাকা', lat, lng);
+  } catch(e) {}
+}
+
 // Try multiple IP geolocation services in parallel — fastest one wins
 async function getIPLocation() {
   const services = [
@@ -288,42 +297,32 @@ async function getIPLocation() {
 }
 
 async function initWeather() {
-  // IP location আর GPS একসাথে চালাও
-  const tryIP = async () => {
-    const ip = await getIPLocation();
-    if (_rendered) return;
+  // ১. সাথে সাথেই Dhaka weather দেখাও — কোনো delay নেই
+  showDefaultWeather();
+
+  // ২. Background-এ real location খোঁজো — পেলে silently update করো
+  try {
+    const ip = await Promise.any([
+      fetch('https://ipwho.is/', {signal: AbortSignal.timeout(5000)}).then(r => r.json()).then(d => { if (!d.latitude || !d.success) throw 0; return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'}; }),
+      fetch('https://ipapi.co/json/', {signal: AbortSignal.timeout(5000)}).then(r => r.json()).then(d => { if (!d.latitude) throw 0; return {lat: d.latitude, lng: d.longitude, name: d.city || d.region || 'আপনার এলাকা'}; }),
+      fetch('https://get.geojs.io/v1/ip/geo.json', {signal: AbortSignal.timeout(5000)}).then(r => r.json()).then(d => { if (!d.latitude) throw 0; return {lat: parseFloat(d.latitude), lng: parseFloat(d.longitude), name: d.city || d.region || 'আপনার এলাকা'}; }),
+    ]);
+    // Real location পাওয়া গেছে — update করো (rendered হলেও)
     const data = await fetchWeather(ip.lat, ip.lng);
+    _rendered = false; // allow update
     renderOnce(data, ip.name, ip.lat, ip.lng);
-  };
-
-  const tryGPS = async () => {
-    if (!navigator.geolocation) throw new Error('no geo');
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, {timeout: 8000, maximumAge: 60000})
-    );
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    if (_rendered) return; // IP ইতোমধ্যে দেখিয়ে ফেলেছে
-    const data = await fetchWeather(lat, lng);
-    let name = 'আপনার এলাকা';
-    try { const ip = await getIPLocation(); name = ip.name; } catch(e) {}
-    renderOnce(data, name, lat, lng);
-  };
-
-  // IP আর GPS parallel এ — যেটা আগে জিতবে সেটাই দেখাবে
-  await Promise.any([tryIP(), tryGPS()]).catch(() => {});
-
-  // দুটোই fail হলে Dhaka fallback
-  if (!_rendered) {
+  } catch(e) {
+    // IP fail — GPS চেষ্টা করো
     try {
-      const [lat,lng] = COORDS['Dhaka'];
-      const data = await fetchWeather(lat, lng);
-      renderOnce(data, 'ঢাকা', lat, lng);
-    } catch(e) {
-      document.getElementById('wxDesc').textContent = 'তথ্য পাওয়া যাচ্ছে না';
-      document.getElementById('forecastList').innerHTML = '<div class="loading-state">সংযোগ সমস্যা। জেলা বেছে নিন।</div>';
-      document.getElementById('farmAdvice').innerHTML  = '<div class="loading-state">সংযোগ সমস্যা</div>';
-    }
+      if (navigator.geolocation) {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, {timeout: 8000, maximumAge: 60000})
+        );
+        const data = await fetchWeather(pos.coords.latitude, pos.coords.longitude);
+        _rendered = false;
+        renderOnce(data, 'আপনার এলাকা', pos.coords.latitude, pos.coords.longitude);
+      }
+    } catch(e2) {} // GPS-ও fail — Dhaka-ই থাকবে
   }
 }
 
