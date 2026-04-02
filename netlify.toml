@@ -9,6 +9,16 @@
   node_bundler = "nft"
   included_files = ["netlify/functions/node_modules/**"]
 
+# ── Scheduled Functions (Netlify Cron) ─────────────────────────────────────
+# রাত ২টা BD Time (UTC+6) = ২০:০০ UTC → cron: "0 20 * * *"
+# discover-leaders: RSS ফিড থেকে নতুন নেতা আবিষ্কার করে Firebase-এ সেভ করে
+[functions."discover-leaders"]
+  schedule = "0 20 * * *"
+
+# generate-timeline: RSS ফিড থেকে timeline events তৈরি করে Firebase-এ সেভ করে
+[functions."generate-timeline"]
+  schedule = "0 20 * * *"
+
 # ── Performance & Security Headers ──────────────────────────
 [[headers]]
   for = "/*"
