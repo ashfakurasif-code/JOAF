@@ -91,7 +91,7 @@ const FB_CONFIG = {
   appId: "1:472362223214:web:9186a4f90dc608bae4487f"
 };
 
-const GROQ_KEY = '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';
+const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
 
 const fbApp = getApps().length ? getApps()[0] : initializeApp(FB_CONFIG);
 const db = getFirestore(fbApp);
@@ -182,7 +182,7 @@ async function fetchFromGroq() {
 - বাংলাদেশের বর্তমান বাজার দর দাও
 - শুধু JSON array, অন্য কিছু না`;
 
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const res = await fetch('/.netlify/functions/groq-proxy', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -334,7 +334,7 @@ body{font-family:'Hind Siliguri',sans-serif;background:var(--bg);color:var(--t);
 <div class="toast" id="toast"></div>
 
 <script>
-const GK='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';
+const GK='/.netlify/functions/groq-proxy';
 const VMS=['meta-llama/llama-4-scout-17b-16e-instruct','llama-3.2-11b-vision-preview'];
 
 // ── STATE ──
@@ -673,7 +673,7 @@ crop=% channel logo/watermark যেখানে সেদিক বেশি (0
     let res=null;
     for(const m of VMS){
       try{
-        const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
+        const r=await fetch('/.netlify/functions/groq-proxy',{method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+GK},
           body:JSON.stringify({model:m,messages:[{role:'user',content:[
             {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`}},

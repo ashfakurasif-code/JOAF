@@ -336,7 +336,7 @@ const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 
 // ── GROQ CONFIG ──
-const GROQ_KEY = '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';
+const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
 const GROQ_MODELS = ['llama-3.3-70b-versatile','llama3-70b-8192','mixtral-8x7b-32768'];
 const BD_TODAY = () => new Date(Date.now()+6*3600000).toISOString().slice(0,10);
 
@@ -351,7 +351,7 @@ let ISSUES = [];
 async function groqCall(prompt, maxTokens=4000) {
   for (const model of GROQ_MODELS) {
     try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      const r = await fetch('/.netlify/functions/groq-proxy',{
         method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
         body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.3,max_tokens:maxTokens})
       });

@@ -415,8 +415,7 @@
 
 // 🔑 ──────────────────────────────────────────────────────────
 // GROQ_KEY এখানে বসাও (console.groq.com থেকে নাও)
-// !! MANUALLY_REPLACE !! → const GROQ_KEY = 'gsk_XXXXXXXXXX';
-const GROQ_KEY = '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';
+const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
 // ─────────────────────────────────────────────────────────────
 
 const GROQ_MODELS = [
@@ -866,7 +865,7 @@ async function genPolls() {
     let data = null;
     for (const model of GROQ_MODELS) {
       try {
-        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const r = await fetch('/.netlify/functions/groq-proxy', {
           method:  'POST',
           headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_KEY },
           body: JSON.stringify({
