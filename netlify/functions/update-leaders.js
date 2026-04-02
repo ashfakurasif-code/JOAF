@@ -75,10 +75,11 @@ async function groqAnalyze(leader, today) {
 নেতা: ${leader.name} (${leader.party}, ${leader.role})
 
 শুধু নিচের JSON object return করো, আর কিছু না, কোনো markdown নেই:
-{"approval":70,"viral":false,"promises":[{"text":"উদাহরণ প্রতিশ্রুতি","status":"progress"}],"statements":[{"text":"সাম্প্রতিক উক্তি","date":"মার্চ ২০২৬"}],"controversies":[{"text":"বিতর্ক","date":"মার্চ ২০২৬"}],"virals":[{"text":"ভাইরাল মুহূর্ত","icon":"🔥","date":"মার্চ ২০২৬"}]}
+{"approval":70,"viral":false,"isDeceased":false,"promises":[{"text":"উদাহরণ প্রতিশ্রুতি","status":"progress"}],"statements":[{"text":"সাম্প্রতিক উক্তি","date":"এপ্রিল ২০২৬"}],"controversies":[{"text":"বিতর্ক","date":"এপ্রিল ২০২৬"}],"virals":[{"text":"ভাইরাল মুহূর্ত","icon":"🔥","date":"এপ্রিল ২০২৬"}]}
 
 নিয়ম:
 - approval: ১-১০০ (বর্তমান আনুমানিক জনসমর্থন)
+- isDeceased: এই ব্যক্তি মৃত হলে true, জীবিত হলে false
 - promises: ৪-৬টি (বাংলাদেশের বর্তমান প্রেক্ষাপটে)
 - statements: ২-৩টি সাম্প্রতিক
 - controversies: ১-৩টি (না থাকলে খালি array)
@@ -246,7 +247,9 @@ exports.handler = async (event) => {
         role:          leader.role,
         cat:           leader.cat,
         icon:          leader.icon || '👤',
-        viral:         aiData.viral ?? leader.viral ?? false,
+        viral:         aiData.viral      ?? leader.viral ?? false,
+        // isDeceased: AI-এর মতামত (মৃত হলে true, জীবিত হলে false)
+        isDeceased:    aiData.isDeceased === true,
         approval:      typeof aiData.approval === 'number' ? aiData.approval : 50,
         promises:      Array.isArray(aiData.promises)      ? aiData.promises      : [],
         statements:    Array.isArray(aiData.statements)    ? aiData.statements    : [],

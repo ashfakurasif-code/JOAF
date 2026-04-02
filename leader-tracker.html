@@ -211,7 +211,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:var(--
 <!-- HERO -->
 <div class="hero">
   <div class="hero-inner">
-    <div class="hero-badge">📍 লাইভ ট্র্যাকার — মার্চ ২০২৬</div>
+    <div class="hero-badge" id="hero-badge">📍 লাইভ ট্র্যাকার — লোড হচ্ছে...</div>
     <h1>বাংলাদেশ এখন কোথায়?</h1>
     <div class="hero-sub">জুলাই অভ্যুত্থানের পর — কী বদলেছে, কী বদলায়নি, কে কী করছে</div>
     <div class="hero-pulse"><span class="pulse-dot"></span> <span id="hero-stats">লোড হচ্ছে...</span></div>
@@ -557,6 +557,12 @@ function catColor(cat) {
 
 // ── LOAD LEADERS ──
 async function loadLeaders() {
+  // Hero badge: BD তারিখ অনুযায়ী dynamic আপডেট (বাংলা মাস ও বছর)
+  const bdMonths = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+  const bdDate = new Date(Date.now() + 6 * 3600000);
+  const heroBadgeEl = document.getElementById('hero-badge');
+  if (heroBadgeEl) heroBadgeEl.textContent = `📍 লাইভ ট্র্যাকার — ${bdMonths[bdDate.getMonth()]} ${bdDate.getFullYear()}`;
+
   // First generate AI issues, then load leaders in parallel
   await generateIssues();
   try {
@@ -567,6 +573,18 @@ async function loadLeaders() {
       ALL_LEADERS = FALLBACK_LEADERS;
     }
   } catch(e) { ALL_LEADERS = FALLBACK_LEADERS; }
+
+  // Firebase থেকে Timeline লোড করার চেষ্টা — না পেলে static TIMELINE_DATA ব্যবহার
+  // Try loading timeline events from Firebase; fall back to static data
+  try {
+    const tlSnap = await getDocs(collection(_db, 'timeline'));
+    if (tlSnap.size >= 3) {
+      TIMELINE_DATA.splice(0, TIMELINE_DATA.length);
+      tlSnap.docs.forEach(d => TIMELINE_DATA.push({ id: d.id, ...d.data() }));
+      // সাম্প্রতিক event আগে দেখাবে (addedOn বা date অনুযায়ী)
+      TIMELINE_DATA.sort((a, b) => (b.addedOn || '').localeCompare(a.addedOn || ''));
+    }
+  } catch(e) { /* static TIMELINE_DATA অপরিবর্তিত থাকবে */ }
 
   // Hero stats
   const avg = Math.round(ALL_LEADERS.reduce((s,l)=>s+(l.approval||0),0)/ALL_LEADERS.length);
@@ -745,7 +763,8 @@ window.filterGrade = function(g, el) {
 };
 
 function renderReportCards() {
-  let list = ALL_LEADERS;
+  // মৃত নেতাদের রিপোর্ট কার্ড থেকে বাদ দাও (isDeceased: true)
+  let list = ALL_LEADERS.filter(l => !l.isDeceased);
   if (gradeFilter !== 'all') list = list.filter(l=>calcGrade(l).grade===gradeFilter);
   list = [...list].sort((a,b)=>calcGrade(b).score - calcGrade(a).score);
 
@@ -881,6 +900,8 @@ window.renderLeaders = function() {
   const q = document.getElementById('ldr-search')?.value?.toLowerCase()||'';
   const sort = document.getElementById('ldr-sort')?.value||'approval';
   let list = ALL_LEADERS.filter(l=>{
+    // মৃত নেতাদের লুকানো (isDeceased: true হলে দেখাবে না)
+    if (l.isDeceased) return false;
     if (activeLeaderCat!=='সব' && l.cat!==activeLeaderCat) return false;
     if (q && !l.name.toLowerCase().includes(q) && !(l.party||'').toLowerCase().includes(q)) return false;
     return true;
