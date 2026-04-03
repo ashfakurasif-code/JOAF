@@ -13,6 +13,9 @@ const GROQ_MODELS = [
   'llama-3.3-70b-versatile',   // 100k TPD, last resort
 ];
 
+// ── Valid leader categories — must match leader-tracker.html ──
+const VALID_CATS = ['সরকার', 'বিরোধী দল', 'যুব রাজনীতি', 'সুশীল সমাজ', 'আওয়ামী লীগ', 'ব্যবসায়ী'];
+
 const FB_CONFIG = {
   apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
   projectId: 'joaf-app-45753',
@@ -135,16 +138,30 @@ function buildDiscoverPrompt(headlines, existingLeaders, today) {
     ? existingLeaders.slice(0, 20).map(l => l.id).join(',')
     : 'none';
   const shortHeadlines = headlines.slice(0, 15).join('\n');
-  return `BD political analyst. Date: ${today}
+  const catsStr = VALID_CATS.join(', ');
+  return `You are a Bangladesh political analyst. Today: ${today}.
+
+Analyze these news headlines and identify BANGLADESH-RELEVANT trending people ONLY.
+
 Headlines:
 ${shortHeadlines}
 
-Tracked IDs: ${existingStr}
+Already tracked IDs (do NOT include these): ${existingStr}
 
-Find: (1) important BD persons in 2+ headlines NOT in tracked IDs, (2) tracked persons confirmed dead/inactive.
-Reply JSON only, no extra text:
-{"new":[{"id":"slug","name":"বাংলা নাম","party":"দল","role":"পদ","cat":"সরকার","icon":"👤"}],"inactive":[{"id":"id","isDeceased":false}]}
-Rules: new[]=2+ headlines only. inactive[]=confirmed only. Empty=[]`;
+STRICT RULES:
+1. Only include real, fully-named individuals who are directly relevant to Bangladesh.
+2. IGNORE any story about India, Iran, Pakistan, Sri Lanka, cricket outside Bangladesh, or any non-Bangladesh topic — unless it directly involves a Bangladeshi person by name.
+3. Only include a person if they appear in 2+ headlines OR are clearly significant for Bangladesh today.
+4. NEVER include generic descriptions like "A historian", "a minister", "a journalist", "an activist" — only real full names (e.g., "ড. মুহাম্মদ ইউনূস", "Mirza Fakhrul Islam Alamgir").
+5. NEVER include single-word names or nicknames (e.g., "Fizz", "Babu", "Zia") unless it is an unambiguous top-level Bangladesh leader.
+6. cat MUST be exactly one of: ${catsStr}
+7. confidence must be 0.0–1.0; only include entries with confidence >= 0.7.
+8. Do NOT repeat anyone already in tracked IDs.
+
+Reply with ONLY a raw JSON object — no markdown fences, no explanation, no extra text:
+{"new":[{"id":"url-safe-slug","name":"Full Name","party":"party or org","role":"role/position","cat":"সরকার","icon":"👤","trending_reason":"why trending in BD today","confidence":0.9}],"inactive":[{"id":"existing-id","isDeceased":false}]}
+
+If no valid entries found: {"new":[],"inactive":[]}`;
 }
 
 function parseDiscoverJson(txt) {
@@ -163,6 +180,65 @@ function parseDiscoverJson(txt) {
     }
   }
   return null;
+}
+
+// ── Validation: reject garbage/non-person entries before Firestore write ──
+
+// Generic article+role labels that are NOT real person names
+const GENERIC_LABELS = [
+  'a historian', 'a minister', 'a politician', 'a leader', 'a lawmaker',
+  'a journalist', 'a professor', 'a teacher', 'a doctor', 'a scientist',
+  'an activist', 'a businessman', 'a general', 'a colonel', 'a soldier',
+  'a student', 'a worker', 'an expert', 'a spokesperson', 'a diplomat',
+  'an official', 'a bureaucrat', 'a judge', 'a banker', 'a researcher',
+  'a governor', 'a mayor', 'a senator', 'a chancellor', 'a premier',
+];
+
+function isValidLeaderEntry(entry) {
+  const name = (entry.name || '').trim();
+
+  if (!name) return { valid: false, reason: 'missing name' };
+
+  const lowerName = name.toLowerCase();
+
+  // Reject exact generic label matches or names that start with one
+  for (const label of GENERIC_LABELS) {
+    if (lowerName === label || lowerName.startsWith(label + ' ')) {
+      return { valid: false, reason: `generic label: "${name}"` };
+    }
+  }
+
+  // Reject any name matching "a/an <single-noun>" pattern
+  if (/^an?\s+\w+$/i.test(name)) {
+    return { valid: false, reason: `article+noun pattern: "${name}"` };
+  }
+
+  // Reject single-word English names (Bangla script words are often single-word and valid)
+  const isBangla = /[\u0980-\u09FF]/.test(name);
+  if (!isBangla) {
+    const words = name.trim().split(/\s+/);
+    if (words.length < 2) {
+      return { valid: false, reason: `single-word name: "${name}"` };
+    }
+  }
+
+  // Reject very short names
+  if (name.length < 4) {
+    return { valid: false, reason: `name too short: "${name}"` };
+  }
+
+  // Reject missing or invalid cat
+  const cat = (entry.cat || '').trim();
+  if (!cat || !VALID_CATS.includes(cat)) {
+    return { valid: false, reason: `invalid or missing cat: "${cat || '(empty)'}"` };
+  }
+
+  // Reject low-confidence entries (if confidence field present)
+  if (typeof entry.confidence === 'number' && entry.confidence < 0.7) {
+    return { valid: false, reason: `low confidence: ${entry.confidence}` };
+  }
+
+  return { valid: true };
 }
 
 // ── PRIMARY: Google Gemini ──
@@ -288,16 +364,28 @@ exports.handler = async (event) => {
       };
     }
 
-    const log = { added: [], updated: [], errors: [] };
+    const log = { added: [], updated: [], skipped: [], errors: [], validation_rejects: [] };
 
     const existingIds = existingLeaders.map(l => l.id);
     for (const nl of aiResult.newLeaders) {
-      if (!nl.id || !nl.name) continue;
-      if (existingIds.includes(nl.id)) continue;
+      if (!nl.id || !nl.name) {
+        log.validation_rejects.push(`(no id/name)`);
+        continue;
+      }
+      if (existingIds.includes(nl.id)) {
+        log.skipped.push(nl.name);
+        continue;
+      }
+      const check = isValidLeaderEntry(nl);
+      if (!check.valid) {
+        log.validation_rejects.push(`${nl.name}: ${check.reason}`);
+        console.warn(`[discover] rejected "${nl.name}": ${check.reason}`);
+        continue;
+      }
       try {
         await firestoreSet(nl.id, {
           name: nl.name, party: nl.party || '', role: nl.role || '',
-          cat: nl.cat || 'সুশীল সমাজ', icon: nl.icon || '👤',
+          cat: nl.cat, icon: nl.icon || '👤',
           active: true, isDeceased: false, viral: false, approval: 50,
           promises: [], statements: [], controversies: [], virals: [],
           lastDiscovered: today, addedByAI: true,
@@ -322,13 +410,16 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        success:   true,
-        date:      today,
-        headlines: headlines.length,
-        existing:  existingLeaders.length,
-        added:     log.added.length,
-        updated:   log.updated.length,
-        summary:   `${log.added.length} নতুন যোগ, ${log.updated.length} আপডেট`,
+        success:            true,
+        date:               today,
+        headlines:          headlines.length,
+        existing:           existingLeaders.length,
+        candidates:         aiResult.newLeaders.length,
+        added:              log.added.length,
+        updated:            log.updated.length,
+        skipped:            log.skipped.length,
+        validation_rejects: log.validation_rejects.length,
+        summary:            `${log.added.length} নতুন যোগ, ${log.updated.length} আপডেট, ${log.validation_rejects.length} rejected`,
         log,
       }),
     };
