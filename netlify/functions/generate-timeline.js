@@ -21,22 +21,18 @@ const https = require('https');
 const http  = require('http');
 
 const RSS_SOURCES = [
-  { id: 'proto',    name: 'প্রথম আলো',  rss: 'https://www.prothomalo.com/feed' },
-  { id: 'bd24',     name: 'BD News 24', rss: 'https://bdnews24.com/bangladesh/feed' },
-  { id: 'daily',    name: 'Daily Star', rss: 'https://www.thedailystar.net/rss.xml' },
-  { id: 'jugantor', name: 'যুগান্তর',  rss: 'https://www.jugantor.com/feed/rss.xml' },
+  { rss: 'https://www.prothomalo.com/feed' },
+  { rss: 'https://bdnews24.com/bangladesh/feed' },
+  { rss: 'https://www.thedailystar.net/rss.xml' },
 ];
 
 function fetchUrl(url, redirectCount = 0) {
   return new Promise((resolve, reject) => {
-    if (redirectCount > 5) return reject(new Error('Too many redirects'));
+    if (redirectCount > 3) return reject(new Error('Too many redirects'));
     const lib = url.startsWith('https') ? https : http;
     const req = lib.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; JOAF-Timeline/1.0)',
-        'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-      },
-      timeout: 8000,
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/xml, text/xml, */*' },
+      timeout: 4000,
     }, (res) => {
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
         return resolve(fetchUrl(res.headers.location, redirectCount + 1));
@@ -52,124 +48,60 @@ function fetchUrl(url, redirectCount = 0) {
   });
 }
 
-function parseRSSItems(xml, srcName) {
-  const items = [];
+function parseTitles(xml) {
+  const titles = [];
   const itemRegex = /<item>([\s\S]*?)<\/item>/g;
   let match;
-  while ((match = itemRegex.exec(xml)) !== null && items.length < 15) {
+  while ((match = itemRegex.exec(xml)) !== null && titles.length < 12) {
     const block = match[1];
-    const get = (tag) => {
-      const m = block.match(new RegExp(`<${tag}(?:[^>]*)><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}(?:[^>]*)>([^<]*)<\\/${tag}>`));
-      return m ? (m[1] || m[2] || '').trim() : '';
-    };
-    const title = get('title');
-    if (!title) continue;
-    items.push({ title, source: srcName });
+    const tm = block.match(/<title(?:[^>]*)><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title(?:[^>]*)>([^<]*)<\/title>/);
+    const title = tm ? (tm[1] || tm[2] || '').trim() : '';
+    if (title && title.length > 5) titles.push(title);
   }
-  return items;
+  return titles;
 }
 
-async function fetchAllNews() {
+async function fetchHeadlines() {
   const results = await Promise.allSettled(
-    RSS_SOURCES.map(async (src) => {
-      const xml = await fetchUrl(src.rss);
-      return parseRSSItems(xml, src.name);
-    })
+    RSS_SOURCES.map(s => fetchUrl(s.rss).then(xml => parseTitles(xml)))
   );
   return results
     .filter(r => r.status === 'fulfilled')
-    .flatMap(r => r.value);
+    .flatMap(r => r.value)
+    .slice(0, 25);
 }
 
-// ── Firestore REST ──
-async function firestoreSet(collection, docId, data) {
+// ── Firestore ──
+async function firestoreSet(docId, data) {
   function toField(v) {
     if (typeof v === 'string')  return { stringValue: v };
     if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
     if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => {
-      if (typeof i === 'string') return { stringValue: i };
-      return { nullValue: null };
-    })}};
+    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => ({ stringValue: String(i) })) } };
     return { nullValue: null };
   }
   const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${collection}/${docId}?key=${FB_CONFIG.apiKey}`;
+  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/timeline/${docId}?key=${FB_CONFIG.apiKey}`;
   const r = await fetch(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields }),
   });
   if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
-  return await r.json();
 }
 
-async function firestoreGet(collection) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${collection}?key=${FB_CONFIG.apiKey}&pageSize=100`;
-  const r = await fetch(url);
-  if (!r.ok) return [];
-  const data = await r.json();
-  return (data.documents || []).map(doc => {
-    const id = doc.name.split('/').pop();
-    const fields = doc.fields || {};
-    const obj = { id };
-    for (const [k, v] of Object.entries(fields)) {
-      if (v.stringValue !== undefined) obj[k] = v.stringValue;
-    }
-    return obj;
-  });
-}
-
-// ── AI দিয়ে timeline events বানানো ──
-async function generateTimelineEvents(newsItems, today, todayBN) {
-  const newsText = newsItems.map(n => `[${n.source}] ${n.title}`).join('\n');
-
-  const prompt = `তুমি বাংলাদেশের নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ: ${todayBN} (${today})।
-
-আজকের শীর্ষ সংবাদ:
-${newsText}
-
-এই news থেকে বাংলাদেশের রাজনীতি, অর্থনীতি ও সমাজের জন্য গুরুত্বপূর্ণ ৫-৮টি timeline event বানাও।
-
-শুধু নিচের JSON array দাও, অন্য কিছু নয়, কোনো markdown নেই:
-[
-  {
-    "id": "unique_event_id_en_date",
-    "date": "${todayBN}",
-    "isoDate": "${today}",
-    "title": "ঘটনার শিরোনাম বাংলায়",
-    "desc": "২-৩ বাক্যে বিস্তারিত বিবরণ বাংলায়",
-    "type": "positive|negative|milestone|neutral",
-    "tags": ["govt|economy|politics|social|crisis|july"]
-  }
-]
-
-নিয়ম:
-- id: lowercase English + date, যেমন: election_reform_2026_04_02
-- type: positive=ভালো খবর, negative=খারাপ খবর, milestone=গুরুত্বপূর্ণ মাইলস্টোন, neutral=নিরপেক্ষ
-- tags থেকে সবচেয়ে relevant ১-৩টা বেছে নাও
-- শুধু সত্যিকারের news-ভিত্তিক ঘটনা, কল্পনা নয়
-- সব বাংলায়, নিরপেক্ষ দৃষ্টিভঙ্গিতে`;
-
-  for (const model of GROQ_MODELS) {
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 2000 }),
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      let txt = data.choices?.[0]?.message?.content || '';
-      txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-      const match = txt.match(/\[[\s\S]*\]/);
-      if (match) {
-        const events = JSON.parse(match[0]);
-        if (Array.isArray(events) && events.length > 0) return events;
-      }
-    } catch (e) { continue; }
-  }
-  return null;
+async function todayEventsExist(today) {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/timeline?key=${FB_CONFIG.apiKey}&pageSize=50`;
+    const r = await fetch(url);
+    if (!r.ok) return false;
+    const data = await r.json();
+    const docs = data.documents || [];
+    return docs.some(doc => {
+      const f = doc.fields || {};
+      return f.isoDate?.stringValue === today;
+    });
+  } catch (e) { return false; }
 }
 
 exports.handler = async (event) => {
@@ -188,85 +120,93 @@ exports.handler = async (event) => {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
+  if (!GROQ_KEY) {
+    return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: 'GROQ_API_KEY নেই' }) };
+  }
+
   const today   = BD_TODAY();
   const todayBN = BD_DATE_BN();
 
   try {
-    // Step 1: আজকের news fetch
-    console.log('[generate-timeline] Fetching news...');
-    const newsItems = await fetchAllNews();
-    if (newsItems.length < 5) {
-      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'Too few news items', count: newsItems.length }) };
-    }
-    console.log(`[generate-timeline] Got ${newsItems.length} news items`);
+    // RSS + duplicate check parallel
+    const [headlines, alreadyExists] = await Promise.all([
+      fetchHeadlines(),
+      todayEventsExist(today),
+    ]);
 
-    // Step 2: আজকের timeline আগে থেকে আছে কিনা check
-    const existingTimeline = await firestoreGet('timeline');
-    const todayEvents = existingTimeline.filter(e => e.isoDate === today);
-    if (todayEvents.length >= 3) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          skipped: true,
-          reason: `Already have ${todayEvents.length} events for today`,
-          date: today,
-        }),
-      };
+    if (headlines.length < 2) {
+      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'RSS fetch ব্যর্থ' }) };
     }
 
-    // Step 3: AI দিয়ে events generate
-    const events = await generateTimelineEvents(newsItems, today, todayBN);
+    if (alreadyExists) {
+      return { statusCode: 200, headers, body: JSON.stringify({ success: true, skipped: true, reason: 'আজকের timeline আগেই তৈরি হয়েছে' }) };
+    }
+
+    const headlineText = headlines.join('\n');
+    const prompt = `বাংলাদেশের নিরপেক্ষ বিশ্লেষক। আজকের তারিখ: ${todayBN}।
+
+আজকের শিরোনাম:
+${headlineText}
+
+এই news থেকে বাংলাদেশের জন্য গুরুত্বপূর্ণ ৪-৬টি timeline event বানাও।
+
+শুধু JSON array দাও:
+[{"id":"event_slug","date":"${todayBN}","isoDate":"${today}","title":"বাংলায় শিরোনাম","desc":"২-৩ বাক্য বিবরণ","type":"positive|negative|milestone|neutral","tags":["politics"]}]
+
+tags থেকে বেছে নাও: govt, economy, politics, social, crisis, july
+কেবল news-ভিত্তিক ঘটনা। সব বাংলায়।`;
+
+    let events = null;
+    for (const model of GROQ_MODELS) {
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 1200 }),
+        });
+        if (!res.ok) { console.log(`[timeline] Groq ${model} HTTP ${res.status}`); continue; }
+        const data = await res.json();
+        let txt = data.choices?.[0]?.message?.content || '';
+        txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+        const arrMatch = txt.match(/\[[\s\S]*\]/);
+        if (arrMatch) {
+          const parsed = JSON.parse(arrMatch[0]);
+          if (Array.isArray(parsed) && parsed.length > 0) { events = parsed; break; }
+        }
+      } catch (e) { console.log(`[timeline] Groq error: ${e.message}`); continue; }
+    }
+
     if (!events) {
-      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'AI generation failed' }) };
+      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'Groq API fail — সব model ব্যর্থ' }) };
     }
 
-    // Step 4: Firebase-এ save
     const saved = [];
-    const errors = [];
-
     for (const ev of events) {
       try {
-        // Unique ID: event id + date
-        const docId = `${ev.id}_${today}`.replace(/[^a-z0-9_]/gi, '_');
-        await firestoreSet('timeline', docId, {
-          date:      ev.date || todayBN,
-          isoDate:   ev.isoDate || today,
-          title:     ev.title || '',
-          desc:      ev.desc || '',
-          type:      ev.type || 'neutral',
-          tags:      Array.isArray(ev.tags) ? ev.tags : [],
+        const docId = `${(ev.id || 'event').replace(/[^a-z0-9_]/gi, '_')}_${today}`;
+        await firestoreSet(docId, {
+          date:        ev.date || todayBN,
+          isoDate:     ev.isoDate || today,
+          title:       ev.title || '',
+          desc:        ev.desc || '',
+          type:        ev.type || 'neutral',
+          tags:        Array.isArray(ev.tags) ? ev.tags : [],
           aiGenerated: true,
-          createdAt: today,
+          createdAt:   today,
         });
         saved.push(docId);
-        await new Promise(r => setTimeout(r, 200));
-      } catch (e) {
-        errors.push({ id: ev.id, error: e.message });
-      }
+        await new Promise(r => setTimeout(r, 150));
+      } catch (e) { console.log(`[timeline] Save error: ${e.message}`); }
     }
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        success: true,
-        date:    today,
-        news:    newsItems.length,
-        events:  saved.length,
-        errors:  errors.length,
-        saved,
-        errors,
-      }),
+      body: JSON.stringify({ success: true, date: today, headlines: headlines.length, events: saved.length, saved }),
     };
 
   } catch (e) {
-    console.error('[generate-timeline] Error:', e);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ success: false, error: e.message }),
-    };
+    console.error('[timeline] Fatal:', e.message);
+    return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: e.message }) };
   }
 };
