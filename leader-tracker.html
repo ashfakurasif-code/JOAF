@@ -568,14 +568,12 @@ async function loadLeaders() {
   await generateIssues();
   try {
     const snap = await getDocs(collection(_db,'leaders'));
-    if (snap.size >= 5) {
-      // active:false বা isDeceased:true নেতাদের hide করা হচ্ছে
-      ALL_LEADERS = snap.docs
-        .map(d=>({id:d.id,...d.data()}))
-        .filter(l => l.active !== false && l.isDeceased !== true);
-    } else {
-      ALL_LEADERS = FALLBACK_LEADERS;
-    }
+    // active:false বা isDeceased:true নেতাদের hide করা হচ্ছে
+    const firestoreLeaders = snap.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .filter(l => l.active !== false && l.isDeceased !== true);
+    // Firestore-এ কমপক্ষে ১ জন usable leader থাকলে সেটাই দেখাও
+    ALL_LEADERS = firestoreLeaders.length > 0 ? firestoreLeaders : FALLBACK_LEADERS;
   } catch(e) { ALL_LEADERS = FALLBACK_LEADERS; }
 
   // Hero stats
