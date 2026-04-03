@@ -1,19 +1,58 @@
 // netlify/functions/migrate-subscriptions.js
 // পুরনো subscriptions fix করার one-time script
-// URL: /.netlify/functions/migrate-subscriptions
-// একবার run করলেই হবে
+// firebase-admin বাদ দিয়ে Firestore REST API দিয়ে করা হয়েছে
 
-const admin = require('firebase-admin');
+const FB_CONFIG = {
+  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
+  projectId: 'joaf-app-45753',
+};
 
-function initAdmin() {
-  if (admin.apps.length) return;
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId:   process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey:  process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    }),
+const BASE = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents`;
+
+async function fsGet(collection) {
+  const r = await fetch(`${BASE}/${collection}?key=${FB_CONFIG.apiKey}&pageSize=200`);
+  if (!r.ok) throw new Error('GET failed: ' + r.status);
+  const data = await r.json();
+  return (data.documents || []).map(doc => {
+    const id = doc.name.split('/').pop();
+    const fields = doc.fields || {};
+    const obj = { id, _name: doc.name };
+    for (const [k, v] of Object.entries(fields)) {
+      if (v.stringValue !== undefined)  obj[k] = v.stringValue;
+      else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
+      else if (v.mapValue) {
+        const m = {};
+        for (const [mk, mv] of Object.entries(v.mapValue.fields || {})) {
+          m[mk] = mv.stringValue ?? mv.booleanValue ?? '';
+        }
+        obj[k] = m;
+      }
+    }
+    return obj;
   });
+}
+
+async function fsPatch(docName, fields) {
+  const toField = v => {
+    if (typeof v === 'string')  return { stringValue: v };
+    if (typeof v === 'boolean') return { booleanValue: v };
+    if (typeof v === 'object' && v !== null) return { mapValue: { fields: Object.fromEntries(Object.entries(v).map(([k,vv])=>[k,toField(vv)])) } };
+    return { nullValue: null };
+  };
+  const fieldMap = Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,toField(v)]));
+  const url = `https://firestore.googleapis.com/v1/${docName}?key=${FB_CONFIG.apiKey}`;
+  const r = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: fieldMap }),
+  });
+  if (!r.ok) throw new Error('PATCH failed: ' + r.status);
+}
+
+async function fsDelete(docName) {
+  const url = `https://firestore.googleapis.com/v1/${docName}?key=${FB_CONFIG.apiKey}`;
+  const r = await fetch(url, { method: 'DELETE' });
+  if (!r.ok) throw new Error('DELETE failed: ' + r.status);
 }
 
 exports.handler = async (event) => {
@@ -22,82 +61,78 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
-  // Admin key check
   const adminKey = event.headers['x-admin-key'] || event.queryStringParameters?.key || '';
   if (adminKey !== process.env.ADMIN_SECRET_KEY) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
   try {
-    initAdmin();
-    const db = admin.firestore();
+    const docs = await fsGet('push_subscriptions');
 
-    const snapshot = await db.collection('push_subscriptions').get();
-
-    if (snapshot.empty) {
+    if (!docs.length) {
       return { statusCode: 200, headers, body: JSON.stringify({ message: 'No subscriptions found', fixed: 0 }) };
     }
 
     let fixed = 0, skipped = 0, deleted = 0;
-    const batch = db.batch();
 
-    for (const doc of snapshot.docs) {
-      const data = doc.data();
-
-      // Case 1: subscription string হিসেবে আছে — parse করে fix করো
-      if (typeof data.subscription === 'string') {
-        try {
-          const parsed = JSON.parse(data.subscription);
-          if (parsed && parsed.endpoint) {
-            batch.update(doc.ref, {
-              subscription: parsed,
-              endpoint: parsed.endpoint,
+    for (const doc of docs) {
+      try {
+        // Case 1: subscription string হিসেবে আছে — parse করে fix করো
+        if (typeof doc.subscription === 'string') {
+          try {
+            const parsed = JSON.parse(doc.subscription);
+            if (parsed && parsed.endpoint) {
+              await fsPatch(doc._name, {
+                subscription: parsed,
+                endpoint: parsed.endpoint,
+                active: true,
+              });
+              fixed++;
+            } else {
+              await fsDelete(doc._name);
+              deleted++;
+            }
+          } catch (e) {
+            await fsDelete(doc._name);
+            deleted++;
+          }
+        }
+        // Case 2: subscription object আছে কিন্তু endpoint নেই
+        else if (typeof doc.subscription === 'object' && doc.subscription && !doc.endpoint) {
+          if (doc.subscription.endpoint) {
+            await fsPatch(doc._name, {
+              endpoint: doc.subscription.endpoint,
               active: true,
-              migratedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
             fixed++;
           } else {
-            // Invalid — delete করো
-            batch.delete(doc.ref);
+            await fsDelete(doc._name);
             deleted++;
           }
-        } catch(e) {
-          batch.delete(doc.ref);
-          deleted++;
         }
-      }
-      // Case 2: subscription object হিসেবে আছে কিন্তু endpoint নেই
-      else if (typeof data.subscription === 'object' && data.subscription && !data.endpoint) {
-        if (data.subscription.endpoint) {
-          batch.update(doc.ref, {
-            endpoint: data.subscription.endpoint,
-            active: true,
-            migratedAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
-          fixed++;
-        } else {
-          batch.delete(doc.ref);
-          deleted++;
+        // Case 3: ঠিক আছে
+        else {
+          skipped++;
         }
-      }
-      // Case 3: ঠিক আছে
-      else {
+      } catch (e) {
+        // individual doc error — skip করো
         skipped++;
       }
-    }
 
-    await batch.commit();
+      // Rate limit এড়াতে ছোট delay
+      await new Promise(r => setTimeout(r, 100));
+    }
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        total: snapshot.size,
+        total:   docs.length,
         fixed,
         skipped,
         deleted,
-        message: `Migration complete! ${fixed} fixed, ${skipped} already OK, ${deleted} deleted.`
+        message: `Migration complete! ${fixed} fixed, ${skipped} already OK, ${deleted} deleted.`,
       }),
     };
 

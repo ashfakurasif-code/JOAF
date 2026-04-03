@@ -2,7 +2,6 @@
   "name": "joaf-netlify-functions",
   "version": "1.0.0",
   "dependencies": {
-    "firebase-admin": "^12.0.0",
     "web-push": "^3.6.7"
   }
 }
