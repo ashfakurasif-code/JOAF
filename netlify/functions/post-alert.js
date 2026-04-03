@@ -1,18 +1,22 @@
 // netlify/functions/post-alert.js
 // Validates and rate-limits emergency alert submissions, writes to Appwrite alerts collection
-// Rate limit: 5 alerts per 10 minutes per IP (via Appwrite rate_limits collection)
+// Rate limit: 5 alerts per 10 minutes per IP (via Appwrite alerts collection; keyed on ipHash)
+// Raw IP is never stored — only sha256(ip + ALERT_SALT)
 
 const { Client, Databases, ID, Query } = require('node-appwrite');
+const crypto = require('crypto');
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT  || 'https://fra.cloud.appwrite.io/v1';
-const PROJECT  = process.env.APPWRITE_PROJECT_ID || '69ceec140033bccf5ea2';
-const DATABASE = process.env.APPWRITE_DATABASE_ID || '69cef52f0018a2a7b05a';
+const PROJECT  = process.env.APPWRITE_PROJECT_ID;
+const DATABASE = process.env.APPWRITE_DATABASE_ID;
 const API_KEY  = process.env.APPWRITE_API_KEY;
 
 const RATE_LIMIT_MAX    = 5;        // max alerts per window
 const RATE_LIMIT_WINDOW = 10 * 60; // 10 minutes in seconds
 
 const ALLOWED_ORIGINS = ['https://www.julyforum.com', 'https://julyforum.com'];
+
+const VALID_TYPES = ['flood', 'fire', 'accident', 'crime', 'health', 'medical', 'political', 'other'];
 
 function getDb() {
   const client = new Client()
@@ -30,13 +34,15 @@ function getIp(event) {
   );
 }
 
+function hashIp(ip, salt) {
+  return crypto.createHash('sha256').update(ip + salt).digest('hex');
+}
+
 // Text sanitizer — strip all angle-bracket characters to prevent HTML injection
 function sanitize(str) {
   if (typeof str !== 'string') return '';
   return str.replace(/[<>]/g, '').trim().slice(0, 500);
 }
-
-const VALID_TYPES = ['fire', 'flood', 'crime', 'medical', 'accident', 'other'];
 
 exports.handler = async (event) => {
   const origin = event.headers['origin'] || event.headers['Origin'] || '';
@@ -56,6 +62,18 @@ exports.handler = async (event) => {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  // ALERT_SALT is required for IP hashing privacy
+  const ALERT_SALT = process.env.ALERT_SALT;
+  if (!PROJECT || !DATABASE || !API_KEY || !ALERT_SALT) {
+    const missing = [!PROJECT && 'APPWRITE_PROJECT_ID', !DATABASE && 'APPWRITE_DATABASE_ID', !API_KEY && 'APPWRITE_API_KEY', !ALERT_SALT && 'ALERT_SALT'].filter(Boolean).join(', ');
+    console.error('Missing required env vars:', missing);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: `Server misconfiguration: missing env vars: ${missing}` }),
+    };
   }
 
   let body;
@@ -82,13 +100,14 @@ exports.handler = async (event) => {
 
   const db = getDb();
   const ip = getIp(event);
+  const ipHash = hashIp(ip, ALERT_SALT);
   const now = Date.now();
   const windowStart = new Date(now - RATE_LIMIT_WINDOW * 1000).toISOString();
 
-  // Rate limit check — count alerts from this IP in the last 10 minutes
+  // Rate limit check — count alerts from this ipHash in the last 10 minutes
   try {
     const recent = await db.listDocuments(DATABASE, 'alerts', [
-      Query.equal('ipAddress', ip),
+      Query.equal('ipHash', ipHash),
       Query.greaterThan('createdAt', windowStart),
       Query.limit(RATE_LIMIT_MAX + 1),
     ]);
@@ -105,7 +124,7 @@ exports.handler = async (event) => {
     console.warn('Rate limit check failed:', err.message);
   }
 
-  // Write alert to Appwrite
+  // Write alert to Appwrite (store ipHash, never raw IP)
   try {
     const doc = await db.createDocument(DATABASE, 'alerts', ID.unique(), {
       title: sanitize(title),
@@ -116,7 +135,7 @@ exports.handler = async (event) => {
       imageUrl: typeof imageUrl === 'string' ? imageUrl.slice(0, 1000) : null,
       lat: typeof lat === 'number' ? lat : null,
       lng: typeof lng === 'number' ? lng : null,
-      ipAddress: ip,
+      ipHash,
       createdAt: new Date().toISOString(),
     });
 

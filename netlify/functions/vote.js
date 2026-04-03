@@ -6,10 +6,10 @@ const { Client, Databases, ID, Query } = require('node-appwrite');
 const crypto = require('crypto');
 
 const ENDPOINT  = process.env.APPWRITE_ENDPOINT  || 'https://fra.cloud.appwrite.io/v1';
-const PROJECT   = process.env.APPWRITE_PROJECT_ID || '69ceec140033bccf5ea2';
-const DATABASE  = process.env.APPWRITE_DATABASE_ID || '69cef52f0018a2a7b05a';
+const PROJECT   = process.env.APPWRITE_PROJECT_ID;
+const DATABASE  = process.env.APPWRITE_DATABASE_ID;
 const API_KEY   = process.env.APPWRITE_API_KEY;
-const VOTE_SALT = process.env.VOTE_SALT || 'joaf-vote-salt';
+const VOTE_SALT = process.env.VOTE_SALT;
 
 // Allowed origins
 const ALLOWED_ORIGINS = ['https://www.julyforum.com', 'https://julyforum.com'];
@@ -48,6 +48,17 @@ exports.handler = async (event) => {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  // Required env vars check
+  if (!PROJECT || !DATABASE || !API_KEY || !VOTE_SALT) {
+    const missing = [!PROJECT && 'APPWRITE_PROJECT_ID', !DATABASE && 'APPWRITE_DATABASE_ID', !API_KEY && 'APPWRITE_API_KEY', !VOTE_SALT && 'VOTE_SALT'].filter(Boolean).join(', ');
+    console.error('Missing required env vars:', missing);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ success: false, message: `Server misconfiguration: missing env vars: ${missing}` }),
+    };
   }
 
   try {

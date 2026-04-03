@@ -34,6 +34,9 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
 .alert-type-badge.fire{background:#ffedd5;color:#c2410c;}
 .alert-type-badge.flood{background:#dbeafe;color:#1d4ed8;}
 .alert-type-badge.crime{background:#ede9fe;color:#6d28d9;}
+.alert-type-badge.health{background:#d1fae5;color:#065f46;}
+.alert-type-badge.accident{background:#fef3c7;color:#92400e;}
+.alert-type-badge.political{background:#e0e7ff;color:#3730a3;}
 .alert-type-badge.other{background:#f3f4f6;color:#374151;}
 .alert-title{font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:4px;}
 .alert-desc{font-size:13px;color:#4b5563;line-height:1.5;margin-bottom:8px;}
@@ -89,6 +92,9 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
   <button class="at" data-type="flood">🌊 বন্যা</button>
   <button class="at" data-type="crime">⚠️ অপরাধ</button>
   <button class="at" data-type="medical">🏥 মেডিকেল</button>
+  <button class="at" data-type="health">💊 স্বাস্থ্য</button>
+  <button class="at" data-type="accident">🚗 দুর্ঘটনা</button>
+  <button class="at" data-type="political">🏛️ রাজনৈতিক</button>
   <button class="at" data-type="other">📢 অন্যান্য</button>
 </div>
 
@@ -109,7 +115,9 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
       <button class="type-btn" data-type="flood">🌊 বন্যা/জলাবদ্ধতা</button>
       <button class="type-btn" data-type="crime">⚠️ অপরাধ/ধর্ষণ</button>
       <button class="type-btn" data-type="medical">🏥 মেডিকেল জরুরি</button>
+      <button class="type-btn" data-type="health">💊 স্বাস্থ্য সংকট</button>
       <button class="type-btn" data-type="accident">🚗 দুর্ঘটনা</button>
+      <button class="type-btn" data-type="political">🏛️ রাজনৈতিক</button>
       <button class="type-btn selected" data-type="other">📢 অন্যান্য</button>
     </div>
 
@@ -206,7 +214,7 @@ const client = new Client()
 
 const databases = new Databases(client);
 
-const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',accident:'🚗',other:'📢'};
+const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',health:'💊',accident:'🚗',political:'🏛️',other:'📢'};
 const TYPE_LABELS = {fire:'আগুন',flood:'বন্যা',crime:'অপরাধ',medical:'মেডিকেল',accident:'দুর্ঘটনা',other:'অন্যান্য'};
 
 let activeType = 'all';

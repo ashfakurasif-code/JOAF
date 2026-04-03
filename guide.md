@@ -73,3 +73,33 @@ Netlify auto-deploy হবে।
 
 ## 📱 Mobile দেখতে সমস্যা?
 সব CSS `css/joaf.css` এ। `@media(max-width:767px)` section দেখুন।
+
+---
+
+## 🔐 Netlify Environment Variables (Appwrite migration)
+
+নিচের env vars Netlify Dashboard → Site → Environment Variables-এ যোগ করুন:
+
+| Variable | Description | Example |
+|---|---|---|
+| `APPWRITE_ENDPOINT` | Appwrite API endpoint | `https://fra.cloud.appwrite.io/v1` |
+| `APPWRITE_PROJECT_ID` | Appwrite Project ID | `69ceec140033bccf5ea2` |
+| `APPWRITE_DATABASE_ID` | Appwrite Database ID | `69cef52f0018a2a7b05a` |
+| `APPWRITE_API_KEY` | Appwrite server API key (secret) | — |
+| `VOTE_SALT` | IP hash salt for poll vote deduplication | `openssl rand -hex 32` দিয়ে generate করুন |
+| `ALERT_SALT` | IP hash salt for alert rate-limiting (must be separate from VOTE_SALT) | `openssl rand -hex 32` দিয়ে generate করুন |
+| `GITHUB_TOKEN` | GitHub token for poll-results.json commit | GitHub → Settings → Tokens |
+| `ADMIN_SECRET_KEY` | Admin panel secret key | — |
+| `VAPID_PUBLIC_KEY` | Web push VAPID public key | — |
+| `VAPID_PRIVATE_KEY` | Web push VAPID private key | — |
+
+### Salt generate করবেন যেভাবে:
+```bash
+openssl rand -hex 32
+```
+প্রতিটি salt আলাদাভাবে generate করুন। `VOTE_SALT` ও `ALERT_SALT` একই হওয়া উচিত নয়।
+
+### প্রথমবার setup (Appwrite bootstrap):
+1. Netlify env vars সেট করুন
+2. Admin panel → Settings → System Tools → **Bootstrap Appwrite** চাপুন
+3. সফল হলে collections/indexes auto-create হবে

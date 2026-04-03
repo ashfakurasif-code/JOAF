@@ -74,13 +74,13 @@
         { "type": "string",  "key": "imageUrl",    "size": 1000, "required": false },
         { "type": "double",  "key": "lat",                       "required": false },
         { "type": "double",  "key": "lng",                       "required": false },
-        { "type": "string",  "key": "ipAddress",   "size": 50,   "required": false },
+        { "type": "string",  "key": "ipHash",      "size": 64,   "required": false },
         { "type": "string",  "key": "createdAt",   "size": 30,   "required": true  }
       ],
       "indexes": [
-        { "key": "idx_createdAt",  "type": "key", "attributes": ["createdAt"],             "orders": ["DESC"] },
+        { "key": "idx_createdAt",  "type": "key", "attributes": ["createdAt"],           "orders": ["DESC"] },
         { "key": "idx_type",       "type": "key", "attributes": ["type"]                                     },
-        { "key": "idx_ip_created", "type": "key", "attributes": ["ipAddress", "createdAt"]                   }
+        { "key": "idx_ip_created", "type": "key", "attributes": ["ipHash", "createdAt"]                      }
       ]
     }
   ]

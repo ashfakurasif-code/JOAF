@@ -13,12 +13,13 @@ const { Client, Databases, Permission, Role, IndexType } = require('node-appwrit
 const path = require('path');
 
 const ENDPOINT   = process.env.APPWRITE_ENDPOINT    || 'https://fra.cloud.appwrite.io/v1';
-const PROJECT    = process.env.APPWRITE_PROJECT_ID  || '69ceec140033bccf5ea2';
-const DATABASE   = process.env.APPWRITE_DATABASE_ID || '69cef52f0018a2a7b05a';
+const PROJECT    = process.env.APPWRITE_PROJECT_ID;
+const DATABASE   = process.env.APPWRITE_DATABASE_ID;
 const API_KEY    = process.env.APPWRITE_API_KEY;
 
-if (!API_KEY) {
-  console.error('ERROR: APPWRITE_API_KEY env var is required');
+if (!PROJECT || !DATABASE || !API_KEY) {
+  const missing = [!PROJECT && 'APPWRITE_PROJECT_ID', !DATABASE && 'APPWRITE_DATABASE_ID', !API_KEY && 'APPWRITE_API_KEY'].filter(Boolean).join(', ');
+  console.error(`ERROR: Required env var(s) missing: ${missing}`);
   process.exit(1);
 }
 

@@ -5,8 +5,8 @@
 const { Client, Databases, Permission, Role, IndexType } = require('node-appwrite');
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT  || 'https://fra.cloud.appwrite.io/v1';
-const PROJECT  = process.env.APPWRITE_PROJECT_ID || '69ceec140033bccf5ea2';
-const DATABASE = process.env.APPWRITE_DATABASE_ID || '69cef52f0018a2a7b05a';
+const PROJECT  = process.env.APPWRITE_PROJECT_ID;
+const DATABASE = process.env.APPWRITE_DATABASE_ID;
 const API_KEY  = process.env.APPWRITE_API_KEY;
 
 function getDb() {
@@ -96,13 +96,13 @@ const COLLECTIONS = {
       { type: 'string',  key: 'imageUrl',    size: 1000, required: false },
       { type: 'double',  key: 'lat',                     required: false },
       { type: 'double',  key: 'lng',                     required: false },
-      { type: 'string',  key: 'ipAddress',   size: 50,   required: false },
+      { type: 'string',  key: 'ipHash',      size: 64,   required: false },
       { type: 'string',  key: 'createdAt',   size: 30,   required: true },
     ],
     indexes: [
       { key: 'idx_createdAt', type: IndexType.Key, attributes: ['createdAt'], orders: ['DESC'] },
       { key: 'idx_type',      type: IndexType.Key, attributes: ['type'] },
-      { key: 'idx_ip_created', type: IndexType.Key, attributes: ['ipAddress', 'createdAt'] },
+      { key: 'idx_ip_created', type: IndexType.Key, attributes: ['ipHash', 'createdAt'] },
     ],
   },
 };
@@ -198,6 +198,12 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+
+  if (!PROJECT || !DATABASE || !API_KEY) {
+    const missing = [!PROJECT && 'APPWRITE_PROJECT_ID', !DATABASE && 'APPWRITE_DATABASE_ID', !API_KEY && 'APPWRITE_API_KEY'].filter(Boolean).join(', ');
+    console.error('Missing required env vars:', missing);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: `Server misconfiguration: missing env vars: ${missing}` }) };
+  }
 
   const adminKey = event.headers['x-admin-key'] || '';
   if (adminKey !== process.env.ADMIN_SECRET_KEY) {

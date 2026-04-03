@@ -2,12 +2,12 @@
 // সব subscriber দের notification পাঠায়
 // Admin panel থেকে manual + GitHub Actions থেকে scheduled
 
-const { Client, Databases, Query } = require('node-appwrite');
+const { Client, Databases, ID, Query } = require('node-appwrite');
 const webpush = require('web-push');
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT  || 'https://fra.cloud.appwrite.io/v1';
-const PROJECT  = process.env.APPWRITE_PROJECT_ID || '69ceec140033bccf5ea2';
-const DATABASE = process.env.APPWRITE_DATABASE_ID || '69cef52f0018a2a7b05a';
+const PROJECT  = process.env.APPWRITE_PROJECT_ID;
+const DATABASE = process.env.APPWRITE_DATABASE_ID;
 const API_KEY  = process.env.APPWRITE_API_KEY;
 
 function getDb() {
@@ -78,6 +78,13 @@ exports.handler = async (event) => {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  // Required env vars check
+  if (!PROJECT || !DATABASE || !API_KEY) {
+    const missing = [!PROJECT && 'APPWRITE_PROJECT_ID', !DATABASE && 'APPWRITE_DATABASE_ID', !API_KEY && 'APPWRITE_API_KEY'].filter(Boolean).join(', ');
+    console.error('Missing required env vars:', missing);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: `Server misconfiguration: missing env vars: ${missing}` }) };
   }
 
   // Admin key check — GitHub Actions বা Admin panel থেকে আসলে verify করো
@@ -162,7 +169,7 @@ exports.handler = async (event) => {
 
     // Log notification history
     try {
-      await db.createDocument(DATABASE, 'notification_history', 'unique()', {
+      await db.createDocument(DATABASE, 'notification_history', ID.unique(), {
         type: type || 'custom',
         title: notifData.title,
         body: notifData.body,

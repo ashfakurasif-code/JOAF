@@ -5,8 +5,8 @@
 const { Client, Databases, Query } = require('node-appwrite');
 
 const ENDPOINT  = process.env.APPWRITE_ENDPOINT  || 'https://fra.cloud.appwrite.io/v1';
-const PROJECT   = process.env.APPWRITE_PROJECT_ID || '69ceec140033bccf5ea2';
-const DATABASE  = process.env.APPWRITE_DATABASE_ID || '69cef52f0018a2a7b05a';
+const PROJECT   = process.env.APPWRITE_PROJECT_ID;
+const DATABASE  = process.env.APPWRITE_DATABASE_ID;
 const API_KEY   = process.env.APPWRITE_API_KEY;
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -124,6 +124,11 @@ async function commitToGitHub(content) {
 }
 
 exports.handler = async () => {
+  if (!PROJECT || !DATABASE || !API_KEY) {
+    const missing = [!PROJECT && 'APPWRITE_PROJECT_ID', !DATABASE && 'APPWRITE_DATABASE_ID', !API_KEY && 'APPWRITE_API_KEY'].filter(Boolean).join(', ');
+    console.error('Missing required env vars:', missing);
+    return { statusCode: 500, body: `Server misconfiguration: missing env vars: ${missing}` };
+  }
   try {
     const db = getDb();
     const docs = await fetchAllShards(db);
