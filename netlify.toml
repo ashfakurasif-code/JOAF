@@ -19,6 +19,10 @@
 [functions."generate-timeline"]
   schedule = "0 20 * * *"
 
+# build-poll-results-json: Appwrite থেকে ভোটের ফলাফল পড়ে data/poll-results.json আপডেট করে
+[functions."build-poll-results-json"]
+  schedule = "*/10 * * * *"
+
 # ── Performance & Security Headers ──────────────────────────
 [[headers]]
   for = "/*"

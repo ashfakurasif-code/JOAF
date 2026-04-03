@@ -2,18 +2,20 @@
 // সব subscriber দের notification পাঠায়
 // Admin panel থেকে manual + GitHub Actions থেকে scheduled
 
-const admin = require('firebase-admin');
+const { Client, Databases, Query } = require('node-appwrite');
 const webpush = require('web-push');
 
-function initAdmin() {
-  if (admin.apps.length) return;
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId:   process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey:  process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    }),
-  });
+const ENDPOINT = process.env.APPWRITE_ENDPOINT  || 'https://fra.cloud.appwrite.io/v1';
+const PROJECT  = process.env.APPWRITE_PROJECT_ID || '69ceec140033bccf5ea2';
+const DATABASE = process.env.APPWRITE_DATABASE_ID || '69cef52f0018a2a7b05a';
+const API_KEY  = process.env.APPWRITE_API_KEY;
+
+function getDb() {
+  const client = new Client()
+    .setEndpoint(ENDPOINT)
+    .setProject(PROJECT)
+    .setKey(API_KEY);
+  return new Databases(client);
 }
 
 function initWebPush() {
@@ -45,6 +47,24 @@ const NOTIFICATION_TYPES = {
   welcome:    { title: '🔥 JOAF-এ স্বাগতম!', body: 'আপনি এখন বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চের অংশ।', url: '/' },
 };
 
+async function fetchAllActiveSubscriptions(db) {
+  const docs = [];
+  let cursor = null;
+
+  while (true) {
+    const queries = [Query.equal('active', true), Query.limit(100)];
+    if (cursor) queries.push(Query.cursorAfter(cursor));
+
+    const res = await db.listDocuments(DATABASE, 'push_subscriptions', queries);
+    docs.push(...res.documents);
+
+    if (res.documents.length < 100) break;
+    cursor = res.documents[res.documents.length - 1].$id;
+  }
+
+  return docs;
+}
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -68,9 +88,8 @@ exports.handler = async (event) => {
   }
 
   try {
-    initAdmin();
     initWebPush();
-    const db = admin.firestore();
+    const db = getDb();
 
     const body = JSON.parse(event.body);
     const { type, title: customTitle, body: customBody, url: customUrl, _verify } = body;
@@ -98,11 +117,9 @@ exports.handler = async (event) => {
     }
 
     // সব active subscriptions নাও
-    const snapshot = await db.collection('push_subscriptions')
-      .where('active', '==', true)
-      .get();
+    const docs = await fetchAllActiveSubscriptions(db);
 
-    if (snapshot.empty) {
+    if (!docs.length) {
       return { statusCode: 200, headers, body: JSON.stringify({ success: true, sent: 0, message: 'No subscribers' }) };
     }
 
@@ -115,19 +132,28 @@ exports.handler = async (event) => {
     });
 
     let sent = 0, failed = 0;
-    const failedIds = [];
 
-    const promises = snapshot.docs.map(async (doc) => {
-      const { subscription } = doc.data();
+    const promises = docs.map(async (doc) => {
+      let subscription;
+      try {
+        subscription = typeof doc.subscription === 'string'
+          ? JSON.parse(doc.subscription)
+          : doc.subscription;
+      } catch (_) {
+        failed++;
+        return;
+      }
+
       try {
         await webpush.sendNotification(subscription, payload);
         sent++;
       } catch (err) {
         failed++;
-        failedIds.push(doc.id);
-        // 404 বা 410 মানে subscription expired — delete করো
+        // 404 বা 410 মানে subscription expired — inactive mark করো
         if (err.statusCode === 404 || err.statusCode === 410) {
-          await db.collection('push_subscriptions').doc(doc.id).update({ active: false });
+          try {
+            await db.updateDocument(DATABASE, 'push_subscriptions', doc.$id, { active: false });
+          } catch (_) {}
         }
       }
     });
@@ -135,20 +161,22 @@ exports.handler = async (event) => {
     await Promise.all(promises);
 
     // Log notification history
-    await db.collection('notification_history').add({
-      type: type || 'custom',
-      title: notifData.title,
-      body: notifData.body,
-      url: notifData.url,
-      sent,
-      failed,
-      sentAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    try {
+      await db.createDocument(DATABASE, 'notification_history', 'unique()', {
+        type: type || 'custom',
+        title: notifData.title,
+        body: notifData.body,
+        url: notifData.url,
+        sent,
+        failed,
+        sentAt: new Date().toISOString(),
+      });
+    } catch (_) {}
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ success: true, sent, failed, total: snapshot.size }),
+      body: JSON.stringify({ success: true, sent, failed, total: docs.length }),
     };
 
   } catch (err) {

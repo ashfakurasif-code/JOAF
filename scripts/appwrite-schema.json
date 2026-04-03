@@ -1,0 +1,87 @@
+{
+  "database_id": "69cef52f0018a2a7b05a",
+  "collections": [
+    {
+      "id": "push_subscriptions",
+      "name": "push_subscriptions",
+      "attributes": [
+        { "type": "string",  "key": "subscription",  "size": 2000, "required": true  },
+        { "type": "string",  "key": "endpoint",       "size": 1000, "required": true  },
+        { "type": "string",  "key": "deviceInfo",     "size": 500,  "required": false },
+        { "type": "string",  "key": "createdAt",      "size": 30,   "required": false },
+        { "type": "string",  "key": "updatedAt",      "size": 30,   "required": false },
+        { "type": "boolean", "key": "active",                       "required": false, "default": true }
+      ],
+      "indexes": [
+        { "key": "idx_active", "type": "key", "attributes": ["active"] }
+      ]
+    },
+    {
+      "id": "notification_history",
+      "name": "notification_history",
+      "attributes": [
+        { "type": "string",  "key": "type",    "size": 50,  "required": false },
+        { "type": "string",  "key": "title",   "size": 200, "required": false },
+        { "type": "string",  "key": "body",    "size": 500, "required": false },
+        { "type": "string",  "key": "url",     "size": 200, "required": false },
+        { "type": "integer", "key": "sent",                 "required": false },
+        { "type": "integer", "key": "failed",               "required": false },
+        { "type": "string",  "key": "sentAt",  "size": 30,  "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_sentAt", "type": "key", "attributes": ["sentAt"], "orders": ["DESC"] }
+      ]
+    },
+    {
+      "id": "poll_results_daily",
+      "name": "poll_results_daily",
+      "attributes": [
+        { "type": "string",  "key": "pollId",    "size": 100,  "required": true  },
+        { "type": "string",  "key": "day",       "size": 10,   "required": true  },
+        { "type": "string",  "key": "counts",    "size": 2000, "required": false },
+        { "type": "integer", "key": "total",                   "required": false },
+        { "type": "string",  "key": "createdAt", "size": 30,   "required": false },
+        { "type": "string",  "key": "updatedAt", "size": 30,   "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_day",    "type": "key", "attributes": ["day"],    "orders": ["DESC"] },
+        { "key": "idx_pollId", "type": "key", "attributes": ["pollId"] }
+      ]
+    },
+    {
+      "id": "poll_dedupe_daily",
+      "name": "poll_dedupe_daily",
+      "attributes": [
+        { "type": "string", "key": "pollId",    "size": 100, "required": true  },
+        { "type": "string", "key": "ipHash",    "size": 64,  "required": true  },
+        { "type": "string", "key": "day",       "size": 10,  "required": true  },
+        { "type": "string", "key": "createdAt", "size": 30,  "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_day",    "type": "key", "attributes": ["day"]    },
+        { "key": "idx_pollId", "type": "key", "attributes": ["pollId"] }
+      ]
+    },
+    {
+      "id": "alerts",
+      "name": "alerts",
+      "attributes": [
+        { "type": "string",  "key": "title",       "size": 200,  "required": true  },
+        { "type": "string",  "key": "description", "size": 2000, "required": true  },
+        { "type": "string",  "key": "location",    "size": 200,  "required": true  },
+        { "type": "string",  "key": "reporter",    "size": 100,  "required": false },
+        { "type": "string",  "key": "type",        "size": 20,   "required": false },
+        { "type": "string",  "key": "imageUrl",    "size": 1000, "required": false },
+        { "type": "double",  "key": "lat",                       "required": false },
+        { "type": "double",  "key": "lng",                       "required": false },
+        { "type": "string",  "key": "ipAddress",   "size": 50,   "required": false },
+        { "type": "string",  "key": "createdAt",   "size": 30,   "required": true  }
+      ],
+      "indexes": [
+        { "key": "idx_createdAt",  "type": "key", "attributes": ["createdAt"],             "orders": ["DESC"] },
+        { "key": "idx_type",       "type": "key", "attributes": ["type"]                                     },
+        { "key": "idx_ip_created", "type": "key", "attributes": ["ipAddress", "createdAt"]                   }
+      ]
+    }
+  ]
+}
