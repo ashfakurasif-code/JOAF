@@ -1,16 +1,16 @@
 // netlify/functions/discover-leaders.js
 // RSS news পড়ে AI দিয়ে leaders auto-discover করে Firebase update করে
-// fetch-rss function কে internally call করে (fast + cached)
+// Primary: Google Gemini (gemini-2.0-flash) — free: 1500 req/day, unlimited tokens
+// Fallback: Groq (active models only — decommissioned গুলো বাদ)
 
-const GROQ_KEY    = process.env.GROQ_API_KEY;
-const ADMIN_KEY   = process.env.ADMIN_SECRET_KEY;
-// Models ordered: smaller/faster first to save daily token limits
-// llama3-8b-8192 & mixtral-8x7b-32768 decommissioned — removed
-// llama3-70b-8192 & llama-3.1-70b-versatile decommissioned — removed
+const GROQ_KEY   = process.env.GROQ_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY; // aistudio.google.com থেকে নাও — পুরোপুরি free
+const ADMIN_KEY  = process.env.ADMIN_SECRET_KEY;
+
+// Groq: শুধু active models (mixtral-8x7b-32768, llama3-70b-8192 decommissioned)
 const GROQ_MODELS = [
-  'llama-3.1-8b-instant',              // 8B — fastest, lowest token cost, 1M TPD free
-  'meta-llama/llama-4-scout-17b-16e-instruct', // 17B MoE — separate quota
-  'llama-3.3-70b-versatile',           // 70B — best quality, 100k TPD (use as last resort)
+  'llama-3.1-8b-instant',      // 1M TPD free
+  'llama-3.3-70b-versatile',   // 100k TPD, last resort
 ];
 
 const FB_CONFIG = {
@@ -23,7 +23,7 @@ const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0,
 const https = require('https');
 const http  = require('http');
 
-// ── RSS: সরাসরি fetch (2টা fast source মাত্র — timeout এড়াতে) ──
+// ── RSS fetch ──
 const RSS_SOURCES = [
   { rss: 'https://www.prothomalo.com/feed' },
   { rss: 'https://bdnews24.com/bangladesh/feed' },
@@ -129,15 +129,13 @@ async function firestorePatchFields(docId, updates) {
   });
 }
 
-// ── Groq: একটাই prompt, সব একসাথে ──
-async function analyzeWithGroq(headlines, existingLeaders, today) {
-  // Token বাঁচাতে: শুধু IDs, শুধু 15টা headline, সংক্ষিপ্ত English prompt
+// ── Shared prompt builder ──
+function buildDiscoverPrompt(headlines, existingLeaders, today) {
   const existingStr = existingLeaders.length > 0
     ? existingLeaders.slice(0, 20).map(l => l.id).join(',')
     : 'none';
   const shortHeadlines = headlines.slice(0, 15).join('\n');
-
-  const prompt = `BD political analyst. Date: ${today}
+  return `BD political analyst. Date: ${today}
 Headlines:
 ${shortHeadlines}
 
@@ -147,7 +145,57 @@ Find: (1) important BD persons in 2+ headlines NOT in tracked IDs, (2) tracked p
 Reply JSON only, no extra text:
 {"new":[{"id":"slug","name":"বাংলা নাম","party":"দল","role":"পদ","cat":"সরকার","icon":"👤"}],"inactive":[{"id":"id","isDeceased":false}]}
 Rules: new[]=2+ headlines only. inactive[]=confirmed only. Empty=[]`;
+}
 
+function parseDiscoverJson(txt) {
+  txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  const objMatch = txt.match(/\{[\s\S]*\}/);
+  if (objMatch) {
+    const parsed = JSON.parse(objMatch[0]);
+    return {
+      newLeaders: Array.isArray(parsed.new) ? parsed.new : [],
+      inactive:   Array.isArray(parsed.inactive) ? parsed.inactive : [],
+    };
+  }
+  return null;
+}
+
+// ── PRIMARY: Google Gemini ──
+async function analyzeWithGemini(headlines, existingLeaders, today) {
+  if (!GEMINI_KEY) return null;
+  try {
+    const prompt = buildDiscoverPrompt(headlines, existingLeaders, today);
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 500 },
+      }),
+    });
+    if (!res.ok) {
+      console.warn('[discover/gemini] HTTP ' + res.status);
+      return null;
+    }
+    const data = await res.json();
+    const txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const parsed = parseDiscoverJson(txt);
+    if (parsed) {
+      console.log('[discover] Gemini ✓');
+      return parsed;
+    }
+    return null;
+  } catch (e) {
+    console.warn('[discover/gemini] error:', e.message);
+    return null;
+  }
+}
+
+// ── FALLBACK: Groq ──
+async function analyzeWithGroq(headlines, existingLeaders, today) {
+  if (!GROQ_KEY) return null;
+  const prompt = buildDiscoverPrompt(headlines, existingLeaders, today);
   for (const model of GROQ_MODELS) {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -157,7 +205,7 @@ Rules: new[]=2+ headlines only. inactive[]=confirmed only. Empty=[]`;
           model,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.1,
-          max_tokens: 400, // JSON output only — 400 যথেষ্ট
+          max_tokens: 500,
         }),
       });
       if (!res.ok) {
@@ -166,15 +214,11 @@ Rules: new[]=2+ headlines only. inactive[]=confirmed only. Empty=[]`;
         continue;
       }
       const data = await res.json();
-      let txt = data.choices?.[0]?.message?.content || '';
-      txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-      const objMatch = txt.match(/\{[\s\S]*\}/);
-      if (objMatch) {
-        const parsed = JSON.parse(objMatch[0]);
-        return {
-          newLeaders: Array.isArray(parsed.new) ? parsed.new : [],
-          inactive:   Array.isArray(parsed.inactive) ? parsed.inactive : [],
-        };
+      const txt = data.choices?.[0]?.message?.content || '';
+      const parsed = parseDiscoverJson(txt);
+      if (parsed) {
+        console.log(`[discover] Groq ${model} ✓`);
+        return parsed;
       }
     } catch (e) {
       console.log(`[discover] Groq error: ${e.message}`);
@@ -200,14 +244,13 @@ exports.handler = async (event) => {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
-  if (!GROQ_KEY) {
-    return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: 'GROQ_API_KEY নেই' }) };
+  if (!GEMINI_KEY && !GROQ_KEY) {
+    return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: 'GEMINI_API_KEY বা GROQ_API_KEY — কমপক্ষে একটা দরকার' }) };
   }
 
   const today = BD_TODAY();
 
   try {
-    // RSS + Firebase parallel fetch
     const [headlines, existingLeaders] = await Promise.all([
       fetchHeadlines(),
       firestoreGetAll(),
@@ -219,16 +262,22 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: `RSS fetch ব্যর্থ — মাত্র ${headlines.length}টি headline` }) };
     }
 
-    // Groq analysis
-    const aiResult = await analyzeWithGroq(headlines, existingLeaders, today);
+    // Gemini first, then Groq
+    let aiResult = await analyzeWithGemini(headlines, existingLeaders, today);
+    if (!aiResult) {
+      console.log('[discover] Gemini failed, trying Groq...');
+      aiResult = await analyzeWithGroq(headlines, existingLeaders, today);
+    }
+
     if (!aiResult) {
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'Groq API fail — সব model ব্যর্থ। Netlify function log দেখুন।',
+          error: 'সব AI fail হয়েছে। Netlify function log দেখুন।',
           headlines: headlines.length,
+          gemini_key_set: !!GEMINI_KEY,
           groq_key_set: !!GROQ_KEY,
         }),
       };
@@ -236,7 +285,6 @@ exports.handler = async (event) => {
 
     const log = { added: [], updated: [], errors: [] };
 
-    // নতুন leaders add
     const existingIds = existingLeaders.map(l => l.id);
     for (const nl of aiResult.newLeaders) {
       if (!nl.id || !nl.name) continue;
@@ -253,7 +301,6 @@ exports.handler = async (event) => {
       } catch (e) { log.errors.push(e.message); }
     }
 
-    // inactive update
     for (const u of aiResult.inactive) {
       if (!u.id) continue;
       try {

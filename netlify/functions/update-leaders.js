@@ -1,12 +1,15 @@
-// update-leaders.js — Firebase থেকে active leaders পড়ে Groq AI দিয়ে update করে
-// Static LEADERS_LIST বাদ দেওয়া হয়েছে — এখন discover-leaders.js দিয়ে নেতারা add/remove হয়
+// update-leaders.js — Firebase থেকে active leaders পড়ে AI দিয়ে update করে
+// Primary: Google Gemini (free: 1500 req/day, gemini-2.0-flash)
+// Fallback: Groq (llama-3.1-8b-instant → llama-3.3-70b-versatile)
 
-const GROQ_KEY    = process.env.GROQ_API_KEY;
-const ADMIN_KEY   = process.env.ADMIN_SECRET_KEY;
+const GROQ_KEY   = process.env.GROQ_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY; // Google AI Studio থেকে নাও — পুরোপুরি free
+const ADMIN_KEY  = process.env.ADMIN_SECRET_KEY;
+
+// Groq: শুধু active models (decommissioned গুলো বাদ)
 const GROQ_MODELS = [
-  'llama-3.1-8b-instant',                       // 8B — fastest, lowest token cost, 1M TPD free
-  'meta-llama/llama-4-scout-17b-16e-instruct',  // 17B MoE — separate quota
-  'llama-3.3-70b-versatile',                    // 70B — last resort, 100k TPD
+  'llama-3.1-8b-instant',              // 1M TPD free — সবচেয়ে কম token খায়
+  'llama-3.3-70b-versatile',           // 100k TPD — ভালো quality, last resort
 ];
 
 const FB_CONFIG = {
@@ -85,9 +88,9 @@ async function firestoreSet(docId, data) {
   return await r.json();
 }
 
-// ── Groq AI analysis — isDeceased check সহ ──
-async function groqAnalyze(leader, today) {
-  const prompt = `তুমি বাংলাদেশের নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ ${today}।
+// ── AI Prompt (shared) ──
+function buildPrompt(leader, today) {
+  return `তুমি বাংলাদেশের নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ ${today}।
 
 নেতা: ${leader.name} (${leader.party}, ${leader.role})
 
@@ -104,21 +107,83 @@ async function groqAnalyze(leader, today) {
 - controversies: ১-৩টি (না থাকলে [])
 - virals: ১-৩টি (না থাকলে [])
 - সব বাংলায়, নিরপেক্ষ`;
+}
 
+function parseJsonFromText(txt) {
+  txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  const match = txt.match(/\{[\s\S]*\}/);
+  if (match) return JSON.parse(match[0]);
+  return null;
+}
+
+// ── PRIMARY: Google Gemini (gemini-2.0-flash) — Free tier: 1500 req/day ──
+async function geminiAnalyze(leader, today) {
+  if (!GEMINI_KEY) return null;
+  try {
+    const prompt = buildPrompt(leader, today);
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
+      }),
+    });
+    if (!res.ok) {
+      console.warn('[gemini] HTTP ' + res.status);
+      return null;
+    }
+    const data = await res.json();
+    const txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return parseJsonFromText(txt);
+  } catch (e) {
+    console.warn('[gemini] error:', e.message);
+    return null;
+  }
+}
+
+// ── FALLBACK: Groq (active models only) ──
+async function groqAnalyze(leader, today) {
+  if (!GROQ_KEY) return null;
+  const prompt = buildPrompt(leader, today);
   for (const model of GROQ_MODELS) {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 }),
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 700 }),
       });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        // decommissioned হলে skip, অন্য error এ next model try
+        console.warn(`[groq] ${model} failed: ${err?.error?.code || res.status}`);
+        continue;
+      }
       const data = await res.json();
-      let txt = data.choices?.[0]?.message?.content || '';
-      txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-      const match = txt.match(/\{[\s\S]*\}/);
-      if (match) return JSON.parse(match[0]);
-    } catch (e) { continue; }
+      const txt = data.choices?.[0]?.message?.content || '';
+      const parsed = parseJsonFromText(txt);
+      if (parsed) return parsed;
+    } catch (e) {
+      console.warn(`[groq] ${model} error:`, e.message);
+      continue;
+    }
+  }
+  return null;
+}
+
+// ── Main analyze: Gemini first, then Groq ──
+async function aiAnalyze(leader, today) {
+  const geminiResult = await geminiAnalyze(leader, today);
+  if (geminiResult) {
+    console.log(`[ai] ${leader.name} — Gemini ✓`);
+    return geminiResult;
+  }
+  console.log(`[ai] ${leader.name} — Gemini failed, trying Groq...`);
+  const groqResult = await groqAnalyze(leader, today);
+  if (groqResult) {
+    console.log(`[ai] ${leader.name} — Groq ✓`);
+    return groqResult;
   }
   return null;
 }
@@ -144,7 +209,6 @@ exports.handler = async (event) => {
   let updated = 0;
 
   try {
-    // Firebase থেকে active leaders পড়ো (static list নয়)
     const activeLeaders = await firestoreGetActiveLeaders();
     console.log(`[update-leaders] ${activeLeaders.length} active leaders found in Firebase`);
 
@@ -155,20 +219,18 @@ exports.handler = async (event) => {
 
     for (const leader of batch) {
       try {
-        // আজকে already update হয়েছে কিনা
         const existing = await firestoreGetOne(leader.id);
         if (existing?.lastAiUpdate === today) {
           results.push({ id: leader.id, name: leader.name, status: 'skipped' });
           continue;
         }
 
-        const aiData = await groqAnalyze(leader, today);
+        const aiData = await aiAnalyze(leader, today);
         if (!aiData) {
           results.push({ id: leader.id, name: leader.name, status: 'ai_failed' });
           continue;
         }
 
-        // AI বললে মৃত — mark করো
         if (aiData.isDeceased === true) {
           await firestoreSet(leader.id, {
             ...leader,
@@ -201,7 +263,7 @@ exports.handler = async (event) => {
         await firestoreSet(leader.id, docData);
         updated++;
         results.push({ id: leader.id, name: leader.name, status: 'updated', approval: aiData.approval });
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 500));
 
       } catch (e) {
         results.push({ id: leader.id, name: leader.name, status: 'error', error: e.message });

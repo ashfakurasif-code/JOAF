@@ -1,7 +1,8 @@
 // netlify/functions/generate-timeline.js
 // RSS news থেকে AI দিয়ে timeline events বানায়, Firebase-এ save করে
 
-const GROQ_KEY    = process.env.GROQ_API_KEY;
+const GROQ_KEY   = process.env.GROQ_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
 const ADMIN_KEY   = process.env.ADMIN_SECRET_KEY;
 const GROQ_MODELS = [
   'llama-3.1-8b-instant',                       // 8B — fastest, lowest token cost, 1M TPD free
@@ -160,28 +161,61 @@ ${headlineText}
 tags থেকে বেছে নাও: govt, economy, politics, social, crisis, july
 কেবল news-ভিত্তিক ঘটনা। সব বাংলায়।`;
 
+    function parseEventsFromText(txt) {
+      txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+      const arrMatch = txt.match(/\[[\s\S]*\]/);
+      if (arrMatch) {
+        const parsed = JSON.parse(arrMatch[0]);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return null;
+    }
+
     let events = null;
-    for (const model of GROQ_MODELS) {
+
+    // PRIMARY: Gemini
+    if (GEMINI_KEY) {
       try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+        const res = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
+          }),
         });
-        if (!res.ok) { console.log(`[timeline] Groq ${model} HTTP ${res.status}`); continue; }
-        const data = await res.json();
-        let txt = data.choices?.[0]?.message?.content || '';
-        txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-        const arrMatch = txt.match(/\[[\s\S]*\]/);
-        if (arrMatch) {
-          const parsed = JSON.parse(arrMatch[0]);
-          if (Array.isArray(parsed) && parsed.length > 0) { events = parsed; break; }
+        if (res.ok) {
+          const data = await res.json();
+          const txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          events = parseEventsFromText(txt);
+          if (events) console.log('[timeline] Gemini ✓');
+        } else {
+          console.log('[timeline] Gemini HTTP ' + res.status);
         }
-      } catch (e) { console.log(`[timeline] Groq error: ${e.message}`); continue; }
+      } catch (e) { console.log('[timeline] Gemini error:', e.message); }
+    }
+
+    // FALLBACK: Groq
+    if (!events && GROQ_KEY) {
+      for (const model of GROQ_MODELS) {
+        try {
+          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+            body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 700 }),
+          });
+          if (!res.ok) { console.log(`[timeline] Groq ${model} HTTP ${res.status}`); continue; }
+          const data = await res.json();
+          const txt = data.choices?.[0]?.message?.content || '';
+          events = parseEventsFromText(txt);
+          if (events) { console.log(`[timeline] Groq ${model} ✓`); break; }
+        } catch (e) { console.log(`[timeline] Groq error: ${e.message}`); continue; }
+      }
     }
 
     if (!events) {
-      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'Groq API fail — সব model ব্যর্থ' }) };
+      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'সব AI fail হয়েছে — Netlify log দেখুন' }) };
     }
 
     const saved = [];
