@@ -12,7 +12,6 @@ const FB_CONFIG = {
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
-// ── RSS Sources (fetch-rss.js এর মতোই) ──
 const https = require('https');
 const http  = require('http');
 
@@ -75,137 +74,160 @@ async function fetchAllHeadlines() {
 }
 
 // ── Firestore REST ──
-async function firestoreGet(collection) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${collection}?key=${FB_CONFIG.apiKey}&pageSize=200`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('Firestore GET failed: ' + r.status);
-  const data = await r.json();
-  return (data.documents || []).map(doc => {
-    const id = doc.name.split('/').pop();
-    const fields = doc.fields || {};
-    const obj = { id };
-    for (const [k, v] of Object.entries(fields)) {
-      if (v.stringValue !== undefined) obj[k] = v.stringValue;
-      else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
-      else if (v.doubleValue !== undefined) obj[k] = v.doubleValue;
-      else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-    }
-    return obj;
-  });
+async function firestoreGetAll() {
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders?key=${FB_CONFIG.apiKey}&pageSize=200`;
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.documents || []).map(doc => {
+      const id = doc.name.split('/').pop();
+      const fields = doc.fields || {};
+      const obj = { id };
+      for (const [k, v] of Object.entries(fields)) {
+        if (v.stringValue !== undefined) obj[k] = v.stringValue;
+        else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
+      }
+      return obj;
+    });
+  } catch (e) {
+    return [];
+  }
 }
 
-async function firestoreSet(collection, docId, data) {
+async function firestoreSet(docId, data) {
   function toField(v) {
     if (typeof v === 'string')  return { stringValue: v };
     if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
     if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => {
-      if (typeof i === 'object' && i !== null) return { mapValue: { fields: Object.fromEntries(Object.entries(i).map(([k,vv]) => [k, toField(vv)])) } };
-      return toField(i);
-    })}};
+    if (Array.isArray(v)) return { arrayValue: { values: [] } };
     return { nullValue: null };
   }
   const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${collection}/${docId}?key=${FB_CONFIG.apiKey}`;
+  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}`;
   const r = await fetch(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields }),
   });
-  if (!r.ok) {
-    const err = await r.text();
-    throw new Error('Firestore PATCH failed: ' + err);
-  }
-  return await r.json();
+  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
 }
 
-async function firestorePatch(collection, docId, fieldUpdates) {
-  // Partial patch — only specific fields
+async function firestorePatchFields(docId, fieldUpdates) {
   function toField(v) {
     if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
     if (typeof v === 'boolean') return { booleanValue: v };
     return { nullValue: null };
   }
   const fields = Object.fromEntries(Object.entries(fieldUpdates).map(([k, v]) => [k, toField(v)]));
-  const updateMask = Object.keys(fieldUpdates).map(k => `updateMask.fieldPaths=${k}`).join('&');
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${collection}/${docId}?key=${FB_CONFIG.apiKey}&${updateMask}`;
+  const mask = Object.keys(fieldUpdates).map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
+  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}&${mask}`;
   const r = await fetch(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fields }),
   });
   if (!r.ok) throw new Error('Firestore partial PATCH failed: ' + r.status);
-  return await r.json();
 }
 
-// ── Groq: headlines থেকে relevant leaders বের করা ──
-async function discoverLeadersFromHeadlines(headlines, existingLeaders, today) {
-  const existingNames = existingLeaders.map(l => `${l.name} (id: ${l.id}, active: ${l.active !== false})`).join('\n');
-  const headlineText = headlines.slice(0, 60).join('\n');
-
-  const prompt = `তুমি বাংলাদেশের রাজনৈতিক বিশ্লেষক। আজকের তারিখ: ${today}।
-
-নিচে আজকের বাংলাদেশের শীর্ষ সংবাদ শিরোনাম:
-${headlineText}
-
-বর্তমানে Firebase-এ tracked নেতারা:
-${existingNames}
-
-তোমাকে দুটো কাজ করতে হবে:
-
-১) যে নেতারা আজকের news-এ উল্লেখ আছেন — তারা active: true।
-   যারা মারা গেছেন, দেশ ছেড়ে চলে গেছেন, বা আর কোনো news-এই নেই — তারা active: false।
-   isDeceased: true যদি মৃত্যুর খবর news-এ থাকে।
-
-২) news-এ এমন কোনো নতুন নেতা বা ব্যক্তিত্ব আছেন যিনি বর্তমান list-এ নেই কিন্তু trending?
-   তাঁদের নতুন করে add করতে হবে।
-
-শুধু নিচের JSON দাও, অন্য কিছু নয়, কোনো markdown নেই:
-{
-  "updates": [
-    {"id": "existing_id", "active": true/false, "isDeceased": true/false}
-  ],
-  "new_leaders": [
-    {
-      "id": "unique_slug_en",
-      "name": "বাংলায় নাম",
-      "party": "দলের নাম",
-      "role": "পদবী",
-      "cat": "সরকার|বিরোধী দল|যুব রাজনীতি|সুশীল সমাজ|ব্যবসায়ী|আওয়ামী লীগ",
-      "icon": "একটি emoji",
-      "active": true,
-      "isDeceased": false
-    }
-  ],
-  "summary": "সংক্ষিপ্ত বিবরণ বাংলায়"
-}
-
-নিয়ম:
-- শুধু news-এ উল্লিখিত নামের ভিত্তিতে সিদ্ধান্ত নাও
-- নতুন যোগ করো শুধু যদি সত্যিই trending হয় (কমপক্ষে ২টি শিরোনামে আসে)
-- id অবশ্যই lowercase English, underscore দিয়ে, unique
-- নতুন নেতা না পেলে new_leaders: []`;
-
+// ── Groq helper ──
+async function groqCall(prompt, maxTokens = 1500) {
   for (const model of GROQ_MODELS) {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.2, max_tokens: 2000 }),
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.2, max_tokens: maxTokens }),
       });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        const errTxt = await res.text();
+        console.log(`[discover] Groq ${model} HTTP ${res.status}: ${errTxt.slice(0, 100)}`);
+        continue;
+      }
       const data = await res.json();
       let txt = data.choices?.[0]?.message?.content || '';
       txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-      const match = txt.match(/\{[\s\S]*\}/);
-      if (match) {
-        const parsed = JSON.parse(match[0]);
-        return parsed;
-      }
-    } catch (e) { continue; }
+      return txt;
+    } catch (e) {
+      console.log(`[discover] Groq ${model} error: ${e.message}`);
+      continue;
+    }
   }
   return null;
+}
+
+// ── Step A: নতুন নেতা খোঁজা ──
+async function findNewLeaders(headlines, existingIds, today) {
+  const headlineText = headlines.slice(0, 50).join('\n');
+  const existingStr = existingIds.length > 0
+    ? `ইতিমধ্যে tracked id-গুলো: ${existingIds.slice(0, 30).join(', ')}`
+    : 'এখনো কোনো নেতা tracked নেই।';
+
+  const prompt = `তুমি বাংলাদেশের রাজনৈতিক বিশ্লেষক। আজকের তারিখ: ${today}।
+
+আজকের শীর্ষ সংবাদ শিরোনাম:
+${headlineText}
+
+${existingStr}
+
+এই headlines-এ কোন কোন বাংলাদেশি রাজনৈতিক নেতা বা গুরুত্বপূর্ণ ব্যক্তি আছেন যারা এখনো tracked নন?
+
+শুধু JSON array দাও — আর কিছু না, কোনো markdown নয়:
+[{"id":"english_id","name":"বাংলায় নাম","party":"দল","role":"পদবী","cat":"সরকার","icon":"👤"}]
+
+নিয়ম: id lowercase English underscore। cat: সরকার/বিরোধী দল/যুব রাজনীতি/সুশীল সমাজ/ব্যবসায়ী/আওয়ামী লীগ। কেউ না থাকলে []`;
+
+  const txt = await groqCall(prompt, 1200);
+  if (!txt) return null;
+
+  try {
+    const arrMatch = txt.match(/\[[\s\S]*\]/);
+    if (arrMatch) {
+      const parsed = JSON.parse(arrMatch[0]);
+      if (Array.isArray(parsed)) return parsed;
+    }
+    return [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// ── Step B: inactive/deceased ──
+async function findInactiveLeaders(headlines, existingLeaders, today) {
+  if (existingLeaders.length === 0) return [];
+
+  const headlineText = headlines.slice(0, 40).join('\n');
+  const leaderList = existingLeaders.slice(0, 25).map(l => `${l.id}: ${l.name}`).join('\n');
+
+  const prompt = `তুমি বাংলাদেশের রাজনৈতিক বিশ্লেষক। আজকের তারিখ: ${today}।
+
+আজকের শীর্ষ সংবাদ:
+${headlineText}
+
+Tracked নেতারা:
+${leaderList}
+
+এদের মধ্যে কেউ কি মারা গেছেন বা সম্পূর্ণ inactive হয়েছেন?
+
+শুধু JSON array দাও — আর কিছু না:
+[{"id":"leader_id","active":false,"isDeceased":false}]
+
+কেউ না থাকলে: []
+শুধু ১০০% নিশ্চিত হলে include করো।`;
+
+  const txt = await groqCall(prompt, 400);
+  if (!txt) return [];
+
+  try {
+    const arrMatch = txt.match(/\[[\s\S]*\]/);
+    if (arrMatch) {
+      const parsed = JSON.parse(arrMatch[0]);
+      if (Array.isArray(parsed)) return parsed;
+    }
+    return [];
+  } catch (e) {
+    return [];
+  }
 }
 
 exports.handler = async (event) => {
@@ -218,81 +240,96 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
 
-  // Auth check
   const adminKey    = event.headers?.['x-admin-key'];
   const isScheduled = event.headers?.['x-netlify-event'] === 'schedule';
   if (!isScheduled && adminKey !== ADMIN_KEY) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
+  if (!GROQ_KEY) {
+    return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: 'GROQ_API_KEY environment variable নেই — Netlify Dashboard > Site configuration > Environment variables এ set করুন' }) };
+  }
+
   const today = BD_TODAY();
+  const log = { added: [], updated: [], errors: [] };
 
   try {
-    // Step 1: আজকের headlines fetch
-    console.log('[discover-leaders] Fetching headlines...');
+    // Headlines fetch
+    console.log('[discover] Fetching RSS headlines...');
     const headlines = await fetchAllHeadlines();
-    if (headlines.length < 5) {
-      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'Too few headlines fetched', count: headlines.length }) };
-    }
-    console.log(`[discover-leaders] Got ${headlines.length} headlines`);
+    console.log(`[discover] Got ${headlines.length} headlines`);
 
-    // Step 2: Firebase থেকে existing leaders পড়া
-    const existingLeaders = await firestoreGet('leaders');
-    console.log(`[discover-leaders] Found ${existingLeaders.length} existing leaders`);
-
-    // Step 3: AI analysis
-    const aiResult = await discoverLeadersFromHeadlines(headlines, existingLeaders, today);
-    if (!aiResult) {
-      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'AI analysis failed', headlines: headlines.length }) };
+    if (headlines.length < 3) {
+      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: `RSS fetch failed — মাত্র ${headlines.length}টি headline পাওয়া গেছে` }) };
     }
 
-    const log = { updated: [], added: [], errors: [] };
+    // Existing leaders
+    const existingLeaders = await firestoreGetAll();
+    const existingIds = existingLeaders.map(l => l.id);
+    console.log(`[discover] ${existingLeaders.length} existing leaders in Firebase`);
 
-    // Step 4: Existing leaders update (active/isDeceased)
-    for (const update of (aiResult.updates || [])) {
+    // Find new leaders
+    const newLeaders = await findNewLeaders(headlines, existingIds, today);
+    if (newLeaders === null) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Groq API সব model-এ fail করেছে। GROQ_API_KEY সঠিক আছে কিনা Netlify environment variables-এ দেখুন।',
+          headlines: headlines.length,
+        }),
+      };
+    }
+
+    console.log(`[discover] AI found ${newLeaders.length} new leaders`);
+
+    // Add new leaders
+    for (const nl of newLeaders) {
       try {
-        await firestorePatch('leaders', update.id, {
-          active:      update.active !== false,
-          isDeceased:  update.isDeceased === true,
-          lastDiscovered: today,
-        });
-        log.updated.push(update.id);
-        await new Promise(r => setTimeout(r, 200));
-      } catch (e) {
-        log.errors.push({ id: update.id, error: e.message });
-      }
-    }
+        if (!nl.id || !nl.name) continue;
+        if (existingIds.includes(nl.id)) continue;
+        if (existingLeaders.find(l => l.name === nl.name)) continue;
 
-    // Step 5: নতুন leaders Firebase-এ add
-    for (const nl of (aiResult.new_leaders || [])) {
-      try {
-        // Duplicate check
-        const exists = existingLeaders.find(l => l.id === nl.id || l.name === nl.name);
-        if (exists) {
-          log.errors.push({ id: nl.id, error: 'Already exists' });
-          continue;
-        }
-        await firestoreSet('leaders', nl.id, {
-          name:         nl.name,
-          party:        nl.party || '',
-          role:         nl.role || '',
-          cat:          nl.cat || 'সুশীল সমাজ',
-          icon:         nl.icon || '👤',
-          active:       true,
-          isDeceased:   false,
-          viral:        false,
-          approval:     50,
-          promises:     [],
-          statements:   [],
-          controversies:[],
-          virals:       [],
+        await firestoreSet(nl.id, {
+          name:           nl.name,
+          party:          nl.party || '',
+          role:           nl.role || '',
+          cat:            nl.cat || 'সুশীল সমাজ',
+          icon:           nl.icon || '👤',
+          active:         true,
+          isDeceased:     false,
+          viral:          false,
+          approval:       50,
+          promises:       [],
+          statements:     [],
+          controversies:  [],
+          virals:         [],
           lastDiscovered: today,
-          addedByAI:    true,
+          addedByAI:      true,
         });
-        log.added.push(nl.id);
+        log.added.push(`${nl.id} (${nl.name})`);
         await new Promise(r => setTimeout(r, 300));
       } catch (e) {
         log.errors.push({ id: nl.id, error: e.message });
+      }
+    }
+
+    // Find inactive/deceased
+    if (existingLeaders.length > 0) {
+      const inactiveList = await findInactiveLeaders(headlines, existingLeaders, today);
+      for (const update of inactiveList) {
+        try {
+          await firestorePatchFields(update.id, {
+            active:         update.active !== false,
+            isDeceased:     update.isDeceased === true,
+            lastDiscovered: today,
+          });
+          log.updated.push(update.id);
+          await new Promise(r => setTimeout(r, 200));
+        } catch (e) {
+          log.errors.push({ id: update.id, error: e.message });
+        }
       }
     }
 
@@ -300,19 +337,20 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        success:    true,
-        date:       today,
-        headlines:  headlines.length,
-        summary:    aiResult.summary || '',
-        updated:    log.updated.length,
-        added:      log.added.length,
-        errors:     log.errors.length,
+        success:   true,
+        date:      today,
+        headlines: headlines.length,
+        existing:  existingLeaders.length,
+        added:     log.added.length,
+        updated:   log.updated.length,
+        errors:    log.errors.length,
+        summary:   `${log.added.length} নতুন যোগ, ${log.updated.length} আপডেট`,
         log,
       }),
     };
 
   } catch (e) {
-    console.error('[discover-leaders] Error:', e);
+    console.error('[discover] Fatal error:', e);
     return {
       statusCode: 500,
       headers,
