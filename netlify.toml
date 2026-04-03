@@ -5,6 +5,10 @@
   functions = "netlify/functions"
   publish = "."
 
+# functions/package.json এর dependencies auto-install করে
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
 # ── Scheduled Functions ──
 # BD time রাত ২টা = UTC রাত ৮টা (UTC+6)
 # discover-leaders: প্রতিদিন রাত ২:০০ (BD) — RSS পড়ে leaders আপডেট করে
