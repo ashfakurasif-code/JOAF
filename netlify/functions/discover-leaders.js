@@ -4,7 +4,14 @@
 
 const GROQ_KEY    = process.env.GROQ_API_KEY;
 const ADMIN_KEY   = process.env.ADMIN_SECRET_KEY;
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+// Models ordered: smaller/faster first to save daily token limits
+// llama3-8b-8192 & mixtral-8x7b-32768 decommissioned — removed
+// llama3-70b-8192 & llama-3.1-70b-versatile decommissioned — removed
+const GROQ_MODELS = [
+  'llama-3.1-8b-instant',              // 8B — fastest, lowest token cost, 1M TPD free
+  'meta-llama/llama-4-scout-17b-16e-instruct', // 17B MoE — separate quota
+  'llama-3.3-70b-versatile',           // 70B — best quality, 100k TPD (use as last resort)
+];
 
 const FB_CONFIG = {
   apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
@@ -124,26 +131,22 @@ async function firestorePatchFields(docId, updates) {
 
 // ── Groq: একটাই prompt, সব একসাথে ──
 async function analyzeWithGroq(headlines, existingLeaders, today) {
-  const headlineText = headlines.join('\n');
+  // Token বাঁচাতে: শুধু IDs, শুধু 15টা headline, সংক্ষিপ্ত English prompt
   const existingStr = existingLeaders.length > 0
-    ? existingLeaders.slice(0, 20).map(l => `${l.id}:${l.name}`).join(', ')
-    : 'কেউ নেই';
+    ? existingLeaders.slice(0, 20).map(l => l.id).join(',')
+    : 'none';
+  const shortHeadlines = headlines.slice(0, 15).join('\n');
 
-  const prompt = `বাংলাদেশের রাজনৈতিক বিশ্লেষক হিসেবে আজকের (${today}) সংবাদ বিশ্লেষণ করো।
+  const prompt = `BD political analyst. Date: ${today}
+Headlines:
+${shortHeadlines}
 
-শিরোনাম:
-${headlineText}
+Tracked IDs: ${existingStr}
 
-বর্তমানে tracked: ${existingStr}
-
-দুটো কাজ:
-১. এই headlines-এ tracked নেই এমন কোনো গুরুত্বপূর্ণ বাংলাদেশি ব্যক্তি আছেন? (নতুন যোগ)
-২. tracked কেউ মারা গেছেন বা সম্পূর্ণ নিষ্ক্রিয়? (inactive)
-
-শুধু JSON দাও:
-{"new":[{"id":"english_id","name":"বাংলা নাম","party":"দল","role":"পদ","cat":"সরকার","icon":"👤"}],"inactive":[{"id":"existing_id","isDeceased":false}]}
-
-নিয়ম: new-তে শুধু ২+ headline-এ থাকা ব্যক্তি। inactive-তে শুধু নিশ্চিত। কেউ না থাকলে []।`;
+Find: (1) important BD persons in 2+ headlines NOT in tracked IDs, (2) tracked persons confirmed dead/inactive.
+Reply JSON only, no extra text:
+{"new":[{"id":"slug","name":"বাংলা নাম","party":"দল","role":"পদ","cat":"সরকার","icon":"👤"}],"inactive":[{"id":"id","isDeceased":false}]}
+Rules: new[]=2+ headlines only. inactive[]=confirmed only. Empty=[]`;
 
   for (const model of GROQ_MODELS) {
     try {
@@ -154,7 +157,7 @@ ${headlineText}
           model,
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.1,
-          max_tokens: 800,
+          max_tokens: 400, // JSON output only — 400 যথেষ্ট
         }),
       });
       if (!res.ok) {

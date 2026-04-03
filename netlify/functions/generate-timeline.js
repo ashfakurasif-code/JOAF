@@ -3,7 +3,11 @@
 
 const GROQ_KEY    = process.env.GROQ_API_KEY;
 const ADMIN_KEY   = process.env.ADMIN_SECRET_KEY;
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+const GROQ_MODELS = [
+  'llama-3.1-8b-instant',                       // 8B — fastest, lowest token cost, 1M TPD free
+  'meta-llama/llama-4-scout-17b-16e-instruct',  // 17B MoE — separate quota
+  'llama-3.3-70b-versatile',                    // 70B — last resort, 100k TPD
+];
 
 const FB_CONFIG = {
   apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
@@ -162,7 +166,7 @@ tags থেকে বেছে নাও: govt, economy, politics, social, crisi
         const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 1200 }),
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 600 }),
         });
         if (!res.ok) { console.log(`[timeline] Groq ${model} HTTP ${res.status}`); continue; }
         const data = await res.json();
