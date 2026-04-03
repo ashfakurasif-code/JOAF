@@ -1,17 +1,19 @@
 // netlify/functions/save-subscription.js
-// User এর push subscription Firestore এ save করে
+// User এর push subscription Appwrite এ save করে
 
-const admin = require('firebase-admin');
+const { Client, Databases } = require('node-appwrite');
 
-function initAdmin() {
-  if (admin.apps.length) return;
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId:   process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey:  process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    }),
-  });
+const ENDPOINT = process.env.APPWRITE_ENDPOINT  || 'https://fra.cloud.appwrite.io/v1';
+const PROJECT  = process.env.APPWRITE_PROJECT_ID;
+const DATABASE = process.env.APPWRITE_DATABASE_ID;
+const API_KEY  = process.env.APPWRITE_API_KEY;
+
+function getDb() {
+  const client = new Client()
+    .setEndpoint(ENDPOINT)
+    .setProject(PROJECT)
+    .setKey(API_KEY);
+  return new Databases(client);
 }
 
 exports.handler = async (event) => {
@@ -29,10 +31,13 @@ exports.handler = async (event) => {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
-  try {
-    initAdmin();
-    const db = admin.firestore();
+  if (!PROJECT || !DATABASE || !API_KEY) {
+    const missing = [!PROJECT && 'APPWRITE_PROJECT_ID', !DATABASE && 'APPWRITE_DATABASE_ID', !API_KEY && 'APPWRITE_API_KEY'].filter(Boolean).join(', ');
+    console.error('Missing required env vars:', missing);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: `Server misconfiguration: missing env vars: ${missing}` }) };
+  }
 
+  try {
     const body = JSON.parse(event.body);
     const { subscription, deviceInfo } = body;
 
@@ -41,21 +46,37 @@ exports.handler = async (event) => {
     }
 
     // endpoint দিয়ে unique ID বানাও
-    const id = Buffer.from(subscription.endpoint).toString('base64').slice(-20);
+    const id = Buffer.from(subscription.endpoint).toString('base64').slice(-36).replace(/[^a-zA-Z0-9]/g, '_');
 
-    await db.collection('push_subscriptions').doc(id).set({
-      subscription,
-      endpoint: subscription.endpoint,
-      deviceInfo: deviceInfo || {},
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      active: true,
-    }, { merge: true });
+    const db = getDb();
+    const now = new Date().toISOString();
+
+    // Try to update existing document; create if not found
+    let doc;
+    try {
+      doc = await db.updateDocument(DATABASE, 'push_subscriptions', id, {
+        subscription: JSON.stringify(subscription),
+        endpoint: subscription.endpoint,
+        deviceInfo: JSON.stringify(deviceInfo || {}),
+        updatedAt: now,
+        active: true,
+      });
+    } catch (e) {
+      if (e.code !== 404) throw e;
+      doc = await db.createDocument(DATABASE, 'push_subscriptions', id, {
+        subscription: JSON.stringify(subscription),
+        endpoint: subscription.endpoint,
+        deviceInfo: JSON.stringify(deviceInfo || {}),
+        createdAt: now,
+        updatedAt: now,
+        active: true,
+      });
+    }
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ success: true, id }),
+      body: JSON.stringify({ success: true, id: doc.$id }),
     };
   } catch (err) {
     console.error('save-subscription error:', err);

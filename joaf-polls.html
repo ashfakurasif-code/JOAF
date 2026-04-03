@@ -420,10 +420,6 @@ const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
 
 const GROQ_MODELS = [
   'llama-3.3-70b-versatile',
-  'llama-3.1-70b-versatile',
-  'llama3-70b-8192',
-  'mixtral-8x7b-32768',
-  'gemma2-9b-it',
 ];
 const POLLS_COUNT = 30;
 const STREAK_GOAL = 30;
@@ -872,7 +868,7 @@ async function genPolls() {
             model: model,
             messages: [{ role:'user', content:prompt }],
             temperature: 0.85,
-            max_tokens:  4500
+            max_tokens:  1200
           })
         });
         if (r.ok) { data = await r.json(); break; }
@@ -1086,89 +1082,10 @@ window.addEventListener('load', async () => {
 });
 </script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, setDoc, getDoc, doc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
-
-// ── Pageview tracking ──
-const _ua = navigator.userAgent;
-const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
-const _ref = document.referrer;
-const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
-addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
-
-// ── votes object cleanup — শুধু শেষ ৭ দিন রাখো ──
-function pruneOldVotes(u) {
-  if (!u || !u.votes) return u;
-  const keep = new Set();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(Date.now() + 6*3600000 - i*86400000);
-    keep.add(d.toISOString().slice(0,10));
-  }
-  const pruned = {};
-  Object.keys(u.votes).forEach(k => { if (keep.has(k)) pruned[k] = u.votes[k]; });
-  u.votes = pruned;
-  return u;
-}
-
-// ── Firestore sync ──
-window._syncPollUser = function(u) {
-  if (!u || !u.id || u.isGuest) return;
-  const clean = pruneOldVotes({...u});
-  setDoc(doc(_db, 'poll_users', u.id), {
-    name:         clean.name        || '',
-    phone:        clean.phone       || '',
-    streak:       clean.streak      || 0,
-    maxStreak:    clean.maxStreak   || 0,
-    lastVote:     clean.lastVote    || null,
-    voteDays:     clean.voteDays    || [],
-    totalVotes:   clean.totalVotes  || 0,
-    cycles:       clean.cycles      || 0,
-    claimedCycles:clean.claimedCycles||0,
-    votes:        clean.votes       || {},
-    rewardClaimed:clean.rewardClaimed||false,
-    fbVerified:   clean.fbVerified  ||false,
-    updatedAt:    serverTimestamp()
-  }, {merge: true}).catch(()=>{});
-  // Also prune in localStorage
-  LS.set(clean.id, clean);
-};
-
-// ── Restore from Firestore if new device (localStorage empty) ──
-window._restorePollUser = async function(uid) {
-  if (!uid || uid.startsWith('guest_')) return null;
-  try {
-    const snap = await getDoc(doc(_db, 'poll_users', uid));
-    if (!snap.exists()) return null;
-    const data = snap.data();
-    // Only restore if Firestore has more progress than localStorage
-    const local = LS.get(uid);
-    const fsStreak = data.streak || 0;
-    const lsStreak = local?.streak || 0;
-    if (fsStreak > lsStreak || !local) {
-      const restored = {
-        id: uid,
-        name:          data.name         || '',
-        phone:         data.phone        || '',
-        streak:        data.streak       || 0,
-        maxStreak:     data.maxStreak    || 0,
-        lastVote:      data.lastVote     || null,
-        voteDays:      data.voteDays     || [],
-        totalVotes:    data.totalVotes   || 0,
-        cycles:        data.cycles       || 0,
-        claimedCycles: data.claimedCycles|| 0,
-        votes:         data.votes        || {},
-        rewardClaimed: data.rewardClaimed||false,
-        fbVerified:    data.fbVerified   ||false,
-        photo:         local?.photo      || '',
-      };
-      LS.set(uid, restored);
-      return restored;
-    }
-    return null;
-  } catch(e) { return null; }
-};
+// poll_users sync: Firestore dependency removed (Firebase→Appwrite migration)
+// _syncPollUser and _restorePollUser are no-ops; user state is kept in localStorage
+window._syncPollUser   = function() {};
+window._restorePollUser = async function() { return null; };
 </script>
 </body>
 </html>

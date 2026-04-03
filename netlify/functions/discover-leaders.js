@@ -1,16 +1,31 @@
 // =============================================================================
-// discover-leaders.js — RSS ফিড থেকে বাংলাদেশি নেতা আবিষ্কার করে Firebase-এ সেভ করে
+// discover-leaders.js — RSS ফিড থেকে বাংলাদেশি নেতা আবিষ্কার করে Appwrite-এ সেভ করে
 // Netlify Scheduled Function — প্রতিদিন রাত ২টায় BD Time (= ২০:০০ UTC) চলে
+// 3-day BD-date gate: Appwrite meta collection-এ lastRunBdDate রেখে ৩ দিন পরপর run করে
 // =============================================================================
 
-const GROQ_KEY    = process.env.GROQ_API_KEY;
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+const { Client, Databases, ID, Query } = require('node-appwrite');
 
-// Firebase project config (public client key only — no secrets)
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const GROQ_KEY    = process.env.GROQ_API_KEY;
+const GROQ_MODELS = ['llama-3.3-70b-versatile'];
+
+// Appwrite config (server-side, uses API key)
+const APPWRITE_ENDPOINT   = process.env.APPWRITE_ENDPOINT   || 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
+const APPWRITE_DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
+const APPWRITE_API_KEY    = process.env.APPWRITE_API_KEY;
+
+// Meta collection/doc for 3-day gate state
+const META_COLLECTION  = 'leader_discovery_meta';
+const META_DOC_ID      = 'state';
+
+function getDb() {
+  const client = new Client()
+    .setEndpoint(APPWRITE_ENDPOINT)
+    .setProject(APPWRITE_PROJECT_ID)
+    .setKey(APPWRITE_API_KEY);
+  return new Databases(client);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ৬+ বাংলাদেশি RSS ফিড লিস্ট
@@ -84,50 +99,89 @@ async function fetchRss(feed) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Firestore REST — বিদ্যমান leader ID-গুলো পড়ে
-// Read all document IDs from a Firestore collection via REST API
+// 3-day BD-date gate — Appwrite meta doc থেকে lastRunBdDate পড়ে
+// Returns { shouldRun, lastRunBdDate } — skips if < 3 BD days since last run
 // ─────────────────────────────────────────────────────────────────────────────
-async function firestoreGetIds(col) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${col}?key=${FB_CONFIG.apiKey}&pageSize=200`;
+async function checkAndUpdateGate(db, today) {
+  let lastRunBdDate = null;
+  let docExists = false;
+
   try {
-    const r = await fetch(url);
-    if (!r.ok) return new Set();
-    const data = await r.json();
-    return new Set((data.documents || []).map(d => d.name.split('/').pop()));
+    const doc = await db.getDocument(APPWRITE_DATABASE_ID, META_COLLECTION, META_DOC_ID);
+    lastRunBdDate = doc.lastRunBdDate || null;
+    docExists = true;
+  } catch (e) {
+    if (e.code !== 404) throw e;
+  }
+
+  // Compare BD dates: skip if last run was < 3 days ago
+  if (lastRunBdDate) {
+    const last = new Date(lastRunBdDate + 'T00:00:00Z');
+    const now  = new Date(today + 'T00:00:00Z');
+    const diffDays = Math.floor((now - last) / 86400000);
+    if (diffDays < 3) {
+      return { shouldRun: false, lastRunBdDate, diffDays };
+    }
+  }
+
+  return { shouldRun: true, lastRunBdDate, docExists };
+}
+
+async function updateGate(db, today, docExists) {
+  try {
+    if (docExists) {
+      await db.updateDocument(APPWRITE_DATABASE_ID, META_COLLECTION, META_DOC_ID, {
+        lastRunBdDate: today,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      await db.createDocument(APPWRITE_DATABASE_ID, META_COLLECTION, META_DOC_ID, {
+        lastRunBdDate: today,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  } catch (e) {
+    console.warn('updateGate error:', e.message);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Appwrite — বিদ্যমান leader ID-গুলো পড়ে (duplicate চেক)
+// Read existing leader document IDs from Appwrite
+// ─────────────────────────────────────────────────────────────────────────────
+async function appwriteGetLeaderIds(db) {
+  try {
+    const res = await db.listDocuments(APPWRITE_DATABASE_ID, 'leaders', [
+      Query.limit(200),
+    ]);
+    return new Set(res.documents.map(d => d.$id));
   } catch (e) {
     return new Set();
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Firestore REST — একটি document সেভ বা আপডেট করে (PATCH)
-// Write/update a Firestore document via REST API
+// Appwrite — একটি leader document সেভ করে
+// Create a new leader document in Appwrite
 // ─────────────────────────────────────────────────────────────────────────────
-async function firestoreSet(col, docId, data) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return {
-      arrayValue: {
-        values: v.map(i => {
-          if (typeof i === 'object' && i !== null)
-            return { mapValue: { fields: Object.fromEntries(Object.entries(i).map(([k, vv]) => [k, toField(vv)])) } };
-          return toField(i);
-        }),
-      },
-    };
-    return { nullValue: null };
-  }
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${col}/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method:  'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ fields }),
+async function appwriteCreateLeader(db, leaderId, data) {
+  return db.createDocument(APPWRITE_DATABASE_ID, 'leaders', leaderId, {
+    name:          data.name,
+    party:         data.party          || '',
+    role:          data.role           || '',
+    cat:           data.cat            || 'সুশীল সমাজ',
+    icon:          data.icon           || '👤',
+    isDeceased:    data.isDeceased     === true,
+    viral:         false,
+    approval:      50,
+    promises:      '[]',
+    statements:    '[]',
+    controversies: '[]',
+    virals:        '[]',
+    lastAiUpdate:  '',
+    discoveredOn:  data.discoveredOn,
+    source:        'discover-leaders',
   });
-  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
-  return r.json();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -168,7 +222,7 @@ ${headlineText}
           model,
           messages:    [{ role: 'user', content: prompt }],
           temperature: 0.3,
-          max_tokens:  6000,
+          max_tokens:  1200,
         }),
       });
       if (!res.ok) continue;
@@ -193,7 +247,36 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
 
+  // Required env vars check
+  if (!APPWRITE_PROJECT_ID || !APPWRITE_DATABASE_ID || !APPWRITE_API_KEY) {
+    const missing = [!APPWRITE_PROJECT_ID && 'APPWRITE_PROJECT_ID', !APPWRITE_DATABASE_ID && 'APPWRITE_DATABASE_ID', !APPWRITE_API_KEY && 'APPWRITE_API_KEY'].filter(Boolean).join(', ');
+    return { statusCode: 500, headers, body: JSON.stringify({ success: false, reason: 'missing_env', missing }) };
+  }
+
   const today = BD_TODAY();
+  const db = getDb();
+
+  // ── 3-day BD-date gate — Appwrite meta থেকে lastRunBdDate চেক করে ──
+  // Skip if last successful run was < 3 BD days ago
+  let gateInfo;
+  try {
+    gateInfo = await checkAndUpdateGate(db, today);
+  } catch (e) {
+    return { statusCode: 500, headers, body: JSON.stringify({ success: false, reason: 'gate_error', error: e.message }) };
+  }
+
+  if (!gateInfo.shouldRun) {
+    return {
+      statusCode: 200, headers,
+      body: JSON.stringify({
+        success: false,
+        reason:  'too_soon',
+        lastRunBdDate: gateInfo.lastRunBdDate,
+        diffDays: gateInfo.diffDays,
+        message: `শেষ রান ${gateInfo.lastRunBdDate} — ৩ দিন হয়নি (${gateInfo.diffDays} দিন হয়েছে)`,
+      }),
+    };
+  }
 
   // ── সব RSS ফিড থেকে সমান্তরালে সংবাদ সংগ্রহ ──
   // Fetch all feeds in parallel and combine results
@@ -222,11 +305,11 @@ exports.handler = async (event) => {
     };
   }
 
-  // ── Firebase-এ আগের নেতাদের ID বের করো (duplicate চেক) ──
+  // ── Appwrite-এ আগের নেতাদের ID বের করো (duplicate চেক) ──
   // Get existing leader IDs to avoid duplicates
-  const existingIds = await firestoreGetIds('leaders');
+  const existingIds = await appwriteGetLeaderIds(db);
 
-  // ── নতুন নেতাদের Firebase-এ সেভ করো ──
+  // ── নতুন নেতাদের Appwrite-এ সেভ করো ──
   // Save only newly discovered leaders (skip existing ones)
   let added   = 0;
   let skipped = 0;
@@ -235,38 +318,34 @@ exports.handler = async (event) => {
   for (const leader of discovered) {
     if (!leader.id || !leader.name) continue;
 
-    // ইতিমধ্যে Firebase-এ আছে — skip
+    // ইতিমধ্যে Appwrite-এ আছে — skip
     if (existingIds.has(leader.id)) {
       skipped++;
       continue;
     }
 
     try {
-      await firestoreSet('leaders', leader.id, {
-        name:          leader.name,
-        party:         leader.party         || '',
-        role:          leader.role          || '',
-        cat:           leader.cat           || 'সুশীল সমাজ',
-        icon:          leader.icon          || '👤',
-        isDeceased:    leader.isDeceased    === true,
-        viral:         false,
-        approval:      50,           // প্রাথমিক মান — update-leaders.js আপডেট করবে
-        promises:      [],
-        statements:    [],
-        controversies: [],
-        virals:        [],
-        lastAiUpdate:  '',           // update-leaders.js পরে AI analysis করবে
-        discoveredOn:  today,
-        source:        'discover-leaders',
+      await appwriteCreateLeader(db, leader.id, {
+        name:        leader.name,
+        party:       leader.party      || '',
+        role:        leader.role       || '',
+        cat:         leader.cat        || 'সুশীল সমাজ',
+        icon:        leader.icon       || '👤',
+        isDeceased:  leader.isDeceased === true,
+        discoveredOn: today,
       });
       added++;
       results.push({ id: leader.id, name: leader.name, status: 'added' });
-      // Firestore rate-limit এড়াতে ছোট বিরতি
+      // Appwrite rate-limit এড়াতে ছোট বিরতি
       await new Promise(r => setTimeout(r, 200));
     } catch (e) {
       results.push({ id: leader.id, name: leader.name, status: 'error', error: e.message });
     }
   }
+
+  // ── সফল রান হলে meta doc আপডেট করো ──
+  // Update lastRunBdDate in Appwrite meta doc on successful run
+  await updateGate(db, today, gateInfo.docExists);
 
   return {
     statusCode: 200,

@@ -1,16 +1,26 @@
 // =============================================================================
-// generate-timeline.js — RSS ফিড থেকে Timeline Events তৈরি করে Firebase-এ সেভ করে
+// generate-timeline.js — RSS ফিড থেকে Timeline Events তৈরি করে Appwrite-এ সেভ করে
 // Netlify Scheduled Function — প্রতিদিন রাত ২টায় BD Time (= ২০:০০ UTC) চলে
 // =============================================================================
 
-const GROQ_KEY    = process.env.GROQ_API_KEY;
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+const { Client, Databases, Query } = require('node-appwrite');
 
-// Firebase project config (public client key only — no secrets)
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const GROQ_KEY    = process.env.GROQ_API_KEY;
+const GROQ_MODELS = ['llama-3.3-70b-versatile'];
+
+// Appwrite config (server-side, uses API key)
+const APPWRITE_ENDPOINT    = process.env.APPWRITE_ENDPOINT   || 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID  = process.env.APPWRITE_PROJECT_ID;
+const APPWRITE_DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
+const APPWRITE_API_KEY     = process.env.APPWRITE_API_KEY;
+
+function getDb() {
+  const client = new Client()
+    .setEndpoint(APPWRITE_ENDPOINT)
+    .setProject(APPWRITE_PROJECT_ID)
+    .setKey(APPWRITE_API_KEY);
+  return new Databases(client);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ৬+ বাংলাদেশি RSS ফিড লিস্ট
@@ -89,50 +99,32 @@ async function fetchRss(feed) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Firestore REST — বিদ্যমান timeline ID-গুলো পড়ে
-// Read existing timeline document IDs from Firestore
+// Appwrite — বিদ্যমান timeline ID-গুলো পড়ে
+// Read existing timeline document IDs from Appwrite
 // ─────────────────────────────────────────────────────────────────────────────
-async function firestoreGetIds(col) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${col}?key=${FB_CONFIG.apiKey}&pageSize=100`;
+async function appwriteGetTimelineIds(db) {
   try {
-    const r = await fetch(url);
-    if (!r.ok) return new Set();
-    const data = await r.json();
-    return new Set((data.documents || []).map(d => d.name.split('/').pop()));
+    const res = await db.listDocuments(APPWRITE_DATABASE_ID, 'timeline', [
+      Query.limit(100),
+    ]);
+    return new Set(res.documents.map(d => d.$id));
   } catch (e) {
     return new Set();
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Firestore REST — একটি document সেভ বা আপডেট করে (PATCH)
-// Write/update a Firestore document via REST API
+// Appwrite — timeline document সেভ বা আপডেট করে
+// Create or update a timeline document in Appwrite
 // ─────────────────────────────────────────────────────────────────────────────
-async function firestoreSet(col, docId, data) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return {
-      arrayValue: {
-        values: v.map(i => {
-          if (typeof i === 'object' && i !== null)
-            return { mapValue: { fields: Object.fromEntries(Object.entries(i).map(([k, vv]) => [k, toField(vv)])) } };
-          return toField(i);
-        }),
-      },
-    };
-    return { nullValue: null };
+async function appwriteUpsertTimeline(db, docId, data) {
+  try {
+    await db.getDocument(APPWRITE_DATABASE_ID, 'timeline', docId);
+    return db.updateDocument(APPWRITE_DATABASE_ID, 'timeline', docId, data);
+  } catch (e) {
+    if (e.code !== 404) throw e;
+    return db.createDocument(APPWRITE_DATABASE_ID, 'timeline', docId, data);
   }
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${col}/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method:  'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ fields }),
-  });
-  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
-  return r.json();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,7 +165,7 @@ ${newsText}
           model,
           messages:    [{ role: 'user', content: prompt }],
           temperature: 0.3,
-          max_tokens:  4000,
+          max_tokens:  1200,
         }),
       });
       if (!res.ok) continue;
@@ -198,7 +190,14 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
 
+  // Required env vars check
+  if (!APPWRITE_PROJECT_ID || !APPWRITE_DATABASE_ID || !APPWRITE_API_KEY) {
+    const missing = [!APPWRITE_PROJECT_ID && 'APPWRITE_PROJECT_ID', !APPWRITE_DATABASE_ID && 'APPWRITE_DATABASE_ID', !APPWRITE_API_KEY && 'APPWRITE_API_KEY'].filter(Boolean).join(', ');
+    return { statusCode: 500, headers, body: JSON.stringify({ success: false, reason: 'missing_env', missing }) };
+  }
+
   const today = BD_TODAY();
+  const db = getDb();
 
   // ── সব RSS ফিড থেকে সমান্তরালে সংবাদ সংগ্রহ ──
   // Fetch all 8 feeds in parallel and combine news items
@@ -227,10 +226,10 @@ exports.handler = async (event) => {
     };
   }
 
-  // ── Firebase-এ আগের timeline ID-গুলো বের করো ──
-  const existingIds = await firestoreGetIds('timeline');
+  // ── Appwrite-এ আগের timeline ID-গুলো বের করো ──
+  const existingIds = await appwriteGetTimelineIds(db);
 
-  // ── Timeline Events Firebase-এ সেভ/আপডেট করো ──
+  // ── Timeline Events Appwrite-এ সেভ/আপডেট করো ──
   // Save new events; update existing ones with fresh data
   let added   = 0;
   let updated = 0;
@@ -240,12 +239,13 @@ exports.handler = async (event) => {
     if (!ev.id || !ev.title) continue;
     const isNew = !existingIds.has(ev.id);
     try {
-      await firestoreSet('timeline', ev.id, {
+      await appwriteUpsertTimeline(db, ev.id, {
         date:    ev.date  || today,
         title:   ev.title || '',
         desc:    ev.desc  || '',
         type:    ev.type  || 'neutral',
-        tags:    Array.isArray(ev.tags) ? ev.tags : [],
+        // tags stored as JSON string
+        tags:    JSON.stringify(Array.isArray(ev.tags) ? ev.tags : []),
         addedOn: today,
       });
       isNew ? added++ : updated++;

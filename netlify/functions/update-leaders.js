@@ -1,71 +1,45 @@
-// update-leaders.js — Groq AI দিয়ে নেতাদের data update করে
-// Firebase Admin SDK optional — client SDK fallback আছে
+// update-leaders.js — Groq AI দিয়ে নেতাদের data update করে (Appwrite backend)
+// Daily overwrite snapshot — Appwrite leaders collection আপডেট করে
+
+const { Client, Databases } = require('node-appwrite');
 
 const GROQ_KEY    = process.env.GROQ_API_KEY;
 const ADMIN_KEY   = process.env.ADMIN_SECRET_KEY;
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+const GROQ_MODELS = ['llama-3.3-70b-versatile'];
 
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+// Appwrite config (server-side, uses API key)
+const APPWRITE_ENDPOINT    = process.env.APPWRITE_ENDPOINT   || 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID  = process.env.APPWRITE_PROJECT_ID;
+const APPWRITE_DATABASE_ID = process.env.APPWRITE_DATABASE_ID;
+const APPWRITE_API_KEY     = process.env.APPWRITE_API_KEY;
 
 const BD_TODAY = () => new Date(Date.now() + 6*3600000).toISOString().slice(0,10);
 
-// ── Firestore REST API (no SDK needed) ──
-async function firestoreGet(collection) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${collection}?key=${FB_CONFIG.apiKey}&pageSize=200`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('Firestore GET failed: ' + r.status);
-  const data = await r.json();
-  return (data.documents || []).map(doc => {
-    const id = doc.name.split('/').pop();
-    const fields = doc.fields || {};
-    const obj = { id };
-    for (const [k, v] of Object.entries(fields)) {
-      if (v.stringValue !== undefined) obj[k] = v.stringValue;
-      else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
-      else if (v.doubleValue !== undefined) obj[k] = v.doubleValue;
-      else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-      else if (v.arrayValue) obj[k] = (v.arrayValue.values || []).map(i => {
-        if (i.mapValue) {
-          const m = {};
-          for (const [mk, mv] of Object.entries(i.mapValue.fields || {})) {
-            m[mk] = mv.stringValue ?? mv.integerValue ?? mv.booleanValue ?? '';
-          }
-          return m;
-        }
-        return i.stringValue ?? i.integerValue ?? '';
-      });
-    }
-    return obj;
-  });
+function getDb() {
+  const client = new Client()
+    .setEndpoint(APPWRITE_ENDPOINT)
+    .setProject(APPWRITE_PROJECT_ID)
+    .setKey(APPWRITE_API_KEY);
+  return new Databases(client);
 }
 
-async function firestoreSet(collection, docId, data) {
-  // Build Firestore field map
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => {
-      if (typeof i === 'object' && i !== null) return { mapValue: { fields: Object.fromEntries(Object.entries(i).map(([k,vv]) => [k, toField(vv)])) } };
-      return toField(i);
-    })}};
-    return { nullValue: null };
+// ── Appwrite — একটি leader document GET (by $id) ──
+async function appwriteGetLeader(db, leaderId) {
+  try {
+    return await db.getDocument(APPWRITE_DATABASE_ID, 'leaders', leaderId);
+  } catch (e) {
+    if (e.code === 404) return null;
+    throw e;
   }
-  const fields = Object.fromEntries(Object.entries(data).map(([k,v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/${collection}/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
-  });
-  if (!r.ok) {
-    const err = await r.text();
-    throw new Error('Firestore PATCH failed: ' + err);
+}
+
+// ── Appwrite — leader document upsert (create or update) ──
+async function appwriteUpsertLeader(db, leaderId, data) {
+  const existing = await appwriteGetLeader(db, leaderId);
+  if (existing) {
+    return db.updateDocument(APPWRITE_DATABASE_ID, 'leaders', leaderId, data);
   }
-  return await r.json();
+  return db.createDocument(APPWRITE_DATABASE_ID, 'leaders', leaderId, data);
 }
 
 // ── Groq AI analysis ──
@@ -200,13 +174,20 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
 
   // Auth
-  const adminKey  = event.headers?.['x-admin-key'];
+  const adminKey    = event.headers?.['x-admin-key'];
   const isScheduled = event.headers?.['x-netlify-event'] === 'schedule';
   if (!isScheduled && adminKey !== ADMIN_KEY) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
+  // Required env vars check
+  if (!APPWRITE_PROJECT_ID || !APPWRITE_DATABASE_ID || !APPWRITE_API_KEY) {
+    const missing = [!APPWRITE_PROJECT_ID && 'APPWRITE_PROJECT_ID', !APPWRITE_DATABASE_ID && 'APPWRITE_DATABASE_ID', !APPWRITE_API_KEY && 'APPWRITE_API_KEY'].filter(Boolean).join(', ');
+    return { statusCode: 500, headers, body: JSON.stringify({ error: `Server misconfiguration: missing env vars: ${missing}` }) };
+  }
+
   const today = BD_TODAY();
+  const db = getDb();
   const results = [];
   let updated = 0;
 
@@ -218,17 +199,8 @@ exports.handler = async (event) => {
 
   for (const leader of batch) {
     try {
-      // Check last update via Firestore REST
-      let existingDoc = null;
-      try {
-        const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${leader.id}?key=${FB_CONFIG.apiKey}`;
-        const r = await fetch(url);
-        if (r.ok) {
-          const d = await r.json();
-          const fields = d.fields || {};
-          existingDoc = { lastAiUpdate: fields.lastAiUpdate?.stringValue };
-        }
-      } catch(e) {}
+      // Check last update via Appwrite — skip if already updated today
+      const existingDoc = await appwriteGetLeader(db, leader.id);
 
       if (existingDoc?.lastAiUpdate === today) {
         results.push({ id: leader.id, name: leader.name, status: 'skipped' });
@@ -251,14 +223,15 @@ exports.handler = async (event) => {
         // isDeceased: AI-এর মতামত (মৃত হলে true, জীবিত হলে false)
         isDeceased:    aiData.isDeceased === true,
         approval:      typeof aiData.approval === 'number' ? aiData.approval : 50,
-        promises:      Array.isArray(aiData.promises)      ? aiData.promises      : [],
-        statements:    Array.isArray(aiData.statements)    ? aiData.statements    : [],
-        controversies: Array.isArray(aiData.controversies) ? aiData.controversies : [],
-        virals:        Array.isArray(aiData.virals)        ? aiData.virals        : [],
+        // Arrays stored as JSON strings (Appwrite string field)
+        promises:      JSON.stringify(Array.isArray(aiData.promises)      ? aiData.promises      : []),
+        statements:    JSON.stringify(Array.isArray(aiData.statements)    ? aiData.statements    : []),
+        controversies: JSON.stringify(Array.isArray(aiData.controversies) ? aiData.controversies : []),
+        virals:        JSON.stringify(Array.isArray(aiData.virals)        ? aiData.virals        : []),
         lastAiUpdate:  today,
       };
 
-      await firestoreSet('leaders', leader.id, docData);
+      await appwriteUpsertLeader(db, leader.id, docData);
       updated++;
       results.push({ id: leader.id, name: leader.name, status: 'updated', approval: aiData.approval });
       await new Promise(r => setTimeout(r, 600));

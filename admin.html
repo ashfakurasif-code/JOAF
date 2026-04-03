@@ -551,7 +551,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="page" id="page-leader">
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">🏛️ নেতা ট্র্যাকার</div><div class="card-sub">Firestore এ data save হলে সাইটে automatically দেখাবে</div></div>
+          <div><div class="card-title">🏛️ নেতা ট্র্যাকার</div><div class="card-sub">Appwrite/JSON এ data save হলে সাইটে automatically দেখাবে</div></div>
           <div style="display:flex;gap:6px;align-items:center;">
             <button class="btn btn-ghost btn-sm" id="leader-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);" onclick="bulkDeleteLeaders()">🗑️ Selected Delete</button>
             <button class="btn btn-primary btn-sm" onclick="openModal('leaderModal')">+ নতুন নেতা</button>
@@ -612,7 +612,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">আজকের দাম (Firestore)</div></div>
+        <div class="card-header"><div class="card-title">আজকের দাম (Appwrite/JSON)</div></div>
         <div id="bajar-current"><div class="loading">লোড হচ্ছে...</div></div>
       </div>
     </div>
@@ -772,27 +772,12 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
       <!-- Setup guide (shown only when no data) -->
       <div id="an-setup" style="display:none" class="card mt16" style="border-color:var(--amber-border);background:var(--amber-bg)">
-        <div class="card-title" style="color:var(--amber);margin-bottom:10px">⚙️ Visitor Tracking সেটআপ করুন</div>
+        <div class="card-title" style="color:var(--amber);margin-bottom:10px">⚙️ Visitor Tracking</div>
         <div style="font-size:12px;color:var(--text2);line-height:1.7">
-          আপনার <code>index.html</code> বা সব page-এর <code>&lt;/body&gt;</code> এর আগে এই code যোগ করুন:<br><br>
-          <code style="display:block;background:var(--bg);padding:10px;border-radius:8px;font-size:11px;white-space:pre-wrap;border:1px solid var(--border)">&lt;script type="module"&gt;
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const FB = { apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk', authDomain:'joaf-app-45753.firebaseapp.com', projectId:'joaf-app-45753' };
-const app = getApps().length ? getApps()[0] : initializeApp(FB);
-const db  = getFirestore(app);
-const ua  = navigator.userAgent;
-const dev = /Mobile|Android|iPhone|iPad/i.test(ua) ? 'mobile' : /Tablet|iPad/i.test(ua) ? 'tablet' : 'desktop';
-const ref = document.referrer;
-const src = ref.includes('google')?'Google':ref.includes('facebook')?'Facebook':ref.includes('t.co')||ref.includes('twitter')?'Twitter':ref?'Referral':'Direct';
-addDoc(collection(db,'pageviews'), {
-  page: location.pathname || '/',
-  device: dev,
-  source: src,
-  referrer: ref || '',
-  ts: serverTimestamp()
-});
-&lt;/script&gt;</code>
+          Pageview tracking এখন Cloudflare Analytics + Google Analytics 4 (GA4) দিয়ে হচ্ছে।
+          Firebase/Firestore tracking সরানো হয়েছে।<br><br>
+          GA4 পেজভিউ দেখতে: <a href="https://analytics.google.com" target="_blank">analytics.google.com</a><br>
+          Cloudflare analytics: <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a>
         </div>
       </div>
 
@@ -826,9 +811,17 @@ addDoc(collection(db,'pageviews'), {
         <div class="btn-row">
           <button class="btn btn-ghost" onclick="runMigration()">⬆️ Subscription Migration</button>
           <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
+          <button class="btn btn-ghost" onclick="bootstrapAppwrite()">🗄️ Bootstrap Appwrite</button>
+          <button class="btn btn-ghost" onclick="buildPollResults()">📊 Build Poll Results JSON</button>
           <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
-          <a href="https://console.firebase.google.com/project/joaf-app-45753" target="_blank" class="btn btn-ghost">🔥 Firebase Console</a>
           <a href="https://app.netlify.com/projects/joaf" target="_blank" class="btn btn-ghost">🌐 Netlify Dashboard</a>
+        </div>
+      </div>
+
+      <div class="card mt16" style="border-color:var(--border)">
+        <div class="card-header"><div class="card-title" style="font-size:13px;color:var(--text2)">🔗 Legacy Tools (migration period)</div></div>
+        <div class="btn-row">
+          <a href="https://console.firebase.google.com/project/joaf-app-45753" target="_blank" class="btn btn-ghost">🔥 Firebase Console</a>
         </div>
       </div>
     </div>
@@ -1112,13 +1105,8 @@ async function initDashboard() {
       headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
       body: JSON.stringify({_verify:true})
     }).then(async r => {
-      // Get actual count from Firestore via a separate count approach
-      const subSnap = await getDocs(collection(db,'push_subscriptions'));
-      const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
-      setEl('ds-sub', activeCount);
-      setEl('b-notif', activeCount);
-      setEl('n-sub', activeCount);
-      setEl('an-subs', activeCount);
+      // Get subscriber count via send-notification _verify (Appwrite-backed)
+      setEl('ds-sub', '…');
     }).catch(()=>{});
   } catch(e) {}
 
@@ -1498,7 +1486,7 @@ async function loadLeaders() {
   tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await getDocs(collection(db,'leaders'));
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">কোনো data নেই — Bootstrap Appwrite চালান</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
       return `<tr>
@@ -1595,7 +1583,7 @@ window.runLeaderAiUpdate = async function() {
 };
 
 window.migrateLeaders = async function() {
-  if (!confirm('Firestore-এ সব নেতার latest data migrate করবেন? পুরনো data replace হবে না, নতুন add হবে।')) return;
+  if (!confirm('সব নেতার latest data migrate করবেন? পুরনো data replace হবে না, নতুন add হবে।')) return;
   const leaders = [
     {id:'yunus',name:'ড. মুহাম্মদ ইউনূস',party:'অন্তর্বর্তীকালীন সরকার',role:'প্রধান উপদেষ্টা',icon:'👴',cat:'সরকার',approval:68,viral:true,
       promises:[{text:'নির্বাচন কমিশন সংস্কার',status:'done'},{text:'বিচার বিভাগ সংস্কার',status:'progress'},{text:'দুর্নীতি দমন কমিশন শক্তিশালীকরণ',status:'progress'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'pending'},{text:'সংবিধান সংস্কার কমিশন গঠন',status:'done'},{text:'নতুন নির্বাচনী রোডম্যাপ',status:'progress'}],
@@ -1889,6 +1877,34 @@ window.runMigration = async function() {
 };
 
 window.clearCache = function() { toast('Cache cleared','success'); };
+
+window.bootstrapAppwrite = async function() {
+  if (!confirm('Appwrite collections/indexes/permissions setup করবেন?')) return;
+  try {
+    const res = await fetch('/.netlify/functions/bootstrap-appwrite', {
+      method: 'POST',
+      headers: { 'X-Admin-Key': ADMIN_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    if (res.ok) { toast('✅ Bootstrap সফল হয়েছে', 'success'); }
+    else { toast('❌ ' + (data.error || 'Bootstrap failed'), 'error'); }
+  } catch(e) { toast('❌ Error: ' + e.message, 'error'); }
+};
+
+window.buildPollResults = async function() {
+  if (!confirm('poll-results.json এখনই build করবেন?')) return;
+  try {
+    const res = await fetch('/.netlify/functions/build-poll-results-json', {
+      method: 'POST',
+      headers: { 'X-Admin-Key': ADMIN_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    if (res.ok) { toast('✅ Poll results JSON build হয়েছে', 'success'); }
+    else { toast('❌ ' + (data.error || 'Build failed'), 'error'); }
+  } catch(e) { toast('❌ Error: ' + e.message, 'error'); }
+};
 
 // ── Helpers ──────────────────────────────────────────────
 window.openModal  = id => document.getElementById(id).classList.add('open');

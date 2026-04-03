@@ -34,6 +34,9 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
 .alert-type-badge.fire{background:#ffedd5;color:#c2410c;}
 .alert-type-badge.flood{background:#dbeafe;color:#1d4ed8;}
 .alert-type-badge.crime{background:#ede9fe;color:#6d28d9;}
+.alert-type-badge.health{background:#d1fae5;color:#065f46;}
+.alert-type-badge.accident{background:#fef3c7;color:#92400e;}
+.alert-type-badge.political{background:#e0e7ff;color:#3730a3;}
 .alert-type-badge.other{background:#f3f4f6;color:#374151;}
 .alert-title{font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:4px;}
 .alert-desc{font-size:13px;color:#4b5563;line-height:1.5;margin-bottom:8px;}
@@ -89,6 +92,9 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
   <button class="at" data-type="flood">🌊 বন্যা</button>
   <button class="at" data-type="crime">⚠️ অপরাধ</button>
   <button class="at" data-type="medical">🏥 মেডিকেল</button>
+  <button class="at" data-type="health">💊 স্বাস্থ্য</button>
+  <button class="at" data-type="accident">🚗 দুর্ঘটনা</button>
+  <button class="at" data-type="political">🏛️ রাজনৈতিক</button>
   <button class="at" data-type="other">📢 অন্যান্য</button>
 </div>
 
@@ -109,7 +115,9 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
       <button class="type-btn" data-type="flood">🌊 বন্যা/জলাবদ্ধতা</button>
       <button class="type-btn" data-type="crime">⚠️ অপরাধ/ধর্ষণ</button>
       <button class="type-btn" data-type="medical">🏥 মেডিকেল জরুরি</button>
+      <button class="type-btn" data-type="health">💊 স্বাস্থ্য সংকট</button>
       <button class="type-btn" data-type="accident">🚗 দুর্ঘটনা</button>
+      <button class="type-btn" data-type="political">🏛️ রাজনৈতিক</button>
       <button class="type-btn selected" data-type="other">📢 অন্যান্য</button>
     </div>
 
@@ -191,22 +199,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// Browser-compatible Appwrite SDK (appwrite package, not node-appwrite)
+import { Client, Databases, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
 
+// Appwrite config
+const APPWRITE_ENDPOINT   = 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID = '69ceec140033bccf5ea2';
+const DATABASE_ID         = '69cef52f0018a2a7b05a';
+const COLLECTION_ID       = 'alerts';
 
-const app = initializeApp({
-  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
-  authDomain: "joaf-app-45753.firebaseapp.com",
-  projectId: "joaf-app-45753",
-  storageBucket: "joaf-app-45753.firebasestorage.app",
-  messagingSenderId: "472362223214",
-  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
-});
-const db = getFirestore(app);
+const client = new Client()
+  .setEndpoint(APPWRITE_ENDPOINT)
+  .setProject(APPWRITE_PROJECT_ID);
 
+const databases = new Databases(client);
 
-const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',accident:'🚗',other:'📢'};
+const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',health:'💊',accident:'🚗',political:'🏛️',other:'📢'};
 const TYPE_LABELS = {fire:'আগুন',flood:'বন্যা',crime:'অপরাধ',medical:'মেডিকেল',accident:'দুর্ঘটনা',other:'অন্যান্য'};
 
 let activeType = 'all';
@@ -214,17 +222,38 @@ let selectedType = 'other';
 let gpsData = null;
 let photoFile = null;
 
-// Real-time listener
-const q = query(collection(db, 'alerts'), orderBy('createdAt', 'desc'));
-onSnapshot(q, snap => {
-  window._alerts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  renderAlerts();
-  document.getElementById('joaf-preloader').style.display = 'none';
-});
+async function loadAlerts() {
+  try {
+    const res = await databases.listDocuments(DATABASE_ID, COLLECTION_ID, [
+      Query.orderDesc('createdAt'),
+      Query.limit(50),
+    ]);
+    window._alerts = res.documents;
+    renderAlerts();
+  } catch (e) {
+    console.error('loadAlerts:', e);
+  } finally {
+    document.getElementById('joaf-preloader').style.display = 'none';
+  }
+}
+
+// Realtime subscription for live updates
+try {
+  client.subscribe(
+    `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents`,
+    response => {
+      if (response.events.some(e => e.includes('create') || e.includes('update'))) {
+        loadAlerts();
+      }
+    }
+  );
+} catch (_) {}
+
+loadAlerts();
 
 function timeAgo(ts) {
   if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const d = new Date(ts);
   const diff = Math.floor((new Date() - d) / 1000);
   if (diff < 60) return diff + ' সেকেন্ড আগে';
   if (diff < 3600) return Math.floor(diff/60) + ' মিনিট আগে';
@@ -306,10 +335,9 @@ window.getGPS = () => {
 
 // Modal
 window.closeModal = () => document.getElementById('modalOverlay').classList.remove('open');
-// FAB handled by global components.js
 document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === document.getElementById('modalOverlay')) closeModal(); });
 
-// Submit
+// Submit via post-alert Netlify function
 document.getElementById('submitBtn').addEventListener('click', async () => {
   const title = document.getElementById('f_title').value.trim();
   const description = document.getElementById('f_desc').value.trim();
@@ -340,23 +368,35 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
       imageUrl = data.secure_url;
     }
 
-    await addDoc(collection(db, 'alerts'), {
-      title, description, location, reporter,
-      type: selectedType, imageUrl,
-      lat: gpsData?.lat || null,
-      lng: gpsData?.lng || null,
-      createdAt: serverTimestamp()
+    const res = await fetch('/.netlify/functions/post-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title, description, location, reporter,
+        type: selectedType, imageUrl,
+        lat: gpsData?.lat || null,
+        lng: gpsData?.lng || null,
+      }),
     });
 
-    alert('✅ সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
-    closeModal();
-    document.getElementById('f_title').value = '';
-    document.getElementById('f_desc').value = '';
-    document.getElementById('f_location').value = '';
-    document.getElementById('f_reporter').value = '';
-    document.getElementById('photoPreview').style.display = 'none';
-    gpsData = null;
-    photoFile = null;
+    const result = await res.json();
+
+    if (res.status === 429) {
+      alert(result.error || 'অনেক বেশি সতর্কতা পাঠানো হয়েছে। একটু পরে চেষ্টা করুন।');
+    } else if (!res.ok) {
+      alert(result.error || 'সমস্যা হয়েছে, আবার চেষ্টা করুন।');
+    } else {
+      alert('✅ সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
+      closeModal();
+      document.getElementById('f_title').value = '';
+      document.getElementById('f_desc').value = '';
+      document.getElementById('f_location').value = '';
+      document.getElementById('f_reporter').value = '';
+      document.getElementById('photoPreview').style.display = 'none';
+      gpsData = null;
+      photoFile = null;
+      loadAlerts();
+    }
   } catch(e) {
     alert('সমস্যা হয়েছে, আবার চেষ্টা করুন।');
     console.error(e);
@@ -371,17 +411,6 @@ setTimeout(() => { document.getElementById('joaf-preloader').style.display = 'no
 
 <script>
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
-</script>
-<script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
-const _ua = navigator.userAgent;
-const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
-const _ref = document.referrer;
-const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
-addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 </script>
 </body>
 </html>

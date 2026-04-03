@@ -11,13 +11,18 @@
 
 # ── Scheduled Functions (Netlify Cron) ─────────────────────────────────────
 # রাত ২টা BD Time (UTC+6) = ২০:০০ UTC → cron: "0 20 * * *"
-# discover-leaders: RSS ফিড থেকে নতুন নেতা আবিষ্কার করে Firebase-এ সেভ করে
+# discover-leaders: RSS ফিড থেকে নতুন নেতা আবিষ্কার করে Appwrite-এ সেভ করে
+# 3-day BD-date gate: কোড-এর ভেতরে Appwrite meta দিয়ে ৩ দিন পরপর রান হয়
 [functions."discover-leaders"]
   schedule = "0 20 * * *"
 
-# generate-timeline: RSS ফিড থেকে timeline events তৈরি করে Firebase-এ সেভ করে
+# generate-timeline: RSS ফিড থেকে timeline events তৈরি করে Appwrite-এ সেভ করে
 [functions."generate-timeline"]
   schedule = "0 20 * * *"
+
+# build-poll-results-json: Appwrite থেকে ভোটের ফলাফল পড়ে data/poll-results.json আপডেট করে
+[functions."build-poll-results-json"]
+  schedule = "*/10 * * * *"
 
 # ── Performance & Security Headers ──────────────────────────
 [[headers]]

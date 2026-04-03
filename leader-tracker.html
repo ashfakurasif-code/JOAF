@@ -328,16 +328,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:var(--
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
-const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/iPad/i.test(_ua)?'tablet':'desktop',_ref=document.referrer,_src=_ref.includes('google')?'Google':_ref.includes('facebook')?'Facebook':_ref?'Referral':'Direct';
-addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+// Browser-compatible Appwrite SDK (appwrite package, not node-appwrite)
+import { Client, Databases, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
+
+// Appwrite config (read-only public access for leaders/timeline)
+const APPWRITE_ENDPOINT   = 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT_ID = '69ceec140033bccf5ea2';
+const DATABASE_ID         = '69cef52f0018a2a7b05a';
+
+const _aw = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT_ID);
+const _db = new Databases(_aw);
 
 // ── GROQ CONFIG ──
 const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
-const GROQ_MODELS = ['llama-3.3-70b-versatile','llama3-70b-8192','mixtral-8x7b-32768'];
+const GROQ_MODELS = ['llama-3.3-70b-versatile'];
 const BD_TODAY = () => new Date(Date.now()+6*3600000).toISOString().slice(0,10);
 
 // ── Cache: localStorage per day ──
@@ -345,10 +349,13 @@ const CP = 'joaf_lt2_';
 const cGet = k => { try{const d=JSON.parse(localStorage.getItem(CP+k));if(d&&d.date===BD_TODAY())return d.data;}catch(e){}return null;};
 const cSet = (k,v) => { try{localStorage.setItem(CP+k,JSON.stringify({date:BD_TODAY(),data:v}));}catch(e){}};
 
+// ── Helper: safely parse a JSON-string array (Appwrite stores arrays as strings) ──
+const safeParseArray = s => { try { return Array.isArray(s) ? s : JSON.parse(s || '[]'); } catch(_) { return []; } };
+
 // ── ISSUES: AI-generated or fallback ──
 let ISSUES = [];
 
-async function groqCall(prompt, maxTokens=4000) {
+async function groqCall(prompt, maxTokens=1200) {
   for (const model of GROQ_MODELS) {
     try {
       const r = await fetch('/.netlify/functions/groq-proxy',{
@@ -566,23 +573,37 @@ async function loadLeaders() {
   // First generate AI issues, then load leaders in parallel
   await generateIssues();
   try {
-    const snap = await getDocs(collection(_db,'leaders'));
-    if (snap.size >= 5) {
-      ALL_LEADERS = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const res = await _db.listDocuments(DATABASE_ID, 'leaders', [Query.limit(200)]);
+    if (res.documents.length >= 5) {
+      ALL_LEADERS = res.documents.map(d => ({
+        id: d.$id,
+        ...d,
+        // Parse JSON-string arrays back to arrays
+        promises:      safeParseArray(d.promises),
+        statements:    safeParseArray(d.statements),
+        controversies: safeParseArray(d.controversies),
+        virals:        safeParseArray(d.virals),
+      }));
     } else {
       ALL_LEADERS = FALLBACK_LEADERS;
     }
   } catch(e) { ALL_LEADERS = FALLBACK_LEADERS; }
 
-  // Firebase থেকে Timeline লোড করার চেষ্টা — না পেলে static TIMELINE_DATA ব্যবহার
-  // Try loading timeline events from Firebase; fall back to static data
+  // Appwrite থেকে Timeline লোড করার চেষ্টা — না পেলে static TIMELINE_DATA ব্যবহার
+  // Try loading timeline events from Appwrite; fall back to static data
   try {
-    const tlSnap = await getDocs(collection(_db, 'timeline'));
-    if (tlSnap.size >= 3) {
+    const tlRes = await _db.listDocuments(DATABASE_ID, 'timeline', [Query.limit(50), Query.orderDesc('addedOn')]);
+    if (tlRes.documents.length >= 3) {
       TIMELINE_DATA.splice(0, TIMELINE_DATA.length);
-      tlSnap.docs.forEach(d => TIMELINE_DATA.push({ id: d.id, ...d.data() }));
-      // সাম্প্রতিক event আগে দেখাবে (addedOn বা date অনুযায়ী)
-      TIMELINE_DATA.sort((a, b) => (b.addedOn || '').localeCompare(a.addedOn || ''));
+      tlRes.documents.forEach(d => TIMELINE_DATA.push({
+        id: d.$id,
+        date: d.date,
+        title: d.title,
+        desc: d.desc,
+        type: d.type,
+        tags: safeParseArray(d.tags),
+        addedOn: d.addedOn,
+      }));
     }
   } catch(e) { /* static TIMELINE_DATA অপরিবর্তিত থাকবে */ }
 
