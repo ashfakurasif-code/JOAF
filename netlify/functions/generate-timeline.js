@@ -37,7 +37,7 @@ function fetchUrl(url, redirectCount = 0) {
     const lib = url.startsWith('https') ? https : http;
     const req = lib.get(url, {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/xml, text/xml, */*' },
-      timeout: 4000,
+      timeout: 12000,
     }, (res) => {
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
         return resolve(fetchUrl(res.headers.location, redirectCount + 1));
@@ -165,8 +165,12 @@ tags থেকে বেছে নাও: govt, economy, politics, social, crisi
       txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
       const arrMatch = txt.match(/\[[\s\S]*\]/);
       if (arrMatch) {
-        const parsed = JSON.parse(arrMatch[0]);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        try {
+          const parsed = JSON.parse(arrMatch[0]);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch (e) {
+          console.error('[timeline] JSON.parse failed:', e.message, '| raw:', txt.slice(0, 200));
+        }
       }
       return null;
     }

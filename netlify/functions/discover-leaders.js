@@ -36,7 +36,7 @@ function fetchUrl(url, redirectCount = 0) {
     const lib = url.startsWith('https') ? https : http;
     const req = lib.get(url, {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/xml, text/xml, */*' },
-      timeout: 4000,
+      timeout: 12000,
     }, (res) => {
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
         return resolve(fetchUrl(res.headers.location, redirectCount + 1));
@@ -151,11 +151,16 @@ function parseDiscoverJson(txt) {
   txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
   const objMatch = txt.match(/\{[\s\S]*\}/);
   if (objMatch) {
-    const parsed = JSON.parse(objMatch[0]);
-    return {
-      newLeaders: Array.isArray(parsed.new) ? parsed.new : [],
-      inactive:   Array.isArray(parsed.inactive) ? parsed.inactive : [],
-    };
+    try {
+      const parsed = JSON.parse(objMatch[0]);
+      return {
+        newLeaders: Array.isArray(parsed.new) ? parsed.new : [],
+        inactive:   Array.isArray(parsed.inactive) ? parsed.inactive : [],
+      };
+    } catch (e) {
+      console.error('[discover] JSON.parse failed:', e.message, '| raw:', txt.slice(0, 200));
+      return null;
+    }
   }
   return null;
 }
