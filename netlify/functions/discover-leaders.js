@@ -23,60 +23,7 @@ const FB_CONFIG = {
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
-const https = require('https');
-const http  = require('http');
-
-// ── RSS fetch ──
-const RSS_SOURCES = [
-  { rss: 'https://www.prothomalo.com/feed' },
-  { rss: 'https://bdnews24.com/bangladesh/feed' },
-  { rss: 'https://www.thedailystar.net/rss.xml' },
-];
-
-function fetchUrl(url, redirectCount = 0) {
-  return new Promise((resolve, reject) => {
-    if (redirectCount > 3) return reject(new Error('Too many redirects'));
-    const lib = url.startsWith('https') ? https : http;
-    const req = lib.get(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/xml, text/xml, */*' },
-      timeout: 12000,
-    }, (res) => {
-      if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
-        return resolve(fetchUrl(res.headers.location, redirectCount + 1));
-      }
-      if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
-      let data = '';
-      res.setEncoding('utf8');
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => resolve(data));
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
-  });
-}
-
-function parseTitles(xml) {
-  const titles = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-  let match;
-  while ((match = itemRegex.exec(xml)) !== null && titles.length < 12) {
-    const block = match[1];
-    const tm = block.match(/<title(?:[^>]*)><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title(?:[^>]*)>([^<]*)<\/title>/);
-    const title = tm ? (tm[1] || tm[2] || '').trim() : '';
-    if (title && title.length > 5) titles.push(title);
-  }
-  return titles;
-}
-
-async function fetchHeadlines() {
-  const results = await Promise.allSettled(
-    RSS_SOURCES.map(s => fetchUrl(s.rss).then(xml => parseTitles(xml)))
-  );
-  return results
-    .filter(r => r.status === 'fulfilled')
-    .flatMap(r => r.value)
-    .slice(0, 30);
-}
+const { fetchBDHeadlines } = require('./bd-rss-utils');
 
 // ── Firestore REST ──
 async function firestoreGetAll() {
@@ -335,15 +282,17 @@ exports.handler = async (event) => {
   const today = BD_TODAY();
 
   try {
-    const [headlines, existingLeaders] = await Promise.all([
-      fetchHeadlines(),
+    const [rssResult, existingLeaders] = await Promise.all([
+      fetchBDHeadlines({ maxPerSource: 15, totalLimit: 60 }),
       firestoreGetAll(),
     ]);
 
-    console.log(`[discover] headlines:${headlines.length} existing:${existingLeaders.length}`);
+    const { items: headlineItems, headlines, filteredCount, sourceCounts } = rssResult;
+
+    console.log(`[discover] headlines:${headlines.length} filtered_out:${filteredCount} existing:${existingLeaders.length}`);
 
     if (headlines.length < 2) {
-      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: `RSS fetch ব্যর্থ — মাত্র ${headlines.length}টি headline` }) };
+      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: `RSS fetch ব্যর্থ — মাত্র ${headlines.length}টি headline`, sourceCounts }) };
     }
 
     // Gemini first, then Groq
@@ -416,6 +365,7 @@ exports.handler = async (event) => {
         success:            true,
         date:               today,
         headlines:          headlines.length,
+        filteredOut:        filteredCount,
         existing:           existingLeaders.length,
         candidates:         aiResult.newLeaders.length,
         added:              log.added.length,
@@ -424,6 +374,8 @@ exports.handler = async (event) => {
         validation_rejects: log.validation_rejects.length,
         summary:            `${log.added.length} নতুন যোগ, ${log.updated.length} আপডেট, ${log.validation_rejects.length} rejected`,
         log,
+        headlineItems,
+        sourceCounts,
       }),
     };
 
