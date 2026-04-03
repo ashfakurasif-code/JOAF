@@ -1617,7 +1617,7 @@ window.runGenerateTimeline = async function() {
     const res = await fetch('/.netlify/functions/generate-timeline', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ force: true }),
     });
     const contentType = res.headers.get('content-type') || '';
     if (!contentType.includes('application/json')) {
