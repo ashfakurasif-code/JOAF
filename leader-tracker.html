@@ -211,7 +211,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:var(--
 <!-- HERO -->
 <div class="hero">
   <div class="hero-inner">
-    <div class="hero-badge">📍 লাইভ ট্র্যাকার — মার্চ ২০২৬</div>
+    <div class="hero-badge" id="hero-badge-date">📍 লাইভ ট্র্যাকার — লোড হচ্ছে...</div>
+    <script>
+    (function(){
+      var BN_MONTHS=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+      var d=new Date(Date.now()+6*3600000);
+      document.getElementById('hero-badge-date').textContent='📍 লাইভ ট্র্যাকার — '+BN_MONTHS[d.getMonth()]+' '+d.getFullYear();
+    })();
+    </script>
     <h1>বাংলাদেশ এখন কোথায়?</h1>
     <div class="hero-sub">জুলাই অভ্যুত্থানের পর — কী বদলেছে, কী বদলায়নি, কে কী করছে</div>
     <div class="hero-pulse"><span class="pulse-dot"></span> <span id="hero-stats">লোড হচ্ছে...</span></div>
@@ -342,8 +349,8 @@ const BD_TODAY = () => new Date(Date.now()+6*3600000).toISOString().slice(0,10);
 
 // ── Cache: localStorage per day ──
 const CP = 'joaf_lt2_';
-const cGet = k => { try{const d=JSON.parse(localStorage.getItem(CP+k));if(d&&d.date===BD_TODAY())return d.data;}catch(e){}return null;};
-const cSet = (k,v) => { try{localStorage.setItem(CP+k,JSON.stringify({date:BD_TODAY(),data:v}));}catch(e){}};
+const cGet = k => { try{const d=JSON.parse(localStorage.getItem(CP+k));if(d&&d.date===BD_TODAY()&&d.data!=null)return d.data;}catch(e){}return null;};
+const cSet = (k,v) => { try{ if(v==null){localStorage.removeItem(CP+k);}else{localStorage.setItem(CP+k,JSON.stringify({date:BD_TODAY(),data:v}));} }catch(e){}};
 
 // ── ISSUES: AI-generated or fallback ──
 let ISSUES = [];
@@ -562,7 +569,10 @@ async function loadLeaders() {
   try {
     const snap = await getDocs(collection(_db,'leaders'));
     if (snap.size >= 5) {
-      ALL_LEADERS = snap.docs.map(d=>({id:d.id,...d.data()}));
+      // active:false বা isDeceased:true নেতাদের hide করা হচ্ছে
+      ALL_LEADERS = snap.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .filter(l => l.active !== false && l.isDeceased !== true);
     } else {
       ALL_LEADERS = FALLBACK_LEADERS;
     }

@@ -1,226 +1,40 @@
-# JOAF Netlify Config v4.0
+# netlify.toml
+# Netlify configuration + scheduled functions
 
 [build]
-  publish = "."
   functions = "netlify/functions"
-  command = "cd netlify/functions && npm install"
+  publish = "."
 
-[functions]
-  node_bundler = "nft"
-  included_files = ["netlify/functions/node_modules/**"]
+# ── Scheduled Functions ──
+# BD time রাত ২টা = UTC রাত ৮টা (UTC+6)
+# discover-leaders: প্রতিদিন রাত ২:০০ (BD) — RSS পড়ে leaders আপডেট করে
+[functions.discover-leaders]
+  schedule = "0 20 * * *"
 
-# ── Performance & Security Headers ──────────────────────────
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=()"
-    X-XSS-Protection = "1; mode=block"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
-    Content-Security-Policy = "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; media-src 'self' https: blob: data:; worker-src 'self' blob:; frame-ancestors 'self'"
+# generate-timeline: প্রতিদিন রাত ২:১৫ (BD) — discover-leaders এর ১৫ মিনিট পরে
+[functions.generate-timeline]
+  schedule = "15 20 * * *"
 
-[[headers]]
-  for = "/css/*"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
+# update-leaders: প্রতিদিন রাত ২:৩০ (BD) — AI দিয়ে leaders' data refresh
+# (discover-leaders এর পরে চলে যাতে নতুন leaders পায়)
+[functions.update-leaders]
+  schedule = "30 20 * * *"
 
-[[headers]]
-  for = "/js/*"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
-
-[[headers]]
-  for = "/img/*"
-  [headers.values]
-    Cache-Control = "public, max-age=2592000"
-
-[[headers]]
-  for = "/*.png"
-  [headers.values]
-    Cache-Control = "public, max-age=2592000"
-
-[[headers]]
-  for = "/*.jpg"
-  [headers.values]
-    Cache-Control = "public, max-age=2592000"
-
-[[headers]]
-  for = "/*.gif"
-  [headers.values]
-    Cache-Control = "public, max-age=2592000"
-
-[[headers]]
-  for = "/*.ico"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/members/*"
-  [headers.values]
-    Cache-Control = "public, max-age=2592000"
-
+# ── Headers ──
 [[headers]]
   for = "/*.html"
   [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
+    Cache-Control = "public, max-age=300, stale-while-revalidate=600"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
 
-# ── Clean URLs — index.html → / ─────────────────────────────
+[[headers]]
+  for = "/netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+
+# ── Redirects ──
 [[redirects]]
-  from = "/index.html"
-  to = "/"
-  status = 301
-  force = true
-
-# ── Clean URLs — remove .html extension ──────────────────────
-[[redirects]]
-  from = "/community.html"
-  to = "/community"
-  status = 301
-
-[[redirects]]
-  from = "/membership.html"
-  to = "/membership"
-  status = 301
-
-[[redirects]]
-  from = "/joaf-polls.html"
-  to = "/joaf-polls"
-  status = 301
-
-[[redirects]]
-  from = "/events.html"
-  to = "/events"
-  status = 301
-
-[[redirects]]
-  from = "/media-news.html"
-  to = "/media-news"
-  status = 301
-
-[[redirects]]
-  from = "/donate.html"
-  to = "/donate"
-  status = 301
-
-[[redirects]]
-  from = "/financial-report.html"
-  to = "/financial-report"
-  status = 301
-
-[[redirects]]
-  from = "/financial-policy.html"
-  to = "/financial-policy"
-  status = 301
-
-[[redirects]]
-  from = "/privacy.html"
-  to = "/privacy"
-  status = 301
-
-[[redirects]]
-  from = "/rokto.html"
-  to = "/rokto"
-  status = 301
-
-[[redirects]]
-  from = "/alert.html"
-  to = "/alert"
-  status = 301
-
-# ── Community case fix ───────────────────────────────────────
-[[redirects]]
-  from = "/Community.html"
-  to = "/community.html"
-  status = 301
-
-# ── Old press release URLs → new press-releases/ folder ─────
-[[redirects]]
-  from = "/press-release-1.html"
-  to = "/press-releases/press-release-1.html"
-  status = 301
-
-[[redirects]]
-  from = "/press-release-2.html"
-  to = "/press-releases/press-release-2.html"
-  status = 301
-
-[[redirects]]
-  from = "/press-release-3.html"
-  to = "/press-releases/press-release-3.html"
-  status = 301
-
-[[redirects]]
-  from = "/press-release-4.html"
-  to = "/press-releases/press-release-4.html"
-  status = 301
-
-[[redirects]]
-  from = "/press-release-5.html"
-  to = "/press-releases/press-release-5.html"
-  status = 301
-
-[[redirects]]
-  from = "/press-release-6.html"
-  to = "/press-releases/press-release-6.html"
-  status = 301
-
-[[redirects]]
-  from = "/press-release-7.html"
-  to = "/press-releases/press-release-7.html"
-  status = 301
-
-[[redirects]]
-  from = "/press-release-8.html"
-  to = "/press-releases/press-release-8.html"
-  status = 301
-
-
-# ── /pages/ folder — clean aliases for all nav pages ────────
-[[redirects]]
-  from = "/pages/events"
-  to = "/events.html"
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
   status = 200
-
-[[redirects]]
-  from = "/pages/media-news"
-  to = "/media-news.html"
-  status = 200
-
-[[redirects]]
-  from = "/pages/joaf-polls"
-  to = "/joaf-polls.html"
-  status = 200
-
-[[redirects]]
-  from = "/pages/community"
-  to = "/community.html"
-  status = 200
-
-[[redirects]]
-  from = "/pages/membership"
-  to = "/membership.html"
-  status = 200
-
-[[redirects]]
-  from = "/pages/donate"
-  to = "/donate.html"
-  status = 200
-
-[[redirects]]
-  from = "/pages/financial-report"
-  to = "/financial-report.html"
-  status = 200
-
-[[redirects]]
-  from = "/pages/privacy"
-  to = "/privacy.html"
-  status = 200
-
-# ── SPA fallback ─────────────────────────────────────────────
-[[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404
