@@ -563,11 +563,40 @@ tr:hover td{background:rgba(255,255,255,.02);}
             <tbody id="leader-tbody"><tr><td colspan="7" class="loading">লোড হচ্ছে...</td></tr></tbody>
           </table>
         </div>
+        <!-- Step 1: Discover -->
+        <div class="card mt16" style="background:#f0fdf4;border-color:#bbf7d0">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-size:12px;font-weight:800;color:#15803d">🔍 Step 1 — নেতা আবিষ্কার (RSS → AI)</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">আজকের news পড়ে AI নিজেই বুঝবে কারা trending, কারা মারা গেছেন, নতুন কারা এসেছেন — Firebase update হবে।</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div id="discover-status" style="font-size:11px;color:var(--text2)"></div>
+              <button class="btn btn-sm" style="background:#15803d;color:#fff" onclick="runDiscoverLeaders()" id="discover-btn">🔍 Discover চালাও</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Timeline -->
+        <div class="card mt16" style="background:#eff6ff;border-color:#bfdbfe">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-size:12px;font-weight:800;color:#1d4ed8">📅 Step 2 — Timeline Generate (RSS → AI)</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">আজকের news থেকে AI timeline events বানাবে — date, title, description, tags সহ Firebase-এ save হবে।</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div id="timeline-status" style="font-size:11px;color:var(--text2)"></div>
+              <button class="btn btn-sm" style="background:#1d4ed8;color:#fff" onclick="runGenerateTimeline()" id="timeline-btn">📅 Timeline বানাও</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: AI Update -->
         <div class="card mt16" style="background:var(--blue-bg);border-color:var(--blue-border)">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div>
-              <div style="font-size:12px;font-weight:800;color:var(--blue)">🤖 AI Auto-Update</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px">প্রতিদিন রাত ১২টায় Groq AI নেতাদের latest data automatically update করে। এখনই update করতে নিচের button চাপুন।</div>
+              <div style="font-size:12px;font-weight:800;color:var(--blue)">🤖 Step 3 — AI Analysis Update</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">Firebase-এর active নেতাদের জন্য Groq AI দিয়ে approval, promises, statements আপডেট করে। Discover-এর পরে চালাও।</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
               <div id="leader-ai-status" style="font-size:11px;color:var(--text2)"></div>
@@ -1542,6 +1571,74 @@ window.deleteLeader = async function(id) {
   if (!confirm('Delete করবেন?')) return;
   await deleteDoc(doc(db,'leaders',id));
   toast('Deleted','info'); loadLeaders();
+};
+
+window.runDiscoverLeaders = async function() {
+  const btn = document.getElementById('discover-btn');
+  const status = document.getElementById('discover-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ চলছে...';
+  status.style.color = 'var(--amber)';
+  status.textContent = 'RSS পড়ছে...';
+  try {
+    const res = await fetch('/.netlify/functions/discover-leaders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify({}),
+    });
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await res.text();
+      throw new Error('Function error: ' + text.substring(0, 200));
+    }
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Unknown error');
+    const msg = `✅ ${data.added || 0} নতুন, ${data.updated || 0} আপডেট`;
+    toast(msg + (data.summary ? ' — ' + data.summary : ''), 'success');
+    status.textContent = msg;
+    status.style.color = 'var(--green)';
+  } catch(e) {
+    toast('❌ Discover failed: ' + e.message, 'error');
+    status.textContent = '❌ ' + e.message.substring(0, 80);
+    status.style.color = 'var(--red)';
+  }
+  btn.disabled = false;
+  btn.textContent = '🔍 Discover চালাও';
+};
+
+window.runGenerateTimeline = async function() {
+  const btn = document.getElementById('timeline-btn');
+  const status = document.getElementById('timeline-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ চলছে...';
+  status.style.color = 'var(--amber)';
+  status.textContent = 'News পড়ছে...';
+  try {
+    const res = await fetch('/.netlify/functions/generate-timeline', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify({}),
+    });
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await res.text();
+      throw new Error('Function error: ' + text.substring(0, 200));
+    }
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || data.reason || 'Unknown error');
+    const msg = data.skipped
+      ? `⏭️ Skip — আজকে আগেই ${data.reason}`
+      : `✅ ${data.events || 0}টি timeline event Firebase-এ save হয়েছে`;
+    toast(msg, 'success');
+    status.textContent = msg;
+    status.style.color = 'var(--green)';
+  } catch(e) {
+    toast('❌ Timeline failed: ' + e.message, 'error');
+    status.textContent = '❌ ' + e.message.substring(0, 80);
+    status.style.color = 'var(--red)';
+  }
+  btn.disabled = false;
+  btn.textContent = '📅 Timeline বানাও';
 };
 
 window.runLeaderAiUpdate = async function() {
