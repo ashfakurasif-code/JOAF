@@ -2,6 +2,7 @@
 // User এর push subscription Appwrite এ save করে
 
 const { Client, Databases } = require('node-appwrite');
+const crypto = require('crypto');
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT  || 'https://fra.cloud.appwrite.io/v1';
 const PROJECT  = process.env.APPWRITE_PROJECT_ID;
@@ -45,8 +46,8 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid subscription' }) };
     }
 
-    // endpoint দিয়ে unique ID বানাও
-    const id = Buffer.from(subscription.endpoint).toString('base64').slice(-36).replace(/[^a-zA-Z0-9]/g, '_');
+    // endpoint দিয়ে stable unique ID বানাও (SHA-256 hash)
+    const id = crypto.createHash('sha256').update(subscription.endpoint).digest('hex').slice(0, 36);
 
     const db = getDb();
     const now = new Date().toISOString();
