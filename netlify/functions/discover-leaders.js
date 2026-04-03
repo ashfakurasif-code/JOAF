@@ -193,6 +193,9 @@ const GENERIC_LABELS = [
   'an official', 'a bureaucrat', 'a judge', 'a banker', 'a researcher',
   'a governor', 'a mayor', 'a senator', 'a chancellor', 'a premier',
 ];
+const GENERIC_LABEL_PREFIXES = GENERIC_LABELS.map(l => l + ' ');
+const ARTICLE_NOUN_RE = /^an?\s+\w+$/i;
+const BANGLA_RE       = /[\u0980-\u09FF]/;
 
 function isValidLeaderEntry(entry) {
   const name = (entry.name || '').trim();
@@ -202,19 +205,19 @@ function isValidLeaderEntry(entry) {
   const lowerName = name.toLowerCase();
 
   // Reject exact generic label matches or names that start with one
-  for (const label of GENERIC_LABELS) {
-    if (lowerName === label || lowerName.startsWith(label + ' ')) {
+  for (let i = 0; i < GENERIC_LABELS.length; i++) {
+    if (lowerName === GENERIC_LABELS[i] || lowerName.startsWith(GENERIC_LABEL_PREFIXES[i])) {
       return { valid: false, reason: `generic label: "${name}"` };
     }
   }
 
   // Reject any name matching "a/an <single-noun>" pattern
-  if (/^an?\s+\w+$/i.test(name)) {
+  if (ARTICLE_NOUN_RE.test(name)) {
     return { valid: false, reason: `article+noun pattern: "${name}"` };
   }
 
   // Reject single-word English names (Bangla script words are often single-word and valid)
-  const isBangla = /[\u0980-\u09FF]/.test(name);
+  const isBangla = BANGLA_RE.test(name);
   if (!isBangla) {
     const words = name.trim().split(/\s+/);
     if (words.length < 2) {
