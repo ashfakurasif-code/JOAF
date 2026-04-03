@@ -3,7 +3,7 @@
 
 const GROQ_KEY    = process.env.GROQ_API_KEY;
 const ADMIN_KEY   = process.env.ADMIN_SECRET_KEY;
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+const GROQ_MODELS = ['llama-3.3-70b-versatile'];
 
 const FB_CONFIG = {
   apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',

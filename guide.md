@@ -55,6 +55,8 @@ joaf-v4/
 `joaf-polls.html` → `const GROQ_KEY = 'আপনার_key_এখানে';`
 পাওয়ার জন্য: https://console.groq.com → API Keys → Create (Free)
 
+> **Note:** Groq API key must be set as the `GROQ_API_KEY` environment variable in Netlify (Site settings → Environment variables). All AI model calls are centrally enforced via `/.netlify/functions/groq-proxy`, which restricts usage to the allowed model (`llama-3.3-70b-versatile`) and caps `max_tokens` at 1200 to stay within Groq free-tier limits.
+
 ### সদস্যতা form endpoint বদলাতে:
 `js/data.js` → `site.formAction`
 

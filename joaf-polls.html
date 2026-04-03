@@ -420,10 +420,6 @@ const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
 
 const GROQ_MODELS = [
   'llama-3.3-70b-versatile',
-  'llama-3.1-70b-versatile',
-  'llama3-70b-8192',
-  'mixtral-8x7b-32768',
-  'gemma2-9b-it',
 ];
 const POLLS_COUNT = 30;
 const STREAK_GOAL = 30;
@@ -872,7 +868,7 @@ async function genPolls() {
             model: model,
             messages: [{ role:'user', content:prompt }],
             temperature: 0.85,
-            max_tokens:  4500
+            max_tokens:  1200
           })
         });
         if (r.ok) { data = await r.json(); break; }

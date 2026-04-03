@@ -4,7 +4,7 @@
 // =============================================================================
 
 const GROQ_KEY    = process.env.GROQ_API_KEY;
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama3-70b-8192', 'mixtral-8x7b-32768'];
+const GROQ_MODELS = ['llama-3.3-70b-versatile'];
 
 // Firebase project config (public client key only — no secrets)
 const FB_CONFIG = {
@@ -168,7 +168,7 @@ ${headlineText}
           model,
           messages:    [{ role: 'user', content: prompt }],
           temperature: 0.3,
-          max_tokens:  6000,
+          max_tokens:  1200,
         }),
       });
       if (!res.ok) continue;
