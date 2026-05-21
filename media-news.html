@@ -102,49 +102,66 @@ window.addEventListener('load', () => {
   const pl = document.getElementById('joaf-preloader');
   if (pl) setTimeout(() => pl.classList.add('hidden'), 300);
 });
-
-function renderAllPress() {
-  const grid = document.getElementById('all-press-grid');
-  if (!grid || typeof JOAF === 'undefined') return;
-  const sorted = [...JOAF.pressReleases].sort((a,b) => new Date(b.date)-new Date(a.date));
-  grid.innerHTML = sorted.map((p, i) => `
-    <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:${(i%3)*0.1}s">
-      <div class="press-card">
-        <div class="press-card-img-wrap">
-          <img src="${p.img}" alt="${p.title}" loading="lazy">
-          <span class="press-date-top"><i class="zmdi zmdi-calendar"></i> ${BanglaUtil.formatDateShort(p.date)}</span>
-          <span class="press-date-bottom">#${p.id}</span>
-        </div>
-        <div class="press-card-body">
-          <h4>${p.title}</h4>
-          <p>${p.summary}</p>
-          <a href="/press-releases/${p.slug}.html" class="press-read-more">বিস্তারিত পড়ুন <i class="zmdi zmdi-arrow-right"></i></a>
-          <div class="share-row">
-            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-fb" aria-label="Facebook শেয়ার"><i class="zmdi zmdi-facebook"></i> শেয়ার</a>
-            <a href="https://wa.me/?text=${encodeURIComponent(p.title+'\nhttps://julyforum.com/press-releases/'+p.slug+'.html')}" target="_blank" class="s-wa" aria-label="WhatsApp শেয়ার"><i class="zmdi zmdi-whatsapp"></i> শেয়ার</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', renderAllPress);
-} else {
-  renderAllPress();
-}
 </script>
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, getDocs, addDoc, collection, orderBy, query, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
 const _db = getFirestore(_fa);
+
+// ── Pageview tracking ──────────────────────────────────────────────
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;
 const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+
+// ── Press Releases from Firestore ─────────────────────────────────
+async function renderAllPress() {
+  const grid = document.getElementById('all-press-grid');
+  if (!grid) return;
+  grid.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-danger" role="status"></div></div>';
+  try {
+    const snap = await getDocs(query(collection(_db,'press_releases'), orderBy('createdAt','desc')));
+    if (snap.empty) {
+      grid.innerHTML = '<div class="col-12 text-center py-4 text-muted">কোনো press release নেই।</div>';
+      return;
+    }
+    grid.innerHTML = snap.docs.map((doc, i) => {
+      const p = doc.data();
+      const id = doc.id;
+      const img = p.img || '/img/press-release.jpg';
+      const dateStr = p.date || '';
+      const dateDisplay = dateStr ? (typeof BanglaUtil !== 'undefined' ? BanglaUtil.formatDateShort(dateStr) : dateStr) : '';
+      const viewUrl = '/press-releases/view.html?id=' + id;
+      const shareUrl = encodeURIComponent('https://julyforum.com' + viewUrl);
+      const shareTitle = encodeURIComponent(p.title || '');
+      return `
+    <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:${(i%3)*0.1}s">
+      <div class="press-card">
+        <div class="press-card-img-wrap">
+          <img src="${img}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+          ${dateDisplay ? `<span class="press-date-top"><i class="zmdi zmdi-calendar"></i> ${dateDisplay}</span>` : ''}
+        </div>
+        <div class="press-card-body">
+          <h4>${p.title||''}</h4>
+          <p>${p.summary||''}</p>
+          <a href="${viewUrl}" class="press-read-more">বিস্তারিত পড়ুন <i class="zmdi zmdi-arrow-right"></i></a>
+          <div class="share-row">
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" class="s-fb" aria-label="Facebook শেয়ার"><i class="zmdi zmdi-facebook"></i> শেয়ার</a>
+            <a href="https://wa.me/?text=${shareTitle}%20${shareUrl}" target="_blank" class="s-wa" aria-label="WhatsApp শেয়ার"><i class="zmdi zmdi-whatsapp"></i> শেয়ার</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    }).join('');
+  } catch(e) {
+    grid.innerHTML = '<div class="col-12 text-center py-4 text-muted">লোড করতে সমস্যা হয়েছে।</div>';
+    console.error('Press releases load error:', e);
+  }
+}
+
+renderAllPress();
 </script>
 </body>
 </html>
