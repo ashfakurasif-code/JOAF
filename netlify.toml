@@ -42,3 +42,8 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+[[redirects]]
+  from = "/press-releases/view.html"
+  to = "/.netlify/functions/press-release-og"
+  status = 200
+  query = {id = ":id"}
