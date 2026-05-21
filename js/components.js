@@ -1610,3 +1610,32 @@ setTimeout(() => {
     document.head.appendChild(s);
   });
 })();
+
+// ── Dynamic latest press release in ticker ──────────────────
+(async function injectLatestPressRelease() {
+  try {
+    const { getApps, initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({
+      apiKey: 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
+      authDomain: 'joaf-app-45753.firebaseapp.com',
+      projectId: 'joaf-app-45753'
+    });
+    const db = getFirestore(fbApp);
+    const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
+    if (snap.empty) return;
+    const pr = snap.docs[0].data();
+    const id = snap.docs[0].id;
+    const title = pr.title || 'সর্বশেষ প্রেস রিলিজ';
+    const href = '/press-releases/view.html?id=' + id;
+    const track = document.getElementById('joafTickerTrack');
+    if (!track) return;
+    const item = document.createElement('span');
+    item.className = 'ticker-item';
+    item.innerHTML = `<a href="${href}">📄 ${title}</a><span class="ticker-sep">◆</span>`;
+    track.prepend(item);
+    // duplicate for seamless loop
+    const clone = item.cloneNode(true);
+    track.appendChild(clone);
+  } catch(e) { console.warn('Ticker press release fetch failed:', e); }
+})();

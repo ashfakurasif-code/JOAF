@@ -75,6 +75,7 @@ const JOAF = {
         { label: "🏛️ নেতা ট্র্যাকার",  href: "/leader-tracker.html"  },
         { label: "📡 লাইভ",             href: "/live.html"             },
         { label: "💬 ফোরাম",            href: "/forum.html"            },
+        { label: "📰 মিডিয়া & সংবাদ",      href: "/media-news.html"       },
         { label: "🤝 যোগ দিন",          href: "/membership.html"       },
         { label: "💚 সহযোগিতা",         href: "/donate.html"           },
         { label: "📬 যোগাযোগ",          href: "/#contact-area"         },
@@ -229,6 +230,7 @@ const JOAF = {
 
   ticker: [
     { text:"🚨 Breaking — সর্বশেষ খবর এখনই দেখুন",          href:"/news.html"      },
+    { text:"📄 সর্বশেষ প্রেস রিলিজ পড়ুন",                    href:"/media-news.html"     },
     { text:"🗳️ জনমত জরিপ — আজকের ভোট দিন, পুরস্কার জিতুন", href:"/joaf-polls.html"      },
     { text:"🩸 রক্ত দরকার? এখনই খুঁজুন",                    href:"/rokto.html"           },
     { text:"📄 আর্থিক বিবরণী প্রকাশিত হয়েছে",               href:"/financial-report.html"},
