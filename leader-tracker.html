@@ -344,7 +344,7 @@ addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_s
 
 // ── GROQ CONFIG ──
 const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
-const GROQ_MODELS = ['llama-3.3-70b-versatile','llama3-70b-8192','mixtral-8x7b-32768'];
+const GROQ_MODELS = ['llama-3.3-70b-versatile','llama-3.1-8b-instant'];
 const BD_TODAY = () => new Date(Date.now()+6*3600000).toISOString().slice(0,10);
 
 // ── Cache: localStorage per day ──
@@ -568,14 +568,12 @@ async function loadLeaders() {
   await generateIssues();
   try {
     const snap = await getDocs(collection(_db,'leaders'));
-    if (snap.size >= 5) {
-      // active:false বা isDeceased:true নেতাদের hide করা হচ্ছে
-      ALL_LEADERS = snap.docs
-        .map(d=>({id:d.id,...d.data()}))
-        .filter(l => l.active !== false && l.isDeceased !== true);
-    } else {
-      ALL_LEADERS = FALLBACK_LEADERS;
-    }
+    // active:false বা isDeceased:true নেতাদের hide করা হচ্ছে
+    const firestoreLeaders = snap.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .filter(l => l.active !== false && l.isDeceased !== true);
+    // Firestore-এ কমপক্ষে ১ জন usable leader থাকলে সেটাই দেখাও
+    ALL_LEADERS = firestoreLeaders.length > 0 ? firestoreLeaders : FALLBACK_LEADERS;
   } catch(e) { ALL_LEADERS = FALLBACK_LEADERS; }
 
   // Hero stats
