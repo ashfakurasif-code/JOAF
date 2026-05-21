@@ -22,7 +22,8 @@ function escapeHtml(str) {
 function buildHtml(pr, id) {
   const title = escapeHtml(pr.title || 'প্রেস রিলিজ');
   const summary = escapeHtml(pr.summary || '');
-  const img = pr.img ? (pr.img.startsWith('http') ? pr.img : 'https://julyforum.com' + pr.img) : 'https://julyforum.com/logoc7c3.png';
+  const imgRaw = pr.img ? (pr.img.startsWith('http') ? pr.img : 'https://julyforum.com' + pr.img) : 'https://julyforum.com/logoc7c3.png';
+const img = imgRaw.split('/').map((seg, i) => i < 3 ? seg : encodeURIComponent(seg)).join('/');
   const pageUrl = `https://julyforum.com/press-releases/view.html?id=${id}`;
   const content = pr.content ? `<p>${escapeHtml(pr.content).replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')}</p>` : `<p>${summary}</p>`;
 
