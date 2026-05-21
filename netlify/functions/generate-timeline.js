@@ -22,7 +22,59 @@ const BD_DATE_BN = () => {
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 };
 
-const { fetchBDHeadlines } = require('./bd-rss-utils');
+const https = require('https');
+const http  = require('http');
+
+const RSS_SOURCES = [
+  { rss: 'https://www.prothomalo.com/feed' },
+  { rss: 'https://bdnews24.com/bangladesh/feed' },
+  { rss: 'https://www.thedailystar.net/rss.xml' },
+];
+
+function fetchUrl(url, redirectCount = 0) {
+  return new Promise((resolve, reject) => {
+    if (redirectCount > 3) return reject(new Error('Too many redirects'));
+    const lib = url.startsWith('https') ? https : http;
+    const req = lib.get(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/xml, text/xml, */*' },
+      timeout: 4000,
+    }, (res) => {
+      if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+        return resolve(fetchUrl(res.headers.location, redirectCount + 1));
+      }
+      if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
+      let data = '';
+      res.setEncoding('utf8');
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+  });
+}
+
+function parseTitles(xml) {
+  const titles = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match;
+  while ((match = itemRegex.exec(xml)) !== null && titles.length < 12) {
+    const block = match[1];
+    const tm = block.match(/<title(?:[^>]*)><!\[CDATA\[([\s\S]*?)\]\]><\/title>|<title(?:[^>]*)>([^<]*)<\/title>/);
+    const title = tm ? (tm[1] || tm[2] || '').trim() : '';
+    if (title && title.length > 5) titles.push(title);
+  }
+  return titles;
+}
+
+async function fetchHeadlines() {
+  const results = await Promise.allSettled(
+    RSS_SOURCES.map(s => fetchUrl(s.rss).then(xml => parseTitles(xml)))
+  );
+  return results
+    .filter(r => r.status === 'fulfilled')
+    .flatMap(r => r.value)
+    .slice(0, 25);
+}
 
 // ── Firestore ──
 async function firestoreSet(docId, data) {
@@ -79,26 +131,20 @@ exports.handler = async (event) => {
 
   const today   = BD_TODAY();
   const todayBN = BD_DATE_BN();
-  let forceRegen = false;
-  if (event.httpMethod === 'POST') {
-    try { forceRegen = JSON.parse(event.body || '{}').force === true; } catch (_) {}
-  }
 
   try {
-    // RSS + duplicate check in parallel
-    const [rssResult, alreadyExists] = await Promise.all([
-      fetchBDHeadlines({ maxPerSource: 15, totalLimit: 60 }),
+    // RSS + duplicate check parallel
+    const [headlines, alreadyExists] = await Promise.all([
+      fetchHeadlines(),
       todayEventsExist(today),
     ]);
 
-    const { items: headlineItems, headlines, filteredCount, sourceCounts } = rssResult;
-
     if (headlines.length < 2) {
-      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'RSS fetch ব্যর্থ', sourceCounts }) };
+      return { statusCode: 200, headers, body: JSON.stringify({ success: false, error: 'RSS fetch ব্যর্থ' }) };
     }
 
-    if (alreadyExists && !forceRegen) {
-      return { statusCode: 200, headers, body: JSON.stringify({ success: true, skipped: true, reason: 'আজকের timeline আগেই তৈরি হয়েছে', headlines: headlines.length, filteredOut: filteredCount }) };
+    if (alreadyExists) {
+      return { statusCode: 200, headers, body: JSON.stringify({ success: true, skipped: true, reason: 'আজকের timeline আগেই তৈরি হয়েছে' }) };
     }
 
     const headlineText = headlines.join('\n');
@@ -119,12 +165,8 @@ tags থেকে বেছে নাও: govt, economy, politics, social, crisi
       txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
       const arrMatch = txt.match(/\[[\s\S]*\]/);
       if (arrMatch) {
-        try {
-          const parsed = JSON.parse(arrMatch[0]);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        } catch (e) {
-          console.error('[timeline] JSON.parse failed:', e.message, '| raw:', txt.slice(0, 200));
-        }
+        const parsed = JSON.parse(arrMatch[0]);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
       return null;
     }
@@ -198,7 +240,7 @@ tags থেকে বেছে নাও: govt, economy, politics, social, crisi
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ success: true, date: today, headlines: headlines.length, filteredOut: filteredCount, events: saved.length, saved, headlineItems, sourceCounts }),
+      body: JSON.stringify({ success: true, date: today, headlines: headlines.length, events: saved.length, saved }),
     };
 
   } catch (e) {

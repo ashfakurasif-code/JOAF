@@ -277,7 +277,6 @@ JOAF.maze = {
     4: { type:"sub", title:"JOAF", tiles:[
       { icon:"👥", name:"কমিউনিটি",    link:"/community.html" },
       { icon:"📰", name:"সংবাদ",        link:"/news.html" },
-      { icon:"🎙️", name:"মিডিয়া",       link:"/media-news.html" },
       { icon:"📅", name:"অনুষ্ঠান",     link:"/events.html" },
       { icon:"🤝", name:"যোগ দিন",      link:"/membership.html" },
       { icon:"💚", name:"সহযোগিতা",    link:"/donate.html" },
