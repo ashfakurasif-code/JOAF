@@ -155,6 +155,7 @@ async function renderAllPress() {
       </div>
     </div>`;
     }).join('');
+    document.querySelectorAll('#all-press-grid .joaf-reveal').forEach(el => el.classList.add('visible'));
   } catch(e) {
     grid.innerHTML = '<div class="col-12 text-center py-4 text-muted">লোড করতে সমস্যা হয়েছে।</div>';
     console.error('Press releases load error:', e);
