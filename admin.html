@@ -216,6 +216,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 /* Toast */
 .toast{position:fixed;bottom:20px;right:20px;padding:11px 18px;border-radius:10px;font-size:12px;font-weight:700;z-index:99999;display:none;max-width:300px;animation:slideUp .2s ease;}
+
+/* T2V Status Log */
+#fb-post-log{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Courier New',monospace;}
 .toast.success{background:#0d2a1e;color:var(--green);border:1px solid var(--green-border);}
 .toast.error{background:#2a0d0d;color:var(--red);border:1px solid var(--red-border);}
 .toast.info{background:#0d1a2a;color:var(--blue);border:1px solid var(--blue-border);}
@@ -892,9 +895,12 @@ addDoc(collection(db,'pageviews'), {
         <label style="font-size:11px;font-weight:700;color:var(--text2)">✍️ News Text লিখুন</label>
         <textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder="এখানে সংবাদের মূল বিষয় লিখুন..."></textarea>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <button onclick="fbGenerateReel()" id="fb-gen-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🎬 Reel বানাও</button>
+          <button onclick="fbGenerateReel()" id="fb-gen-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🎬 AI Reel বানাও</button>
           <button onclick="fbDownloadReel()" id="fb-download-btn" style="padding:8px 18px;background:#25d366;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:none">⬇️ Download করো</button>
           <button onclick="fbPostToReels()" id="fb-post-reels-btn" style="padding:8px 18px;background:#1877f2;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:none">📤 FB Reels এ দাও</button>
+        </div>
+        <div style="margin-top:8px;padding:8px 10px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:7px;font-size:11px;color:var(--amber)">
+          ⏱️ <b>AI Video তৈরিতে ৫–১৫ মিনিট লাগে</b> — HuggingFace free public server ব্যবহার হচ্ছে। Caption ও Tags আগেই তৈরি হবে। Page বন্ধ করবেন না।
         </div>
         <div id="fb-preview" style="margin-top:16px;display:none">
           <label style="font-size:11px;font-weight:700;color:var(--text2)">🎬 Preview</label>
@@ -2390,7 +2396,7 @@ async function fbGenerateReel() {
   btn.disabled = true;
   // Show progress
   const logEl = document.getElementById('fb-post-log');
-  if (logEl) logEl.innerHTML = '<div style="color:var(--text2);font-size:11px">🤖 AI দিয়ে slides তৈরি হচ্ছে...</div>';
+  if (logEl) logEl.innerHTML = '<div style="color:var(--blue);font-size:11px;font-weight:700">🤖 AI দিয়ে caption, slides ও video তৈরি হচ্ছে... (৫-১৫ মিনিট লাগতে পারে)</div>';
 
   try {
     // AI দিয়ে caption + slides + mood বানাও
@@ -2471,20 +2477,18 @@ News: ${text}` }]
     });
     const mood = parsed.mood || 'neutral';
 
-    // Progress update
-    if (logEl) logEl.innerHTML = '<div style="color:var(--text2);font-size:11px">🎬 Video render হচ্ছে (~' + (slideData.length * 5 + 2) + 'সেকেন্ড)...</div>';
+    // ── Caption ও Tags আগেই দেখাও — video আসার আগেই ready ──
+    document.getElementById('fb-preview').style.display = 'block';
 
-    // Video + Audio বানাও
-    reelBlob = await renderVideoWithAudio(slideData, mood);
-
+    // ── AI Video generation — HuggingFace Wan2.1 ──────────
+    reelBlob = await renderVideoWithAudio(slideData, mood, text, logEl);
     const videoEl = document.getElementById('fb-reel-video');
     videoEl.src = URL.createObjectURL(reelBlob);
     videoEl.style.display = 'block';
 
-    document.getElementById('fb-preview').style.display = 'block';
     document.getElementById('fb-download-btn').style.display = 'inline-block';
     document.getElementById('fb-post-reels-btn').style.display = 'inline-block';
-    if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px">✅ Reel তৈরি হয়েছে! Download করুন বা FB Reels এ দিন।</div>';
+    if (logEl) { logEl.innerHTML = ''; t2vLog(logEl, 5, '✅ AI Video তৈরি হয়েছে! Download করুন বা FB Reels এ দিন।', 'ok'); }
 
   } catch(e) {
     alert('Error: ' + e.message);
@@ -2495,55 +2499,332 @@ News: ${text}` }]
   }
 }
 
-async function renderVideoWithAudio(slides, mood) {
-  // slides is now array of {text, label, theme, illustration} or strings
-  const canvas = document.getElementById('fb-card-canvas');
-  canvas.width = 1080; // Force HD
-  canvas.height = 1920; // Force Vertical
-  // 1080;
-  canvas.height = 1920;
-  const ctx = canvas.getContext('2d');
+// ══════════════════════════════════════════════════════════════
+//  AI TEXT-TO-VIDEO ENGINE — HuggingFace Wan2.1 (100% Free)
+//  Gradio Client CDN — No login, no subscription, no backend
+// ══════════════════════════════════════════════════════════════
 
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  // Resume if browser suspended (gesture policy)
-  if (audioCtx.state === 'suspended') await audioCtx.resume();
-  const dest = audioCtx.createMediaStreamDestination();
+// Gradio CDN loader — lazy load once
+let _gradioClientPromise = null;
+function loadGradioClient() {
+  if (_gradioClientPromise) return _gradioClientPromise;
+  _gradioClientPromise = new Promise((resolve, reject) => {
+    if (window.GradioClient || window.gradio_client) return resolve(window.GradioClient || window.gradio_client);
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.js';
+    s.type = 'module';
+    // ESM CDN — use dynamic import instead
+    s.onload = () => resolve(null); // fallback
+    s.onerror = () => reject(new Error('Gradio CDN load failed'));
+    document.head.appendChild(s);
+  });
+  return _gradioClientPromise;
+}
 
-  const canvasStream = canvas.captureStream(30);
-  const audioTrack = dest.stream.getAudioTracks()[0];
-  canvasStream.addTrack(audioTrack);
+// ── Viral Realism Prompt Wrapper ──────────────────────────────
+function t2vBuildPrompt(rawText, slides) {
+  // Extract key visual content from slides
+  const slideTexts = slides.map(s => (typeof s === 'string' ? s : s.text || '')).join('. ');
+  const base = rawText || slideTexts;
+  const positive = [
+    base,
+    'photorealistic cinematic masterpiece',
+    '8k resolution ultra detailed',
+    'cinematic volumetric lighting',
+    'dynamic fluid motion',
+    'shot on 35mm anamorphic lens',
+    'flawless skin and fabric textures',
+    'hyper-detailed environment',
+    'golden hour dramatic lighting',
+    'smooth slow motion camera pan',
+    'trending on artstation'
+  ].join(', ');
+  const negative = 'cartoon, anime, 3d render, cgi, drawing, painting, sketch, static image, text overlay, watermark, logo, presentation slide, low quality, blurry, choppy frame rate, glitched pixels, distorted face, extra limbs, duplicate';
+  return { positive, negative };
+}
 
-  const recorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm;codecs=vp9,opus' });
-  const chunks = [];
-  recorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
-  recorder.start(100);
+// ── Status Logger ─────────────────────────────────────────────
+function t2vLog(logEl, stage, msg, type) {
+  if (!logEl) return;
+  const colors = { info: '#7878a0', ok: '#34d399', err: '#f05252', stage: '#fbbf24', active: '#60a5fa' };
+  const color = colors[type] || colors.info;
+  const icons = { info: '◦', ok: '✓', err: '✗', stage: '▶', active: '⟳' };
+  const icon = icons[type] || '◦';
+  const line = document.createElement('div');
+  line.style.cssText = 'font-size:11px;line-height:1.7;padding:1px 0;display:flex;gap:6px;align-items:flex-start;';
+  line.innerHTML = `<span style="color:${colors.stage};font-weight:700;flex-shrink:0">[Stage ${stage}]</span><span style="color:${color}">${icon} ${msg}</span>`;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
 
-  const SLIDE_DURATION = 5000;
-  const FPS = 30;
-  const FRAME_MS = 1000 / FPS;
+// ── Candidate Spaces — fallback chain ─────────────────────────
+const T2V_SPACES = [
+  'Wan-Video/Wan2.1-T2V-14B',
+  'Wan-Video/Wan2.1-T2V-1.3B',
+  'multimodalart/wan2.1',
+];
 
-  for (let i = 0; i < slides.length; i++) {
-    playSlideSound(audioCtx, dest, mood, i, slides.length);
-    const sd = typeof slides[i] === 'string' ? {text:slides[i],label:'',theme:'',illustration:''} : slides[i];
-    const frames = Math.floor(SLIDE_DURATION / FRAME_MS);
-    for (let f = 0; f < frames; f++) {
-      const t = f / frames;
-      drawSlideAnimated(ctx, sd.text, i, slides.length, mood, t, sd.label, sd.theme, sd.illustration);
-      await new Promise(r => setTimeout(r, FRAME_MS));
+// ── Main AI Video Render (replaces canvas render) ─────────────
+async function renderVideoWithAudio(slides, mood, rawText, logEl) {
+  // Clear log
+  if (logEl) logEl.innerHTML = '';
+
+  // ── Stage 1: Prompt Enhancement ───────────────────────────
+  t2vLog(logEl, 1, 'Text Prompt কে Cinematic Realism Matrix এ রূপান্তর করা হচ্ছে...', 'stage');
+  await new Promise(r => setTimeout(r, 400));
+  const { positive: prompt, negative: negPrompt } = t2vBuildPrompt(rawText, slides);
+  t2vLog(logEl, 1, `Prompt enhanced (${prompt.length} chars) ✓`, 'ok');
+
+  // ── Stage 2: Connect to HuggingFace ───────────────────────
+  t2vLog(logEl, 2, 'Free Public HuggingFace Server এ ping করা হচ্ছে...', 'stage');
+  await new Promise(r => setTimeout(r, 300));
+
+  // Use dynamic ESM import for Gradio client (works in modern browsers)
+  let client;
+  let connectedSpace = null;
+
+  for (const spaceName of T2V_SPACES) {
+    try {
+      t2vLog(logEl, 2, `Trying: ${spaceName}...`, 'active');
+      const { Client } = await import('https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.js');
+      client = await Client.connect(spaceName, {
+        events: ['data', 'status'],
+      });
+      connectedSpace = spaceName;
+      t2vLog(logEl, 2, `✅ Connected → ${spaceName}`, 'ok');
+      break;
+    } catch (connErr) {
+      t2vLog(logEl, 2, `${spaceName} → unavailable, next...`, 'info');
+      client = null;
     }
   }
 
-  // OUTRO — 2 seconds
-  const outroFrames = Math.floor(2000 / FRAME_MS);
-  for (let f = 0; f < outroFrames; f++) {
-    const ot = f / outroFrames;
-    drawOutroSlide(ctx, mood, ot);
-    await new Promise(r => setTimeout(r, FRAME_MS));
+  if (!client) {
+    // Last resort: direct fetch API (no Gradio client)
+    t2vLog(logEl, 2, 'Gradio client fallback — Direct API mode এ যাচ্ছে...', 'active');
+    return await t2vDirectFetch(prompt, negPrompt, slides, mood, logEl);
   }
-  recorder.stop();
-  audioCtx.close();
-  await new Promise(r => recorder.onstop = r);
-  return new Blob(chunks, { type: 'video/webm' });
+
+  // ── Stage 3: Queue Injection ───────────────────────────────
+  t2vLog(logEl, 3, 'Queue এ inject করা হচ্ছে...', 'stage');
+
+  // Build payload — Wan2.1 standard API
+  const seed = Math.floor(Math.random() * 2147483647);
+  const numFrames = 97; // ~6 seconds @ 16fps = smooth fluid motion
+  const inferenceSteps = 30; // balanced: quality vs speed on free nodes
+
+  let resultBlob = null;
+
+  // ── Resilient polling — stays alive indefinitely ──────────
+  await new Promise((resolve, reject) => {
+    let queuePos = null;
+    let stageReported = { s3: false, s4: false, s5: false };
+    let heartbeatTimer = null;
+    let timeoutTimer = null;
+    let settled = false;
+
+    function done(blob) {
+      if (settled) return;
+      settled = true;
+      resultBlob = blob;
+      clearInterval(heartbeatTimer);
+      clearTimeout(timeoutTimer);
+      resolve();
+    }
+    function fail(err) {
+      if (settled) return;
+      settled = true;
+      clearInterval(heartbeatTimer);
+      clearTimeout(timeoutTimer);
+      reject(err);
+    }
+
+    // Heartbeat — updates UI every 8s so user knows it's alive
+    let elapsedSec = 0;
+    heartbeatTimer = setInterval(() => {
+      elapsedSec += 8;
+      const mins = Math.floor(elapsedSec / 60);
+      const secs = elapsedSec % 60;
+      const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      if (!stageReported.s4) return;
+      t2vLog(logEl, 4, `Frame generation চলছে... (${timeStr} elapsed) — Page বন্ধ করবেন না`, 'active');
+    }, 8000);
+
+    // Hard timeout — 25 minutes for free public nodes
+    timeoutTimer = setTimeout(() => {
+      fail(new Error('Public server timeout (25min). Server অনেক busy — কিছুক্ষণ পর আবার চেষ্টা করুন।'));
+    }, 25 * 60 * 1000);
+
+    (async () => {
+      try {
+        const submission = client.submit('/generate', {
+          prompt: prompt,
+          negative_prompt: negPrompt,
+          num_frames: numFrames,
+          num_inference_steps: inferenceSteps,
+          guidance_scale: 6.5,
+          seed: seed,
+          // Some spaces use these param names:
+          height: 480,
+          width: 832,
+        });
+
+        for await (const event of submission) {
+          if (settled) break;
+
+          // Queue position updates
+          if (event.type === 'status') {
+            const st = event.data || event;
+            if (st.queue_position !== undefined && st.queue_position !== null) {
+              const pos = st.queue_position;
+              if (!stageReported.s3) {
+                t2vLog(logEl, 3, `Queue এ আছেন — Position: #${pos}`, 'info');
+                stageReported.s3 = true;
+              } else {
+                // Update last line quietly
+                t2vLog(logEl, 3, `Queue Position: #${pos} (waiting...)`, 'info');
+              }
+            }
+            if (st.stage === 'generating' || st.msg?.includes('generat') || st.status === 'generating') {
+              if (!stageReported.s4) {
+                t2vLog(logEl, 4, `Frame generation শুরু হয়েছে — ${numFrames} frames (6 sec) render হচ্ছে...`, 'stage');
+                t2vLog(logEl, 4, 'Cinematic lighting & fluid motion physics simulate হচ্ছে...', 'active');
+                stageReported.s4 = true;
+              }
+            }
+          }
+
+          // Output data received
+          if (event.type === 'data' && event.data) {
+            if (!stageReported.s4) {
+              t2vLog(logEl, 4, 'Video frames তৈরি হয়েছে ✓', 'ok');
+              stageReported.s4 = true;
+            }
+            t2vLog(logEl, 5, 'Final video stream পাওয়া গেছে — Blob URL তৈরি হচ্ছে...', 'stage');
+
+            // Extract video from response
+            const outputs = event.data;
+            let videoBlob = null;
+
+            // Handle different output formats from various spaces
+            const findVideo = (obj) => {
+              if (!obj) return null;
+              if (obj instanceof Blob) return obj;
+              if (typeof obj === 'string' && (obj.startsWith('http') || obj.startsWith('blob') || obj.startsWith('data:video'))) return obj;
+              if (obj?.url) return obj.url;
+              if (obj?.video?.url) return obj.video.url;
+              if (obj?.path) return obj.path;
+              if (Array.isArray(obj)) { for (const item of obj) { const r = findVideo(item); if (r) return r; } }
+              if (typeof obj === 'object') { for (const k of Object.keys(obj)) { const r = findVideo(obj[k]); if (r) return r; } }
+              return null;
+            };
+
+            const videoSrc = findVideo(outputs);
+
+            if (videoSrc instanceof Blob) {
+              videoBlob = videoSrc;
+            } else if (typeof videoSrc === 'string') {
+              // Fetch and convert to blob for local playback + FB upload
+              t2vLog(logEl, 5, 'Video file download করা হচ্ছে...', 'active');
+              const resp = await fetch(videoSrc);
+              videoBlob = await resp.blob();
+            }
+
+            if (videoBlob) {
+              t2vLog(logEl, 5, `Video DOM এ inject হচ্ছে (${(videoBlob.size/1024/1024).toFixed(1)} MB) ✓`, 'ok');
+              done(videoBlob);
+            } else {
+              fail(new Error('Video output পাওয়া যায়নি — Space টি ভিন্ন format ব্যবহার করছে।'));
+            }
+          }
+        }
+
+        if (!settled) fail(new Error('Server connection শেষ হয়ে গেছে কিন্তু video আসেনি।'));
+      } catch(err) {
+        fail(err);
+      }
+    })();
+  });
+
+  if (!resultBlob) throw new Error('Video generate হয়নি।');
+  return resultBlob;
+}
+
+// ── Direct Fetch Fallback (no Gradio client) ───────────────────
+// Used when Gradio ESM CDN fails — tries HF Inference API style
+async function t2vDirectFetch(prompt, negPrompt, slides, mood, logEl) {
+  t2vLog(logEl, 3, 'Direct HuggingFace Space API mode...', 'stage');
+
+  // Try spaces with REST API
+  const restSpaces = [
+    { url: 'https://wan-video-wan2-1-t2v-14b.hf.space', fn: '/generate' },
+    { url: 'https://wan-video-wan2-1-t2v-1-3b.hf.space', fn: '/generate' },
+  ];
+
+  for (const space of restSpaces) {
+    try {
+      t2vLog(logEl, 3, `Connecting → ${space.url}...`, 'active');
+
+      // Step 1: Join queue
+      const joinResp = await fetch(`${space.url}/queue/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: [prompt, negPrompt, 97, 30, 6.5, Math.floor(Math.random()*2147483647)],
+          fn_index: 0,
+          session_hash: Math.random().toString(36).slice(2),
+        })
+      });
+
+      if (!joinResp.ok) { t2vLog(logEl, 3, `${space.url} → HTTP ${joinResp.status}`, 'info'); continue; }
+      const joinData = await joinResp.json();
+      const sessionHash = joinData.event_id || joinData.session_hash;
+      t2vLog(logEl, 3, `Queue joined ✓ (session: ${sessionHash?.slice(0,8)}...)`, 'ok');
+      t2vLog(logEl, 4, 'Video generation শুরু হয়েছে — frames তৈরি হচ্ছে...', 'stage');
+
+      // Step 2: Poll status via EventSource
+      const videoBlob = await new Promise((resolve, reject) => {
+        const evtUrl = `${space.url}/queue/data?session_hash=${sessionHash}`;
+        const evtSource = new EventSource(evtUrl);
+        let settled = false;
+        let heartbeat = setInterval(() => { t2vLog(logEl, 4, 'Generation চলছে... (Page বন্ধ করবেন না)', 'active'); }, 10000);
+        const timeout = setTimeout(() => {
+          if (!settled) { settled = true; clearInterval(heartbeat); evtSource.close(); reject(new Error('Direct API timeout')); }
+        }, 20 * 60 * 1000);
+
+        evtSource.onmessage = async (e) => {
+          try {
+            const msg = JSON.parse(e.data);
+            if (msg.msg === 'queue_full') { clearInterval(heartbeat); clearTimeout(timeout); evtSource.close(); reject(new Error('Queue full')); return; }
+            if (msg.msg === 'estimation') { t2vLog(logEl, 3, `Queue position: #${msg.rank || '?'}`, 'info'); }
+            if (msg.msg === 'process_generating') { t2vLog(logEl, 4, 'Frames তৈরি হচ্ছে...', 'active'); }
+            if (msg.msg === 'process_completed') {
+              clearInterval(heartbeat); clearTimeout(timeout); evtSource.close();
+              if (!settled) {
+                settled = true;
+                t2vLog(logEl, 5, 'Video stream পাওয়া গেছে ✓', 'ok');
+                const output = msg.output?.data?.[0];
+                let src = output?.url || output?.path || output;
+                if (src && typeof src === 'string') {
+                  if (!src.startsWith('http')) src = space.url + src;
+                  const resp = await fetch(src);
+                  resolve(await resp.blob());
+                } else { reject(new Error('Output URL নেই')); }
+              }
+            }
+          } catch(parseErr) { /* ignore non-JSON frames */ }
+        };
+        evtSource.onerror = () => { if (!settled) { settled = true; clearInterval(heartbeat); clearTimeout(timeout); evtSource.close(); reject(new Error('EventSource error')); } };
+      });
+
+      return videoBlob;
+
+    } catch(e) {
+      t2vLog(logEl, 3, `${space.url} → ${e.message}`, 'info');
+    }
+  }
+
+  throw new Error('সব free server busy বা unavailable। ৫-১০ মিনিট পর আবার চেষ্টা করুন। Public HuggingFace spaces এ heavy traffic থাকে।');
 }
 
 function playSlideSound(audioCtx, dest, mood, slideIndex, totalSlides) {
