@@ -875,12 +875,13 @@ addDoc(collection(db,'pageviews'), {
         <label style="font-size:11px;font-weight:700;color:var(--text2)">✍️ News Text লিখুন</label>
         <textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder="এখানে সংবাদের মূল বিষয় লিখুন..."></textarea>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <button onclick="fbGenerateCard()" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">✨ AI দিয়ে Card বানাও</button>
-          <button onclick="fbPostAll()" id="fb-post-btn" style="padding:8px 18px;background:#1877f2;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:none">📤 সব Page এ Post করো</button>
+          <button onclick="fbGenerateReel()" id="fb-gen-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🎬 Reel বানাও</button>
+          <button onclick="fbDownloadReel()" id="fb-download-btn" style="padding:8px 18px;background:#25d366;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:none">⬇️ Download করো</button>
         </div>
         <div id="fb-preview" style="margin-top:16px;display:none">
           <label style="font-size:11px;font-weight:700;color:var(--text2)">Preview</label>
-          <canvas id="fb-card-canvas" width="1080" height="1080" style="width:100%;max-width:400px;border-radius:12px;margin-top:6px;display:block"></canvas>
+          <canvas id="fb-card-canvas" width="1080" height="1920" style="width:100%;max-width:300px;border-radius:12px;margin-top:6px;display:block"></canvas>
+          <video id="fb-reel-video" controls style="width:100%;max-width:300px;border-radius:12px;margin-top:8px;display:none"></video>
           <textarea id="fb-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:8px;resize:vertical"></textarea>
         </div>
         <div id="fb-post-log" style="margin-top:12px;font-size:11px;max-height:200px;overflow-y:auto"></div>
