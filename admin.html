@@ -2472,14 +2472,13 @@ async function fbPostAll() {
     for (const page of pages) {
       try {
         // Image upload
-        const formData = new FormData();
-        formData.append('source', imageBlob, 'joaf-news.jpg');
-        formData.append('caption', caption);
-        formData.append('access_token', page.token);
-
-        const postRes = await fetch(`https://graph.facebook.com/${page.id}/photos`, {
+        const postRes = await fetch(`https://graph.facebook.com/${page.id}/feed`, {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: caption,
+            access_token: page.token
+          })
         });
         const postData = await postRes.json();
 
