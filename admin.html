@@ -2375,22 +2375,30 @@ let reelBlob = null;
 
 
 
+
 async function fbGenerateReel() {
-  const text = document.getElementById('fb-news-input').value.trim();
-  if (!text) return alert('News text লিখুন');
+  const inputText = document.getElementById('fb-news-input').value.trim();
+  if (!inputText) {
+    alert('প্রথমে news text লিখুন!');
+    return;
+  }
 
-  const btn = document.getElementById('fb-gen-btn');
-  btn.textContent = '🎬 Cinematic Reel তৈরি হচ্ছে...';
-  btn.disabled = true;
+  const optimizedPrompt = "Create a professional cinematic 9:16 vertical reel for Facebook/Instagram. Style: Dramatic Bengali news, dark moody cinematic look, fast smooth transitions, bold white Bengali text overlays with shadow, emotional storytelling, strong hook in first 3 seconds, high quality 1080x1920. News Content: " + inputText.substring(0, 450);
 
-  try {
-    // Split into logical slides
-    const sentences = text.split(/[।!?।]/).filter(s => s.trim().length > 8);
-    const slides = sentences.map((s, i) => ({
-      text: s.trim() + (i === sentences.length-1 ? '।' : ''),
-      label: i === 0 ? 'BREAKING' : i === 1 ? 'বিস্তারিত' : 'প্রভাব',
-      mood: i % 3 === 0 ? 'urgent' : i % 3 === 1 ? 'positive' : 'neutral'
-    }));
+  const popup = window.open(
+    'https://www.jaiportal.com/free/ai-video-generator?prompt=' + encodeURIComponent(optimizedPrompt),
+    'JAIReelGenerator',
+    'width=1300,height=860,scrollbars=yes,resizable=yes,toolbar=no'
+  );
+
+  if (!popup) {
+    alert('Popup blocked! jullyforum.com এ popup allow করুন।');
+    return;
+  }
+
+  alert('✅ JAI Portal খুলেছে।\n\nPrompt auto বসানো আছে। Video generate করে download করুন।');
+}
+));
 
     const blob = await generateCinematicReel(slides);
 
