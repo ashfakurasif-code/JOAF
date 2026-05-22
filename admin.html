@@ -884,6 +884,8 @@ addDoc(collection(db,'pageviews'), {
           <canvas id="fb-card-canvas" width="1080" height="1920" style="width:100%;max-width:300px;border-radius:12px;margin-top:6px;display:block"></canvas>
           <video id="fb-reel-video" controls style="width:100%;max-width:300px;border-radius:12px;margin-top:8px;display:none"></video>
           <textarea id="fb-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:8px;resize:vertical"></textarea>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-top:8px">🏷️ Tags</label>
+          <input id="fb-tags" type="text" readonly style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;box-sizing:border-box">
         </div>
         <div id="fb-post-log" style="margin-top:12px;font-size:11px;max-height:200px;overflow-y:auto"></div>
       </div>
@@ -2342,6 +2344,8 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 <label style="font-size:11px;font-weight:700;color:var(--text2)">Preview</label>
 <canvas id="fb-card-canvas" width="1080" height="1080" style="width:100%;max-width:400px;border-radius:12px;margin-top:6px;display:block"></canvas>
 <textarea id="fb-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:8px;resize:vertical"></textarea>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-top:8px">🏷️ Tags</label>
+          <input id="fb-tags" type="text" readonly style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;box-sizing:border-box">
 </div>
 <div id="fb-post-log" style="margin-top:12px;font-size:11px;max-height:200px;overflow-y:auto"></div>
 </div>
@@ -2398,7 +2402,7 @@ async function fbGenerateReel() {
   ]
 }
 
-News: \${text}` }]
+News: ${text}` }]
       })
     });
     const aiData = await res.json();
@@ -2411,6 +2415,8 @@ News: \${text}` }]
     document.getElementById('fb-caption').value = parsed.caption || text;
     // Store tags globally so extension can use it
     window._joafTags = parsed.tags || '';
+    const tagsEl2 = document.getElementById('fb-tags');
+    if (tagsEl2) tagsEl2.value = parsed.tags || '';
 
     // New format: slides = [{text, label, theme, illustration}] or old string format
     const rawSlides = parsed.slides || [text];
