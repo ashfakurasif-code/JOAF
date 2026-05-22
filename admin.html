@@ -269,12 +269,11 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <script>
 function seededRand(seed) {
   let s = seed >>> 0;
-  return function() {
-    s += 0x6D2B79F5;
+
     let z = s;
     z = Math.imul(z ^ (z >>> 15), z | 1);
     z ^= z + Math.imul(z ^ (z >>> 7), z | 61);
-    return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
+
   };
 }
 
@@ -1325,11 +1324,7 @@ function renderHistory(elId, docs) {
   el.innerHTML = docs.map(d => {
     const color = colors[d.type]||colors.default;
     const time = d.sentAt?.toDate?.()?.toLocaleString('bn-BD') || (d.sentAt?.seconds ? new Date(d.sentAt.seconds*1000).toLocaleString('bn-BD') : '—');
-    return `<div class="hist-item">
-      <div class="hist-dot" style="background:${color}"></div>
-      <div class="hist-info"><div class="hist-title">${d.title||'—'}</div><div class="hist-time">${time}</div></div>
-      <div class="hist-sent">✅ ${d.sent||0}</div>
-    </div>`;
+
   }).join('');
 }
 
@@ -2367,14 +2362,7 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
 
-async function fbGenerateReel() {
-  const input = document.getElementById('fb-news-input');
-  if (!input || !input.value.trim()) {
-    alert('❌ প্রথমে News Text লিখুন!');
-    return;
-  }
-
-  const text = input.value.trim();
+const text = input.value.trim();
   const btn = document.getElementById('fb-gen-btn');
   
   if (btn) {
@@ -2409,16 +2397,7 @@ async function fbGenerateReel() {
 
 
 
-async function fbGenerateReel() {
-  const input = document.getElementById('fb-news-input');
-  const text = input ? input.value.trim() : '';
-  
-  if (!text) {
-    alert("❌ প্রথমে News Text লিখুন!");
-    return;
-  }
-
-  const btn = document.getElementById('fb-gen-btn');
+const btn = document.getElementById('fb-gen-btn');
   if (btn) {
     btn.innerHTML = '⏳ Processing...';
     btn.disabled = true;
@@ -2449,6 +2428,48 @@ async function fbGenerateReel() {
   }
 }
 
+
+
+async function fbGenerateReel() {
+  const input = document.getElementById('fb-news-input');
+  const text = input ? input.value.trim() : '';
+  
+  if (!text) {
+    alert("❌ প্রথমে News Text লিখুন!");
+    return;
+  }
+
+  const btn = document.getElementById('fb-gen-btn');
+  if (btn) {
+    btn.innerHTML = '⏳ Generating...';
+    btn.disabled = true;
+  }
+
+  try {
+    const prompt = "Create a cinematic 9:16 vertical Facebook Reel in Bengali news style. Dramatic lighting, fast cuts, bold text overlays, strong hook in first 3 seconds. News: " + text.substring(0, 400);
+
+    const popup = window.open(
+      "https://www.jaiportal.com/free/ai-video-generator?prompt=" + encodeURIComponent(prompt),
+      "JAIReel",
+      "width=1350,height=900,scrollbars=yes,resizable=yes"
+    );
+
+    if (!popup) {
+      alert("Popup blocked! jullyforum.com এ popup allow করুন।");
+    } else {
+      alert("✅ Popup খুলেছে!\nVideo generate করে download করুন।");
+    }
+  } catch(e) {
+    console.error(e);
+    alert("Error: " + e.message);
+  } finally {
+    if (btn) {
+      btn.innerHTML = '🎬 Reel বানাও';
+      btn.disabled = false;
+    }
+  }
+}
+
 </script>
 </body>
 </html><script>
@@ -2461,16 +2482,7 @@ let reelBlob = null;
 
 
 
-async function fbGenerateReel() {
-  const input = document.getElementById('fb-news-input');
-  const text = input ? input.value.trim() : '';
-  
-  if (!text) {
-    alert('❌ প্রথমে News Text লিখুন!');
-    return;
-  }
-
-  const btn = document.getElementById('fb-gen-btn');
+const btn = document.getElementById('fb-gen-btn');
   if (btn) {
     btn.innerHTML = '⏳ জেনারেট হচ্ছে...';
     btn.disabled = true;
@@ -2558,9 +2570,6 @@ async function generateCinematicReel(slides) {
   let frame = 0;
   const framesPerSlide = 150; // ~5 seconds per slide at 30fps
 
-  return new Promise(resolve => {
-    function render() {
-      const slideIdx = Math.floor(frame / framesPerSlide);
       const progress = (frame % framesPerSlide) / framesPerSlide;
       const slide = slides[slideIdx] || slides[slides.length-1];
 
@@ -2645,12 +2654,11 @@ function fbDownloadReel() {
 <script>
 function seededRand(seed) {
   let s = seed >>> 0;
-  return function() {
-    s += 0x6D2B79F5;
+
     let z = s;
     z = Math.imul(z ^ (z >>> 15), z | 1);
     z ^= z + Math.imul(z ^ (z >>> 7), z | 61);
-    return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
+
   };
 }
 </script>
