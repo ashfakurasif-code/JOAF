@@ -726,6 +726,15 @@ async function _draw(fe){const cv=document.getElementById('cv');await dFull(cv,f
 async function dFull(cv,fe=false){
   const[W,H]=gSz();cv.width=W;cv.height=H;
   const ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  // Viral Text Shadow Effect
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetX = 4;
+  ctx.shadowOffsetY = 4;
+
   const sc=W/1080;
 
   const pad   =44*sc;
