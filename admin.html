@@ -2351,6 +2351,10 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 
 // Save pages to Firestore
 async function fbSavePages() {
+  const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+  const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:"AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",authDomain:"joaf-app-45753.firebaseapp.com",projectId:"joaf-app-45753"});
+  const fdb = getFirestore(fbApp);
   const raw = document.getElementById('fb-pages-json').value.trim();
   if (!raw) return;
   try {
@@ -2358,7 +2362,7 @@ async function fbSavePages() {
     const pages = data.data || [];
     if (!pages.length) { document.getElementById('fb-pages-status').textContent = '❌ কোনো page পাওয়া যায়নি'; return; }
     const simplified = pages.map(p => ({ id: p.id, name: p.name, token: p.access_token }));
-    await db.collection('admin_config').doc('fb_pages').set({ pages: simplified, updatedAt: new Date().toISOString() });
+    await setDoc(doc(fdb,'admin_config','fb_pages'), { pages: simplified, updatedAt: new Date().toISOString() });
     document.getElementById('fb-pages-status').textContent = `✅ ${simplified.length}টি page save হয়েছে`;
     document.getElementById('fb-pages-json').value = '';
   } catch(e) { document.getElementById('fb-pages-status').textContent = '❌ JSON ভুল আছে'; }
