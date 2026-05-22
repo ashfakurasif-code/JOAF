@@ -2534,224 +2534,59 @@ function t2vBuildPrompt(rawText, slides) {
 // ── Space Catalogue — probed in order, first alive wins ────────
 // Each entry: { base, fnIndex, buildData(prompt,neg,seed) }
 // HF Space API: POST /queue/join  →  EventSource /queue/data
-const T2V_SPACE_CATALOGUE = [
-  {
-    base: 'https://wan-video-wan2-1-t2v-1-3b.hf.space',
-    label: 'Wan2.1-1.3B (Fast)',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, n, 81, 20, 7.0, seed, 480, 832],
-  },
-  {
-    base: 'https://hysts-zeroscope-v2.hf.space',
-    label: 'ZeroScope-v2 XL',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, 24, 7.5, seed, 576, 1024],
-  },
-  {
-    base: 'https://multimodalart-stable-video-diffusion.hf.space',
-    label: 'Stable Video Diffusion',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, 25, seed, true],
-  },
-  {
-    base: 'https://damo-vilab-modelscope-text-to-video-synthesis.hf.space',
-    label: 'ModelScope T2V',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, 50, 7.5, seed],
-  },
-  {
-    base: 'https://wan-video-wan2-1-t2v-14b.hf.space',
-    label: 'Wan2.1-14B (HQ)',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, n, 97, 25, 7.0, seed, 480, 832],
-  },
-];
-
-// ── Probe: check if a space is alive (HEAD /info, 6s timeout) ──
-async function t2vProbeSpace(base) {
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 6000);
-  try {
-    const r = await fetch(`${base}/info`, { signal: ctrl.signal });
-    clearTimeout(tid);
-    return r.ok || r.status === 404; // 404 = alive but no /info — still usable
-  } catch { clearTimeout(tid); return false; }
+// ── Netlify Proxy → HuggingFace Wan2.1 ────────────────────────
+function t2vLog(logEl, stage, msg, type) {
+  if (!logEl) return;
+  const colors = { info:'#7878a0', ok:'#34d399', err:'#f05252', stage:'#fbbf24', active:'#60a5fa' };
+  const line = document.createElement('div');
+  line.style.cssText = 'font-size:11px;line-height:1.8;display:flex;gap:6px;';
+  line.innerHTML = '<span style="color:#fbbf24;font-weight:700;flex-shrink:0">[S' + stage + ']</span><span style="color:' + (colors[type]||colors.info) + '">' + msg + '</span>';
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
 }
-
-// ── One space attempt: join queue → EventSource → blob ─────────
-function t2vAttemptSpace(space, prompt, negPrompt, seed, logEl) {
-  return new Promise(async (resolve, reject) => {
-    const sessionHash = Math.random().toString(36).slice(2, 14);
-    let settled = false, heartbeatTimer, timeoutTimer;
-
-    const done  = (v) => { if(settled)return; settled=true; clearInterval(heartbeatTimer); clearTimeout(timeoutTimer); resolve(v); };
-    const fail  = (e) => { if(settled)return; settled=true; clearInterval(heartbeatTimer); clearTimeout(timeoutTimer); reject(e); };
-
-    // ── 1. Join queue ────────────────────────────────────────
-    let joinRes;
-    try {
-      joinRes = await fetch(`${space.base}/queue/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          data: space.buildData(prompt, negPrompt, seed),
-          fn_index: space.fnIndex,
-          session_hash: sessionHash,
-          event_data: null,
-        }),
-      });
-    } catch(e) { return fail(new Error(`join fetch failed: ${e.message}`)); }
-
-    if (!joinRes.ok) return fail(new Error(`HTTP ${joinRes.status} on /queue/join`));
-    t2vLog(logEl, 3, `✓ Queue joined → ${space.label}`, 'ok');
-
-    // ── 2. EventSource poll ──────────────────────────────────
-    let evtSource;
-    try {
-      evtSource = new EventSource(`${space.base}/queue/data?session_hash=${sessionHash}`);
-    } catch(e) { return fail(new Error(`EventSource failed: ${e.message}`)); }
-
-    let elapsedSec = 0;
-    heartbeatTimer = setInterval(() => {
-      elapsedSec += 9;
-      const m = Math.floor(elapsedSec/60), s = elapsedSec%60;
-      t2vLog(logEl, 4, `⟳ Generating... ${m>0?m+'m ':''}${s}s elapsed — page বন্ধ করবেন না`, 'active');
-    }, 9000);
-
-    // 22-minute hard ceiling per space
-    timeoutTimer = setTimeout(() => {
-      evtSource.close();
-      fail(new Error('timeout after 22min'));
-    }, 22*60*1000);
-
-    evtSource.onmessage = async (ev) => {
-      let msg;
-      try { msg = JSON.parse(ev.data); } catch { return; }
-
-      if (msg.msg === 'send_hash') {
-        // Some spaces need a hash acknowledgement
-        fetch(`${space.base}/queue/status`, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ session_hash: sessionHash })
-        }).catch(()=>{});
-      }
-
-      if (msg.msg === 'queue_full') {
-        evtSource.close(); fail(new Error('queue_full'));
-      }
-      if (msg.msg === 'estimation') {
-        const rank = msg.rank_eta ? `~${Math.round(msg.rank_eta)}s` : `#${msg.rank||'?'}`;
-        t2vLog(logEl, 3, `Queue position: ${rank}`, 'info');
-      }
-      if (msg.msg === 'process_starts') {
-        t2vLog(logEl, 4, '▶ Frame generation শুরু হয়েছে — cinematic lighting simulate হচ্ছে...', 'stage');
-      }
-      if (msg.msg === 'process_generating') {
-        const pct = msg.progress?.index && msg.progress?.length
-          ? Math.round(msg.progress.index/msg.progress.length*100)+'%' : '';
-        if (pct) t2vLog(logEl, 4, `Frames: ${pct}`, 'active');
-      }
-      if (msg.msg === 'process_completed') {
-        evtSource.close();
-        t2vLog(logEl, 5, '⟳ Video stream পাওয়া গেছে — blob তৈরি হচ্ছে...', 'stage');
-
-        // ── 3. Extract video URL from output ────────────────
-        const out = msg.output?.data;
-        let videoSrc = null;
-
-        const dig = (o) => {
-          if (!o) return null;
-          if (typeof o === 'string' && /\.(mp4|webm|mov)/i.test(o)) return o;
-          if (typeof o === 'string' && (o.startsWith('http')||o.startsWith('/file=')||o.startsWith('blob:'))) return o;
-          if (o?.video?.url) return o.video.url;
-          if (o?.url) return o.url;
-          if (o?.path) return (o.path.startsWith('http')?'':space.base+'/file=')+o.path;
-          if (Array.isArray(o)) { for(const x of o){const r=dig(x);if(r)return r;} }
-          if (typeof o==='object'){for(const k of Object.keys(o)){const r=dig(o[k]);if(r)return r;}}
-          return null;
-        };
-        videoSrc = dig(out);
-
-        if (!videoSrc) return fail(new Error('video URL পাওয়া যায়নি'));
-
-        // Make absolute URL
-        if (videoSrc.startsWith('/')) videoSrc = space.base + videoSrc;
-
-        try {
-          const vRes = await fetch(videoSrc);
-          if (!vRes.ok) throw new Error(`video fetch HTTP ${vRes.status}`);
-          const blob = await vRes.blob();
-          t2vLog(logEl, 5, `✅ Video ready — ${(blob.size/1024/1024).toFixed(1)} MB`, 'ok');
-          done(blob);
-        } catch(fe) { fail(fe); }
-      }
-    };
-
-    evtSource.onerror = (e) => {
-      // EventSource auto-retries; only fail after several consecutive errors
-      // We use the timeout as the real backstop — don't fail on first error
-      t2vLog(logEl, 3, '⟳ Connection flicker — reconnecting...', 'info');
-    };
-  });
+function t2vBuildPrompt(rawText, slides) {
+  const base = rawText || slides.map(s => typeof s==='string'?s:s.text||'').join('. ');
+  return {
+    positive: base + ', photorealistic cinematic masterpiece, 8k resolution, cinematic volumetric lighting, dynamic fluid motion, shot on 35mm lens, hyper-detailed, trending on artstation',
+    negative: 'cartoon, anime, 3d render, drawing, painting, static, text overlay, watermark, low quality, blurry, choppy, glitch'
+  };
 }
-
-// ── Main orchestrator ───────────────────────────────────────────
 async function renderVideoWithAudio(slides, mood, rawText, logEl) {
   if (logEl) logEl.innerHTML = '';
-
-  // Stage 1 — prompt
-  t2vLog(logEl, 1, 'Prompt কে Cinematic Realism Matrix এ upgrade করা হচ্ছে...', 'stage');
-  await new Promise(r=>setTimeout(r,200));
+  t2vLog(logEl, 1, 'Prompt কে Cinematic Matrix এ upgrade করা হচ্ছে...', 'stage');
+  await new Promise(r => setTimeout(r, 200));
   const { positive: prompt, negative: negPrompt } = t2vBuildPrompt(rawText, slides);
-  t2vLog(logEl, 1, `✓ Enhanced prompt ready (${prompt.length} chars)`, 'ok');
-
-  // Stage 2 — probe spaces in parallel (first 3), pick fastest alive
-  t2vLog(logEl, 2, 'Free HuggingFace servers probe করা হচ্ছে (parallel)...', 'stage');
+  t2vLog(logEl, 1, '✓ Enhanced prompt ready', 'ok');
+  t2vLog(logEl, 2, 'Netlify → HuggingFace Wan2.1 API তে request পাঠানো হচ্ছে...', 'stage');
+  t2vLog(logEl, 2, '⏱ ৩–১০ মিনিট লাগতে পারে — model load হচ্ছে...', 'info');
   const seed = Math.floor(Math.random() * 2147483647);
-
-  // Probe first 3 spaces simultaneously
-  const probeResults = await Promise.allSettled(
-    T2V_SPACE_CATALOGUE.slice(0,3).map(sp =>
-      t2vProbeSpace(sp.base).then(alive => ({ sp, alive }))
-    )
-  );
-  const aliveSpaces = probeResults
-    .filter(r => r.status==='fulfilled' && r.value.alive)
-    .map(r => r.value.sp);
-
-  // Add remaining spaces as backup (unprobed)
-  const remaining = T2V_SPACE_CATALOGUE.slice(3);
-  const orderedSpaces = [...aliveSpaces, ...remaining];
-
-  if (aliveSpaces.length === 0) {
-    t2vLog(logEl, 2, '⚠ Probe: কোনো server instant respond করেনি — সরাসরি try করছি...', 'info');
-    orderedSpaces.push(...T2V_SPACE_CATALOGUE.slice(0,3));
-  } else {
-    t2vLog(logEl, 2, `✓ ${aliveSpaces.length} server alive — ${aliveSpaces[0].label} দিয়ে শুরু`, 'ok');
-  }
-
-  // Stage 3-5 — try spaces one by one
-  for (let i = 0; i < orderedSpaces.length; i++) {
-    const space = orderedSpaces[i];
-    t2vLog(logEl, 3, `[${i+1}/${orderedSpaces.length}] ${space.label} → connecting...`, 'stage');
-    try {
-      const blob = await t2vAttemptSpace(space, prompt, negPrompt, seed, logEl);
-      return blob; // ✅ success
-    } catch(e) {
-      t2vLog(logEl, 3, `✗ ${space.label}: ${e.message} — next server...`, 'err');
-      if (i < orderedSpaces.length - 1) {
-        t2vLog(logEl, 3, `⟳ ${orderedSpaces[i+1].label} এ switch হচ্ছে...`, 'info');
-        await new Promise(r => setTimeout(r, 800));
-      }
+  let elapsed = 0;
+  const hb = setInterval(() => {
+    elapsed += 10;
+    const m = Math.floor(elapsed/60), s = elapsed%60;
+    t2vLog(logEl, 3, '⟳ Generating... ' + (m>0?m+'m ':'') + s + 's — page বন্ধ করবেন না', 'active');
+  }, 10000);
+  try {
+    const res = await fetch('/.netlify/functions/hf-video-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, negative_prompt: negPrompt, num_frames: 81, num_inference_steps: 20, guidance_scale: 7.0, seed, height: 480, width: 832 }),
+    });
+    clearInterval(hb);
+    if (!res.ok) {
+      const errText = await res.text();
+      let msg = 'HF API error (' + res.status + ')';
+      try { const j = JSON.parse(errText); msg = j.error || msg; } catch {}
+      throw new Error(msg);
     }
+    t2vLog(logEl, 4, '✓ Video data পাওয়া গেছে — blob তৈরি হচ্ছে...', 'ok');
+    const blob = await res.blob();
+    t2vLog(logEl, 5, '✅ Video ready — ' + (blob.size/1024/1024).toFixed(1) + ' MB', 'ok');
+    return blob;
+  } catch(e) {
+    clearInterval(hb);
+    throw e;
   }
-
-  // All spaces failed — give actionable advice
-  throw new Error(
-    'সব server এ চেষ্টা হয়েছে কিন্তু সফল হয়নি।\n' +
-    'কারণ: HuggingFace free spaces মাঝে মাঝে sleep mode এ যায়।\n' +
-    'সমাধান: ১-২ মিনিট অপেক্ষা করে আবার চেষ্টা করুন — space জেগে উঠলেই কাজ হবে।'
-  );
 }
 
 function playSlideSound(audioCtx, dest, mood, slideIndex, totalSlides) {
