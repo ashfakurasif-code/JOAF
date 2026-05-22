@@ -2411,6 +2411,12 @@ News: ${text}` }]
     document.getElementById('fb-caption').value = parsed.caption || text;
     // Store tags globally so extension can use it
     window._joafTags = parsed.tags || '';
+    // খালি caption box এর নিচে tags বসাও
+    const capEl = document.getElementById('fb-caption');
+    if (capEl) {
+      const tagsVal = parsed.tags || '';
+      if (tagsVal) capEl.value = (parsed.caption || text) + '\n\nTags: ' + tagsVal;
+    }
 
     // New format: slides = [{text, label, theme, illustration}] or old string format
     const rawSlides = parsed.slides || [text];
