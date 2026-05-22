@@ -235,7 +235,6 @@ const JOAF = {
     { text:"📄 আর্থিক বিবরণী প্রকাশিত হয়েছে",               href:"/financial-report.html"},
     { text:"✊ সদস্যতা গ্রহণ চলছে — এখনই যোগ দিন",          href:"/membership.html"      },
     { text:"🤝 কমিউনিটি গ্রুপে যোগ দিন",                    href:"/community.html"       },
-    { text:"📄 নতুন প্রেস রিলিজ প্রকাশিত হয়েছে",          href:"/media-news.html",       id:"press-ticker"},
   ]
 };
 

@@ -1616,8 +1616,9 @@ setTimeout(() => {
 
 
 
+
 // ── Dynamic latest press release in ticker ──────────────────
-(async function updatePressReleaseTicker() {
+(async function injectLatestPressRelease() {
   try {
     const { getApps, initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
@@ -1629,15 +1630,15 @@ setTimeout(() => {
     const db = getFirestore(fbApp);
     const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
     if (snap.empty) return;
-    const href = '/press-releases/view.html?id=' + snap.docs[0].id;
-    const update = () => {
-      const links = document.querySelectorAll('#joafTickerTrack .ticker-item a[href="/media-news.html"]');
-      if (links.length) {
-        links.forEach(a => a.href = href);
-      } else {
-        setTimeout(update, 300);
-      }
-    };
-    update();
-  } catch(e) { console.warn('Ticker press release update failed:', e); }
+    const id = snap.docs[0].id;
+    const href = '/press-releases/view.html?id=' + id;
+    const track = document.getElementById('joafTickerTrack');
+    if (!track) return;
+    const item = document.createElement('span');
+    item.className = 'ticker-item';
+    item.innerHTML = `<a href="${href}">📄 নতুন প্রেস রিলিজ দেখুন</a><span class="ticker-sep">◆</span>`;
+    track.prepend(item);
+    const clone = item.cloneNode(true);
+    track.appendChild(clone);
+  } catch(e) { console.warn('Ticker press release fetch failed:', e); }
 })();
