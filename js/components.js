@@ -1613,6 +1613,7 @@ setTimeout(() => {
 
 
 
+
 // ── Dynamic latest press release in ticker ──────────────────
 (async function updatePressReleaseTicker() {
   try {
@@ -1634,7 +1635,5 @@ setTimeout(() => {
     item.className = 'ticker-item';
     item.innerHTML = `<a href="${href}">📄 নতুন প্রেস রিলিজ প্রকাশিত হয়েছে</a><span class="ticker-sep">◆</span>`;
     track.prepend(item);
-    const clone = item.cloneNode(true);
-    track.appendChild(clone);
   } catch(e) { console.warn('Ticker press release update failed:', e); }
 })();
