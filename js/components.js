@@ -1617,6 +1617,7 @@ setTimeout(() => {
 
 
 
+
 // ── Dynamic latest press release in ticker ──────────────────
 (async function injectLatestPressRelease() {
   try {
@@ -1630,15 +1631,16 @@ setTimeout(() => {
     const db = getFirestore(fbApp);
     const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
     if (snap.empty) return;
-    const id = snap.docs[0].id;
-    const href = '/press-releases/view.html?id=' + id;
-    const track = document.getElementById('joafTickerTrack');
-    if (!track) return;
-    const item = document.createElement('span');
-    item.className = 'ticker-item';
-    item.innerHTML = `<a href="${href}">📄 নতুন প্রেস রিলিজ দেখুন</a><span class="ticker-sep">◆</span>`;
-    track.prepend(item);
-    const clone = item.cloneNode(true);
-    track.appendChild(clone);
+    const href = '/press-releases/view.html?id=' + snap.docs[0].id;
+    const tryUpdate = () => {
+      const links = [...document.querySelectorAll('#joafTickerTrack .ticker-item a')]
+        .filter(a => a.textContent.includes('নতুন প্রেস রিলিজ দেখুন'));
+      if (links.length) {
+        links.forEach(a => a.href = href);
+      } else {
+        setTimeout(tryUpdate, 300);
+      }
+    };
+    tryUpdate();
   } catch(e) { console.warn('Ticker press release fetch failed:', e); }
 })();
