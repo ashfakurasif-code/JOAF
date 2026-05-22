@@ -2365,7 +2365,7 @@ async function fbSavePages() {
     await setDoc(doc(fdb,'admin_config','fb_pages'), { pages: simplified, updatedAt: new Date().toISOString() });
     document.getElementById('fb-pages-status').textContent = `✅ ${simplified.length}টি page save হয়েছে`;
     document.getElementById('fb-pages-json').value = '';
-  } catch(e) { document.getElementById('fb-pages-status').textContent = '❌ JSON ভুল আছে'; }
+  } catch(e) { console.error("fbSavePages error:", e); document.getElementById("fb-pages-status").textContent = "❌ " + e.message; }
 }
 
 // Generate card and caption
