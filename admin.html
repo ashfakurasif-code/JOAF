@@ -2483,24 +2483,20 @@ async function renderVideoWithAudio(slides, mood) {
   const FRAME_MS = 1000 / FPS;
 
   for (let i = 0; i < slides.length; i++) {
-    // Per-slide dynamic sound
     playSlideSound(audioCtx, dest, mood, i, slides.length);
-
-    const startTime = performance.now();
-    let elapsed = 0;
-    while (elapsed < SLIDE_DURATION) {
-      const t = elapsed / SLIDE_DURATION; // 0→1 progress within slide
-      const sd = typeof slides[i] === 'string' ? {text:slides[i],label:'',theme:'',illustration:''} : slides[i];
+    const sd = typeof slides[i] === 'string' ? {text:slides[i],label:'',theme:'',illustration:''} : slides[i];
+    const frames = Math.floor(SLIDE_DURATION / FRAME_MS);
+    for (let f = 0; f < frames; f++) {
+      const t = f / frames;
       drawSlideAnimated(ctx, sd.text, i, slides.length, mood, t, sd.label, sd.theme, sd.illustration);
       await new Promise(r => setTimeout(r, FRAME_MS));
-      elapsed = performance.now() - startTime;
     }
   }
 
   // OUTRO — 3 seconds
-  const outroStart = performance.now();
-  while (performance.now() - outroStart < 3000) {
-    const ot = (performance.now() - outroStart) / 3000;
+  const outroFrames = Math.floor(3000 / FRAME_MS);
+  for (let f = 0; f < outroFrames; f++) {
+    const ot = f / outroFrames;
     drawOutroSlide(ctx, mood, ot);
     await new Promise(r => setTimeout(r, FRAME_MS));
   }
