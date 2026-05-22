@@ -2348,162 +2348,262 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </body>
 </html><script>
-// ── FB Auto Post ─────────────────────────────────────────────
 
-// Save pages to Firestore
-async function fbSavePages() {
-  const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-  const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
-  const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:"AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",authDomain:"joaf-app-45753.firebaseapp.com",projectId:"joaf-app-45753"});
-  const fdb = getFirestore(fbApp);
-  const raw = document.getElementById('fb-pages-json').value.trim();
-  if (!raw) return;
-  try {
-    const data = JSON.parse(raw);
-    const pages = data.data || [];
-    if (!pages.length) { document.getElementById('fb-pages-status').textContent = '❌ কোনো page পাওয়া যায়নি'; return; }
-    const simplified = pages.map(p => ({ id: p.id, name: p.name, token: p.access_token }));
-    await setDoc(doc(fdb,'admin_config','fb_pages'), { pages: simplified, updatedAt: new Date().toISOString() });
-    document.getElementById('fb-pages-status').textContent = `✅ ${simplified.length}টি page save হয়েছে`;
-    document.getElementById('fb-pages-json').value = '';
-  } catch(e) { console.error("fbSavePages error:", e); document.getElementById("fb-pages-status").textContent = "❌ " + e.message; }
-}
 
-// Generate card and caption
-async function fbGenerateCard() {
+// ── FB Reel Generator ─────────────────────────────────────────
+let reelBlob = null;
+
+async function fbGenerateReel() {
   const text = document.getElementById('fb-news-input').value.trim();
   if (!text) return alert('News text লিখুন');
-  
-  const btn = document.querySelector('[onclick="fbGenerateCard()"]');
+  const btn = document.getElementById('fb-gen-btn');
   btn.textContent = '⏳ তৈরি হচ্ছে...';
   btn.disabled = true;
 
   try {
-    document.getElementById('fb-caption').value = text;
+    // AI দিয়ে caption + slides + mood বানাও
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার। নিচের news বিশ্লেষণ করে JSON দাও। অন্য কিছু না, শুধু JSON।
 
-    // Canvas এ animated card বানাও
-    const canvas = document.getElementById('fb-card-canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Background gradient
-    const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
-    grad.addColorStop(0, '#0f172a');
-    grad.addColorStop(1, '#1e3a5f');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 1080, 1080);
+Format:
+{
+  "mood": "urgent|sad|positive|neutral|angry",
+  "caption": "Facebook Reels caption বাংলায়, emoji সহ, ৩টা hashtag শেষে",
+  "slides": ["slide1","slide2","slide3","slide4","slide5"]
+}
 
-    // JOAF logo circle
-    ctx.beginPath();
-    ctx.arc(540, 380, 160, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(220, 38, 38, 0.15)';
-    ctx.fill();
-    ctx.strokeStyle = '#dc2626';
-    ctx.lineWidth = 4;
-    ctx.stroke();
+প্রতিটা slide ১-২ লাইন বাংলায়।
 
-    // JOAF text
-    ctx.fillStyle = '#dc2626';
-    ctx.font = 'bold 72px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('JOAF', 540, 410);
+News: ${text}` }]
+      })
+    });
+    const aiData = await res.json();
+    const raw = aiData.content?.[0]?.text || '{}';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '24px sans-serif';
-    ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম', 540, 450);
+    document.getElementById('fb-caption').value = parsed.caption || text;
 
-    // Divider line
-    ctx.strokeStyle = '#dc2626';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(140, 580);
-    ctx.lineTo(940, 580);
-    ctx.stroke();
+    const slides = parsed.slides || [text];
+    const mood = parsed.mood || 'neutral';
 
-    // Breaking news label
-    ctx.fillStyle = '#dc2626';
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('🔴 সর্বশেষ সংবাদ', 540, 640);
+    // Video + Audio বানাও
+    reelBlob = await renderVideoWithAudio(slides, mood);
 
-    // Date
-    const today = new Date().toLocaleDateString('bn-BD', { year:'numeric', month:'long', day:'numeric' });
-    ctx.fillStyle = '#64748b';
-    ctx.font = '22px sans-serif';
-    ctx.fillText(today, 540, 1020);
-
-    // Website
-    ctx.fillStyle = '#3b82f6';
-    ctx.font = '24px sans-serif';
-    ctx.fillText('julyforum.com', 540, 980);
+    const videoEl = document.getElementById('fb-reel-video');
+    videoEl.src = URL.createObjectURL(reelBlob);
+    videoEl.style.display = 'block';
 
     document.getElementById('fb-preview').style.display = 'block';
-    document.getElementById('fb-post-btn').style.display = 'inline-block';
+    document.getElementById('fb-download-btn').style.display = 'inline-block';
 
   } catch(e) {
-    console.error(e);
     alert('Error: ' + e.message);
+    console.error(e);
   } finally {
-    btn.textContent = '✨ AI দিয়ে Card বানাও';
+    btn.textContent = '🎬 Reel বানাও';
     btn.disabled = false;
   }
 }
 
-// Post to all pages
-async function fbPostAll() {
-  const btn = document.getElementById('fb-post-btn');
-  const log = document.getElementById('fb-post-log');
-  const caption = document.getElementById('fb-caption').value.trim();
-  if (!caption) return alert('Caption নেই');
+async function renderVideoWithAudio(slides, mood) {
+  const canvas = document.getElementById('fb-card-canvas');
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext('2d');
 
-  btn.disabled = true;
-  btn.textContent = '⏳ Post হচ্ছে...';
-  log.innerHTML = '';
+  // AudioContext setup
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const dest = audioCtx.createMediaStreamDestination();
 
-  try {
-    // Firestore থেকে pages load করো
-    const { getFirestore: _gfs, doc: _d, getDoc: _gd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'); const { getApps: _ga, initializeApp: _ia } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'); const _app = _ga().length ? _ga()[0] : _ia({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'}); const _fdb = _gfs(_app); const doc = await _gd(_d(_fdb,'admin_config','fb_pages'));
-    if (!doc.exists()) return alert('আগে Pages JSON save করুন');
-    const pages = doc.data().pages || [];
+  // Mood অনুযায়ী background music বানাও
+  generateMoodMusic(audioCtx, dest, mood, slides.length * 7);
 
-    // Canvas থেকে image নাও
-    const canvas = document.getElementById('fb-card-canvas');
-    const imageBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.92));
+  // Canvas + Audio stream merge করো
+  const canvasStream = canvas.captureStream(30);
+  const audioTrack = dest.stream.getAudioTracks()[0];
+  canvasStream.addTrack(audioTrack);
 
-    let success = 0, fail = 0;
+  const recorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+  const chunks = [];
+  recorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
 
-    for (const page of pages) {
-      try {
-        // Image upload
-        const postRes = await fetch(`https://graph.facebook.com/${page.id}/feed`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: caption,
-            access_token: page.token
-          })
-        });
-        const postData = await postRes.json();
+  recorder.start(100);
 
-        if (postData.id) {
-          success++;
-          log.innerHTML += `<div style="color:var(--green);padding:2px 0">✅ ${page.name}</div>`;
-        } else {
-          fail++;
-          log.innerHTML += `<div style="color:var(--red);padding:2px 0">❌ ${page.name}: ${postData.error?.message || 'Error'}</div>`;
-        }
-      } catch(e) {
-        fail++;
-        log.innerHTML += `<div style="color:var(--red);padding:2px 0">❌ ${page.name}: ${e.message}</div>`;
+  for (let i = 0; i < slides.length; i++) {
+    drawSlide(ctx, slides[i], i, slides.length, mood);
+    await new Promise(r => setTimeout(r, 7000));
+  }
+
+  recorder.stop();
+  audioCtx.close();
+  await new Promise(r => recorder.onstop = r);
+  return new Blob(chunks, { type: 'video/webm' });
+}
+
+function generateMoodMusic(audioCtx, dest, mood, duration) {
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.value = 0.3;
+  gainNode.connect(dest);
+
+  // Mood অনুযায়ী notes
+  const moodNotes = {
+    urgent:   [220, 247, 262, 294, 330, 294, 262, 247],
+    sad:      [196, 185, 175, 165, 175, 185, 196, 208],
+    positive: [262, 294, 330, 349, 392, 349, 330, 294],
+    angry:    [110, 117, 123, 131, 123, 117, 110, 104],
+    neutral:  [220, 247, 262, 247, 220, 247, 262, 294]
+  };
+
+  const notes = moodNotes[mood] || moodNotes.neutral;
+  const noteDuration = duration / notes.length;
+
+  notes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const oscGain = audioCtx.createGain();
+
+    osc.type = mood === 'sad' ? 'sine' : mood === 'angry' ? 'sawtooth' : 'triangle';
+    osc.frequency.value = freq;
+
+    oscGain.gain.setValueAtTime(0, audioCtx.currentTime + i * noteDuration);
+    oscGain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + i * noteDuration + 0.1);
+    oscGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + i * noteDuration + noteDuration * 0.7);
+    oscGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + i * noteDuration + noteDuration);
+
+    osc.connect(oscGain);
+    oscGain.connect(gainNode);
+
+    osc.start(audioCtx.currentTime + i * noteDuration);
+    osc.stop(audioCtx.currentTime + i * noteDuration + noteDuration);
+  });
+
+  // Mood অনুযায়ী beat/rhythm
+  if (mood === 'urgent' || mood === 'angry') {
+    for (let t = 0; t < duration; t += 0.5) {
+      const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let j = 0; j < data.length; j++) {
+        data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (audioCtx.sampleRate * 0.05));
       }
-      await new Promise(r => setTimeout(r, 500));
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const g = audioCtx.createGain();
+      g.gain.value = mood === 'angry' ? 0.15 : 0.08;
+      src.connect(g);
+      g.connect(dest);
+      src.start(audioCtx.currentTime + t);
     }
-
-    log.innerHTML += `<div style="margin-top:8px;font-weight:700">মোট: ✅ ${success}টি সফল, ❌ ${fail}টি ব্যর্থ</div>`;
-
-  } catch(e) {
-    log.innerHTML = `<div style="color:var(--red)">Error: ${e.message}</div>`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '📤 সব Page এ Post করো';
   }
 }
+
+function drawSlide(ctx, text, index, total, mood) {
+  const w = 1080, h = 1920;
+
+  // Mood অনুযায়ী color scheme
+  const moodColors = {
+    urgent:   { bg1: '#1a0000', bg2: '#2d0a0a', accent: '#dc2626', text: '#fff' },
+    sad:      { bg1: '#0a0a1a', bg2: '#0d0d2d', accent: '#4f46e5', text: '#c7d2fe' },
+    positive: { bg1: '#001a0a', bg2: '#0a2d1a', accent: '#16a34a', text: '#dcfce7' },
+    angry:    { bg1: '#1a0500', bg2: '#2d0f00', accent: '#ea580c', text: '#fed7aa' },
+    neutral:  { bg1: '#0f172a', bg2: '#1e1034', accent: '#dc2626', text: '#fff' }
+  };
+  const c = moodColors[mood] || moodColors.neutral;
+
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, c.bg1);
+  grad.addColorStop(0.5, c.bg2);
+  grad.addColorStop(1, c.bg1);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Top bar
+  ctx.fillStyle = c.accent;
+  ctx.fillRect(0, 0, w, 10);
+
+  // JOAF circle
+  ctx.beginPath();
+  ctx.arc(w/2, 400, 130, 0, Math.PI * 2);
+  ctx.fillStyle = c.accent + '25';
+  ctx.fill();
+  ctx.strokeStyle = c.accent;
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // JOAF text
+  ctx.fillStyle = c.accent;
+  ctx.font = 'bold 88px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('JOAF', w/2, 430);
+
+  ctx.fillStyle = c.text + '80';
+  ctx.font = '30px sans-serif';
+  ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম', w/2, 480);
+
+  // Divider
+  const divGrad = ctx.createLinearGradient(w/2-250, 0, w/2+250, 0);
+  divGrad.addColorStop(0, 'transparent');
+  divGrad.addColorStop(0.5, c.accent);
+  divGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = divGrad;
+  ctx.fillRect(w/2-250, 540, 500, 3);
+
+  // Slide text with word wrap
+  ctx.fillStyle = c.text;
+  ctx.font = 'bold 62px sans-serif';
+  ctx.textAlign = 'center';
+
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line + word + ' ';
+    if (ctx.measureText(test).width > 920 && line) {
+      lines.push(line.trim());
+      line = word + ' ';
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line.trim());
+
+  const totalTextH = lines.length * 85;
+  const startY = (h - totalTextH) / 2 - 50;
+  lines.forEach((l, i) => ctx.fillText(l, w/2, startY + i * 85));
+
+  // Progress dots
+  const dotY = 1750;
+  const dotSpacing = 40;
+  const totalDots = total;
+  const startX = w/2 - (totalDots-1) * dotSpacing / 2;
+  for (let d = 0; d < totalDots; d++) {
+    ctx.beginPath();
+    ctx.arc(startX + d * dotSpacing, dotY, d === index ? 12 : 7, 0, Math.PI*2);
+    ctx.fillStyle = d === index ? c.accent : c.accent + '50';
+    ctx.fill();
+  }
+
+  // Bottom watermark
+  ctx.fillStyle = c.text + '40';
+  ctx.font = '30px sans-serif';
+  ctx.fillText('julyforum.com', w/2, 1850);
+
+  // Bottom bar
+  ctx.fillStyle = c.accent;
+  ctx.fillRect(0, h-10, w, 10);
+}
+
+function fbDownloadReel() {
+  if (!reelBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(reelBlob);
+  a.download = 'joaf-reel.webm';
+  a.click();
+}
+
 </script>
