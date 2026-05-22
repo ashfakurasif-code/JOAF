@@ -2462,7 +2462,9 @@ News: ${text}` }]
 async function renderVideoWithAudio(slides, mood) {
   // slides is now array of {text, label, theme, illustration} or strings
   const canvas = document.getElementById('fb-card-canvas');
-  canvas.width = 1080;
+  canvas.width = 1080; // Force HD
+  canvas.height = 1920; // Force Vertical
+  // 1080;
   canvas.height = 1920;
   const ctx = canvas.getContext('2d');
 
