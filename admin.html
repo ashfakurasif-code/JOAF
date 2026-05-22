@@ -2728,6 +2728,85 @@ function drawSlideAnimated(ctx, text, index, total, mood, t) {
   ctx.restore();
 }
 
+function drawOutroSlide(ctx, mood, t) {
+  const w = 1080, h = 1920;
+  const moodColors = {
+    urgent:   { bg1: '#0d0000', bg2: '#1a0505', accent: '#ef4444', glow: '#ff0000', text: '#fff' },
+    sad:      { bg1: '#030318', bg2: '#0a0a2a', accent: '#818cf8', glow: '#6366f1', text: '#e0e7ff' },
+    positive: { bg1: '#001208', bg2: '#002a10', accent: '#22c55e', glow: '#16a34a', text: '#f0fdf4' },
+    angry:    { bg1: '#0d0300', bg2: '#1a0800', accent: '#f97316', glow: '#ea580c', text: '#fff7ed' },
+    neutral:  { bg1: '#060b18', bg2: '#0f172a', accent: '#ef4444', glow: '#dc2626', text: '#f8fafc' }
+  };
+  const c = moodColors[mood] || moodColors.neutral;
+  const rand = seededRand(777);
+
+  // Background
+  const bg = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h * 0.8);
+  bg.addColorStop(0, c.bg2);
+  bg.addColorStop(1, c.bg1);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+
+  // Expanding ring effect
+  for (let r = 0; r < 4; r++) {
+    const radius = 200 + r * 160 + t * 300;
+    const alpha = Math.max(0, 0.4 - t * 0.4 - r * 0.08);
+    ctx.beginPath();
+    ctx.arc(w/2, h/2, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = c.accent + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+    ctx.lineWidth = 4 - r;
+    ctx.stroke();
+  }
+
+  // JOAF big logo — scale in
+  const logoScale = Math.min(1, t * 3);
+  ctx.save();
+  ctx.translate(w/2, h/2 - 200);
+  ctx.scale(logoScale, logoScale);
+  // Glow
+  ctx.shadowColor = c.glow;
+  ctx.shadowBlur = 60;
+  ctx.fillStyle = c.accent;
+  ctx.font = 'bold 180px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('JOAF', 0, 0);
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // Tagline fade in
+  const tagAlpha = Math.min(1, Math.max(0, t * 4 - 1));
+  ctx.globalAlpha = tagAlpha;
+  ctx.fillStyle = c.text;
+  ctx.font = 'bold 48px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম', w/2, h/2 + 80);
+  ctx.font = '38px sans-serif';
+  ctx.fillStyle = c.accent;
+  ctx.fillText('julyforum.com', w/2, h/2 + 160);
+  ctx.globalAlpha = 1;
+
+  // Particle burst
+  for (let p = 0; p < 60; p++) {
+    const angle = (p / 60) * Math.PI * 2;
+    const dist = t * 700 * (rand() * 0.5 + 0.5);
+    const px = w/2 + Math.cos(angle) * dist;
+    const py = h/2 + Math.sin(angle) * dist - 200;
+    const alpha = Math.max(0, (1 - t) * (rand() * 0.6 + 0.3));
+    ctx.beginPath();
+    ctx.arc(px, py, rand() * 5 + 2, 0, Math.PI * 2);
+    ctx.fillStyle = c.accent + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+    ctx.fill();
+  }
+
+  // Bottom bar
+  const barGrad = ctx.createLinearGradient(0, 0, w, 0);
+  barGrad.addColorStop(0, 'transparent');
+  barGrad.addColorStop(0.5, c.accent);
+  barGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = barGrad;
+  ctx.fillRect(0, h - 8, w, 8);
+  ctx.fillRect(0, 0, w, 8);
+}
+
 function fbDownloadReel() {
   if (!reelBlob) return;
   const a = document.createElement('a');
