@@ -2377,10 +2377,17 @@ async function fbGenerateReel() {
   const btn = document.getElementById('fb-gen-btn');
   btn.textContent = '⏳ তৈরি হচ্ছে...';
   btn.disabled = true;
+  // Show progress
+  const logEl = document.getElementById('fb-post-log');
+  if (logEl) logEl.innerHTML = '<div style="color:var(--text2);font-size:11px">🤖 AI দিয়ে slides তৈরি হচ্ছে...</div>';
 
   try {
     // AI দিয়ে caption + slides + mood বানাও
-    const res = await fetch('/.netlify/functions/groq-proxy', {
+    // Retry AI up to 2 times on failure
+    let res, aiData;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        res = await fetch('/.netlify/functions/groq-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2393,8 +2400,8 @@ async function fbGenerateReel() {
 - slide এর text সরাসরি এই news এর তথ্য থেকে নেবে
 - কোনো কিছু বানিয়ে বা অনুমান করে লিখবে না
 
-ধাপ ১: news টাকে ৫টা logical অংশে ভাগ করো।
-ধাপ ২: প্রতিটা অংশের জন্য:
+ধাপ ১: news টাকে ৩টা logical অংশে ভাগ করো।
+ধাপ ২: slide 1 MUST শুরু হবে একটা shocking/urgent single sentence দিয়ে — hook হিসেবে। প্রতিটা অংশের জন্য:
   - text: সেই অংশের তথ্য বাংলায় ২-৩ লাইনে (news থেকে সরাসরি)
   - label: এই slide এর unique বাংলা শিরোনাম (সর্বোচ্চ ৩ শব্দ, এই news এর context অনুযায়ী, কখনো repeat করবে না)
   - theme: context অনুযায়ী বেছে নাও: aurora|cyber|ocean|gold|matrix|fire|storm|blood|galaxy|neon|forest|desert|ice|volcanic|cosmic
@@ -2404,11 +2411,9 @@ async function fbGenerateReel() {
 শুধু JSON দাও, অন্য কিছু না:
 {
   "mood": "urgent|sad|positive|neutral|angry",
-  "caption": "Facebook Reels caption বাংলায়, emoji সহ, ৩টা hashtag শেষে",
+  "caption": "Facebook Reels caption বাংলায়: প্রথম line এ সবচেয়ে shocking তথ্য দিয়ে শুরু, emoji সহ, সর্বোচ্চ ৫ লাইন, শেষে ৩টা relevant hashtag",
   "tags": "keyword1, keyword2, keyword3",
   "slides": [
-    {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
-    {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
     {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
     {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
     {"text": "...", "label": "...", "theme": "...", "illustration": "..."}
@@ -2418,7 +2423,13 @@ async function fbGenerateReel() {
 News: ${text}` }]
       })
     });
-    const aiData = await res.json();
+          break;
+      } catch(fetchErr) {
+        if (attempt === 1) throw fetchErr;
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+    aiData = await res.json();
     const raw = aiData.choices?.[0]?.message?.content || '{}';
     // Robustly extract JSON — find first { to last }
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
@@ -2430,7 +2441,7 @@ News: ${text}` }]
     window._joafTags = parsed.tags || '';
 
     // New format: slides = [{text, label, theme, illustration}] or old string format
-    const rawSlides = parsed.slides || [text];
+    const rawSlides = (parsed.slides && parsed.slides.length > 0) ? parsed.slides : [{ text, label: 'সংবাদ', theme: 'cyber', illustration: 'alert' }];
     const slideData = rawSlides.map(s => {
       if (typeof s === 'string') {
         return { text: s.replace(/^slide\s*\d+\s*[:\-]\s*/i, '').trim(), label: '', theme: '', illustration: '' };
@@ -2438,6 +2449,9 @@ News: ${text}` }]
       return { text: (s.text || '').trim(), label: s.label || '', theme: s.theme || '', illustration: s.illustration || '' };
     });
     const mood = parsed.mood || 'neutral';
+
+    // Progress update
+    if (logEl) logEl.innerHTML = '<div style="color:var(--text2);font-size:11px">🎬 Video render হচ্ছে (~' + (slideData.length * 5 + 2) + 'সেকেন্ড)...</div>';
 
     // Video + Audio বানাও
     reelBlob = await renderVideoWithAudio(slideData, mood);
@@ -2449,6 +2463,7 @@ News: ${text}` }]
     document.getElementById('fb-preview').style.display = 'block';
     document.getElementById('fb-download-btn').style.display = 'inline-block';
     document.getElementById('fb-post-reels-btn').style.display = 'inline-block';
+    if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px">✅ Reel তৈরি হয়েছে! Download করুন বা FB Reels এ দিন।</div>';
 
   } catch(e) {
     alert('Error: ' + e.message);
@@ -2469,6 +2484,8 @@ async function renderVideoWithAudio(slides, mood) {
   const ctx = canvas.getContext('2d');
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // Resume if browser suspended (gesture policy)
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
   const dest = audioCtx.createMediaStreamDestination();
 
   const canvasStream = canvas.captureStream(30);
@@ -2480,7 +2497,7 @@ async function renderVideoWithAudio(slides, mood) {
   recorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
   recorder.start(100);
 
-  const SLIDE_DURATION = 7000;
+  const SLIDE_DURATION = 5000;
   const FPS = 30;
   const FRAME_MS = 1000 / FPS;
 
@@ -2495,8 +2512,8 @@ async function renderVideoWithAudio(slides, mood) {
     }
   }
 
-  // OUTRO — 3 seconds
-  const outroFrames = Math.floor(3000 / FRAME_MS);
+  // OUTRO — 2 seconds
+  const outroFrames = Math.floor(2000 / FRAME_MS);
   for (let f = 0; f < outroFrames; f++) {
     const ot = f / outroFrames;
     drawOutroSlide(ctx, mood, ot);
@@ -3063,7 +3080,7 @@ function drawSceneVFX(ctx, w, h, mood, t, rand) {
 // ═══════════════════════════════════════════════════════════
 function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c, aiIllustration='') {
   const illustType = aiIllustration || ['people','alert','ripple','chart','megaphone'][index % 5];
-  const illustY = 1480; // below text area
+  const illustY = 1600; // pushed down — text safe zone
   ctx.save();
 
   if (illustType === 'people' || illustType === 'map' || illustType === 'flag') {
@@ -3101,7 +3118,7 @@ function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c, aiIllustratio
     ctx.shadowColor = c.glow; ctx.shadowBlur = 30;
     ctx.stroke();
     ctx.fillStyle = c.accent + '22'; ctx.fill();
-    ctx.fillStyle = c.text; ctx.font = 'bold 80px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = c.text; ctx.font = "bold 80px 'Noto Sans Bengali', sans-serif"; ctx.textAlign = 'center';
     ctx.fillText('!', 0, 50); ctx.restore();
     // Radiating waves
     for (let r = 0; r < 3; r++) {
@@ -3329,7 +3346,7 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
     ctx.shadowBlur = 0;
   } else {
     // Fallback text
-    ctx.fillStyle = c.accent; ctx.font = 'bold 100px serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = c.accent; ctx.font = "bold 100px 'Noto Sans Bengali', sans-serif"; ctx.textAlign = 'center';
     ctx.fillText('JOAF', 0, 30);
   }
   ctx.restore();
@@ -3348,12 +3365,12 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
   ctx.fillRect(w/2 - divW/2, 510, divW, 5);
 
   // ── SLIDE LABEL ──────────────────────────────────────────
-  const label = aiLabel || ['পটভূমি','মূল ঘটনা','প্রভাব','বিশ্লেষণ','আহ্বান'][index] || `অংশ ${index+1}`;
+  const label = aiLabel || ['হুক','মূল ঘটনা','আহ্বান'][index] || `অংশ ${index+1}`;
   const labelAlpha = Math.min(1, t * 5);
   ctx.save();
   ctx.globalAlpha = labelAlpha;
   // Label pill
-  ctx.font = 'bold 34px sans-serif';
+  ctx.font = "bold 34px 'Noto Sans Bengali', sans-serif";
   const lblW = ctx.measureText(`◆ ${label} ◆`).width + 50;
   ctx.fillStyle = c.accent + '22';
   ctx.beginPath(); ctx.roundRect(w/2 - lblW/2, 540, lblW, 54, 27); ctx.fill();
@@ -3366,7 +3383,7 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
 
   // ── MAIN TEXT ────────────────────────────────────────────
   const cleanText = text.replace(/^slide\s*\d+\s*[:\-]\s*/i, '').trim();
-  ctx.font = 'bold 56px sans-serif';
+  ctx.font = "bold 56px 'Noto Sans Bengali', sans-serif";
   ctx.fillStyle = c.text;
   ctx.textAlign = 'center';
 
@@ -3385,6 +3402,10 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
   const lineH = 90;
   const textStartY = 680;
 
+  // Max 8 lines — prevent overflow into illustration zone
+  const maxLines = Math.min(lines.length, 8);
+  lines.splice(maxLines);
+
   lines.forEach((l, li) => {
     const lineReveal = Math.min(1, Math.max(0, t * 7 - li * 0.35));
     const slideIn = (1 - lineReveal) * 40;
@@ -3399,7 +3420,7 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
       ctx.fillStyle = c.text;
       ctx.shadowColor = c.glow; ctx.shadowBlur = 18;
     }
-    ctx.font = 'bold 56px sans-serif';
+    ctx.font = "bold 56px 'Noto Sans Bengali', sans-serif";
     ctx.textAlign = 'center';
     ctx.fillText(l, w/2, textStartY + li * lineH);
     ctx.shadowBlur = 0;
@@ -3441,7 +3462,7 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
 
   // ── WATERMARK ────────────────────────────────────────────
   ctx.globalAlpha = 0.3;
-  ctx.font = '26px sans-serif';
+  ctx.font = "26px 'Noto Sans Bengali', sans-serif";
   ctx.fillStyle = c.text;
   ctx.textAlign = 'center';
   ctx.fillText('www.julyforum.com', w/2, 1895);
@@ -3506,7 +3527,7 @@ function drawOutroSlide(ctx, mood, t) {
     ctx.drawImage(JOAF_LOGO_IMG, -oLogoSize/2, -oLogoSize/2, oLogoSize, oLogoSize);
     ctx.shadowBlur = 0;
   } else {
-    ctx.font = 'bold 200px serif'; ctx.textAlign = 'center';
+    ctx.font = "bold 200px 'Noto Sans Bengali', sans-serif"; ctx.textAlign = 'center';
     ctx.fillText('JOAF', 0, 0);
   }
   ctx.shadowBlur = 0;
@@ -3519,11 +3540,11 @@ function drawOutroSlide(ctx, mood, t) {
     ctx.globalAlpha = alpha;
     ctx.textAlign = 'center';
     if (i === 0) {
-      ctx.font = 'bold 50px sans-serif';
+      ctx.font = "bold 50px 'Noto Sans Bengali', sans-serif";
       ctx.fillStyle = c.text;
       ctx.fillText(line, w/2, h/2 + 100);
     } else {
-      ctx.font = '40px sans-serif';
+      ctx.font = "40px 'Noto Sans Bengali', sans-serif";
       ctx.fillStyle = c.accent;
       ctx.shadowColor = c.glow; ctx.shadowBlur = 20;
       ctx.fillText(line, w/2, h/2 + 180);
@@ -3603,25 +3624,6 @@ function fbDownloadReel() {
   a.click();
 }
 
-</script>
-<script>
-function seededRand(seed) {
-  let s = seed >>> 0;
-  return function() {
-    s += 0x6D2B79F5;
-    let z = s;
-    z = Math.imul(z ^ (z >>> 15), z | 1);
-    z ^= z + Math.imul(z ^ (z >>> 7), z | 61);
-    return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
-  };
-}
-</script>
-<script>
-// Logo loader
-const JOAF_LOGO_IMG = new Image();
-let _logoLoaded = false;
-JOAF_LOGO_IMG.onload = () => { _logoLoaded = true; };
-JOAF_LOGO_IMG.src = '/logoc7c3.png';
 </script>
 <script>
 window.isCinematic = true;
