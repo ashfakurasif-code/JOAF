@@ -2459,8 +2459,8 @@ async function fbPostAll() {
 
   try {
     // Firestore থেকে pages load করো
-    const doc = await db.collection('admin_config').doc('fb_pages').get();
-    if (!doc.exists) return alert('আগে Pages JSON save করুন');
+    const { getFirestore: _gfs, doc: _d, getDoc: _gd } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'); const { getApps: _ga, initializeApp: _ia } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'); const _app = _ga().length ? _ga()[0] : _ia({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'}); const _fdb = _gfs(_app); const doc = await _gd(_d(_fdb,'admin_config','fb_pages'));
+    if (!doc.exists()) return alert('আগে Pages JSON save করুন');
     const pages = doc.data().pages || [];
 
     // Canvas থেকে image নাও
