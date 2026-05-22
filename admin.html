@@ -2368,20 +2368,30 @@ async function fbGenerateReel() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        max_tokens: 1500,
-        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার। নিচের short news টা নিয়ে কাজ করো।
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার। নিচের news টা নিয়ে কাজ করো।
 
-ধাপ ১: news টাকে বিস্তারিত করো — পটভূমি, ঘটনা, প্রভাব, প্রতিক্রিয়া, গুরুত্ব যোগ করো।
-ধাপ ২: সেই বিস্তারিত content কে ঠিক ৫টা slide এ ভাগ করো।
+ধাপ ১: news টাকে বিস্তারিত করো।
+ধাপ ২: ঠিক ৫টা slide এ ভাগ করো। প্রতিটা slide এর জন্য:
+  - text: slide content বাংলায় ২-৩ লাইন
+  - label: এই slide এর unique বাংলা শিরোনাম (সর্বোচ্চ ৩ শব্দ, news context অনুযায়ী — যেমন "সংঘাতের সূচনা", "মাঠের চিত্র", "রাষ্ট্রের নীরবতা", "জনতার ক্রোধ", "এগিয়ে চলো" — কখনো একই label repeat করবে না)
+  - theme: এই slide এর visual theme — এই list থেকে বেছে নাও context অনুযায়ী: aurora|cyber|ocean|gold|matrix|fire|storm|blood|galaxy|neon|forest|desert|ice|volcanic|cosmic
+  - illustration: এই slide এ কী animated drawing হবে — এই list থেকে: people|alert|ripple|chart|megaphone|fire|shield|broken|rise|hand|eye|clock|map|flag|chain|star|wave|spiral|pulse|explosion
 
-শুধু JSON দাও, অন্য কিছু না:
+শুধু JSON দাও:
 {
   "mood": "urgent|sad|positive|neutral|angry",
   "caption": "Facebook Reels caption বাংলায়, emoji সহ, ৩টা hashtag শেষে",
-  "slides": ["slide 1: পটভূমি ২-৩ লাইন","slide 2: মূল ঘটনা ২-৩ লাইন","slide 3: প্রভাব ও প্রতিক্রিয়া ২-৩ লাইন","slide 4: বিস্তারিত বিশ্লেষণ ২-৩ লাইন","slide 5: call to action ২ লাইন"]
+  "slides": [
+    {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
+    {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
+    {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
+    {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
+    {"text": "...", "label": "...", "theme": "...", "illustration": "..."}
+  ]
 }
 
-News: ${text}` }]
+News: \${text}` }]
       })
     });
     const aiData = await res.json();
@@ -2391,11 +2401,18 @@ News: ${text}` }]
 
     document.getElementById('fb-caption').value = parsed.caption || text;
 
-    const slides = (parsed.slides || [text]).map(s => s.replace(/^slide\s*\d+\s*[:\-]\s*/i, '').trim());
+    // New format: slides = [{text, label, theme, illustration}] or old string format
+    const rawSlides = parsed.slides || [text];
+    const slideData = rawSlides.map(s => {
+      if (typeof s === 'string') {
+        return { text: s.replace(/^slide\s*\d+\s*[:\-]\s*/i, '').trim(), label: '', theme: '', illustration: '' };
+      }
+      return { text: (s.text || '').trim(), label: s.label || '', theme: s.theme || '', illustration: s.illustration || '' };
+    });
     const mood = parsed.mood || 'neutral';
 
     // Video + Audio বানাও
-    reelBlob = await renderVideoWithAudio(slides, mood);
+    reelBlob = await renderVideoWithAudio(slideData, mood);
 
     const videoEl = document.getElementById('fb-reel-video');
     videoEl.src = URL.createObjectURL(reelBlob);
@@ -2415,6 +2432,7 @@ News: ${text}` }]
 }
 
 async function renderVideoWithAudio(slides, mood) {
+  // slides is now array of {text, label, theme, illustration} or strings
   const canvas = document.getElementById('fb-card-canvas');
   canvas.width = 1080;
   canvas.height = 1920;
@@ -2444,7 +2462,8 @@ async function renderVideoWithAudio(slides, mood) {
     let elapsed = 0;
     while (elapsed < SLIDE_DURATION) {
       const t = elapsed / SLIDE_DURATION; // 0→1 progress within slide
-      drawSlideAnimated(ctx, slides[i], i, slides.length, mood, t);
+      const sd = typeof slides[i] === 'string' ? {text:slides[i],label:'',theme:'',illustration:''} : slides[i];
+      drawSlideAnimated(ctx, sd.text, i, slides.length, mood, t, sd.label, sd.theme, sd.illustration);
       await new Promise(r => setTimeout(r, FRAME_MS));
       elapsed = performance.now() - startTime;
     }
@@ -2571,7 +2590,69 @@ const MOOD_OVERRIDE = {
   neutral:  { accent: '#a855f7', glow: '#7c3aed', sec: '#d8b4fe' },
 };
 
-function getTheme(index, mood) {
+// Dynamic theme map — AI can request any of these
+const DYNAMIC_THEMES = {
+  aurora:   { bg:['#0a0020','#1a0050','#0d0035'], accent:'#a855f7', glow:'#7c3aed', sec:'#f0abfc', text:'#faf5ff' },
+  cyber:    { bg:['#1a0000','#2d0505','#0d0000'], accent:'#ef4444', glow:'#dc2626', sec:'#fca5a5', text:'#fff' },
+  ocean:    { bg:['#001825','#002d40','#001018'], accent:'#06b6d4', glow:'#0891b2', sec:'#67e8f9', text:'#ecfeff' },
+  gold:     { bg:['#1a1000','#2d1f00','#0d0800'], accent:'#f59e0b', glow:'#d97706', sec:'#fde68a', text:'#fffbeb' },
+  matrix:   { bg:['#001a00','#002d00','#000d00'], accent:'#22c55e', glow:'#16a34a', sec:'#86efac', text:'#f0fdf4' },
+  fire:     { bg:['#1a0500','#2d0d00','#0d0200'], accent:'#ff6b00', glow:'#ff3d00', sec:'#ffad80', text:'#fff8f0' },
+  storm:    { bg:['#0d0d1a','#1a1a2d','#060610'], accent:'#7c83ff', glow:'#4c55ff', sec:'#b8bcff', text:'#f0f0ff' },
+  blood:    { bg:['#1a0000','#2d0000','#0d0000'], accent:'#cc0000', glow:'#ff0000', sec:'#ff6666', text:'#fff0f0' },
+  galaxy:   { bg:['#000510','#000d20','#000208'], accent:'#818cf8', glow:'#4f46e5', sec:'#c7d2fe', text:'#eef2ff' },
+  neon:     { bg:['#000d10','#001a1a','#000508'], accent:'#00ffcc', glow:'#00ccaa', sec:'#80ffe8', text:'#f0fffa' },
+  forest:   { bg:['#001000','#001a00','#000800'], accent:'#4ade80', glow:'#16a34a', sec:'#bbf7d0', text:'#f0fdf4' },
+  desert:   { bg:['#1a1000','#2d2000','#0d0800'], accent:'#fb923c', glow:'#ea580c', sec:'#fed7aa', text:'#fff7ed' },
+  ice:      { bg:['#001020','#001830','#000810'], accent:'#67e8f9', glow:'#22d3ee', sec:'#cffafe', text:'#ecfeff' },
+  volcanic: { bg:['#1a0500','#300a00','#0d0200'], accent:'#ff4500', glow:'#ff2200', sec:'#ff9980', text:'#fff5f0' },
+  cosmic:   { bg:['#050010','#0d0025','#020008'], accent:'#e879f9', glow:'#d946ef', sec:'#f5d0fe', text:'#fdf4ff' },
+};
+
+// bg draw function map
+const THEME_BG_FN = {
+  aurora: drawBg_Aurora, cyber: drawBg_Cyber, ocean: drawBg_Ocean,
+  gold: drawBg_Gold, matrix: drawBg_Matrix,
+  fire: (ctx,w,h,c,t,rand) => {
+    ctx.fillStyle=c.bg[0]; ctx.fillRect(0,0,w,h);
+    const g=ctx.createRadialGradient(w/2,h,0,w/2,h,h*0.8);
+    g.addColorStop(0,c.accent+'88'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+  },
+  storm: (ctx,w,h,c,t,rand) => {
+    ctx.fillStyle=c.bg[0]; ctx.fillRect(0,0,w,h);
+    for(let i=0;i<5;i++){
+      const y=h*(0.1+i*0.2)+Math.sin(t*3+i)*60;
+      const g=ctx.createLinearGradient(0,y-100,0,y+100);
+      g.addColorStop(0,'transparent'); g.addColorStop(0.5,c.accent+'33'); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.fillRect(0,y-100,w,200);
+    }
+  },
+  blood: drawBg_Cyber,
+  galaxy: drawBg_Aurora,
+  neon: (ctx,w,h,c,t,rand) => {
+    ctx.fillStyle=c.bg[0]; ctx.fillRect(0,0,w,h);
+    ctx.save(); ctx.globalAlpha=0.08;
+    for(let i=0;i<15;i++){
+      const y=(h/15)*i+(t*80)%(h/15);
+      ctx.fillStyle=c.accent; ctx.fillRect(0,y,w,2);
+    }
+    ctx.restore();
+  },
+  forest: drawBg_Matrix,
+  desert: drawBg_Gold,
+  ice: drawBg_Ocean,
+  volcanic: drawBg_Cyber,
+  cosmic: drawBg_Aurora,
+};
+
+function getTheme(index, mood, aiTheme='') {
+  // AI theme overrides everything
+  if (aiTheme && DYNAMIC_THEMES[aiTheme]) {
+    const dt = DYNAMIC_THEMES[aiTheme];
+    const moodOv = MOOD_OVERRIDE[mood] || {};
+    return { ...dt, bgFn: THEME_BG_FN[aiTheme] || drawBg_Aurora, name: aiTheme, bg: dt.bg };
+  }
   const base = SLIDE_THEMES[index % SLIDE_THEMES.length];
   const ov = MOOD_OVERRIDE[mood] || {};
   return { ...base, ...ov };
@@ -2760,12 +2841,13 @@ function drawSceneVFX(ctx, w, h, mood, t, rand) {
 // ═══════════════════════════════════════════════════════════
 // ANIMATED DRAWING — text content কে visual এ convert করো
 // ═══════════════════════════════════════════════════════════
-function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c) {
+function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c, aiIllustration='') {
+  const illustType = aiIllustration || ['people','alert','ripple','chart','megaphone'][index % 5];
   const illustY = 1480; // below text area
   ctx.save();
 
-  if (index === 0) {
-    // Slide 0 — Expanding circles (পটভূমি = history/foundation)
+  if (illustType === 'people' || illustType === 'map' || illustType === 'flag') {
+    // People/community orbiting
     for (let r = 0; r < 5; r++) {
       const radius = 30 + r * 55 + Math.sin(t * Math.PI * 2 + r) * 15;
       const alpha = 0.12 + Math.sin(t * 3 + r) * 0.06;
@@ -2788,8 +2870,8 @@ function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c) {
     }
   }
 
-  if (index === 1) {
-    // Slide 1 — Breaking news / Event: animated news ticker + alert icon
+  } else if (illustType === 'alert' || illustType === 'explosion' || illustType === 'pulse') {
+    // Alert / Breaking news
     ctx.globalAlpha = 0.7;
     // Alert triangle
     const pulse = 1 + Math.sin(t * Math.PI * 6) * 0.1;
@@ -2812,8 +2894,8 @@ function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c) {
     }
   }
 
-  if (index === 2) {
-    // Slide 2 — Impact waves / ripple effect
+  } else if (illustType === 'ripple' || illustType === 'wave' || illustType === 'spiral') {
+    // Ripple / wave effect
     for (let r = 0; r < 6; r++) {
       const phase = (t + r * 0.15) % 1;
       const radius = phase * 250;
@@ -2835,8 +2917,8 @@ function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c) {
     ctx.lineTo(w/2 + 60, ay + bounce); ctx.closePath(); ctx.fill();
   }
 
-  if (index === 3) {
-    // Slide 3 — Analysis: chart bars animated
+  } else if (illustType === 'chart' || illustType === 'rise' || illustType === 'eye') {
+    // Chart / analysis
     const bars = [0.65, 0.9, 0.45, 0.78, 0.55];
     const barW = 80, gap = 40;
     const totalW = bars.length * barW + (bars.length - 1) * gap;
@@ -2867,8 +2949,8 @@ function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c) {
     ctx.beginPath(); ctx.moveTo(startX - 10, baseY); ctx.lineTo(startX + totalW + 10, baseY); ctx.stroke();
   }
 
-  if (index === 4) {
-    // Slide 4 — Call to action: fist / megaphone animated
+  } else if (illustType === 'megaphone' || illustType === 'hand' || illustType === 'star') {
+    // Megaphone / call to action
     const pulse = 1 + Math.sin(t * Math.PI * 5) * 0.08;
     ctx.save(); ctx.translate(w/2, illustY); ctx.scale(pulse, pulse);
     // Megaphone shape
@@ -2902,6 +2984,57 @@ function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c) {
     }
   }
 
+  } else if (illustType === 'fire' || illustType === 'broken' || illustType === 'chain') {
+    // Fire / broken chains
+    const fy = illustY;
+    for (let fl = 0; fl < 8; fl++) {
+      const fx = w/2 + (rand()-0.5)*300;
+      const fh = 60 + rand()*80 + Math.sin(t*Math.PI*6+fl)*20;
+      const alpha = 0.5 + rand()*0.4;
+      const fg = ctx.createLinearGradient(fx, fy, fx, fy-fh);
+      fg.addColorStop(0, `rgba(255,100,0,${alpha})`);
+      fg.addColorStop(0.5, `rgba(255,200,0,${alpha*0.7})`);
+      fg.addColorStop(1, 'transparent');
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = fg;
+      const fw2 = 20 + rand()*30;
+      ctx.beginPath();
+      ctx.moveTo(fx-fw2/2, fy); ctx.lineTo(fx+fw2/2, fy);
+      ctx.lineTo(fx+fw2/4, fy-fh); ctx.lineTo(fx-fw2/4, fy-fh);
+      ctx.closePath(); ctx.fill();
+    }
+  } else if (illustType === 'shield' || illustType === 'clock') {
+    // Shield / protection
+    const sx = w/2, sy = illustY;
+    const pulse = 1 + Math.sin(t * Math.PI * 4) * 0.06;
+    ctx.save(); ctx.translate(sx, sy); ctx.scale(pulse, pulse);
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(0, -110); ctx.lineTo(90, -60);
+    ctx.lineTo(90, 30); ctx.quadraticCurveTo(90, 110, 0, 130);
+    ctx.quadraticCurveTo(-90, 110, -90, 30);
+    ctx.lineTo(-90, -60); ctx.closePath();
+    ctx.strokeStyle = c.accent; ctx.lineWidth = 7;
+    ctx.shadowColor = c.glow; ctx.shadowBlur = 25; ctx.stroke();
+    ctx.fillStyle = c.accent + '18'; ctx.fill();
+    ctx.shadowBlur = 0;
+    // Check mark
+    ctx.strokeStyle = c.sec; ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(-35, 10); ctx.lineTo(-5, 45); ctx.lineTo(45, -30); ctx.stroke();
+    ctx.restore();
+  } else {
+    // Default: pulsing orb
+    for (let r = 0; r < 5; r++) {
+      const radius = 40 + r*50 + Math.sin(t*Math.PI*3+r)*15;
+      ctx.globalAlpha = 0.1 + Math.sin(t*2+r)*0.05;
+      ctx.beginPath(); ctx.arc(w/2, illustY, radius, 0, Math.PI*2);
+      ctx.strokeStyle = c.accent; ctx.lineWidth = 3; ctx.stroke();
+    }
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath(); ctx.arc(w/2, illustY, 35, 0, Math.PI*2);
+    ctx.fillStyle = c.accent; ctx.fill();
+  }
+
   ctx.shadowBlur = 0;
   ctx.restore();
 }
@@ -2909,14 +3042,15 @@ function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c) {
 // ═══════════════════════════════════════════════════════════
 // MAIN SLIDE RENDERER
 // ═══════════════════════════════════════════════════════════
-function drawSlideAnimated(ctx, text, index, total, mood, t) {
+function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme='', aiIllustration='') {
   const w = 1080, h = 1920;
-  const c = getTheme(index, mood);
+  const c = getTheme(index, mood, aiTheme);
   const rand = seededRand(index * 1337 + 42);
 
   // ── BACKGROUND ──────────────────────────────────────────
-  const bgFns = [drawBg_Aurora, drawBg_Cyber, drawBg_Ocean, drawBg_Gold, drawBg_Matrix];
-  bgFns[index % bgFns.length](ctx, w, h, c, t, rand);
+  const defaultBgFns = [drawBg_Aurora, drawBg_Cyber, drawBg_Ocean, drawBg_Gold, drawBg_Matrix];
+  const bgDrawFn = c.bgFn || defaultBgFns[index % defaultBgFns.length];
+  bgDrawFn(ctx, w, h, c, t, rand);
 
   // ── MOOD VFX ─────────────────────────────────────────────
   drawSceneVFX(ctx, w, h, mood, t, rand);
@@ -3018,8 +3152,7 @@ function drawSlideAnimated(ctx, text, index, total, mood, t) {
   ctx.fillRect(w/2 - divW/2, 510, divW, 5);
 
   // ── SLIDE LABEL ──────────────────────────────────────────
-  const slideLabels = ['পটভূমি','মূল ঘটনা','প্রভাব ও প্রতিক্রিয়া','বিস্তারিত বিশ্লেষণ','আহ্বান'];
-  const label = index < slideLabels.length ? slideLabels[index] : `অংশ ${index+1}`;
+  const label = aiLabel || ['পটভূমি','মূল ঘটনা','প্রভাব','বিশ্লেষণ','আহ্বান'][index] || `অংশ ${index+1}`;
   const labelAlpha = Math.min(1, t * 5);
   ctx.save();
   ctx.globalAlpha = labelAlpha;
@@ -3079,7 +3212,7 @@ function drawSlideAnimated(ctx, text, index, total, mood, t) {
   ctx.globalAlpha = 1;
 
   // ── ILLUSTRATION DRAWING ─────────────────────────────────
-  drawSlideIllustration(ctx, w, h, index, mood, t, seededRand(index * 777), c);
+  drawSlideIllustration(ctx, w, h, index, mood, t, seededRand(index * 777), c, aiIllustration);
 
   // ── PROGRESS BAR ─────────────────────────────────────────
   const barY = 1800;
