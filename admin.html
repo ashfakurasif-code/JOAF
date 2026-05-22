@@ -275,7 +275,6 @@ function seededRand(seed) {
     z ^= z + Math.imul(z ^ (z >>> 7), z | 61);
 
   };
-}
 
 let _logoLoaded = false;
 JOAF_LOGO_IMG.onload = () => { _logoLoaded = true; };
@@ -1222,7 +1221,6 @@ async function initDashboard() {
     const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
     renderBloodPreview(bDocs);
   } catch(e) { console.log('dashboard error',e); }
-}
 
 // ── Notification ────────────────────────────────────────
 const NOTIF_DEFAULTS = {
@@ -1297,7 +1295,6 @@ async function callSendNotif(payload) {
     else { toast(`✅ ${data.sent} জনের কাছে পাঠানো হয়েছে!`,'success'); loadNotifPage(); }
   } catch(e) { toast('❌ Network error','error'); }
   finally { if(btn){btn.disabled=false;btn.textContent='📤 সবার কাছে পাঠান';} }
-}
 
 async function loadNotifPage() {
   try {
@@ -1315,7 +1312,6 @@ async function loadNotifPage() {
     setEl('n-today', todayCount);
     renderHistory('notif-history', docs.slice(0,10));
   } catch(e) { console.log(e); }
-}
 
 function renderHistory(elId, docs) {
   const el = document.getElementById(elId);
@@ -1326,7 +1322,6 @@ function renderHistory(elId, docs) {
     const time = d.sentAt?.toDate?.()?.toLocaleString('bn-BD') || (d.sentAt?.seconds ? new Date(d.sentAt.seconds*1000).toLocaleString('bn-BD') : '—');
 
   }).join('');
-}
 
 // ── Alerts ──────────────────────────────────────────────
 async function loadAlerts() {
@@ -1351,7 +1346,6 @@ async function loadAlerts() {
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML='<div class="empty text-red">Error loading</div>'; }
-}
 
 window.showAlertInfo = function(data) {
   const lvlLabel = data.level==='danger'?'🔴 বিপদ':data.level==='warning'?'🟡 সতর্কতা':'🔵 তথ্য';
@@ -1437,7 +1431,6 @@ async function loadDonors() {
     setEl('b-blood', allDonors.length);
     renderDonors(allDonors);
   } catch(e) { tbody.innerHTML='<tr><td colspan="7" class="empty text-red">Error</td></tr>'; }
-}
 
 function renderDonors(donors) {
   const tbody = document.getElementById('donor-tbody');
@@ -1454,7 +1447,6 @@ function renderDonors(donors) {
         <button class="btn btn-danger btn-sm" onclick="deleteDonor('${d.id}')">🗑️</button>
       </div></td>
     </tr>`).join('');
-}
 
 window.toggleDonorCheckAll = function(cb) {
   document.querySelectorAll('.donor-chk').forEach(c=>c.checked=cb.checked);
@@ -1504,7 +1496,6 @@ function renderBloodPreview(donors) {
       </div>
       <span class="badge badge-red">${d.blood||d.bloodGroup||'—'}</span>
     </div>`).join('');
-}
 
 // ── Press Releases ───────────────────────────────────────
 async function loadPress() {
@@ -1527,7 +1518,6 @@ async function loadPress() {
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML='<div class="empty text-red">Error</div>'; }
-}
 
 window.togglePressAll = function(cb) { document.querySelectorAll('.press-chk').forEach(c=>c.checked=cb.checked); onPressCheck(); };
 window.onPressCheck = function() { const n=document.querySelectorAll('.press-chk:checked').length; const b=document.getElementById('press-bulk-del'); if(b) b.style.display=n>0?'':'none'; };
@@ -1581,7 +1571,6 @@ async function loadLeaders() {
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="8" class="empty text-red">Error</td></tr>'; }
-}
 
 window.onLeaderCheck = function() { const n=document.querySelectorAll('.leader-chk:checked').length; const b=document.getElementById('leader-bulk-del'); if(b) b.style.display=n>0?'':'none'; };
 window.bulkDeleteLeaders = async function() {
@@ -1798,7 +1787,6 @@ async function loadWarriors() {
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="8" class="empty text-red">Error</td></tr>'; }
-}
 
 window.onWarriorCheck = function() { const n=document.querySelectorAll('.warrior-chk:checked').length; const b=document.getElementById('warrior-bulk-del'); if(b) b.style.display=n>0?'':'none'; };
 window.bulkDeleteWarriors = async function() {
@@ -1863,7 +1851,6 @@ async function loadBajar() {
       });
     } else { el.innerHTML='<div class="empty">এখনো কোনো data নেই</div>'; }
   } catch(e) { el.innerHTML='<div class="empty text-red">Error</div>'; }
-}
 
 window.saveBajar = async function(withNotif=false) {
   const data = {updatedAt: serverTimestamp()};
@@ -1895,7 +1882,6 @@ async function loadMedicines() {
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="5" class="empty text-red">Error</td></tr>'; }
-}
 
 window.saveMedicine = async function() {
   const name    = document.getElementById('med-name').value.trim();
@@ -1933,7 +1919,6 @@ async function loadMembers() {
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="5" class="empty text-red">Error</td></tr>'; }
-}
 
 window.saveMember = async function() {
   const name = document.getElementById('mb-name').value.trim();
@@ -1975,7 +1960,6 @@ async function loadPolls() {
         <td style="font-size:10px;color:var(--text2)">${u.lastVote||'—'}</td>
       </tr>`).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="5" class="empty">Poll data নেই (localStorage based)</td></tr>'; }
-}
 
 // ── Forum ────────────────────────────────────────────────
 async function loadForum() {
@@ -1996,7 +1980,6 @@ async function loadForum() {
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="4" class="empty text-red">Error loading</td></tr>'; }
-}
 
 window.deleteMsg = async function(col, id) {
   if (!confirm('এই message delete করবেন?')) return;
@@ -2039,7 +2022,6 @@ function toast(msg, type='success') {
   el.style.display = 'block';
   clearTimeout(el._t);
   el._t = setTimeout(()=>{ el.style.display='none'; }, 4000);
-}
 
 // ── File Upload via GitHub API ──────────────────────────
 // ── Inline Upload (image URL field এর পাশে) ──────────────
@@ -2233,18 +2215,15 @@ function startAnalyticsListener() {
       if(document.getElementById('page-analytics')?.classList.contains('active')) renderAnalytics();
     });
   } catch(e) { console.warn('Analytics listener error:', e); }
-}
 
 function stopAnalyticsListener() {
   if(anUnsubscribe) { anUnsubscribe(); anUnsubscribe = null; }
   anLiveCount = 0;
-}
 
 async function loadAnalytics() {
   if(typeof Chart === 'undefined') return setTimeout(loadAnalytics, 400);
   startAnalyticsListener();
   renderAnalytics();
-}
 
 function renderAnalytics() {
   if(typeof Chart === 'undefined') return;
@@ -2335,7 +2314,6 @@ function renderAnalytics() {
     }).join(''):'<div class="empty">কোনো visit নেই</div>';
 
   } catch(e) { console.error('renderAnalytics error:',e); }
-}
 
 // ── Close modals on background click
 document.querySelectorAll('.modal-bg').forEach(bg => {
@@ -2368,7 +2346,6 @@ const text = input.value.trim();
   if (btn) {
     btn.innerHTML = '⏳ Generating...';
     btn.disabled = true;
-  }
 
   try {
     const prompt = "Create a cinematic 9:16 vertical Facebook Reel. Dramatic Bengali news style, dark moody cinematic lighting, fast dynamic cuts, bold Bengali text overlays, strong emotional hook in first 3 seconds. News: " + text.substring(0, 400);
@@ -2392,16 +2369,12 @@ const text = input.value.trim();
       btn.innerHTML = '🎬 Reel বানাও';
       btn.disabled = false;
     }
-  }
-}
-
 
 
 const btn = document.getElementById('fb-gen-btn');
   if (btn) {
     btn.innerHTML = '⏳ Processing...';
     btn.disabled = true;
-  }
 
   try {
     const prompt = "Create a cinematic 9:16 vertical news reel for Facebook. Dramatic Bengali news style, dark moody cinematic, fast cuts, bold text overlays, strong hook. News: " + text.substring(0, 420);
@@ -2416,7 +2389,7 @@ const btn = document.getElementById('fb-gen-btn');
       alert("Popup blocked! jullyforum.com এ popup allow করুন।");
     } else {
       alert("✅ Popup খুলেছে!\n\nVideo generate করে download করুন।");
-    }
+
   } catch(e) {
     console.error(e);
     alert("Error: " + e.message);
@@ -2424,26 +2397,13 @@ const btn = document.getElementById('fb-gen-btn');
     if (btn) {
       btn.innerHTML = '🎬 Reel বানাও';
       btn.disabled = false;
-    }
-  }
-}
 
 
-
-async function fbGenerateReel() {
-  const input = document.getElementById('fb-news-input');
-  const text = input ? input.value.trim() : '';
-  
-  if (!text) {
-    alert("❌ প্রথমে News Text লিখুন!");
-    return;
-  }
 
   const btn = document.getElementById('fb-gen-btn');
   if (btn) {
     btn.innerHTML = '⏳ Generating...';
     btn.disabled = true;
-  }
 
   try {
     const prompt = "Create a cinematic 9:16 vertical Facebook Reel in Bengali news style. Dramatic lighting, fast cuts, bold text overlays, strong hook in first 3 seconds. News: " + text.substring(0, 400);
@@ -2458,9 +2418,49 @@ async function fbGenerateReel() {
       alert("Popup blocked! jullyforum.com এ popup allow করুন।");
     } else {
       alert("✅ Popup খুলেছে!\nVideo generate করে download করুন।");
-    }
+
   } catch(e) {
     console.error(e);
+    alert("Error: " + e.message);
+  } finally {
+    if (btn) {
+      btn.innerHTML = '🎬 Reel বানাও';
+      btn.disabled = false;
+
+
+
+
+
+async function fbGenerateReel() {
+  const input = document.getElementById('fb-news-input');
+  if (!input || !input.value.trim()) {
+    alert("❌ প্রথমে News Text লিখুন!");
+    return;
+  }
+
+  const text = input.value.trim();
+  const btn = document.getElementById('fb-gen-btn');
+  
+  if (btn) {
+    btn.innerHTML = '⏳ Popup খুলছে...';
+    btn.disabled = true;
+  }
+
+  try {
+    const prompt = "Create a cinematic 9:16 vertical Bengali news reel for Facebook/Instagram. Dramatic dark mood, fast cuts, bold text overlays, strong hook in first 3 seconds. News content: " + text.substring(0, 400);
+
+    const popup = window.open(
+      "https://www.jaiportal.com/free/ai-video-generator?prompt=" + encodeURIComponent(prompt),
+      "JAIReelGenerator",
+      "width=1400,height=920,scrollbars=yes,resizable=yes,menubar=no"
+    );
+
+    if (!popup) {
+      alert("❌ Popup blocked! jullyforum.com এ Popup Allow করুন।");
+    } else {
+      alert("✅ Popup খুলেছে!\n\nVideo generate করে Download করুন।");
+    }
+  } catch(e) {
     alert("Error: " + e.message);
   } finally {
     if (btn) {
@@ -2486,7 +2486,6 @@ const btn = document.getElementById('fb-gen-btn');
   if (btn) {
     btn.innerHTML = '⏳ জেনারেট হচ্ছে...';
     btn.disabled = true;
-  }
 
   try {
     const optimizedPrompt = "Create a highly cinematic 9:16 vertical news reel for Facebook/Instagram. Dramatic Bengali news style, dark moody lighting, fast cuts, bold text overlays, strong hook in first 3 seconds. News: " + text.substring(0, 420);
@@ -2501,16 +2500,14 @@ const btn = document.getElementById('fb-gen-btn');
       alert('❌ Popup blocked! jullyforum.com এ Popup allow করুন।');
     } else {
       alert('✅ Popup খুলেছে!\n\nVideo generate করে download করুন।');
-    }
+
   } catch(e) {
     alert('Error: ' + e.message);
   } finally {
     if (btn) {
       btn.innerHTML = '🎬 Reel বানাও';
       btn.disabled = false;
-    }
-  }
-}
+
 
 
   const optimizedPrompt = "Create a professional cinematic 9:16 vertical reel for Facebook/Instagram. Style: Dramatic Bengali news, dark moody cinematic look, fast smooth transitions, bold white Bengali text overlays with shadow, emotional storytelling, strong hook in first 3 seconds, high quality 1080x1920. News Content: " + inputText.substring(0, 450);
@@ -2524,10 +2521,9 @@ const btn = document.getElementById('fb-gen-btn');
   if (!popup) {
     alert('Popup blocked! jullyforum.com এ popup allow করুন।');
     return;
-  }
 
   alert('✅ JAI Portal খুলেছে।\n\nPrompt auto বসানো আছে। Video generate করে download করুন।');
-}
+
 ));
 
     const blob = await generateCinematicReel(slides);
@@ -2548,8 +2544,7 @@ const btn = document.getElementById('fb-gen-btn');
   } finally {
     btn.textContent = '🎬 Reel বানাও';
     btn.disabled = false;
-  }
-}
+
 
 async function generateCinematicReel(slides) {
   const canvas = document.getElementById('fb-card-canvas');
@@ -2580,14 +2575,12 @@ async function generateCinematicReel(slides) {
         requestAnimationFrame(render);
       } else {
         recorder.stop();
-      }
-    }
+
+
     render();
 
     recorder.onstop = () => resolve(new Blob(chunks, {type: 'video/webm'}));
   });
-}
-
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   const words = text.split(' ');
@@ -2603,11 +2596,9 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
       y += lineHeight;
     } else {
       line = testLine;
-    }
-  }
-  ctx.fillText(line, x, y);
-}
 
+
+  ctx.fillText(line, x, y);
 
 function drawCinematicSlide(ctx, slide, t, idx, total) {
   const w = 1080, h = 1920;
@@ -2639,8 +2630,6 @@ function drawCinematicSlide(ctx, slide, t, idx, total) {
   // Accent line
   ctx.fillStyle = '#ff3366';
   ctx.fillRect(w/2 - 200, 720, 400, 6);
-}
-
 
 function fbDownloadReel() {
   if (!reelBlob) return;
@@ -2648,7 +2637,6 @@ function fbDownloadReel() {
   a.href = URL.createObjectURL(reelBlob);
   a.download = 'joaf-reel.webm';
   a.click();
-}
 
 </script>
 <script>
@@ -2660,7 +2648,7 @@ function seededRand(seed) {
     z ^= z + Math.imul(z ^ (z >>> 7), z | 61);
 
   };
-}
+
 </script>
 <script>
 // Logo loader
@@ -2680,5 +2668,5 @@ function startCinematic() {
     draw(); 
     sceneIndex++;
   }, 10000); // 10 second-e per slide, 3 slide = 30 sec
-}
+
 </script>
