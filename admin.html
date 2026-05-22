@@ -2374,18 +2374,21 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 let reelBlob = null;
 
 
+
 async function fbGenerateReel() {
-  const input = document.getElementById('fb-news-input').value.trim();
-  if (!input) return alert('News text লিখুন');
+  const text = document.getElementById('fb-news-input').value.trim();
+  if (!text) return alert('News text লিখুন');
 
   const btn = document.getElementById('fb-gen-btn');
   btn.textContent = '🎬 Cinematic Reel তৈরি হচ্ছে...';
   btn.disabled = true;
 
   try {
-    const sentences = input.split(/[।!?।]/).filter(s => s.length > 8);
-    const slides = sentences.map((text, i) => ({
-      text: text.trim(),
+    // Split into logical slides
+    const sentences = text.split(/[।!?।]/).filter(s => s.trim().length > 8);
+    const slides = sentences.map((s, i) => ({
+      text: s.trim() + (i === sentences.length-1 ? '।' : ''),
+      label: i === 0 ? 'BREAKING' : i === 1 ? 'বিস্তারিত' : 'প্রভাব',
       mood: i % 3 === 0 ? 'urgent' : i % 3 === 1 ? 'positive' : 'neutral'
     }));
 
@@ -2397,10 +2400,12 @@ async function fbGenerateReel() {
 
     document.getElementById('fb-preview').style.display = 'block';
     document.getElementById('fb-download-btn').style.display = 'inline-block';
+    document.getElementById('fb-post-reels-btn').style.display = 'inline-block';
 
-    document.getElementById('fb-caption').value = "🔥 " + input.substring(0, 100) + "... #JOAF #জুলাই";
+    document.getElementById('fb-caption').value = "🔥 " + text.substring(0, 90) + "... #JOAF #জুলাই";
 
   } catch(e) {
+    console.error(e);
     alert('Error: ' + e.message);
   } finally {
     btn.textContent = '🎬 Reel বানাও';
@@ -2414,8 +2419,8 @@ async function generateCinematicReel(slides) {
   canvas.height = 1920;
   const ctx = canvas.getContext('2d');
 
-  await Tone.start();
-  const recorder = new MediaRecorder(canvas.captureStream(30), {
+  const stream = canvas.captureStream(30);
+  const recorder = new MediaRecorder(stream, {
     mimeType: 'video/webm;codecs=vp9,opus',
     videoBitsPerSecond: 14000000
   });
@@ -2425,80 +2430,59 @@ async function generateCinematicReel(slides) {
   recorder.start();
 
   let frame = 0;
-  const framesPerSlide = 120;
+  const framesPerSlide = 150; // ~5 seconds per slide at 30fps
 
   return new Promise(resolve => {
-    function drawFrame() {
+    function render() {
       const slideIdx = Math.floor(frame / framesPerSlide);
-      const t = (frame % framesPerSlide) / framesPerSlide;
+      const progress = (frame % framesPerSlide) / framesPerSlide;
       const slide = slides[slideIdx] || slides[slides.length-1];
 
-      drawCinematicSlide(ctx, slide, t, slideIdx, slides.length);
+      drawCinematicSlide(ctx, slide, progress, slideIdx, slides.length);
 
       frame++;
-      if (frame < slides.length * framesPerSlide) {
-        requestAnimationFrame(drawFrame);
+      if (frame < slides.length * framesPerSlide + 90) { // +3s outro
+        requestAnimationFrame(render);
       } else {
         recorder.stop();
       }
     }
-    drawFrame();
+    render();
 
     recorder.onstop = () => resolve(new Blob(chunks, {type: 'video/webm'}));
   });
 }
 
-
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(' ');
-  let line = '';
-  let testLine = '';
-  for (let n = 0; n < words.length; n++) {
-    testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      ctx.fillText(line, x, y);
-      line = words[n] + ' ';
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line, x, y);
-}
-
-
 function drawCinematicSlide(ctx, slide, t, idx, total) {
-  const w=1080, h=1920;
-  ctx.fillStyle = '#05050f';
-  ctx.fillRect(0,0,w,h);
+  const w = 1080, h = 1920;
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(0, 0, w, h);
 
-  // Dynamic background
-  const grad = ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0, '#1a0033');
+  // Dynamic gradient background
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, idx % 2 === 0 ? '#1a0033' : '#001a00');
   grad.addColorStop(1, '#000000');
   ctx.fillStyle = grad;
-  ctx.fillRect(0,0,w,h);
+  ctx.fillRect(0, 0, w, h);
 
-  // Text with animation
+  // Text with smooth animation
   ctx.save();
-  ctx.translate(w/2, h/2 - 80);
-  const scale = 0.7 + Math.pow(t, 0.7) * 0.45;
+  ctx.translate(w/2, h/2 - 120);
+  const scale = 0.6 + Math.pow(Math.min(1, t * 1.8), 0.6) * 0.55;
   ctx.scale(scale, scale);
-  ctx.globalAlpha = Math.min(1, t*2.5);
+  ctx.globalAlpha = Math.min(1, t * 2.8);
 
-  ctx.font = '900 82px "Noto Sans Bengali", sans-serif';
+  ctx.font = '900 78px "Noto Sans Bengali", Arial, sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.shadowColor = '#ff3366';
-  ctx.shadowBlur = 60;
-  wrapText(ctx, slide.text, 0, 0, 920, 110);
+  ctx.shadowBlur = 50;
+  wrapText(ctx, slide.text, 0, 0, 880, 105);
   ctx.restore();
 
   // Accent line
   ctx.fillStyle = '#ff3366';
-  ctx.fillRect(w/2 - 220, 680, 440, 8);
+  ctx.fillRect(w/2 - 200, 720, 400, 6);
 }
 
 
