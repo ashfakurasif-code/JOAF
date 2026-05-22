@@ -230,7 +230,6 @@ const JOAF = {
 
   ticker: [
     { text:"🚨 Breaking — সর্বশেষ খবর এখনই দেখুন",          href:"/news.html"      },
-    { text:"📄 সর্বশেষ প্রেস রিলিজ পড়ুন",                    href:"/media-news.html"     },
     { text:"🗳️ জনমত জরিপ — আজকের ভোট দিন, পুরস্কার জিতুন", href:"/joaf-polls.html"      },
     { text:"🩸 রক্ত দরকার? এখনই খুঁজুন",                    href:"/rokto.html"           },
     { text:"📄 আর্থিক বিবরণী প্রকাশিত হয়েছে",               href:"/financial-report.html"},
