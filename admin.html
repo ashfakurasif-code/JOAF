@@ -2384,59 +2384,59 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 let reelBlob = null;
 
 // ── "Reel বানাও" বাটন: AI prompt বানাও + JAI Portal popup খোলো ──
-async function fbGenerateReel() {
+function fbGenerateReel() {
   const text = document.getElementById('fb-news-input').value.trim();
-  if (!text) { alert('⚠️ আগে News Text লিখুন'); return; }
+  if (!text) { alert('\u26a0\ufe0f \u0986\u0997\u09c7 News Text \u09b2\u09bf\u0996\u09c1\u09a8'); return; }
 
-  const btn = document.getElementById('fb-gen-btn');
-  btn.textContent = '⏳ Prompt তৈরি হচ্ছে...';
-  btn.disabled = true;
+  // No API call — generate cinematic prompt locally from news text
+  const prompt = buildCinematicPrompt(text);
 
-  try {
-    // Groq দিয়ে cinematic video prompt বানাও
-    const res = await fetch('/.netlify/functions/groq-proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 800,
-        messages: [{
-          role: 'user',
-          content: `তুমি একজন expert AI video prompt writer। নিচের বাংলাদেশি news টার জন্য একটা cinematic vertical video (9:16) prompt লিখবে যা JAI Portal / Kling AI তে use হবে।
+  // Caption background fetch (optional, silent)
+  fetchCaption(text);
 
-Rules:
-- Prompt হবে English এ
-- Cinematic, dramatic, emotional atmosphere describe করবে
-- Bangladesh এর real context (dhaka streets, protest, crowd, flag, news channel feel)
-- Camera movement describe করবে (slow zoom, pan, drone shot etc)
-- Lighting & color grade describe করবে
-- 3-5 sentence এর মধ্যে রাখবে
-- Facebook Reels এ viral হওয়ার মতো visual হতে হবে
-- শুধু prompt দাও, অন্য কিছু না
+  // Open popup with prompt
+  openJAIPopup(prompt, text);
+}
 
-News: ${text}`
-        }]
-      })
-    });
+function buildCinematicPrompt(newsText) {
+  // Extract key words from Bengali/English text
+  const short = newsText.replace(/\s+/g, ' ').trim().substring(0, 200);
 
-    const aiData = await res.json();
-    const prompt = (aiData.choices?.[0]?.message?.content || '').trim();
+  // Mood detection based on keywords
+  const urgentWords = ['হত্যা','আক্রমণ','বিস্ফোরণ','দুর্ঘটনা','মৃত্যু','আগুন','বন্যা','ঘূর্ণিঝড়','সংঘর্ষ','নিহত','আহত','protest','attack','fire','flood','dead','killed'];
+  const positiveWords = ['উদ্বোধন','অর্জন','পুরস্কার','সাফল্য','উন্নয়ন','নতুন','চালু','জয়','win','success','award','launch','development'];
+  const sadWords = ['শোক','মৃত্যু','দুর্ভোগ','ক্ষতি','বিপদ','কষ্ট','grief','loss','tragedy','suffering'];
 
-    if (!prompt) throw new Error('AI prompt তৈরি করতে পারেনি');
+  const lower = newsText.toLowerCase();
+  let mood = 'neutral';
+  let atmosphere = 'tense and dramatic';
+  let lighting = 'moody overcast lighting with deep shadows';
+  let color = 'desaturated blues and grays';
+  let camera = 'slow cinematic push-in, rack focus';
 
-    // Caption ও বানাও (background এ)
-    fetchCaption(text);
-
-    // JAI Portal popup এ prompt নিয়ে খোলো
-    openJAIPopup(prompt, text);
-
-  } catch (e) {
-    alert('Error: ' + e.message);
-    console.error(e);
-  } finally {
-    btn.textContent = '🎬 Reel বানাও';
-    btn.disabled = false;
+  if (urgentWords.some(w => lower.includes(w))) {
+    mood = 'urgent';
+    atmosphere = 'urgent, chaotic, high-tension';
+    lighting = 'harsh red-tinted emergency lighting, flashing lights';
+    color = 'high contrast red and black color grade';
+    camera = 'handheld shaky cam, rapid cuts, extreme close-ups';
+  } else if (positiveWords.some(w => lower.includes(w))) {
+    mood = 'positive';
+    atmosphere = 'hopeful, triumphant, inspiring';
+    lighting = 'warm golden hour sunlight, god rays through clouds';
+    color = 'warm golden tones, vibrant greens';
+    camera = 'smooth drone shot rising upward, slow motion';
+  } else if (sadWords.some(w => lower.includes(w))) {
+    mood = 'sad';
+    atmosphere = 'somber, grief-stricken, reflective';
+    lighting = 'dim blue-gray twilight, soft mist';
+    color = 'cold desaturated blue palette';
+    camera = 'slow pull-back, shallow depth of field, long pauses';
   }
+
+  const prompt = `Cinematic vertical 9:16 video set in Dhaka, Bangladesh. ${atmosphere} atmosphere. Scene shows ${short.substring(0, 100)}. ${lighting}, ${color}. ${camera}. Crowds of Bangladeshi people, national flags, urban streets, news broadcast aesthetic. Photorealistic, 4K quality, emotionally powerful composition suitable for viral social media reels.`;
+
+  return prompt;
 }
 
 // JAI Portal popup with auto-filled prompt
@@ -2625,13 +2625,6 @@ function seededRand(seed) {
     return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
   };
 }
-</script>
-<script>
-// Logo loader
-const JOAF_LOGO_IMG = new Image();
-let _logoLoaded = false;
-JOAF_LOGO_IMG.onload = () => { _logoLoaded = true; };
-JOAF_LOGO_IMG.src = '/logoc7c3.png';
 </script>
 <script>
 window.isCinematic = true;
