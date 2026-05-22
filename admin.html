@@ -2365,7 +2365,49 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 <div id="fb-post-log" style="margin-top:12px;font-size:11px;max-height:200px;overflow-y:auto"></div>
 </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+
+async function fbGenerateReel() {
+  const input = document.getElementById('fb-news-input');
+  if (!input || !input.value.trim()) {
+    alert('❌ প্রথমে News Text লিখুন!');
+    return;
+  }
+
+  const text = input.value.trim();
+  const btn = document.getElementById('fb-gen-btn');
+  
+  if (btn) {
+    btn.innerHTML = '⏳ Generating...';
+    btn.disabled = true;
+  }
+
+  try {
+    const prompt = "Create a cinematic 9:16 vertical Facebook Reel. Dramatic Bengali news style, dark moody cinematic lighting, fast dynamic cuts, bold Bengali text overlays, strong emotional hook in first 3 seconds. News: " + text.substring(0, 400);
+
+    const popup = window.open(
+      'https://www.jaiportal.com/free/ai-video-generator?prompt=' + encodeURIComponent(prompt),
+      'JAIReelGenerator',
+      'width=1350,height=900,scrollbars=yes,resizable=yes'
+    );
+
+    if (!popup) {
+      alert('Popup blocked! jullyforum.com এ popup allow করুন।');
+    } else {
+      alert('✅ Popup খুলেছে!\nVideo generate করে download করুন।');
+    }
+  } catch(e) {
+    console.error(e);
+    alert('Error: ' + e.message);
+  } finally {
+    if (btn) {
+      btn.innerHTML = '🎬 Reel বানাও';
+      btn.disabled = false;
+    }
+  }
+}
+
+</script>
 </body>
 </html><script>
 
