@@ -2557,6 +2557,9 @@ function drawSlideAnimated(ctx, text, index, total, mood, t) {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, w, h);
 
+  // === SCENE VFX ===
+  drawSceneVFX(ctx, w, h, mood, t, rand);
+
   // === ANIMATED PARTICLE FIELD ===
   const particleCount = 60;
   for (let p = 0; p < particleCount; p++) {
