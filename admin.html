@@ -18,7 +18,7 @@
   --purple:#a78bfa;--purple-bg:rgba(167,139,250,.12);--purple-border:rgba(167,139,250,.25);
   --accent:#f05252;--accent2:#ff6b6b;
   --sidebar-w:220px;
-}
+
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
@@ -125,12 +125,11 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
   .an-tab{padding:5px 8px;font-size:10px;}
   table th:nth-child(4),table td:nth-child(4),
   table th:nth-child(5),table td:nth-child(5){display:none;}
-}
+
 @media(max-width:400px){
   .stats-grid{grid-template-columns:1fr 1fr!important;}
   .scard-num{font-size:18px;}
   .topbar-left h2{font-size:13px;}
-}
 
 /* ══ COMPONENTS ══════════════════════════════════ */
 
@@ -1125,7 +1124,7 @@ window.doLogin = async function() {
     initDashboard();
   } catch(e) {
     setErr('❌ Connection error'); btn.disabled=false; btn.textContent='প্রবেশ করুন →';
-  }
+
 };
 
 window.doLogout = function() {
@@ -1619,7 +1618,7 @@ window.runDiscoverLeaders = async function() {
     if (!contentType.includes('application/json')) {
       const text = await res.text();
       throw new Error('Function error: ' + text.substring(0, 200));
-    }
+
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Unknown error');
     const msg = `✅ ${data.added || 0} নতুন, ${data.updated || 0} আপডেট`;
@@ -1630,7 +1629,7 @@ window.runDiscoverLeaders = async function() {
     toast('❌ Discover failed: ' + e.message, 'error');
     status.textContent = '❌ ' + e.message.substring(0, 80);
     status.style.color = 'var(--red)';
-  }
+
   btn.disabled = false;
   btn.textContent = '🔍 Discover চালাও';
 };
@@ -1652,7 +1651,7 @@ window.runGenerateTimeline = async function() {
     if (!contentType.includes('application/json')) {
       const text = await res.text();
       throw new Error('Function error: ' + text.substring(0, 200));
-    }
+
     const data = await res.json();
     if (!data.success) throw new Error(data.error || data.reason || 'Unknown error');
     const msg = data.skipped
@@ -1665,7 +1664,7 @@ window.runGenerateTimeline = async function() {
     toast('❌ Timeline failed: ' + e.message, 'error');
     status.textContent = '❌ ' + e.message.substring(0, 80);
     status.style.color = 'var(--red)';
-  }
+
   btn.disabled = false;
   btn.textContent = '📅 Timeline বানাও';
 };
@@ -1693,7 +1692,6 @@ window.runLeaderAiUpdate = async function() {
       if (!contentType.includes('application/json')) {
         const text = await res.text();
         throw new Error('Function error — Netlify env variables সেট আছে কিনা চেক করুন। Details: ' + text.substring(0, 200));
-      }
 
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Unknown error');
@@ -1705,7 +1703,6 @@ window.runLeaderAiUpdate = async function() {
 
       // Small pause between batches
       await new Promise(r => setTimeout(r, 1000));
-    }
 
     toast(`✅ ${totalUpdated} জন নেতার data AI দিয়ে update হয়েছে!`, 'success');
     status.textContent = `✅ ${totalUpdated} জন updated`;
@@ -1715,7 +1712,7 @@ window.runLeaderAiUpdate = async function() {
     toast('❌ AI Update failed: ' + e.message, 'error');
     status.textContent = '❌ ' + e.message.substring(0, 80);
     status.style.color = 'var(--red)';
-  }
+
   btn.disabled = false;
   btn.textContent = '🤖 AI দিয়ে Update করুন';
 };
@@ -1759,7 +1756,7 @@ window.migrateLeaders = async function() {
     for (const leader of leaders) {
       const {id, ...data} = leader;
       await setDoc(doc(db,'leaders', id), {...data, createdAt:serverTimestamp()});
-    }
+
     toast('✅ '+leaders.length+'জন নেতার latest data migrate হয়েছে!','success');
     loadLeaders();
   } catch(e) { toast('❌ Error: '+e.message,'error'); }
@@ -2043,7 +2040,6 @@ window.inlineUpload = async function(input, targetFieldId, folder) {
       if (prev && prevImg) { prevImg.src = e.target.result; prev.style.display = 'block'; }
     };
     reader.readAsDataURL(file);
-  }
 
   if (progressEl) { progressEl.style.display = 'block'; if(barEl) barEl.style.width='30%'; if(statusEl) statusEl.textContent='Uploading...'; }
 
@@ -2075,7 +2071,7 @@ window.inlineUpload = async function(input, targetFieldId, folder) {
   } catch(e) {
     if(statusEl) { statusEl.textContent = '❌ '+e.message; statusEl.style.color = 'var(--red)'; }
     toast('❌ Upload failed: '+e.message,'error');
-  }
+
 };
 
 window.previewFile = function(input) {
@@ -2088,7 +2084,7 @@ window.previewFile = function(input) {
       document.getElementById('up-preview').style.display = 'block';
     };
     reader.readAsDataURL(file);
-  }
+
   // Auto-set commit message
   document.getElementById('up-message').placeholder = `Admin upload: ${file.name}`;
 };
@@ -2147,7 +2143,7 @@ window.doUpload = async function() {
     toast('❌ Upload failed: ' + e.message,'error');
   } finally {
     btn.disabled = false; btn.textContent = '⬆️ Upload করুন';
-  }
+
 };
 
 window.copyUploadUrl = function() {
@@ -2209,9 +2205,9 @@ function startAnalyticsListener() {
             if(dot) { dot.style.color='var(--accent)'; setTimeout(()=>{dot.style.color='var(--green)';},700); }
             const badge = document.getElementById('an-live-count');
             if(badge) { badge.textContent='+'+anLiveCount+' live'; badge.style.display=''; }
-          }
+
         });
-      }
+
       if(document.getElementById('page-analytics')?.classList.contains('active')) renderAnalytics();
     });
   } catch(e) { console.warn('Analytics listener error:', e); }
@@ -2260,7 +2256,7 @@ function renderAnalytics() {
     } else {
       const days=anRange<=10080?7:30;
       for(let i=days-1;i>=0;i--){const b=new Date(now-i*86400000);const bd=new Date(b);bd.setHours(0,0,0,0);const be=new Date(bd.getTime()+86400000);labels.push((b.getMonth()+1)+'/'+(b.getDate()));data.push(inRange.filter(d=>d.tsMs>=bd.getTime()&&d.tsMs<be.getTime()).length);}
-    }
+
     const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
     const gridColor=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
     const textColor=isDark?'#7878a0':'#888';
@@ -2268,7 +2264,6 @@ function renderAnalytics() {
     if(ctx){
       if(anChartInst){anChartInst.data.labels=labels;anChartInst.data.datasets[0].data=data;anChartInst.update('none');}
       else anChartInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Visits',data,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.1)',borderWidth:2,fill:true,tension:0.4,pointRadius:2,pointHoverRadius:5}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f1019',titleColor:'#eeeef5',bodyColor:'#7878a0',borderColor:'rgba(255,255,255,.08)',borderWidth:1}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:10},maxTicksLimit:14}},y:{grid:{color:gridColor},ticks:{color:textColor,font:{size:10},stepSize:1,precision:0},beginAtZero:true}}}});
-    }
 
     // Top pages
     const pageCounts={};
@@ -2289,7 +2284,6 @@ function renderAnalytics() {
       else anCatInst=new Chart(catCtx,{type:'doughnut',data:{labels:catKeys,datasets:[{data:catVals,backgroundColor:catColors,borderWidth:2,borderColor:'var(--bg3)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',animation:{duration:300},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f1019',titleColor:'#eeeef5',bodyColor:'#7878a0'}}}});
       const legEl=document.getElementById('an-cat-legend');
       if(legEl) legEl.innerHTML=catKeys.map((k,i)=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)"><span style="width:8px;height:8px;border-radius:50%;background:${catColors[i]};flex-shrink:0"></span>${k} (${catVals[i]})</span>`).join('');
-    }
 
     // Device donut
     const devCounts={};
@@ -2302,7 +2296,6 @@ function renderAnalytics() {
       else anDevInst=new Chart(devCtx,{type:'doughnut',data:{labels:devKeys,datasets:[{data:devVals,backgroundColor:devColors,borderWidth:2,borderColor:'var(--bg3)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',animation:{duration:300},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f1019',titleColor:'#eeeef5',bodyColor:'#7878a0'}}}});
       const devLegEl=document.getElementById('an-device-legend');
       if(devLegEl) devLegEl.innerHTML=devKeys.map((k,i)=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)"><span style="width:8px;height:8px;border-radius:50%;background:${devColors[i]};flex-shrink:0"></span>${k==='mobile'?'📱 মোবাইল':k==='tablet'?'📲 ট্যাবলেট':'🖥️ ডেস্কটপ'} (${devVals[i]})</span>`).join('');
-    }
 
     // Recent feed
     const feedEl=document.getElementById('an-feed');
@@ -2360,7 +2353,7 @@ const text = input.value.trim();
       alert('Popup blocked! jullyforum.com এ popup allow করুন।');
     } else {
       alert('✅ Popup খুলেছে!\nVideo generate করে download করুন।');
-    }
+
   } catch(e) {
     console.error(e);
     alert('Error: ' + e.message);
@@ -2368,8 +2361,6 @@ const text = input.value.trim();
     if (btn) {
       btn.innerHTML = '🎬 Reel বানাও';
       btn.disabled = false;
-    }
-
 
 const btn = document.getElementById('fb-gen-btn');
   if (btn) {
@@ -2431,6 +2422,38 @@ const btn = document.getElementById('fb-gen-btn');
 
 
 
+const text = input.value.trim();
+  const btn = document.getElementById('fb-gen-btn');
+  
+  if (btn) {
+    btn.innerHTML = '⏳ Popup খুলছে...';
+    btn.disabled = true;
+
+  try {
+    const prompt = "Create a cinematic 9:16 vertical Bengali news reel for Facebook/Instagram. Dramatic dark mood, fast cuts, bold text overlays, strong hook in first 3 seconds. News content: " + text.substring(0, 400);
+
+    const popup = window.open(
+      "https://www.jaiportal.com/free/ai-video-generator?prompt=" + encodeURIComponent(prompt),
+      "JAIReelGenerator",
+      "width=1400,height=920,scrollbars=yes,resizable=yes,menubar=no"
+    );
+
+    if (!popup) {
+      alert("❌ Popup blocked! jullyforum.com এ Popup Allow করুন।");
+    } else {
+      alert("✅ Popup খুলেছে!\n\nVideo generate করে Download করুন।");
+
+  } catch(e) {
+    alert("Error: " + e.message);
+  } finally {
+    if (btn) {
+      btn.innerHTML = '🎬 Reel বানাও';
+      btn.disabled = false;
+
+
+
+
+
 async function fbGenerateReel() {
   const input = document.getElementById('fb-news-input');
   if (!input || !input.value.trim()) {
@@ -2447,12 +2470,12 @@ async function fbGenerateReel() {
   }
 
   try {
-    const prompt = "Create a cinematic 9:16 vertical Bengali news reel for Facebook/Instagram. Dramatic dark mood, fast cuts, bold text overlays, strong hook in first 3 seconds. News content: " + text.substring(0, 400);
+    const prompt = "Create a cinematic 9:16 vertical Bengali news reel for Facebook/Instagram. Dramatic dark mood, fast cuts, bold text overlays, strong hook in first 3 seconds. News: " + text.substring(0, 400);
 
     const popup = window.open(
       "https://www.jaiportal.com/free/ai-video-generator?prompt=" + encodeURIComponent(prompt),
       "JAIReelGenerator",
-      "width=1400,height=920,scrollbars=yes,resizable=yes,menubar=no"
+      "width=1400,height=920,scrollbars=yes,resizable=yes"
     );
 
     if (!popup) {
