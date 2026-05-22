@@ -865,6 +865,36 @@ addDoc(collection(db,'pageviews'), {
       </div>
     </div>
 
+<div style="margin-bottom:12px">
+<label style="font-size:11px;font-weight:700;color:var(--text2)">📋 Pages JSON (একবার paste করুন)</label>
+<textarea id="fb-pages-json" rows="3" style="width:100%;font-size:11px;font-family:monospace;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder='{"data":[...]}'></textarea>
+<button onclick="fbSavePages()" style="margin-top:6px;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">💾 Save Pages</button>
+<span id="fb-pages-status" style="font-size:11px;margin-left:8px;color:var(--green)"></span>
+</div>
+    <div class="page" id="page-fbpost">
+      <div class="card">
+        <div class="section-title">📢 Facebook Auto Post</div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:11px;font-weight:700;color:var(--text2)">📋 Pages JSON (একবার paste করুন)</label>
+          <textarea id="fb-pages-json" rows="3" style="width:100%;font-size:11px;font-family:monospace;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder='{"data":[]}'></textarea>
+          <button onclick="fbSavePages()" style="margin-top:6px;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">💾 Save Pages</button>
+          <span id="fb-pages-status" style="font-size:11px;margin-left:8px;color:var(--green)"></span>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+        <label style="font-size:11px;font-weight:700;color:var(--text2)">✍️ News Text লিখুন</label>
+        <textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder="এখানে সংবাদের মূল বিষয় লিখুন..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <button onclick="fbGenerateCard()" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">✨ AI দিয়ে Card বানাও</button>
+          <button onclick="fbPostAll()" id="fb-post-btn" style="padding:8px 18px;background:#1877f2;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:none">📤 সব Page এ Post করো</button>
+        </div>
+        <div id="fb-preview" style="margin-top:16px;display:none">
+          <label style="font-size:11px;font-weight:700;color:var(--text2)">Preview</label>
+          <canvas id="fb-card-canvas" width="1080" height="1080" style="width:100%;max-width:400px;border-radius:12px;margin-top:6px;display:block"></canvas>
+          <textarea id="fb-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:8px;resize:vertical"></textarea>
+        </div>
+        <div id="fb-post-log" style="margin-top:12px;font-size:11px;max-height:200px;overflow-y:auto"></div>
+      </div>
+    </div>
   </div><!-- /main -->
 </div><!-- /app -->
 
@@ -2308,15 +2338,6 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 // Set today's date default for press release
 document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 </script>
-<div id="page-fbpost" class="page" style="display:none">
-<div class="card">
-<div class="section-title">📢 Facebook Auto Post</div>
-<div style="margin-bottom:12px">
-<label style="font-size:11px;font-weight:700;color:var(--text2)">📋 Pages JSON (একবার paste করুন)</label>
-<textarea id="fb-pages-json" rows="3" style="width:100%;font-size:11px;font-family:monospace;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder='{"data":[...]}'></textarea>
-<button onclick="fbSavePages()" style="margin-top:6px;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">💾 Save Pages</button>
-<span id="fb-pages-status" style="font-size:11px;margin-left:8px;color:var(--green)"></span>
-</div>
 <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
 <label style="font-size:11px;font-weight:700;color:var(--text2)">✍️ News Text লিখুন</label>
 <textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder="এখানে সংবাদের মূল বিষয় লিখুন..."></textarea>
