@@ -2366,24 +2366,25 @@ async function fbGenerateReel() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'llama-3.3-70b-versatile',
         max_tokens: 1500,
-        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার। নিচের news বিশ্লেষণ করে JSON দাও। অন্য কিছু না, শুধু JSON।
+        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার। নিচের short news টা নিয়ে কাজ করো।
 
-Format:
+ধাপ ১: news টাকে বিস্তারিত করো — পটভূমি, ঘটনা, প্রভাব, প্রতিক্রিয়া, গুরুত্ব যোগ করো।
+ধাপ ২: সেই বিস্তারিত content কে ঠিক ৫টা slide এ ভাগ করো।
+
+শুধু JSON দাও, অন্য কিছু না:
 {
   "mood": "urgent|sad|positive|neutral|angry",
   "caption": "Facebook Reels caption বাংলায়, emoji সহ, ৩টা hashtag শেষে",
-  "slides": ["slide1","slide2","slide3","slide4","slide5"]
+  "slides": ["slide 1: পটভূমি ২-৩ লাইন","slide 2: মূল ঘটনা ২-৩ লাইন","slide 3: প্রভাব ও প্রতিক্রিয়া ২-৩ লাইন","slide 4: বিস্তারিত বিশ্লেষণ ২-৩ লাইন","slide 5: call to action ২ লাইন"]
 }
-
-প্রতিটা slide ১-২ লাইন বাংলায়।
 
 News: ${text}` }]
       })
     });
     const aiData = await res.json();
-    const raw = aiData.content?.[0]?.text || '{}';
+    const raw = aiData.choices?.[0]?.message?.content || '{}';
     const clean = raw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
 
