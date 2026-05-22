@@ -309,6 +309,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="ni" onclick="goPage('blood',this)"><span class="ic">🩸</span>রক্তদাতা <span class="nbadge green" id="b-blood">—</span></div>
       <div class="ni" onclick="goPage('press',this)"><span class="ic">📰</span>Press Release</div>
       <div class="ni" onclick="window.open('/news-card-generator.html','_blank')" style="color:var(--amber)"><span class="ic">🎨</span>News Card Generator</div>
+      <div class="ni" onclick="goPage('fbpost',this)"><span class="ic">📢</span>FB Auto Post</div>
 
       <div class="nsec">Data</div>
       <div class="ni" onclick="goPage('leader',this)"><span class="ic">🏛️</span>নেতা ট্র্যাকার</div>
@@ -2307,6 +2308,201 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 // Set today's date default for press release
 document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 </script>
+<div id="page-fbpost" class="page" style="display:none">
+<div class="card">
+<div class="section-title">📢 Facebook Auto Post</div>
+<div style="margin-bottom:12px">
+<label style="font-size:11px;font-weight:700;color:var(--text2)">📋 Pages JSON (একবার paste করুন)</label>
+<textarea id="fb-pages-json" rows="3" style="width:100%;font-size:11px;font-family:monospace;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder='{"data":[...]}'></textarea>
+<button onclick="fbSavePages()" style="margin-top:6px;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">💾 Save Pages</button>
+<span id="fb-pages-status" style="font-size:11px;margin-left:8px;color:var(--green)"></span>
+</div>
+<hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+<label style="font-size:11px;font-weight:700;color:var(--text2)">✍️ News Text লিখুন</label>
+<textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder="এখানে সংবাদের মূল বিষয় লিখুন..."></textarea>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+<button onclick="fbGenerateCard()" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">✨ AI দিয়ে Card বানাও</button>
+<button onclick="fbPostAll()" id="fb-post-btn" style="padding:8px 18px;background:#1877f2;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:none">📤 সব Page এ Post করো</button>
+</div>
+<div id="fb-preview" style="margin-top:16px;display:none">
+<label style="font-size:11px;font-weight:700;color:var(--text2)">Preview</label>
+<canvas id="fb-card-canvas" width="1080" height="1080" style="width:100%;max-width:400px;border-radius:12px;margin-top:6px;display:block"></canvas>
+<textarea id="fb-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:8px;resize:vertical"></textarea>
+</div>
+<div id="fb-post-log" style="margin-top:12px;font-size:11px;max-height:200px;overflow-y:auto"></div>
+</div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </body>
-</html>
+</html><script>
+// ── FB Auto Post ─────────────────────────────────────────────
+
+// Save pages to Firestore
+async function fbSavePages() {
+  const raw = document.getElementById('fb-pages-json').value.trim();
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    const pages = data.data || [];
+    if (!pages.length) { document.getElementById('fb-pages-status').textContent = '❌ কোনো page পাওয়া যায়নি'; return; }
+    const simplified = pages.map(p => ({ id: p.id, name: p.name, token: p.access_token }));
+    await db.collection('admin_config').doc('fb_pages').set({ pages: simplified, updatedAt: new Date().toISOString() });
+    document.getElementById('fb-pages-status').textContent = `✅ ${simplified.length}টি page save হয়েছে`;
+    document.getElementById('fb-pages-json').value = '';
+  } catch(e) { document.getElementById('fb-pages-status').textContent = '❌ JSON ভুল আছে'; }
+}
+
+// Generate card and caption
+async function fbGenerateCard() {
+  const text = document.getElementById('fb-news-input').value.trim();
+  if (!text) return alert('News text লিখুন');
+  
+  const btn = document.querySelector('[onclick="fbGenerateCard()"]');
+  btn.textContent = '⏳ তৈরি হচ্ছে...';
+  btn.disabled = true;
+
+  try {
+    // AI দিয়ে caption বানাও
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `তুমি JOAF (জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম) এর সোশ্যাল মিডিয়া ম্যানেজার। নিচের news টা দিয়ে Facebook এর জন্য একটা আকর্ষণীয় বাংলা caption লেখো। Caption এ relevant emoji ব্যবহার করো, ৩-৪ টা hashtag দাও শেষে। শুধু caption দাও, অন্য কিছু না।\n\nNews: ${text}`
+        }]
+      })
+    });
+    const aiData = await res.json();
+    const caption = aiData.content?.[0]?.text || text;
+    document.getElementById('fb-caption').value = caption;
+
+    // Canvas এ animated card বানাও
+    const canvas = document.getElementById('fb-card-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#1e3a5f');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1080, 1080);
+
+    // JOAF logo circle
+    ctx.beginPath();
+    ctx.arc(540, 380, 160, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(220, 38, 38, 0.15)';
+    ctx.fill();
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // JOAF text
+    ctx.fillStyle = '#dc2626';
+    ctx.font = 'bold 72px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('JOAF', 540, 410);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '24px sans-serif';
+    ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম', 540, 450);
+
+    // Divider line
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(140, 580);
+    ctx.lineTo(940, 580);
+    ctx.stroke();
+
+    // Breaking news label
+    ctx.fillStyle = '#dc2626';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText('🔴 সর্বশেষ সংবাদ', 540, 640);
+
+    // Date
+    const today = new Date().toLocaleDateString('bn-BD', { year:'numeric', month:'long', day:'numeric' });
+    ctx.fillStyle = '#64748b';
+    ctx.font = '22px sans-serif';
+    ctx.fillText(today, 540, 1020);
+
+    // Website
+    ctx.fillStyle = '#3b82f6';
+    ctx.font = '24px sans-serif';
+    ctx.fillText('julyforum.com', 540, 980);
+
+    document.getElementById('fb-preview').style.display = 'block';
+    document.getElementById('fb-post-btn').style.display = 'inline-block';
+
+  } catch(e) {
+    console.error(e);
+    alert('Error: ' + e.message);
+  } finally {
+    btn.textContent = '✨ AI দিয়ে Card বানাও';
+    btn.disabled = false;
+  }
+}
+
+// Post to all pages
+async function fbPostAll() {
+  const btn = document.getElementById('fb-post-btn');
+  const log = document.getElementById('fb-post-log');
+  const caption = document.getElementById('fb-caption').value.trim();
+  if (!caption) return alert('Caption নেই');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Post হচ্ছে...';
+  log.innerHTML = '';
+
+  try {
+    // Firestore থেকে pages load করো
+    const doc = await db.collection('admin_config').doc('fb_pages').get();
+    if (!doc.exists) return alert('আগে Pages JSON save করুন');
+    const pages = doc.data().pages || [];
+
+    // Canvas থেকে image নাও
+    const canvas = document.getElementById('fb-card-canvas');
+    const imageBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.92));
+
+    let success = 0, fail = 0;
+
+    for (const page of pages) {
+      try {
+        // Image upload
+        const formData = new FormData();
+        formData.append('source', imageBlob, 'joaf-news.jpg');
+        formData.append('caption', caption);
+        formData.append('access_token', page.token);
+
+        const postRes = await fetch(`https://graph.facebook.com/${page.id}/photos`, {
+          method: 'POST',
+          body: formData
+        });
+        const postData = await postRes.json();
+
+        if (postData.id) {
+          success++;
+          log.innerHTML += `<div style="color:var(--green);padding:2px 0">✅ ${page.name}</div>`;
+        } else {
+          fail++;
+          log.innerHTML += `<div style="color:var(--red);padding:2px 0">❌ ${page.name}: ${postData.error?.message || 'Error'}</div>`;
+        }
+      } catch(e) {
+        fail++;
+        log.innerHTML += `<div style="color:var(--red);padding:2px 0">❌ ${page.name}: ${e.message}</div>`;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    log.innerHTML += `<div style="margin-top:8px;font-weight:700">মোট: ✅ ${success}টি সফল, ❌ ${fail}টি ব্যর্থ</div>`;
+
+  } catch(e) {
+    log.innerHTML = `<div style="color:var(--red)">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 সব Page এ Post করো';
+  }
+}
+</script>
