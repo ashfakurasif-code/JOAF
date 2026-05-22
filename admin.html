@@ -2462,7 +2462,7 @@ News: ${text}` }]
 async function renderVideoWithAudio(slides, mood) {
   // slides is now array of {text, label, theme, illustration} or strings
   const canvas = document.getElementById('fb-card-canvas');
-  canvas.width = 1080; // Force HD
+  canvas.width = 1080;
   canvas.height = 1920; // Force Vertical
   // 1080;
   canvas.height = 1920;
@@ -2475,7 +2475,11 @@ async function renderVideoWithAudio(slides, mood) {
   const audioTrack = dest.stream.getAudioTracks()[0];
   canvasStream.addTrack(audioTrack);
 
-  const recorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+  const recorder = new MediaRecorder(canvasStream, { 
+    mimeType: 'video/webm;codecs=vp9,opus',
+    videoBitsPerSecond: 12000000,     // 12 Mbps = sharp HD
+    audioBitsPerSecond: 192000
+  });
   const chunks = [];
   recorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
   recorder.start(100);
@@ -2483,6 +2487,7 @@ async function renderVideoWithAudio(slides, mood) {
   const SLIDE_DURATION = 7000;
   const FPS = 30;
   const FRAME_MS = 1000 / FPS;
+  // Force consistent timing for smoother video
 
   for (let i = 0; i < slides.length; i++) {
     playSlideSound(audioCtx, dest, mood, i, slides.length);
@@ -3622,4 +3627,17 @@ const JOAF_LOGO_IMG = new Image();
 let _logoLoaded = false;
 JOAF_LOGO_IMG.onload = () => { _logoLoaded = true; };
 JOAF_LOGO_IMG.src = '/logoc7c3.png';
+</script>
+<script>
+window.isCinematic = true;
+let sceneIndex = 0;
+const scenes = ["সকাল ৮টা: রাজধানী স্থবির", "দুপুর ১২টা: নতুন ঘোষণা", "রাত ৮টা: চূড়ান্ত সিদ্ধান্ত"];
+
+function startCinematic() {
+  setInterval(() => {
+    document.getElementById('eHl').value = scenes[sceneIndex % scenes.length];
+    draw(); 
+    sceneIndex++;
+  }, 10000); // 10 second-e per slide, 3 slide = 30 sec
+}
 </script>
