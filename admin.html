@@ -894,19 +894,17 @@ addDoc(collection(db,'pageviews'), {
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button onclick="fbGenerateReel()" id="fb-gen-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🎬 Reel বানাও</button>
         </div>
-        <!-- Reel Upload Section -->
-        <div style="margin-top:14px;padding:12px;background:var(--bg3);border:2px dashed var(--border);border-radius:10px">
-          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">⬆️ AI থেকে Download করা Video আপলোড করুন</label>
-          <input type="file" id="reel-file-input" accept="video/*" onchange="handleReelUpload(this)"
-            style="width:100%;font-size:12px;padding:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer">
-          <p style="font-size:10px;color:var(--text2);margin:4px 0 0">MP4, MOV, WEBM — যেকোনো format চলবে</p>
+        <div id="fb-progress" style="display:none;margin-top:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px" id="fb-progress-label">⏳ তৈরি হচ্ছে...</div>
+          <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden">
+            <div id="fb-progress-bar" style="height:100%;background:var(--accent);width:0%;transition:width 0.3s;border-radius:4px"></div>
+          </div>
         </div>
         <div id="fb-preview" style="margin-top:16px;display:none">
           <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">👁️ Preview</label>
           <video id="fb-reel-video" controls playsinline
-            style="width:100%;max-width:320px;max-height:480px;border-radius:12px;display:block;background:#000;box-shadow:0 4px 20px rgba(0,0,0,0.3)"></video>
-          <div id="fb-reel-meta" style="font-size:11px;color:var(--text2);margin:6px 0 10px"></div>
-          <textarea id="fb-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder="Caption (Reel বানানোর পর auto-fill হবে)"></textarea>
+            style="width:100%;max-width:320px;border-radius:12px;display:block;background:#000;box-shadow:0 4px 20px rgba(0,0,0,0.3)"></video>
+          <textarea id="fb-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:8px;resize:vertical"></textarea>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
             <button onclick="fbDownloadReel()" id="fb-download-btn"
               style="padding:8px 18px;background:#25d366;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">⬇️ Download করো</button>
@@ -2380,152 +2378,452 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 </html><script>
 
 
-// ── FB Reel Generator (Option 2 — JAI Portal + Upload Flow) ────
+// ── FB Reel Generator — Canvas Auto 30s ────────────────────
 let reelBlob = null;
 
-// ── "Reel বানাও" বাটন: AI prompt বানাও + JAI Portal popup খোলো ──
-function fbGenerateReel() {
-  const text = document.getElementById('fb-news-input').value.trim();
-  if (!text) { alert('\u26a0\ufe0f \u0986\u0997\u09c7 News Text \u09b2\u09bf\u0996\u09c1\u09a8'); return; }
-
-  // No API call — generate cinematic prompt locally from news text
-  const prompt = buildCinematicPrompt(text);
-
-  // Caption background fetch (optional, silent)
-  fetchCaption(text);
-
-  // Open popup with prompt
-  openJAIPopup(prompt, text);
+// ── MOOD DETECTION ───────────────────────────────────────────
+function detectMood(text) {
+  const t = text.toLowerCase();
+  const urgent = ['হত্যা','আক্রমণ','বিস্ফোরণ','দুর্ঘটনা','মৃত্যু','আগুন','বন্যা','সংঘর্ষ','নিহত','আহত','protest','attack','fire','flood','dead','killed','clash'];
+  const positive = ['উদ্বোধন','অর্জন','পুরস্কার','সাফল্য','উন্নয়ন','জয়','win','success','award','launch','celebrate','victory'];
+  const sad = ['শোক','দুর্ভোগ','ক্ষতি','কষ্ট','grief','loss','tragedy','suffering','mourning'];
+  if (urgent.some(w => t.includes(w))) return 'urgent';
+  if (positive.some(w => t.includes(w))) return 'positive';
+  if (sad.some(w => t.includes(w))) return 'sad';
+  return 'neutral';
 }
 
-function buildCinematicPrompt(newsText) {
-  // Extract key words from Bengali/English text
-  const short = newsText.replace(/\s+/g, ' ').trim().substring(0, 200);
+// ── SPLIT TEXT INTO 5 SLIDES ─────────────────────────────────
+function splitSlides(text) {
+  const sentences = text.replace(/।/g, '।|').replace(/\./g, '.|').split('|').map(s => s.trim()).filter(s => s.length > 2);
+  if (sentences.length === 0) return [text];
+  if (sentences.length <= 5) {
+    while (sentences.length < 5) sentences.push('');
+    return sentences;
+  }
+  const out = [];
+  const chunk = Math.ceil(sentences.length / 5);
+  for (let i = 0; i < 5; i++) out.push(sentences.slice(i * chunk, (i + 1) * chunk).join(' '));
+  return out;
+}
 
-  // Mood detection based on keywords
-  const urgentWords = ['হত্যা','আক্রমণ','বিস্ফোরণ','দুর্ঘটনা','মৃত্যু','আগুন','বন্যা','ঘূর্ণিঝড়','সংঘর্ষ','নিহত','আহত','protest','attack','fire','flood','dead','killed'];
-  const positiveWords = ['উদ্বোধন','অর্জন','পুরস্কার','সাফল্য','উন্নয়ন','নতুন','চালু','জয়','win','success','award','launch','development'];
-  const sadWords = ['শোক','মৃত্যু','দুর্ভোগ','ক্ষতি','বিপদ','কষ্ট','grief','loss','tragedy','suffering'];
+// ── THEME CONFIG PER MOOD ────────────────────────────────────
+function getMoodTheme(mood) {
+  const themes = {
+    urgent: {
+      bgGrad: ['#1a0000','#3d0000','#1a0000'],
+      accent: '#ff2222', accentGlow: '#ff000066',
+      textColor: '#ffffff', subColor: '#ffaaaa',
+      badgeBg: '#cc0000', badgeText: '#fff',
+      badgeLabel: '🔴 BREAKING',
+      particleColor: '#ff4444',
+      lineColor: '#ff3333'
+    },
+    positive: {
+      bgGrad: ['#001a00','#003300','#001a0f'],
+      accent: '#22dd66', accentGlow: '#00ff6644',
+      textColor: '#ffffff', subColor: '#aaffcc',
+      badgeBg: '#006622', badgeText: '#fff',
+      badgeLabel: '✅ সুখবর',
+      particleColor: '#44ff88',
+      lineColor: '#33ff77'
+    },
+    sad: {
+      bgGrad: ['#000a1a','#001133','#000a22'],
+      accent: '#4488ff', accentGlow: '#2255ff44',
+      textColor: '#ddeeff', subColor: '#8899bb',
+      badgeBg: '#003366', badgeText: '#ddeeff',
+      badgeLabel: '💙 আপডেট',
+      particleColor: '#5599ff',
+      lineColor: '#4477ee'
+    },
+    neutral: {
+      bgGrad: ['#0a0a0a','#1a1a2e','#0a0a0a'],
+      accent: '#6366f1', accentGlow: '#6366f144',
+      textColor: '#ffffff', subColor: '#aaaacc',
+      badgeBg: '#3730a3', badgeText: '#fff',
+      badgeLabel: '📢 আপডেট',
+      particleColor: '#8888ff',
+      lineColor: '#6666dd'
+    }
+  };
+  return themes[mood] || themes.neutral;
+}
 
-  const lower = newsText.toLowerCase();
-  let mood = 'neutral';
-  let atmosphere = 'tense and dramatic';
-  let lighting = 'moody overcast lighting with deep shadows';
-  let color = 'desaturated blues and grays';
-  let camera = 'slow cinematic push-in, rack focus';
+// ── WRAP TEXT ────────────────────────────────────────────────
+function reelWrapText(ctx, text, maxW) {
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    const test = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; }
+    else cur = test;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
 
-  if (urgentWords.some(w => lower.includes(w))) {
-    mood = 'urgent';
-    atmosphere = 'urgent, chaotic, high-tension';
-    lighting = 'harsh red-tinted emergency lighting, flashing lights';
-    color = 'high contrast red and black color grade';
-    camera = 'handheld shaky cam, rapid cuts, extreme close-ups';
-  } else if (positiveWords.some(w => lower.includes(w))) {
-    mood = 'positive';
-    atmosphere = 'hopeful, triumphant, inspiring';
-    lighting = 'warm golden hour sunlight, god rays through clouds';
-    color = 'warm golden tones, vibrant greens';
-    camera = 'smooth drone shot rising upward, slow motion';
-  } else if (sadWords.some(w => lower.includes(w))) {
-    mood = 'sad';
-    atmosphere = 'somber, grief-stricken, reflective';
-    lighting = 'dim blue-gray twilight, soft mist';
-    color = 'cold desaturated blue palette';
-    camera = 'slow pull-back, shallow depth of field, long pauses';
+// ── DRAW ONE FRAME ───────────────────────────────────────────
+function drawReelFrame(ctx, W, H, slideText, slideIndex, totalSlides, t, mood, theme, logoImg) {
+  ctx.clearRect(0, 0, W, H);
+
+  // 1. Background gradient
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, theme.bgGrad[0]);
+  bg.addColorStop(0.5, theme.bgGrad[1]);
+  bg.addColorStop(1, theme.bgGrad[2]);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // 2. Animated grid lines
+  ctx.save();
+  const gridAlpha = 0.06 + 0.02 * Math.sin(t * Math.PI * 2);
+  ctx.strokeStyle = theme.lineColor;
+  ctx.globalAlpha = gridAlpha;
+  ctx.lineWidth = 1;
+  const spacing = 80;
+  for (let x = 0; x < W; x += spacing) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += spacing) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.restore();
+
+  // 3. Animated particles
+  ctx.save();
+  const seed = slideIndex * 137 + 42;
+  const rng = (i) => { let s = (seed + i * 1664525 + 1013904223) >>> 0; return (s / 4294967296); };
+  for (let i = 0; i < 18; i++) {
+    const px = rng(i * 3) * W;
+    const baseY = rng(i * 3 + 1) * H;
+    const speed = 0.3 + rng(i * 3 + 2) * 0.7;
+    const py = ((baseY - t * speed * H * 0.4) % H + H) % H;
+    const size = 1.5 + rng(i) * 3;
+    const alpha = 0.2 + 0.4 * Math.sin(t * Math.PI * 2 + i);
+    ctx.beginPath();
+    ctx.arc(px, py, size, 0, Math.PI * 2);
+    ctx.fillStyle = theme.particleColor;
+    ctx.globalAlpha = alpha;
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // 4. Accent glow circle (bottom)
+  ctx.save();
+  const glowR = 280 + 20 * Math.sin(t * Math.PI * 2);
+  const glowGrad = ctx.createRadialGradient(W / 2, H * 0.85, 0, W / 2, H * 0.85, glowR);
+  glowGrad.addColorStop(0, theme.accentGlow);
+  glowGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = glowGrad;
+  ctx.globalAlpha = 0.7;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+
+  // 5. Top bar — JOAF branding
+  const barH = 110;
+  ctx.save();
+  const barGrad = ctx.createLinearGradient(0, 0, W, 0);
+  barGrad.addColorStop(0, 'rgba(0,0,0,0.85)');
+  barGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+  ctx.fillStyle = barGrad;
+  ctx.fillRect(0, 0, W, barH);
+
+  // Accent top line
+  ctx.fillStyle = theme.accent;
+  ctx.fillRect(0, 0, W, 5);
+
+  // Logo
+  if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+    ctx.save();
+    ctx.beginPath();
+    const lr = 28; const lx = 28; const ly = 22; const lsz = 66;
+    ctx.roundRect(lx, ly, lsz, lsz, lr);
+    ctx.clip();
+    ctx.drawImage(logoImg, lx, ly, lsz, lsz);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = theme.accent;
+    ctx.beginPath(); ctx.roundRect(28, 22, 66, 66, 14); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('J', 61, 68);
   }
 
-  const prompt = `Cinematic vertical 9:16 video set in Dhaka, Bangladesh. ${atmosphere} atmosphere. Scene shows ${short.substring(0, 100)}. ${lighting}, ${color}. ${camera}. Crowds of Bangladeshi people, national flags, urban streets, news broadcast aesthetic. Photorealistic, 4K quality, emotionally powerful composition suitable for viral social media reels.`;
+  // JOAF text
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.fillText('JOAF', 108, 55);
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.font = '18px sans-serif';
+  ctx.fillText('julyforum.com', 108, 78);
+  ctx.fillStyle = theme.accent;
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', 108, 100);
+  ctx.restore();
 
-  return prompt;
+  // 6. Slide counter dots
+  ctx.save();
+  const dotY = 145;
+  const dotSpacing = 22;
+  const totalDotW = totalSlides * dotSpacing;
+  const dotStartX = (W - totalDotW) / 2;
+  for (let d = 0; d < totalSlides; d++) {
+    const isActive = d === slideIndex;
+    ctx.beginPath();
+    ctx.arc(dotStartX + d * dotSpacing + dotSpacing / 2, dotY, isActive ? 7 : 4, 0, Math.PI * 2);
+    ctx.fillStyle = isActive ? theme.accent : 'rgba(255,255,255,0.3)';
+    ctx.globalAlpha = 1;
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // 7. Badge
+  if (slideText && slideText.length > 0) {
+    ctx.save();
+    ctx.font = 'bold 26px sans-serif';
+    const badgeLabel = slideIndex === 0 ? theme.badgeLabel : `${slideIndex + 1}/${totalSlides}`;
+    const bw = ctx.measureText(badgeLabel).width + 32;
+    const bx = 44; const by = 175; const bh = 42;
+    ctx.fillStyle = theme.badgeBg;
+    ctx.globalAlpha = 0.92;
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 8); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = theme.badgeText;
+    ctx.fillText(badgeLabel, bx + 16, by + 29);
+    ctx.restore();
+  }
+
+  // 8. Main text — animated slide-in
+  if (slideText && slideText.trim().length > 0) {
+    ctx.save();
+    const slideIn = Math.min(1, t * 4);
+    const eased = 1 - Math.pow(1 - slideIn, 3);
+    const textX = 44 + (1 - eased) * 60;
+    const textAlpha = eased;
+
+    ctx.globalAlpha = textAlpha;
+
+    // Text area background
+    const textBgGrad = ctx.createLinearGradient(0, H * 0.52, 0, H - 160);
+    textBgGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    textBgGrad.addColorStop(0.3, 'rgba(0,0,0,0.75)');
+    textBgGrad.addColorStop(1, 'rgba(0,0,0,0.9)');
+    ctx.fillStyle = textBgGrad;
+    ctx.fillRect(0, H * 0.52, W, H - 160 - H * 0.52);
+
+    ctx.font = 'bold 52px sans-serif';
+    ctx.fillStyle = theme.textColor;
+    ctx.textAlign = 'left';
+    const lines = reelWrapText(ctx, slideText.trim(), W - 88);
+    const lineH = 68;
+    const totalTextH = lines.length * lineH;
+    const startY = H * 0.58;
+    lines.slice(0, 5).forEach((line, i) => {
+      // Accent line marker
+      ctx.fillStyle = theme.accent;
+      ctx.fillRect(textX - 12, startY + i * lineH - 44, 5, 52);
+      ctx.fillStyle = theme.textColor;
+      ctx.font = 'bold 52px sans-serif';
+      ctx.fillText(line, textX, startY + i * lineH);
+    });
+    ctx.restore();
+  }
+
+  // 9. Bottom bar
+  ctx.save();
+  const botH = 130;
+  const botGrad = ctx.createLinearGradient(0, H - botH, 0, H);
+  botGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  botGrad.addColorStop(1, 'rgba(0,0,0,0.92)');
+  ctx.fillStyle = botGrad;
+  ctx.fillRect(0, H - botH, W, botH);
+
+  // Accent bottom line
+  ctx.fillStyle = theme.accent;
+  ctx.fillRect(0, H - 5, W, 5);
+
+  // Footer text
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('JOAF • দেশ আগে, দল পরে', W / 2, H - 60);
+  ctx.fillStyle = theme.accent;
+  ctx.font = '20px sans-serif';
+  ctx.fillText('julyforum.com', W / 2, H - 30);
+  ctx.restore();
+
+  // 10. Progress bar (bottom)
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fillRect(0, H - 10, W, 5);
+  ctx.fillStyle = theme.accent;
+  ctx.fillRect(0, H - 10, W * t, 5);
+  ctx.restore();
 }
 
-// JAI Portal popup with auto-filled prompt
-function openJAIPopup(prompt, newsText) {
-  // Remove existing popup if any
-  const existing = document.getElementById('jai-portal-popup');
-  if (existing) existing.remove();
+// ── OUTRO FRAME ──────────────────────────────────────────────
+function drawOutroFrame(ctx, W, H, t, mood, theme, logoImg) {
+  ctx.clearRect(0, 0, W, H);
 
-  const overlay = document.createElement('div');
-  overlay.id = 'jai-portal-popup';
-  overlay.style.cssText = `
-    position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;
-    display:flex;align-items:center;justify-content:center;padding:16px
-  `;
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, theme.bgGrad[0]);
+  bg.addColorStop(0.5, theme.bgGrad[1]);
+  bg.addColorStop(1, theme.bgGrad[2]);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
 
-  const box = document.createElement('div');
-  box.style.cssText = `
-    background:var(--bg2,#1a1a2e);border:1px solid var(--border,#333);
-    border-radius:16px;padding:24px;max-width:560px;width:100%;
-    box-shadow:0 8px 40px rgba(0,0,0,0.6);
-  `;
+  // Glow
+  ctx.save();
+  const gr = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 350);
+  gr.addColorStop(0, theme.accentGlow);
+  gr.addColorStop(1, 'transparent');
+  ctx.fillStyle = gr;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
 
-  box.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="margin:0;font-size:15px;font-weight:800;color:var(--text,#fff)">
-        🎬 AI Video Generator — Cinematic Prompt Ready
-      </h3>
-      <button onclick="document.getElementById('jai-portal-popup').remove()"
-        style="background:none;border:none;color:var(--text2,#aaa);font-size:20px;cursor:pointer;line-height:1">✕</button>
-    </div>
+  const fade = Math.min(1, t * 3);
 
-    <label style="font-size:11px;font-weight:700;color:var(--text2,#aaa);display:block;margin-bottom:6px">
-      📋 Cinematic Prompt (Copy করুন → JAI Portal এ paste করুন)
-    </label>
-    <textarea id="jai-prompt-text" rows="5"
-      style="width:100%;font-size:12px;line-height:1.6;border:1px solid var(--border,#444);border-radius:8px;
-             padding:10px;background:var(--bg3,#0d1117);color:var(--text,#fff);resize:vertical;box-sizing:border-box"
-      readonly>${prompt}</textarea>
+  // Logo big
+  ctx.save();
+  ctx.globalAlpha = fade;
+  const ls = 160;
+  const lx = (W - ls) / 2;
+  const ly = H / 2 - 200;
+  if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(lx, ly, ls, ls, 30); ctx.clip();
+    ctx.drawImage(logoImg, lx, ly, ls, ls);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = theme.accent;
+    ctx.beginPath(); ctx.roundRect(lx, ly, ls, ls, 30); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 80px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('J', W/2, ly + 110);
+  }
+  ctx.restore();
 
-    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-      <button onclick="copyJAIPrompt()"
-        style="padding:9px 18px;background:var(--accent,#6366f1);color:#fff;border:none;border-radius:8px;
-               font-size:12px;font-weight:700;cursor:pointer" id="jai-copy-btn">
-        📋 Prompt Copy করুন
-      </button>
-      <a href="https://jaiportal.com" target="_blank"
-        style="padding:9px 18px;background:#ff6b35;color:#fff;border:none;border-radius:8px;
-               font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block">
-        🚀 JAI Portal খুলুন
-      </a>
-      <a href="https://app.klingai.com/video/text-to-video" target="_blank"
-        style="padding:9px 18px;background:#7c3aed;color:#fff;border:none;border-radius:8px;
-               font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block">
-        ✨ Kling AI খুলুন
-      </a>
-    </div>
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 72px sans-serif';
+  ctx.fillText('JOAF', W/2, H/2 + 10);
+  ctx.fillStyle = theme.accent;
+  ctx.font = 'bold 30px sans-serif';
+  ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম', W/2, H/2 + 60);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '26px sans-serif';
+  ctx.fillText('julyforum.com', W/2, H/2 + 110);
+  ctx.fillStyle = theme.accent;
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillText('দেশ আগে, দল পরে', W/2, H/2 + 160);
+  ctx.restore();
 
-    <div style="margin-top:16px;padding:12px;background:rgba(99,102,241,0.12);border-radius:8px;
-                border-left:3px solid var(--accent,#6366f1)">
-      <p style="margin:0;font-size:11px;color:var(--text2,#aaa);line-height:1.7">
-        <strong style="color:var(--text,#fff)">📌 পরবর্তী ধাপ:</strong><br>
-        1️⃣ Prompt copy করুন → JAI Portal / Kling AI তে paste করে video generate করুন<br>
-        2️⃣ Video download করুন (MP4)<br>
-        3️⃣ নিচের <strong style="color:#25d366">Upload</strong> box এ সেই video টা দিন → preview দেখুন → FB তে post করুন
-      </p>
-    </div>
-  `;
+  // Accent lines
+  ctx.save();
+  ctx.globalAlpha = fade * 0.8;
+  ctx.fillStyle = theme.accent;
+  ctx.fillRect(0, 0, W, 6);
+  ctx.fillRect(0, H - 6, W, 6);
+  ctx.restore();
+}
 
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
+// ── MAIN RENDER ──────────────────────────────────────────────
+async function fbGenerateReel() {
+  const text = document.getElementById('fb-news-input').value.trim();
+  if (!text) { alert('⚠️ আগে News Text লিখুন'); return; }
 
-  // Close on overlay click
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) overlay.remove();
+  const btn = document.getElementById('fb-gen-btn');
+  const progressDiv = document.getElementById('fb-progress');
+  const progressBar = document.getElementById('fb-progress-bar');
+  const progressLabel = document.getElementById('fb-progress-label');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ তৈরি হচ্ছে...';
+  progressDiv.style.display = 'block';
+  document.getElementById('fb-preview').style.display = 'none';
+
+  // Load logo
+  const logoImg = new Image();
+  logoImg.crossOrigin = 'anonymous';
+  await new Promise(res => { logoImg.onload = res; logoImg.onerror = res; logoImg.src = '/logoc7c3.png?v=' + Date.now(); });
+
+  const mood = detectMood(text);
+  const theme = getMoodTheme(mood);
+  const slides = splitSlides(text);
+
+  const W = 1080, H = 1920;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const FPS = 30;
+  const SLIDE_DUR = 5500;   // 5.5s per slide × 5 = 27.5s
+  const OUTRO_DUR = 3000;   // 3s outro
+  const TOTAL_DUR = slides.length * SLIDE_DUR + OUTRO_DUR;
+  const FRAME_MS = 1000 / FPS;
+  const totalFrames = Math.ceil(TOTAL_DUR / FRAME_MS);
+
+  // Setup MediaRecorder
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+  const stream = canvas.captureStream(FPS);
+  const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+  const chunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.start(100);
+
+  let frame = 0;
+  const renderLoop = () => new Promise(resolve => {
+    const step = async () => {
+      if (frame >= totalFrames) { resolve(); return; }
+
+      const elapsed = frame * FRAME_MS;
+      const slidesDur = slides.length * SLIDE_DUR;
+
+      if (elapsed < slidesDur) {
+        const si = Math.floor(elapsed / SLIDE_DUR);
+        const t = (elapsed % SLIDE_DUR) / SLIDE_DUR;
+        drawReelFrame(ctx, W, H, slides[si] || '', si, slides.length, t, mood, theme, logoImg);
+      } else {
+        const ot = Math.min(1, (elapsed - slidesDur) / OUTRO_DUR);
+        drawOutroFrame(ctx, W, H, ot, mood, theme, logoImg);
+      }
+
+      // Progress
+      const pct = Math.round((frame / totalFrames) * 100);
+      progressBar.style.width = pct + '%';
+      progressLabel.textContent = `⏳ Rendering... ${pct}% (${Math.round(elapsed/1000)}s / ${Math.round(TOTAL_DUR/1000)}s)`;
+
+      frame++;
+      setTimeout(step, FRAME_MS);
+    };
+    step();
   });
+
+  await renderLoop();
+
+  recorder.stop();
+  await new Promise(r => recorder.onstop = r);
+
+  reelBlob = new Blob(chunks, { type: 'video/webm' });
+
+  // Caption
+  fetchCaption(text);
+
+  const url = URL.createObjectURL(reelBlob);
+  const videoEl = document.getElementById('fb-reel-video');
+  videoEl.src = url;
+
+  progressDiv.style.display = 'none';
+  document.getElementById('fb-preview').style.display = 'block';
+
+  btn.disabled = false;
+  btn.textContent = '🎬 Reel বানাও';
 }
 
-function copyJAIPrompt() {
-  const ta = document.getElementById('jai-prompt-text');
-  if (!ta) return;
-  navigator.clipboard.writeText(ta.value).then(() => {
-    const btn = document.getElementById('jai-copy-btn');
-    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '📋 Prompt Copy করুন'; }, 2000); }
-  }).catch(() => {
-    ta.select(); document.execCommand('copy');
-  });
-}
-
-// Background এ caption বানাও (upload এর পর ব্যবহার হবে)
+// ── Caption (background, silent fail) ───────────────────────
 async function fetchCaption(text) {
   try {
     const res = await fetch('/.netlify/functions/groq-proxy', {
@@ -2533,109 +2831,36 @@ async function fetchCaption(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: `এই news এর জন্য Facebook Reels এর জন্য একটা caption লিখো বাংলায়। Emoji ব্যবহার করো। শেষে ৩টা বাংলা hashtag দাও। শুধু caption দাও।\n\nNews: ${text}`
-        }]
+        max_tokens: 250,
+        messages: [{ role: 'user', content: 'এই news এর জন্য Facebook Reels caption বাংলায় লিখো। Emoji ও ৩টা hashtag দাও। শুধু caption।\n\nNews: ' + text }]
       })
     });
     const d = await res.json();
-    const caption = (d.choices?.[0]?.message?.content || '').trim();
-    if (caption) {
-      const captionEl = document.getElementById('fb-caption');
-      if (captionEl && !captionEl.value) captionEl.value = caption;
-    }
-  } catch(e) { /* silent fail */ }
+    const cap = (d.choices?.[0]?.message?.content || '').trim();
+    if (cap) { const el = document.getElementById('fb-caption'); if (el && !el.value) el.value = cap; }
+  } catch(e) {}
 }
 
-// ── Video Upload Handler ─────────────────────────────
-function handleReelUpload(input) {
-  const file = input.files?.[0];
-  if (!file) return;
-
-  if (!file.type.startsWith('video/')) {
-    alert('⚠️ শুধু video file আপলোড করুন (MP4, MOV, WEBM)');
-    return;
-  }
-
-  reelBlob = file;
-  const url = URL.createObjectURL(file);
-  const videoEl = document.getElementById('fb-reel-video');
-  const previewDiv = document.getElementById('fb-preview');
-  const metaEl = document.getElementById('fb-reel-meta');
-
-  videoEl.src = url;
-  videoEl.style.display = 'block';
-  previewDiv.style.display = 'block';
-
-  // File info দেখাও
-  const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-  metaEl.innerHTML = `📁 ${file.name} &nbsp;|&nbsp; 📦 ${sizeMB} MB &nbsp;|&nbsp; 🎞️ ${file.type}`;
-
-  // Scroll to preview
-  previewDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ── Download Button ──────────────────────────────────
+// ── Download ─────────────────────────────────────────────────
 function fbDownloadReel() {
-  if (!reelBlob) { alert('আগে video upload করুন'); return; }
+  if (!reelBlob) { alert('আগে Reel বানান'); return; }
   const a = document.createElement('a');
-  const url = URL.createObjectURL(reelBlob);
-  a.href = url;
-  const ext = reelBlob.name ? reelBlob.name.split('.').pop() : 'mp4';
-  a.download = `joaf-reel.${ext}`;
+  a.href = URL.createObjectURL(reelBlob);
+  a.download = 'joaf-reel.webm';
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-// ── FB Reels Post Button ─────────────────────────────
+// ── FB Post ──────────────────────────────────────────────────
 async function fbPostToReels() {
-  if (!reelBlob) { alert('আগে video upload করুন'); return; }
-
-  // Caption clipboard এ নাও
+  if (!reelBlob) { alert('আগে Reel বানান'); return; }
   const caption = document.getElementById('fb-caption').value || '';
   try { await navigator.clipboard.writeText(caption); } catch(e) {}
-
-  // FB Reels Composer এ যাও
-  setTimeout(() => {
-    window.open('https://www.facebook.com/reels/create/', '_blank');
-  }, 400);
-
-  // Toast notification
-  const toast = document.createElement('div');
-  toast.textContent = '✅ Caption clipboard এ আছে! FB Reels এ paste করুন।';
-  toast.style.cssText = `
-    position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
-    background:#1877f2;color:#fff;padding:14px 24px;border-radius:10px;
-    font-size:13px;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.4)
-  `;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
-}
-</script>
-<script>
-function seededRand(seed) {
-  let s = seed >>> 0;
-  return function() {
-    s += 0x6D2B79F5;
-    let z = s;
-    z = Math.imul(z ^ (z >>> 15), z | 1);
-    z ^= z + Math.imul(z ^ (z >>> 7), z | 61);
-    return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
-  };
-}
-</script>
-<script>
-window.isCinematic = true;
-let sceneIndex = 0;
-const scenes = ["সকাল ৮টা: রাজধানী স্থবির", "দুপুর ১২টা: নতুন ঘোষণা", "রাত ৮টা: চূড়ান্ত সিদ্ধান্ত"];
-
-function startCinematic() {
-  setInterval(() => {
-    document.getElementById('eHl').value = scenes[sceneIndex % scenes.length];
-    draw(); 
-    sceneIndex++;
-  }, 10000); // 10 second-e per slide, 3 slide = 30 sec
+  fbDownloadReel();
+  setTimeout(() => window.open('https://www.facebook.com/reels/create/', '_blank'), 600);
+  const t = document.createElement('div');
+  t.textContent = '✅ Video download হচ্ছে! Caption clipboard এ আছে। FB Reels এ paste করুন।';
+  t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#1877f2;color:#fff;padding:14px 22px;border-radius:10px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.4)';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
 }
 </script>
