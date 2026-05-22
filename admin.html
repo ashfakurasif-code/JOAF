@@ -2914,7 +2914,7 @@ async function fbPostToReels() {
   const caption = document.getElementById('fb-caption').value || '';
   try { await navigator.clipboard.writeText(caption); } catch(e) {}
   setTimeout(() => {
-    window.open('https://business.facebook.com/latest/reels/composer/?ref=biz_web_content_manager_post_to_multiple_pages&asset_id=901104276426275&context_ref=POSTS', '_blank');
+    window.open('https://business.facebook.com/latest/reels_composer/?ref=biz_web_home_post_to_multiple_pages&asset_id=901104276426275&context_ref=HOME', '_blank');
   }, 1000);
   const toast = document.createElement('div');
   toast.textContent = '✅ Video download হয়েছে! Caption clipboard এ আছে — Extension pages select করবে';
