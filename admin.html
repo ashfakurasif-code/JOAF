@@ -2378,22 +2378,7 @@ async function fbGenerateCard() {
   btn.disabled = true;
 
   try {
-    // AI দিয়ে caption বানাও
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `তুমি JOAF (জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম) এর সোশ্যাল মিডিয়া ম্যানেজার। নিচের news টা দিয়ে Facebook এর জন্য একটা আকর্ষণীয় বাংলা caption লেখো। Caption এ relevant emoji ব্যবহার করো, ৩-৪ টা hashtag দাও শেষে। শুধু caption দাও, অন্য কিছু না।\n\nNews: ${text}`
-        }]
-      })
-    });
-    const aiData = await res.json();
-    const caption = aiData.content?.[0]?.text || text;
-    document.getElementById('fb-caption').value = caption;
+    document.getElementById('fb-caption').value = text;
 
     // Canvas এ animated card বানাও
     const canvas = document.getElementById('fb-card-canvas');
