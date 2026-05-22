@@ -2480,25 +2480,31 @@ async function renderVideoWithAudio(slides, mood) {
 
   const SLIDE_DURATION = 7000;
   const FPS = 30;
-  const FRAME_MS = 1000 / FPS;
+
+  function waitFrame() {
+    return new Promise(r => requestAnimationFrame(r));
+  }
 
   for (let i = 0; i < slides.length; i++) {
     playSlideSound(audioCtx, dest, mood, i, slides.length);
     const sd = typeof slides[i] === 'string' ? {text:slides[i],label:'',theme:'',illustration:''} : slides[i];
-    const frames = Math.floor(SLIDE_DURATION / FRAME_MS);
-    for (let f = 0; f < frames; f++) {
-      const t = f / frames;
+    const start = performance.now();
+    while (true) {
+      await waitFrame();
+      const elapsed = performance.now() - start;
+      if (elapsed >= SLIDE_DURATION) break;
+      const t = elapsed / SLIDE_DURATION;
       drawSlideAnimated(ctx, sd.text, i, slides.length, mood, t, sd.label, sd.theme, sd.illustration);
-      await new Promise(r => setTimeout(r, FRAME_MS));
     }
   }
 
   // OUTRO — 3 seconds
-  const outroFrames = Math.floor(3000 / FRAME_MS);
-  for (let f = 0; f < outroFrames; f++) {
-    const ot = f / outroFrames;
-    drawOutroSlide(ctx, mood, ot);
-    await new Promise(r => setTimeout(r, FRAME_MS));
+  const outroStart = performance.now();
+  while (true) {
+    await waitFrame();
+    const elapsed = performance.now() - outroStart;
+    if (elapsed >= 3000) break;
+    drawOutroSlide(ctx, mood, elapsed / 3000);
   }
   recorder.stop();
   audioCtx.close();
