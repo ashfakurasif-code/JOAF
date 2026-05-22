@@ -1618,6 +1618,7 @@ setTimeout(() => {
 
 
 
+
 // ── Dynamic latest press release in ticker ──────────────────
 (async function injectLatestPressRelease() {
   try {
@@ -1634,7 +1635,7 @@ setTimeout(() => {
     const href = '/press-releases/view.html?id=' + snap.docs[0].id;
     const tryUpdate = () => {
       const links = [...document.querySelectorAll('#joafTickerTrack .ticker-item a')]
-        .filter(a => a.textContent.includes('নতুন প্রেস রিলিজ দেখুন'));
+        .filter(a => a.textContent.includes('নতুন প্রেস রিলিজ'));
       if (links.length) {
         links.forEach(a => a.href = href);
       } else {
