@@ -2393,37 +2393,25 @@ async function fbGenerateReel() {
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         max_tokens: 2000,
-        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার।
+        messages: [{ role: 'user', content: `তুমি JOAF এর Facebook Reels ভিডিও ম্যানেজার। যেকোনো input — সংবাদ, slogan, একলাইন text — থেকে সবসময় EXACTLY 3টা slide বানাবে।
 
-⚠️ STRICT RULES — এগুলো ভাঙলে চলবে না:
-1. slide এর "text" field এ কখনো hashtag (#), "Tags:", emoji দেবে না — শুধু plain বাংলা বাক্য
-2. slide এর "text" field এ caption এর কোনো অংশ দেবে না
-3. প্রতিটা slide এ আলাদা আলাদা তথ্য থাকবে — repeat করবে না
-4. caption এবং slide text সম্পূর্ণ আলাদা content হবে
-5. input যদি short slogan বা caption হয় — তাহলে সেটাকে expand করে news style এ ৩টা slide বানাও
+🚫 ABSOLUTE RULES (এগুলো ভাঙলে পুরো output reject হবে):
+R1. slides array তে EXACTLY 3টা item — কম নয়, বেশি নয়
+R2. slide.text এ শুধু plain বাংলা — কোনো #hashtag, emoji, "Tags:", "Slide" শব্দ নেই
+R3. তিনটা slide এর text সম্পূর্ণ আলাদা বিষয় — copy-paste বা repetition নেই
+R4. caption শুধু "caption" field এ — slide.text এ ঢুকবে না
 
-ধাপ ১: input content টাকে ৩টা distinct visual moment এ ভাগ করো
-ধাপ ২: slide 1 = attention-grabbing hook (১টা powerful বাক্য), slide 2 = বিস্তারিত তথ্য, slide 3 = call to action বা উপসংহার
-প্রতিটা slide এর জন্য:
-  - text: plain বাংলায় ২-৩টা বাক্য, কোনো hashtag বা emoji নেই
-  - label: ২-৩ শব্দের unique বাংলা শিরোনাম
-  - theme: aurora|cyber|ocean|gold|matrix|fire|storm|blood|galaxy|neon|forest|desert|ice|volcanic|cosmic
-  - illustration: people|alert|ripple|chart|megaphone|fire|shield|broken|rise|hand|eye|clock|map|flag|chain|star|wave|spiral|pulse|explosion
-ধাপ ৩: caption = separate punchy text with emojis and hashtags (slide text এর বাইরে)
+📐 ৩টা slide এর কাজ:
+Slide 1 — HOOK: একটাই শক্তিশালী বাক্য যা দর্শক থামিয়ে দেয় (২০-৫০ অক্ষর)
+Slide 2 — DETAIL: ঘটনার প্রেক্ষাপট বা বিস্তারিত তথ্য (৬০-১২০ অক্ষর)
+Slide 3 — CALL: দর্শকের কাছে সরাসরি আহ্বান বা উপসংহার (৩০-৭০ অক্ষর)
 
-শুধু raw JSON দাও, markdown বা backtick নেই:
-{
-  "mood": "urgent|sad|positive|neutral|angry",
-  "caption": "Facebook caption বাংলায়, emoji সহ, ৩টা hashtag শেষে — এটা slide এ দেখাবে না",
-  "tags": "keyword1, keyword2, keyword3",
-  "slides": [
-    {"text": "hook sentence বাংলায়, কোনো hashtag নেই", "label": "শুরু", "theme": "cyber", "illustration": "alert"},
-    {"text": "বিস্তারিত তথ্য বাংলায়, কোনো hashtag নেই", "label": "বিস্তার", "theme": "ocean", "illustration": "people"},
-    {"text": "উপসংহার বা আহ্বান বাংলায়, কোনো hashtag নেই", "label": "আহ্বান", "theme": "matrix", "illustration": "megaphone"}
-  ]
-}
+input যদি ছোট slogan হয়: সেই বিষয়টাকে ৩টা angle থেকে দেখো — কী হয়েছে, কেন গুরুত্বপূর্ণ, কী করতে হবে
 
-News: ${text}` }]
+Output শুধু এই raw JSON — কোনো markdown, backtick, explanation নেই:
+{"mood":"urgent|sad|positive|neutral|angry","caption":"Facebook caption emoji সহ #hashtag শেষে","tags":"keyword1, keyword2, keyword3","slides":[{"text":"slide 1 plain বাংলা","label":"শুরু","theme":"cyber","illustration":"alert"},{"text":"slide 2 plain বাংলা","label":"বিস্তার","theme":"ocean","illustration":"people"},{"text":"slide 3 plain বাংলা","label":"আহ্বান","theme":"matrix","illustration":"megaphone"}]}
+
+Input: ${text}` }]
       })
     });
           break;
@@ -2505,7 +2493,7 @@ async function renderVideoWithAudio(slides, mood) {
   recorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
   recorder.start(100);
 
-  const SLIDE_DURATION = 5000;
+  const SLIDE_DURATION = 7000; // 7s per slide = 21s + 2s outro = ~23s total
   const FPS = 30;
   const FRAME_MS = 1000 / FPS;
 
@@ -2926,7 +2914,7 @@ function drawBg_Cyber(ctx, w, h, c, t, rand) {
   bg.addColorStop(0, '#1a0000'); bg.addColorStop(0.5, '#2d0505'); bg.addColorStop(1, '#0d0000');
   ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
   // Grid lines
-  ctx.save(); ctx.globalAlpha = 0.07 + Math.sin(t * 4) * 0.03;
+  ctx.save(); ctx.globalAlpha = 0.15 + Math.sin(t * 4) * 0.05;
   ctx.strokeStyle = c.accent; ctx.lineWidth = 1;
   for (let x = 0; x < w; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
   for (let y = 0; y < h; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
@@ -3086,9 +3074,9 @@ function drawSceneVFX(ctx, w, h, mood, t, rand) {
 // ═══════════════════════════════════════════════════════════
 // ANIMATED DRAWING — text content কে visual এ convert করো
 // ═══════════════════════════════════════════════════════════
-function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c, aiIllustration='') {
+function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c, aiIllustration='', illustCY=1560) {
   const illustType = aiIllustration || ['people','alert','ripple','chart','megaphone'][index % 5];
-  const illustY = 1650; // well below text zone
+  const illustY = illustCY; // dynamic — passed from layout
   ctx.save();
 
   if (illustType === 'people' || illustType === 'map' || illustType === 'flag') {
@@ -3282,10 +3270,44 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
   const c = getTheme(index, mood, aiTheme);
   const rand = seededRand(index * 1337 + 42);
 
+  // ══ LAYOUT CONSTANTS — সব কিছু এখান থেকে calculated ══
+  // Zone 1: TOP — ticker + logo     (0 → ~520px = 27%)
+  // Zone 2: MIDDLE — label + text   (520 → ~1350px = 43%)
+  // Zone 3: BOTTOM — illust+bar+wm  (1350 → 1920px = 30%)
+  const ZONE1_END   = 520;   // ticker (64) + logo (180) + gaps
+  const ZONE3_START = 1360;  // illustration starts here
+  const ZONE3_END   = 1870;  // watermark starts
+  const ILLUST_CY   = 1560;  // illustration center Y — middle of zone 3
+  const BAR_Y       = 1820;  // progress bar
+  const DOT_Y       = 1858;  // progress dots
+  const WM_Y        = 1900;  // watermark text
+
   // ── BACKGROUND ──────────────────────────────────────────
   const defaultBgFns = [drawBg_Aurora, drawBg_Cyber, drawBg_Ocean, drawBg_Gold, drawBg_Matrix];
   const bgDrawFn = c.bgFn || defaultBgFns[index % defaultBgFns.length];
   bgDrawFn(ctx, w, h, c, t, rand);
+
+  // ── BACKGROUND SCANLINES — visible texture, not dark ────
+  ctx.save();
+  ctx.globalAlpha = 0.06 + Math.sin(t * Math.PI * 2) * 0.02;
+  for (let sy = 0; sy < h; sy += 8) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, sy, w, 1);
+  }
+  ctx.restore();
+
+  // ── CYBER GRID — brighter than before ───────────────────
+  ctx.save();
+  ctx.globalAlpha = 0.13 + Math.sin(t * 3) * 0.04;
+  ctx.strokeStyle = c.accent;
+  ctx.lineWidth = 1;
+  for (let gx = 0; gx < w; gx += 80) {
+    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, h); ctx.stroke();
+  }
+  for (let gy = 0; gy < h; gy += 80) {
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+  }
+  ctx.restore();
 
   // ── MOOD VFX ─────────────────────────────────────────────
   drawSceneVFX(ctx, w, h, mood, t, rand);
@@ -3306,7 +3328,7 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
   // ── TRANSITION FLASH ─────────────────────────────────────
   if (t < 0.08) {
     ctx.save();
-    ctx.globalAlpha = (0.08 - t) / 0.08 * 0.5;
+    ctx.globalAlpha = (0.08 - t) / 0.08 * 0.6;
     const flash = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, 700);
     flash.addColorStop(0, c.accent);
     flash.addColorStop(1, 'transparent');
@@ -3327,133 +3349,150 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
   barGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = barGrad; ctx.fillRect(0, 0, w, 10);
 
-  // Slide number badge removed
-
   // ── BREAKING NEWS TICKER BAR ─────────────────────────────
-  const tickerH = 52;
-  const tickerY = 12;
-  // Ticker background
+  // Zone 1 top: y=10 to y=74 (64px ticker)
+  const tickerH = 64;
+  const tickerY = 10;
   ctx.fillStyle = c.accent;
   ctx.fillRect(0, tickerY, w, tickerH);
-  // BREAKING label
-  ctx.fillStyle = '#ffffff';
-  ctx.font = "bold 26px 'Noto Sans Bengali', sans-serif";
+  // Left: JOAF label
+  ctx.fillStyle = '#fff';
+  ctx.font = "bold 30px 'Noto Sans Bengali', sans-serif";
   ctx.textAlign = 'left';
-  ctx.fillText('◉ JOAF', 30, tickerY + 34);
-  // Separator
+  ctx.fillText('◉ JOAF', 30, tickerY + 42);
+  // Separator line
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.fillRect(130, tickerY + 10, 2, 32);
-  // Mood badge
+  ctx.fillRect(148, tickerY + 12, 2, 40);
+  // Mood label
   const moodLabels = { urgent: '🔴 জরুরি', sad: '😢 দুঃখজনক', positive: '✅ ইতিবাচক', angry: '⚠️ গুরুত্বপূর্ণ', neutral: '📢 সংবাদ' };
   ctx.fillStyle = 'rgba(255,255,255,0.95)';
-  ctx.font = "bold 24px 'Noto Sans Bengali', sans-serif";
-  ctx.textAlign = 'left';
-  ctx.fillText(moodLabels[mood] || '📢 সংবাদ', 142, tickerY + 34);
+  ctx.font = "bold 28px 'Noto Sans Bengali', sans-serif";
+  ctx.fillText(moodLabels[mood] || '📢 সংবাদ', 162, tickerY + 42);
+  // Right: slide counter
+  ctx.textAlign = 'right';
+  ctx.font = "bold 22px 'Noto Sans Bengali', sans-serif";
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText(`${index+1}/${total}`, w - 30, tickerY + 42);
 
-  // ── JOAF LOGO HEADER ──────────────────────────────────────
+  // ── JOAF LOGO — smaller, tight under ticker ──────────────
+  // Logo center at y=74+20+90=184, so logo occupies 94–274 (180px)
+  const logoCY = 74 + 20 + 90; // = 184
   const logoAlpha = Math.min(1, t * 6);
   ctx.globalAlpha = logoAlpha;
-
-  // JOAF Original Logo
-  ctx.save(); ctx.translate(w/2, 360);
-  // Glow ring behind logo
-  const glowR = 160 + Math.sin(t * Math.PI * 3) * 8;
-  const ringGrad = ctx.createRadialGradient(0, 0, glowR * 0.5, 0, 0, glowR);
-  ringGrad.addColorStop(0, c.accent + '30');
+  ctx.save();
+  ctx.translate(w/2, logoCY);
+  // Subtle glow ring
+  const glowR = 105 + Math.sin(t * Math.PI * 3) * 5;
+  const ringGrad = ctx.createRadialGradient(0, 0, glowR * 0.6, 0, 0, glowR);
+  ringGrad.addColorStop(0, c.accent + '28');
   ringGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = ringGrad;
   ctx.beginPath(); ctx.arc(0, 0, glowR, 0, Math.PI * 2); ctx.fill();
-  // Pulsing accent ring
-  ctx.beginPath(); ctx.arc(0, 0, 155 + Math.sin(t * Math.PI * 4) * 6, 0, Math.PI * 2);
-  ctx.strokeStyle = c.accent; ctx.lineWidth = 4;
-  ctx.shadowColor = c.glow; ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
-  // Draw real logo image
-  const logoSize = 260;
+  // Thin pulsing ring
+  ctx.beginPath(); ctx.arc(0, 0, 97 + Math.sin(t * Math.PI * 4) * 4, 0, Math.PI * 2);
+  ctx.strokeStyle = c.accent; ctx.lineWidth = 3;
+  ctx.shadowColor = c.glow; ctx.shadowBlur = 16; ctx.stroke(); ctx.shadowBlur = 0;
+  // Logo image — 180px (was 260)
+  const logoSize = 180;
   if (_logoLoaded) {
-    ctx.shadowColor = c.glow; ctx.shadowBlur = 30;
+    ctx.shadowColor = c.glow; ctx.shadowBlur = 20;
     ctx.drawImage(JOAF_LOGO_IMG, -logoSize/2, -logoSize/2, logoSize, logoSize);
     ctx.shadowBlur = 0;
   } else {
-    // Fallback text
-    ctx.fillStyle = c.accent; ctx.font = "bold 100px 'Noto Sans Bengali', sans-serif"; ctx.textAlign = 'center';
-    ctx.fillText('JOAF', 0, 30);
+    ctx.fillStyle = c.accent;
+    ctx.font = "bold 80px 'Noto Sans Bengali', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.fillText('JOAF', 0, 25);
   }
   ctx.restore();
-
   ctx.globalAlpha = 1;
 
-  // ── ANIMATED DIVIDER ──────────────────────────────────────
+  // ── DIVIDER — right under logo ───────────────────────────
+  // Logo bottom = logoCY + 90 = 274 → divider at 290
+  const divY = logoCY + 90 + 16; // = 290
   const divProg = Math.min(1, t * 4);
-  const divW = 520 * divProg;
+  const divW = 600 * divProg;
   const divGrad = ctx.createLinearGradient(w/2 - divW/2, 0, w/2 + divW/2, 0);
   divGrad.addColorStop(0, 'transparent');
   divGrad.addColorStop(0.4, c.accent);
   divGrad.addColorStop(0.6, c.sec);
   divGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = divGrad;
-  ctx.fillRect(w/2 - divW/2, 510, divW, 5);
+  ctx.fillRect(w/2 - divW/2, divY, divW, 5);
 
-  // ── SLIDE LABEL ──────────────────────────────────────────
+  // ── SLIDE LABEL PILL — 20px below divider ───────────────
+  const labelY = divY + 20; // = 310
   const label = aiLabel || ['হুক','মূল ঘটনা','আহ্বান'][index] || `অংশ ${index+1}`;
   const labelAlpha = Math.min(1, t * 5);
   ctx.save();
   ctx.globalAlpha = labelAlpha;
-  // Label pill
-  ctx.font = "bold 32px 'Noto Sans Bengali', sans-serif";
-  const lblW = Math.max(ctx.measureText(`◆ ${label} ◆`).width + 60, 200);
-  ctx.fillStyle = c.accent + '22';
-  ctx.beginPath(); ctx.roundRect(w/2 - lblW/2, 540, lblW, 54, 27); ctx.fill();
+  ctx.font = "bold 30px 'Noto Sans Bengali', sans-serif";
+  const lblW = Math.max(ctx.measureText(`◆ ${label} ◆`).width + 60, 180);
+  ctx.fillStyle = c.accent + '28';
+  ctx.beginPath(); ctx.roundRect(w/2 - lblW/2, labelY, lblW, 52, 26); ctx.fill();
   ctx.fillStyle = c.accent;
   ctx.textAlign = 'center';
-  ctx.shadowColor = c.glow; ctx.shadowBlur = 15;
-  ctx.fillText(`◆ ${label} ◆`, w/2, 577);
+  ctx.shadowColor = c.glow; ctx.shadowBlur = 14;
+  ctx.fillText(`◆ ${label} ◆`, w/2, labelY + 36);
   ctx.shadowBlur = 0;
   ctx.restore();
 
-  // ── MAIN TEXT ────────────────────────────────────────────
-  const cleanText = text.replace(/^slide\s*\d+\s*[:\-]\s*/i, '').trim()
-    .replace(/#[\u0980-\u09FF\w]+/g, '').replace(/Tags?:\s*.*/gi, '').trim();
+  // ── MAIN TEXT — dynamic zone ─────────────────────────────
+  // Text starts right below label pill, fills to ZONE3_START
+  // Available vertical space = ZONE3_START - (labelY+52+20) = dynamic
+  const textAreaTop  = labelY + 52 + 24; // = ~386
+  const textAreaBtm  = ZONE3_START;      // = 1360
+  const textAreaH    = textAreaBtm - textAreaTop; // ~974px available
 
-  // Dynamic font size based on text length
-  const fontSize = cleanText.length > 80 ? 46 : cleanText.length > 50 ? 52 : 58;
+  const cleanText = text
+    .replace(/^slide\s*\d+\s*[:\-]\s*/i, '').trim()
+    .replace(/#[ঀ-৿\w]+/g, '')
+    .replace(/Tags?:\s*.*/gi, '').trim();
+
+  // ── Font size: adapts to text length ──
+  // Short (≤40 chars): 68px | Medium (≤80): 56px | Long (≤140): 46px | Very long: 38px
+  const charLen = cleanText.length;
+  const fontSize = charLen <= 40 ? 68 : charLen <= 80 ? 56 : charLen <= 140 ? 46 : 38;
+  const lineH    = Math.round(fontSize * 1.55);
+  const maxW     = 960;
+
   ctx.font = `bold ${fontSize}px 'Noto Sans Bengali', sans-serif`;
-  ctx.fillStyle = c.text;
-  ctx.textAlign = 'center';
 
+  // ── Word wrap ──
   const words = cleanText.split(' ');
-  const lines = [];
-  let line = '';
-  const maxW = 940;
+  const lines  = [];
+  let   line   = '';
   for (const word of words) {
     const test = line + word + ' ';
     if (ctx.measureText(test).width > maxW && line) {
       lines.push(line.trim()); line = word + ' ';
     } else { line = test; }
   }
-  if (line) lines.push(line.trim());
+  if (line.trim()) lines.push(line.trim());
 
-  const lineH = fontSize + 34;
-  const textStartY = 660;
-
-  // Max 7 lines — prevent overflow
-  const maxLines = Math.min(lines.length, 7);
+  // ── Max lines so text never overflows into illustration zone ──
+  // maxLines = how many fit in textAreaH with current lineH
+  const maxLines = Math.min(lines.length, Math.floor(textAreaH / lineH));
   lines.splice(maxLines);
 
+  // ── Vertical centering in text area ──
+  const totalTextH  = lines.length * lineH;
+  const textStartY  = textAreaTop + Math.max(0, (textAreaH - totalTextH) / 2);
+
   lines.forEach((l, li) => {
-    const lineReveal = Math.min(1, Math.max(0, t * 7 - li * 0.35));
-    const slideIn = (1 - lineReveal) * 40;
-    ctx.globalAlpha = lineReveal;
+    const lineReveal = Math.min(1, Math.max(0, t * 7 - li * 0.3));
+    const slideIn    = (1 - lineReveal) * 35;
+    ctx.globalAlpha  = lineReveal;
     ctx.save();
     ctx.translate(0, slideIn);
-    // Highlight every other line with sec color
     if (li % 2 === 1) {
-      ctx.fillStyle = c.sec;
+      ctx.fillStyle   = c.sec;
       ctx.shadowColor = c.sec; ctx.shadowBlur = 10;
     } else {
-      ctx.fillStyle = c.text;
+      ctx.fillStyle   = c.text;
       ctx.shadowColor = c.glow; ctx.shadowBlur = 18;
     }
-    ctx.font = `bold ${fontSize}px 'Noto Sans Bengali', sans-serif`;
+    ctx.font      = `bold ${fontSize}px 'Noto Sans Bengali', sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(l, w/2, textStartY + li * lineH);
     ctx.shadowBlur = 0;
@@ -3461,47 +3500,56 @@ function drawSlideAnimated(ctx, text, index, total, mood, t, aiLabel='', aiTheme
   });
   ctx.globalAlpha = 1;
 
-  // ── ILLUSTRATION DRAWING ─────────────────────────────────
-  drawSlideIllustration(ctx, w, h, index, mood, t, seededRand(index * 777), c, aiIllustration);
+  // ── ZONE SEPARATOR — thin line between text and illustration ─
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.strokeStyle = c.accent;
+  ctx.lineWidth   = 1;
+  ctx.setLineDash([20, 20]);
+  ctx.beginPath(); ctx.moveTo(60, ZONE3_START); ctx.lineTo(w - 60, ZONE3_START); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // ── ILLUSTRATION — centered in Zone 3 ───────────────────
+  drawSlideIllustration(ctx, w, h, index, mood, t, seededRand(index * 777), c, aiIllustration, ILLUST_CY);
 
   // ── PROGRESS BAR ─────────────────────────────────────────
-  const barY = 1800;
-  ctx.fillStyle = c.accent + '20';
-  ctx.beginPath(); ctx.roundRect(60, barY, w - 120, 14, 7); ctx.fill();
+  ctx.fillStyle = c.accent + '25';
+  ctx.beginPath(); ctx.roundRect(60, BAR_Y, w - 120, 12, 6); ctx.fill();
   const totalProg = (index + t) / total;
-  const progGrad = ctx.createLinearGradient(60, 0, 60 + (w-120)*totalProg, 0);
+  const progGrad  = ctx.createLinearGradient(60, 0, 60 + (w - 120) * totalProg, 0);
   progGrad.addColorStop(0, c.glow);
   progGrad.addColorStop(1, c.sec);
   ctx.fillStyle = progGrad;
-  ctx.beginPath(); ctx.roundRect(60, barY, (w-120)*totalProg, 14, 7); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(60, BAR_Y, (w - 120) * totalProg, 12, 6); ctx.fill();
 
   // ── PROGRESS DOTS ────────────────────────────────────────
-  const dotY = 1840;
-  const spacing = 52;
-  const startDotX = w/2 - (total-1)*spacing/2;
+  const spacing    = 52;
+  const startDotX  = w/2 - (total - 1) * spacing / 2;
   for (let d = 0; d < total; d++) {
     const isActive = d === index;
-    const isPast = d < index;
-    const dotR = isActive ? 12 + Math.sin(t*Math.PI*5)*3 : 8;
-    ctx.beginPath(); ctx.arc(startDotX + d*spacing, dotY, dotR, 0, Math.PI*2);
-    ctx.fillStyle = isActive ? c.accent : isPast ? c.sec + 'aa' : c.accent + '30';
+    const isPast   = d < index;
+    const dotR     = isActive ? 11 + Math.sin(t * Math.PI * 5) * 3 : 7;
+    ctx.beginPath(); ctx.arc(startDotX + d * spacing, DOT_Y, dotR, 0, Math.PI * 2);
+    ctx.fillStyle = isActive ? c.accent : isPast ? c.sec + 'bb' : c.accent + '30';
     ctx.fill();
     if (isActive) {
-      ctx.strokeStyle = c.glow; ctx.lineWidth = 3;
-      ctx.shadowColor = c.glow; ctx.shadowBlur = 15;
+      ctx.strokeStyle = c.glow; ctx.lineWidth = 2.5;
+      ctx.shadowColor = c.glow; ctx.shadowBlur = 14;
       ctx.stroke(); ctx.shadowBlur = 0;
     }
   }
 
-  // ── WATERMARK ────────────────────────────────────────────
-  // Bottom watermark bar
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(0, 1870, w, 50);
-  ctx.globalAlpha = 0.9;
-  ctx.font = "bold 24px 'Noto Sans Bengali', sans-serif";
+  // ── WATERMARK BAR ────────────────────────────────────────
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(0, ZONE3_END, w, h - ZONE3_END);
+  ctx.globalAlpha = 0.92;
+  ctx.font      = "bold 26px 'Noto Sans Bengali', sans-serif";
   ctx.fillStyle = c.accent;
   ctx.textAlign = 'center';
-  ctx.fillText('📌 www.julyforum.com', w/2, 1900);
+  ctx.shadowColor = c.glow; ctx.shadowBlur = 12;
+  ctx.fillText('📌 www.julyforum.com', w/2, WM_Y);
+  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 
   // ── BOTTOM ACCENT BAR ────────────────────────────────────
