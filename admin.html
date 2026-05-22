@@ -2396,8 +2396,9 @@ News: \${text}` }]
     });
     const aiData = await res.json();
     const raw = aiData.choices?.[0]?.message?.content || '{}';
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI দিয়ে JSON বের করা যায়নি');
+    const parsed = JSON.parse(jsonMatch[0]);
 
     document.getElementById('fb-caption').value = parsed.caption || text;
 
