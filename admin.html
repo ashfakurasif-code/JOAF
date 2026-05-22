@@ -2546,214 +2546,505 @@ function seededRand(seed) {
   return () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; };
 }
 
+// ═══════════════════════════════════════════════════════════
+// SLIDE THEMES — প্রতিটা slide এর নিজস্ব unique color palette
+// ═══════════════════════════════════════════════════════════
+const SLIDE_THEMES = [
+  // Slide 0 — Deep Aurora (পটভূমি)
+  { bg: ['#0a0020','#1a0050','#0d0035'], accent: '#a855f7', glow: '#7c3aed', sec: '#f0abfc', text: '#faf5ff', name: 'aurora' },
+  // Slide 1 — Cyber Red (মূল ঘটনা)
+  { bg: ['#1a0000','#2d0505','#0d0000'], accent: '#ef4444', glow: '#dc2626', sec: '#fca5a5', text: '#fff', name: 'cyber' },
+  // Slide 2 — Ocean Neon (প্রভাব)
+  { bg: ['#001825','#002d40','#001018'], accent: '#06b6d4', glow: '#0891b2', sec: '#67e8f9', text: '#ecfeff', name: 'ocean' },
+  // Slide 3 — Golden Empire (বিশ্লেষণ)
+  { bg: ['#1a1000','#2d1f00','#0d0800'], accent: '#f59e0b', glow: '#d97706', sec: '#fde68a', text: '#fffbeb', name: 'gold' },
+  // Slide 4 — Matrix Green (আহ্বান)
+  { bg: ['#001a00','#002d00','#000d00'], accent: '#22c55e', glow: '#16a34a', sec: '#86efac', text: '#f0fdf4', name: 'matrix' },
+];
+
+// মুড অনুযায়ী theme override
+const MOOD_OVERRIDE = {
+  urgent:   { accent: '#ef4444', glow: '#ff0000', sec: '#fca5a5' },
+  sad:      { accent: '#818cf8', glow: '#6366f1', sec: '#c7d2fe' },
+  positive: { accent: '#22c55e', glow: '#16a34a', sec: '#86efac' },
+  angry:    { accent: '#f97316', glow: '#ea580c', sec: '#fed7aa' },
+  neutral:  { accent: '#a855f7', glow: '#7c3aed', sec: '#d8b4fe' },
+};
+
+function getTheme(index, mood) {
+  const base = SLIDE_THEMES[index % SLIDE_THEMES.length];
+  const ov = MOOD_OVERRIDE[mood] || {};
+  return { ...base, ...ov };
+}
+
+// ═══════════════════════════════════════════════════════════
+// BACKGROUND GENERATORS — প্রতি slide আলাদা bg
+// ═══════════════════════════════════════════════════════════
+function drawBg_Aurora(ctx, w, h, c, t, rand) {
+  // Deep space + aurora waves
+  ctx.fillStyle = c.bg[0]; ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 5; i++) {
+    const y = h * (0.2 + i * 0.15) + Math.sin(t * 2 + i) * 80;
+    const waveH = 200 + rand() * 150;
+    const grad = ctx.createLinearGradient(0, y - waveH, 0, y + waveH);
+    const colors = ['#7c3aed','#a855f7','#06b6d4','#0891b2','#4f46e5'];
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.5, colors[i % colors.length] + '55');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad; ctx.fillRect(0, y - waveH, w, waveH * 2);
+  }
+}
+
+function drawBg_Cyber(ctx, w, h, c, t, rand) {
+  const bg = ctx.createLinearGradient(0, 0, w, h);
+  bg.addColorStop(0, '#1a0000'); bg.addColorStop(0.5, '#2d0505'); bg.addColorStop(1, '#0d0000');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  // Grid lines
+  ctx.save(); ctx.globalAlpha = 0.07 + Math.sin(t * 4) * 0.03;
+  ctx.strokeStyle = c.accent; ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+  ctx.restore();
+}
+
+function drawBg_Ocean(ctx, w, h, c, t, rand) {
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#001825'); bg.addColorStop(0.5, '#002d40'); bg.addColorStop(1, '#001018');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  // Ripple rings from center
+  for (let r = 0; r < 6; r++) {
+    const radius = 100 + r * 160 + (t * 200) % 160;
+    const alpha = Math.max(0, 0.25 - (r * 0.04));
+    ctx.beginPath(); ctx.arc(w/2, h * 0.45, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(6,182,212,${alpha})`; ctx.lineWidth = 2; ctx.stroke();
+  }
+}
+
+function drawBg_Gold(ctx, w, h, c, t, rand) {
+  const bg = ctx.createRadialGradient(w/2, h * 0.3, 0, w/2, h/2, h);
+  bg.addColorStop(0, '#2d1f00'); bg.addColorStop(0.6, '#1a1000'); bg.addColorStop(1, '#0d0800');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  // Golden rays
+  ctx.save(); ctx.globalAlpha = 0.06;
+  for (let r = 0; r < 12; r++) {
+    const angle = (r / 12) * Math.PI * 2 + t * 0.3;
+    ctx.beginPath(); ctx.moveTo(w/2, h * 0.35);
+    ctx.lineTo(w/2 + Math.cos(angle) * 1200, h * 0.35 + Math.sin(angle) * 1200);
+    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 40; ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawBg_Matrix(ctx, w, h, c, t, rand) {
+  ctx.fillStyle = '#001200'; ctx.fillRect(0, 0, w, h);
+  // Falling code rain
+  ctx.save(); ctx.font = '18px monospace'; ctx.fillStyle = '#22c55e';
+  for (let col = 0; col < 20; col++) {
+    const x = col * 56 + 10;
+    for (let row = 0; row < 12; row++) {
+      const y = ((row * 80 + t * 300 * (rand() * 0.5 + 0.5)) % (h + 100));
+      const alpha = Math.max(0, 0.05 + rand() * 0.1 - row * 0.005);
+      ctx.globalAlpha = alpha;
+      ctx.fillText(String.fromCharCode(0x30A0 + Math.floor(rand() * 96)), x, y);
+    }
+  }
+  ctx.globalAlpha = 1; ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════
+// VFX LAYERS — mood specific overlays
+// ═══════════════════════════════════════════════════════════
 function drawSceneVFX(ctx, w, h, mood, t, rand) {
   if (mood === 'urgent') {
-    for (let i = 0; i < 55; i++) {
+    // Fire embers
+    for (let i = 0; i < 70; i++) {
       const x = rand() * w;
-      const baseY = h - rand() * h * 0.6;
-      const y = ((baseY - t * h * 0.35) % h + h) % h;
-      const size = rand() * 8 + 2;
-      const alpha = rand() * 0.7 * Math.sin(t * Math.PI);
-      const r = ctx.createRadialGradient(x, y, 0, x, y, size * 2);
-      r.addColorStop(0, `rgba(255,200,50,${alpha})`);
-      r.addColorStop(0.4, `rgba(220,50,20,${alpha * 0.7})`);
+      const baseY = h - rand() * h * 0.5;
+      const y = ((baseY - t * h * 0.4) % h + h) % h;
+      const size = rand() * 10 + 2;
+      const alpha = rand() * 0.8 * Math.sin(t * Math.PI);
+      const r = ctx.createRadialGradient(x, y, 0, x, y, size * 2.5);
+      r.addColorStop(0, `rgba(255,230,80,${alpha})`);
+      r.addColorStop(0.4, `rgba(255,80,0,${alpha * 0.7})`);
       r.addColorStop(1, 'transparent');
-      ctx.fillStyle = r;
-      ctx.beginPath(); ctx.arc(x, y, size * 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = r; ctx.beginPath(); ctx.arc(x, y, size * 2.5, 0, Math.PI * 2); ctx.fill();
     }
+    // Screen shake / flash at start
     if (t < 0.08) {
-      ctx.fillStyle = `rgba(255,100,0,${(0.08 - t) / 0.08 * 0.4})`;
+      ctx.fillStyle = `rgba(255,60,0,${(0.08-t)/0.08*0.45})`;
       ctx.fillRect(0, 0, w, h);
     }
-  }
-  if (mood === 'sad') {
-    ctx.save();
-    for (let i = 0; i < 80; i++) {
-      const x = rand() * w;
-      const y = (rand() * h + t * h * 0.5) % h;
-      const len = rand() * 28 + 8;
-      const alpha = rand() * 0.45 + 0.1;
-      ctx.strokeStyle = `rgba(150,180,255,${alpha})`;
-      ctx.lineWidth = rand() * 1.5 + 0.5;
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + len); ctx.stroke();
+    // Heat distortion scanlines
+    ctx.save(); ctx.globalAlpha = 0.04;
+    for (let y = 0; y < h; y += 8) {
+      ctx.fillStyle = `rgba(255,100,0,1)`;
+      ctx.fillRect(0, y + Math.sin(y * 0.1 + t * 20) * 3, w, 2);
     }
     ctx.restore();
-    const mist = ctx.createLinearGradient(0, h * 0.6, 0, h);
+  }
+
+  if (mood === 'sad') {
+    // Heavy rain
+    for (let i = 0; i < 100; i++) {
+      const x = rand() * w;
+      const y = (rand() * h + t * h * 0.7) % h;
+      const len = rand() * 35 + 10;
+      const alpha = rand() * 0.5 + 0.1;
+      ctx.strokeStyle = `rgba(120,160,255,${alpha})`;
+      ctx.lineWidth = rand() * 1.5 + 0.5;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 6, y + len); ctx.stroke();
+    }
+    // Blue mist at bottom
+    const mist = ctx.createLinearGradient(0, h * 0.65, 0, h);
     mist.addColorStop(0, 'transparent');
-    mist.addColorStop(1, 'rgba(30,40,100,0.35)');
+    mist.addColorStop(1, 'rgba(20,30,100,0.45)');
     ctx.fillStyle = mist; ctx.fillRect(0, 0, w, h);
   }
+
   if (mood === 'positive') {
-    for (let i = 0; i < 50; i++) {
+    // Golden sparkling stars + confetti
+    for (let i = 0; i < 70; i++) {
       const x = rand() * w;
-      const y = rand() * h;
-      const size = rand() * 5 + 1;
-      const twinkle = Math.sin(t * Math.PI * 6 + i * 1.3) * 0.5 + 0.5;
-      const alpha = twinkle * (rand() * 0.6 + 0.2);
-      ctx.save(); ctx.translate(x, y); ctx.rotate(t * Math.PI * 2 + i);
-      ctx.fillStyle = `rgba(255,230,100,${alpha})`;
+      const y = (rand() * h - t * 80) % h;
+      const size = rand() * 7 + 2;
+      const twinkle = Math.sin(t * Math.PI * 8 + i * 1.7) * 0.5 + 0.5;
+      const alpha = twinkle * (rand() * 0.7 + 0.2);
+      ctx.save(); ctx.translate(x, y); ctx.rotate(t * Math.PI * 3 + i);
+      const colors = ['255,230,50','255,150,200','100,230,255','180,255,100'];
+      ctx.fillStyle = `rgba(${colors[i%4]},${alpha})`;
+      // Star shape
       ctx.beginPath();
       for (let p = 0; p < 8; p++) {
         const angle = (p / 8) * Math.PI * 2;
-        const r = p % 2 === 0 ? size * 2 : size * 0.5;
+        const r = p % 2 === 0 ? size * 2.5 : size * 0.6;
         p === 0 ? ctx.moveTo(Math.cos(angle)*r, Math.sin(angle)*r)
                 : ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r);
       }
       ctx.closePath(); ctx.fill(); ctx.restore();
     }
   }
+
   if (mood === 'angry') {
-    if (Math.sin(t * Math.PI * 15) > 0.85) {
+    // Lightning bolts
+    if (Math.sin(t * Math.PI * 18) > 0.8) {
       ctx.save();
-      ctx.strokeStyle = `rgba(255,180,50,0.8)`;
-      ctx.lineWidth = 3; ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 20;
-      ctx.beginPath();
-      let lx = rand() * w, ly = 0; ctx.moveTo(lx, ly);
-      while (ly < h * 0.6) { lx += (rand()-0.5)*120; ly += rand()*80+40; ctx.lineTo(lx, ly); }
+      ctx.strokeStyle = `rgba(255,200,50,0.9)`;
+      ctx.lineWidth = 4; ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 30;
+      let lx = rand() * w, ly = 0; ctx.beginPath(); ctx.moveTo(lx, ly);
+      while (ly < h * 0.55) { lx += (rand()-0.5)*140; ly += rand()*90+50; ctx.lineTo(lx, ly); }
       ctx.stroke(); ctx.restore();
     }
-    for (let i = 0; i < 40; i++) {
+    // Flying sparks
+    for (let i = 0; i < 50; i++) {
       const x = rand() * w;
-      const y = (rand() * h + t * h * 0.2) % h;
-      const alpha = rand() * 0.6;
-      ctx.fillStyle = `rgba(255,${Math.floor(rand()*100+80)},0,${alpha})`;
-      ctx.beginPath(); ctx.arc(x, y, rand()*4+1, 0, Math.PI*2); ctx.fill();
+      const y = (rand() * h + t * h * 0.25) % h;
+      const alpha = rand() * 0.7;
+      ctx.fillStyle = `rgba(255,${Math.floor(rand()*120+80)},0,${alpha})`;
+      ctx.beginPath(); ctx.arc(x, y, rand()*5+1, 0, Math.PI*2); ctx.fill();
     }
   }
+
   if (mood === 'neutral') {
-    ctx.save(); ctx.globalAlpha = 0.12;
-    for (let i = 0; i < 8; i++) {
-      const y = (h/8)*i + (t*60)%(h/8);
-      const grad = ctx.createLinearGradient(0, y, w, y);
-      grad.addColorStop(0, 'transparent'); grad.addColorStop(0.5, '#ef4444'); grad.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad; ctx.fillRect(0, y, w, 2);
+    // Flowing neon lines
+    ctx.save(); ctx.globalAlpha = 0.1;
+    for (let i = 0; i < 10; i++) {
+      const y = (h/10)*i + (t*100)%(h/10);
+      const g = ctx.createLinearGradient(0, 0, w, 0);
+      g.addColorStop(0,'transparent'); g.addColorStop(0.5,'#a855f7'); g.addColorStop(1,'transparent');
+      ctx.fillStyle = g; ctx.fillRect(0, y, w, 3);
     }
     ctx.restore();
   }
 }
 
+// ═══════════════════════════════════════════════════════════
+// ANIMATED DRAWING — text content কে visual এ convert করো
+// ═══════════════════════════════════════════════════════════
+function drawSlideIllustration(ctx, w, h, index, mood, t, rand, c) {
+  const illustY = 1480; // below text area
+  ctx.save();
+
+  if (index === 0) {
+    // Slide 0 — Expanding circles (পটভূমি = history/foundation)
+    for (let r = 0; r < 5; r++) {
+      const radius = 30 + r * 55 + Math.sin(t * Math.PI * 2 + r) * 15;
+      const alpha = 0.12 + Math.sin(t * 3 + r) * 0.06;
+      ctx.beginPath(); ctx.arc(w/2, illustY, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = c.accent; ctx.globalAlpha = alpha; ctx.lineWidth = 3; ctx.stroke();
+    }
+    // People icons
+    const iconColors = [c.accent, c.sec, c.glow];
+    for (let i = 0; i < 5; i++) {
+      const angle = (i/5) * Math.PI * 2 + t * 0.5;
+      const dist = 130 + Math.sin(t * 2 + i) * 15;
+      const ix = w/2 + Math.cos(angle) * dist;
+      const iy = illustY + Math.sin(angle) * dist * 0.4;
+      ctx.globalAlpha = 0.6 + Math.sin(t*4+i)*0.2;
+      ctx.fillStyle = iconColors[i%3];
+      ctx.beginPath(); ctx.arc(ix, iy - 20, 18, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath();
+      ctx.arc(ix, iy + 20, 28, 0, Math.PI, true);
+      ctx.fill();
+    }
+  }
+
+  if (index === 1) {
+    // Slide 1 — Breaking news / Event: animated news ticker + alert icon
+    ctx.globalAlpha = 0.7;
+    // Alert triangle
+    const pulse = 1 + Math.sin(t * Math.PI * 6) * 0.1;
+    ctx.save(); ctx.translate(w/2, illustY); ctx.scale(pulse, pulse);
+    ctx.beginPath();
+    ctx.moveTo(0, -100); ctx.lineTo(100, 60); ctx.lineTo(-100, 60);
+    ctx.closePath();
+    ctx.strokeStyle = c.accent; ctx.lineWidth = 8;
+    ctx.shadowColor = c.glow; ctx.shadowBlur = 30;
+    ctx.stroke();
+    ctx.fillStyle = c.accent + '22'; ctx.fill();
+    ctx.fillStyle = c.text; ctx.font = 'bold 80px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('!', 0, 50); ctx.restore();
+    // Radiating waves
+    for (let r = 0; r < 3; r++) {
+      const rad = 120 + r * 80 + (t * 150) % 80;
+      ctx.globalAlpha = Math.max(0, 0.3 - t * 0.3 - r * 0.08);
+      ctx.beginPath(); ctx.arc(w/2, illustY, rad, 0, Math.PI * 2);
+      ctx.strokeStyle = c.accent; ctx.lineWidth = 3; ctx.stroke();
+    }
+  }
+
+  if (index === 2) {
+    // Slide 2 — Impact waves / ripple effect
+    for (let r = 0; r < 6; r++) {
+      const phase = (t + r * 0.15) % 1;
+      const radius = phase * 250;
+      const alpha = Math.max(0, (1 - phase) * 0.4);
+      ctx.globalAlpha = alpha;
+      ctx.beginPath(); ctx.arc(w/2, illustY, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = c.accent; ctx.lineWidth = 4 - phase * 3; ctx.stroke();
+    }
+    // Arrow pointing down (impact/effect)
+    const ay = illustY - 80;
+    const bounce = Math.sin(t * Math.PI * 4) * 12;
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = c.accent;
+    ctx.shadowColor = c.glow; ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.moveTo(w/2, ay + 80 + bounce); ctx.lineTo(w/2 - 60, ay + bounce);
+    ctx.lineTo(w/2 - 20, ay + bounce); ctx.lineTo(w/2 - 20, ay - 60 + bounce);
+    ctx.lineTo(w/2 + 20, ay - 60 + bounce); ctx.lineTo(w/2 + 20, ay + bounce);
+    ctx.lineTo(w/2 + 60, ay + bounce); ctx.closePath(); ctx.fill();
+  }
+
+  if (index === 3) {
+    // Slide 3 — Analysis: chart bars animated
+    const bars = [0.65, 0.9, 0.45, 0.78, 0.55];
+    const barW = 80, gap = 40;
+    const totalW = bars.length * barW + (bars.length - 1) * gap;
+    const startX = w/2 - totalW/2;
+    const maxH = 160;
+    const baseY = illustY + 80;
+    bars.forEach((v, i) => {
+      const animV = v * Math.min(1, t * 3 - i * 0.2);
+      const bh = Math.max(0, animV * maxH);
+      const bx = startX + i * (barW + gap);
+      // Bar glow
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = c.accent;
+      ctx.fillRect(bx - 4, baseY - maxH, barW + 8, maxH + 8);
+      // Bar fill
+      ctx.globalAlpha = 0.85;
+      const barGrad = ctx.createLinearGradient(0, baseY, 0, baseY - bh);
+      barGrad.addColorStop(0, c.glow);
+      barGrad.addColorStop(1, c.sec);
+      ctx.fillStyle = barGrad;
+      ctx.beginPath();
+      ctx.roundRect(bx, baseY - bh, barW, bh, 6);
+      ctx.fill();
+    });
+    // Baseline
+    ctx.globalAlpha = 0.4;
+    ctx.strokeStyle = c.accent; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(startX - 10, baseY); ctx.lineTo(startX + totalW + 10, baseY); ctx.stroke();
+  }
+
+  if (index === 4) {
+    // Slide 4 — Call to action: fist / megaphone animated
+    const pulse = 1 + Math.sin(t * Math.PI * 5) * 0.08;
+    ctx.save(); ctx.translate(w/2, illustY); ctx.scale(pulse, pulse);
+    // Megaphone shape
+    ctx.fillStyle = c.accent;
+    ctx.shadowColor = c.glow; ctx.shadowBlur = 40;
+    ctx.globalAlpha = 0.85;
+    // Body
+    ctx.beginPath();
+    ctx.moveTo(-30, -30); ctx.lineTo(-30, 30);
+    ctx.lineTo(80, 70); ctx.lineTo(80, -70);
+    ctx.closePath(); ctx.fill();
+    // Horn
+    ctx.beginPath();
+    ctx.moveTo(80, -70); ctx.lineTo(160, -120);
+    ctx.lineTo(160, 120); ctx.lineTo(80, 70);
+    ctx.closePath();
+    ctx.fillStyle = c.sec; ctx.fill();
+    // Handle
+    ctx.fillStyle = c.glow;
+    ctx.fillRect(-60, -15, 35, 30);
+    ctx.restore();
+    // Sound waves
+    for (let r = 0; r < 4; r++) {
+      const phase = (t * 1.5 + r * 0.25) % 1;
+      const sx = w/2 + 160 + phase * 180;
+      const alpha = Math.max(0, (1 - phase) * 0.6);
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(w/2 + 140, illustY, 30 + phase * 120, -0.8, 0.8);
+      ctx.strokeStyle = c.accent; ctx.lineWidth = 4; ctx.stroke();
+    }
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAIN SLIDE RENDERER
+// ═══════════════════════════════════════════════════════════
 function drawSlideAnimated(ctx, text, index, total, mood, t) {
   const w = 1080, h = 1920;
-  const moodColors = {
-    urgent:   { bg1: '#0d0000', bg2: '#1a0505', bg3: '#2d0a0a', accent: '#ef4444', glow: '#ff0000', text: '#fff' },
-    sad:      { bg1: '#030318', bg2: '#0a0a2a', bg3: '#0d1240', accent: '#818cf8', glow: '#6366f1', text: '#e0e7ff' },
-    positive: { bg1: '#001208', bg2: '#002a10', bg3: '#003d18', accent: '#22c55e', glow: '#16a34a', text: '#f0fdf4' },
-    angry:    { bg1: '#0d0300', bg2: '#1a0800', bg3: '#2d1000', accent: '#f97316', glow: '#ea580c', text: '#fff7ed' },
-    neutral:  { bg1: '#060b18', bg2: '#0f172a', bg3: '#1e1034', accent: '#ef4444', glow: '#dc2626', text: '#f8fafc' }
-  };
-  const c = moodColors[mood] || moodColors.neutral;
-  const rand = seededRand(index * 999 + 1);
+  const c = getTheme(index, mood);
+  const rand = seededRand(index * 1337 + 42);
 
-  // === BACKGROUND ===
-  const bgGrad = ctx.createRadialGradient(w/2, h*0.4, 0, w/2, h/2, h*0.8);
-  bgGrad.addColorStop(0, c.bg3);
-  bgGrad.addColorStop(0.5, c.bg2);
-  bgGrad.addColorStop(1, c.bg1);
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, w, h);
+  // ── BACKGROUND ──────────────────────────────────────────
+  const bgFns = [drawBg_Aurora, drawBg_Cyber, drawBg_Ocean, drawBg_Gold, drawBg_Matrix];
+  bgFns[index % bgFns.length](ctx, w, h, c, t, rand);
 
-  // === SCENE VFX ===
+  // ── MOOD VFX ─────────────────────────────────────────────
   drawSceneVFX(ctx, w, h, mood, t, rand);
 
-  // === ANIMATED PARTICLE FIELD ===
-  const particleCount = 60;
-  for (let p = 0; p < particleCount; p++) {
+  // ── PARTICLES ───────────────────────────────────────────
+  for (let p = 0; p < 50; p++) {
     const px = rand() * w;
     const py = rand() * h;
+    const speed = rand() * 0.5 + 0.1;
+    const animY = (py + t * speed * h * 0.35) % h;
+    const alpha = (rand() * 0.45 + 0.1) * Math.abs(Math.sin(t * Math.PI + p * 0.5));
     const size = rand() * 4 + 1;
-    const speed = rand() * 0.4 + 0.1;
-    const animPY = (py + t * speed * h * 0.3) % h;
-    const alpha = (rand() * 0.5 + 0.15) * Math.sin(t * Math.PI + p * 0.3);
-    ctx.beginPath();
-    ctx.arc(px, animPY, size, 0, Math.PI * 2);
-    ctx.fillStyle = c.accent + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(px, animY, size, 0, Math.PI * 2);
+    ctx.fillStyle = c.accent;
+    ctx.globalAlpha = alpha; ctx.fill(); ctx.globalAlpha = 1;
   }
 
-  // === SLIDE 1 HOOK: Big attention flash at start ===
-  if (index === 0 && t < 0.15) {
-    const flashAlpha = (0.15 - t) / 0.15 * 0.35;
-    ctx.fillStyle = c.glow + Math.floor(flashAlpha * 255).toString(16).padStart(2, '0');
-    ctx.fillRect(0, 0, w, h);
-    // Radial burst
-    const burst = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, 600);
-    burst.addColorStop(0, c.accent + 'aa');
-    burst.addColorStop(1, 'transparent');
-    ctx.fillStyle = burst;
-    ctx.fillRect(0, 0, w, h);
+  // ── TRANSITION FLASH ─────────────────────────────────────
+  if (t < 0.08) {
+    ctx.save();
+    ctx.globalAlpha = (0.08 - t) / 0.08 * 0.5;
+    const flash = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, 700);
+    flash.addColorStop(0, c.accent);
+    flash.addColorStop(1, 'transparent');
+    ctx.fillStyle = flash; ctx.fillRect(0, 0, w, h);
+    ctx.restore();
   }
 
-  // === SLIDE TRANSITION: zoom-in effect (t: 0→0.12) ===
-  const scale = t < 0.12 ? (0.88 + t / 0.12 * 0.12) : 1.0;
+  // ── SCALE TRANSITION ──────────────────────────────────────
+  const scale = t < 0.1 ? (0.9 + t / 0.1 * 0.1) : 1.0;
   ctx.save();
-  ctx.translate(w/2, h/2);
-  ctx.scale(scale, scale);
-  ctx.translate(-w/2, -h/2);
+  ctx.translate(w/2, h/2); ctx.scale(scale, scale); ctx.translate(-w/2, -h/2);
 
-  // === TOP GLOW BAR ===
-  const topBarGrad = ctx.createLinearGradient(0, 0, w, 0);
-  topBarGrad.addColorStop(0, 'transparent');
-  topBarGrad.addColorStop(0.5, c.accent);
-  topBarGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = topBarGrad;
-  ctx.fillRect(0, 0, w, 8);
+  // ── TOP ACCENT BAR ───────────────────────────────────────
+  const barGrad = ctx.createLinearGradient(0, 0, w, 0);
+  barGrad.addColorStop(0, 'transparent');
+  barGrad.addColorStop(0.3, c.accent);
+  barGrad.addColorStop(0.7, c.sec);
+  barGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = barGrad; ctx.fillRect(0, 0, w, 10);
 
-  // === JOAF LOGO AREA ===
-  const glowPulse = 0.6 + Math.sin(t * Math.PI * 4) * 0.15;
-  // Outer glow ring
-  const ringGrad = ctx.createRadialGradient(w/2, 340, 80, w/2, 340, 200);
-  ringGrad.addColorStop(0, c.glow + Math.floor(glowPulse * 60).toString(16).padStart(2, '0'));
-  ringGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = ringGrad;
-  ctx.fillRect(w/2-200, 140, 400, 400);
+  // ── SLIDE NUMBER BADGE ──────────────────────────────────
+  const badgeAlpha = Math.min(1, t * 5);
+  ctx.save();
+  ctx.globalAlpha = badgeAlpha;
+  // Pill background
+  ctx.fillStyle = c.accent + '33';
+  ctx.beginPath(); ctx.roundRect(40, 80, 200, 56, 28); ctx.fill();
+  ctx.strokeStyle = c.accent; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(40, 80, 200, 56, 28); ctx.stroke();
+  ctx.fillStyle = c.accent; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(`${index + 1} / ${total}`, 75, 118);
+  ctx.restore();
 
-  ctx.beginPath();
-  ctx.arc(w/2, 340, 140, 0, Math.PI * 2);
-  ctx.fillStyle = c.accent + '20';
-  ctx.fill();
-  ctx.strokeStyle = c.accent;
-  ctx.lineWidth = 5 + Math.sin(t * Math.PI * 6) * 2;
-  ctx.stroke();
-
-  // JOAF text — fade in fast
-  const logoAlpha = Math.min(1, t * 8);
+  // ── JOAF LOGO HEADER ──────────────────────────────────────
+  const logoAlpha = Math.min(1, t * 6);
   ctx.globalAlpha = logoAlpha;
+
+  // Hexagon ring behind logo
+  ctx.save(); ctx.translate(w/2, 330);
+  const hexR = 150 + Math.sin(t * Math.PI * 3) * 8;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 - Math.PI / 6;
+    i === 0 ? ctx.moveTo(Math.cos(a)*hexR, Math.sin(a)*hexR)
+            : ctx.lineTo(Math.cos(a)*hexR, Math.sin(a)*hexR);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = c.accent; ctx.lineWidth = 4;
+  ctx.shadowColor = c.glow; ctx.shadowBlur = 25;
+  ctx.stroke();
+  // Inner fill
+  ctx.fillStyle = c.accent + '15'; ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // JOAF text
   ctx.fillStyle = c.accent;
-  ctx.font = 'bold 96px serif';
+  ctx.font = 'bold 100px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('JOAF', w/2, 375);
-  ctx.font = '28px sans-serif';
-  ctx.fillStyle = c.text + 'aa';
-  ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম', w/2, 425);
+  ctx.shadowColor = c.glow; ctx.shadowBlur = 35;
+  ctx.fillText('JOAF', 0, 30);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = c.text + 'cc';
+  ctx.font = '26px sans-serif';
+  ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম', 0, 80);
+  ctx.restore();
+
   ctx.globalAlpha = 1;
 
-  // === DIVIDER ===
-  const divProgress = Math.min(1, t * 5);
-  const divW = 500 * divProgress;
+  // ── ANIMATED DIVIDER ──────────────────────────────────────
+  const divProg = Math.min(1, t * 4);
+  const divW = 520 * divProg;
   const divGrad = ctx.createLinearGradient(w/2 - divW/2, 0, w/2 + divW/2, 0);
   divGrad.addColorStop(0, 'transparent');
-  divGrad.addColorStop(0.5, c.accent);
+  divGrad.addColorStop(0.4, c.accent);
+  divGrad.addColorStop(0.6, c.sec);
   divGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = divGrad;
-  ctx.fillRect(w/2 - divW/2, 480, divW, 4);
+  ctx.fillRect(w/2 - divW/2, 510, divW, 5);
 
-  // === SLIDE INDICATOR ===
-  const slideLabel = ['পটভূমি', 'মূল ঘটনা', 'প্রভাব', 'বিশ্লেষণ', 'আহ্বান'];
-  const label = index < slideLabel.length ? slideLabel[index] : `${index + 1}/${total}`;
-  ctx.font = 'bold 32px sans-serif';
+  // ── SLIDE LABEL ──────────────────────────────────────────
+  const slideLabels = ['পটভূমি','মূল ঘটনা','প্রভাব ও প্রতিক্রিয়া','বিস্তারিত বিশ্লেষণ','আহ্বান'];
+  const label = index < slideLabels.length ? slideLabels[index] : `অংশ ${index+1}`;
+  const labelAlpha = Math.min(1, t * 5);
+  ctx.save();
+  ctx.globalAlpha = labelAlpha;
+  // Label pill
+  ctx.font = 'bold 34px sans-serif';
+  const lblW = ctx.measureText(`◆ ${label} ◆`).width + 50;
+  ctx.fillStyle = c.accent + '22';
+  ctx.beginPath(); ctx.roundRect(w/2 - lblW/2, 540, lblW, 54, 27); ctx.fill();
   ctx.fillStyle = c.accent;
-  ctx.fillText(`— ${label} —`, w/2, 540);
+  ctx.textAlign = 'center';
+  ctx.shadowColor = c.glow; ctx.shadowBlur = 15;
+  ctx.fillText(`◆ ${label} ◆`, w/2, 577);
+  ctx.shadowBlur = 0;
+  ctx.restore();
 
-  // === MAIN TEXT with animated reveal ===
+  // ── MAIN TEXT ────────────────────────────────────────────
   const cleanText = text.replace(/^slide\s*\d+\s*[:\-]\s*/i, '').trim();
-  ctx.font = 'bold 58px sans-serif';
+  ctx.font = 'bold 56px sans-serif';
   ctx.fillStyle = c.text;
   ctx.textAlign = 'center';
 
   const words = cleanText.split(' ');
   const lines = [];
   let line = '';
-  const maxW = 940;
+  const maxW = 960;
   for (const word of words) {
     const test = line + word + ' ';
     if (ctx.measureText(test).width > maxW && line) {
@@ -2762,147 +3053,189 @@ function drawSlideAnimated(ctx, text, index, total, mood, t) {
   }
   if (line) lines.push(line.trim());
 
-  const lineH = 88;
-  const totalTextH = lines.length * lineH;
+  const lineH = 90;
   const textStartY = 680;
 
   lines.forEach((l, li) => {
-    // Each line reveals with slight delay
-    const lineReveal = Math.min(1, Math.max(0, (t * 6) - li * 0.4));
-    const lineY = textStartY + li * lineH + (1 - lineReveal) * 30;
+    const lineReveal = Math.min(1, Math.max(0, t * 7 - li * 0.35));
+    const slideIn = (1 - lineReveal) * 40;
     ctx.globalAlpha = lineReveal;
-    // Text shadow/glow
-    ctx.shadowColor = c.glow;
-    ctx.shadowBlur = 20 * lineReveal;
-    ctx.fillText(l, w/2, lineY);
+    ctx.save();
+    ctx.translate(0, slideIn);
+    // Highlight every other line with sec color
+    if (li % 2 === 1) {
+      ctx.fillStyle = c.sec;
+      ctx.shadowColor = c.sec; ctx.shadowBlur = 10;
+    } else {
+      ctx.fillStyle = c.text;
+      ctx.shadowColor = c.glow; ctx.shadowBlur = 18;
+    }
+    ctx.font = 'bold 56px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(l, w/2, textStartY + li * lineH);
     ctx.shadowBlur = 0;
-    ctx.globalAlpha = 1;
+    ctx.restore();
   });
+  ctx.globalAlpha = 1;
 
-  // === PROGRESS BAR (bottom) ===
-  const barY = 1780;
-  // Background track
-  ctx.fillStyle = c.accent + '25';
-  ctx.beginPath();
-  ctx.roundRect(80, barY, w - 160, 12, 6);
-  ctx.fill();
-  // Animated fill — fills during this slide + prior slides
-  const totalProgress = (index + t) / total;
-  ctx.fillStyle = c.accent;
-  ctx.beginPath();
-  ctx.roundRect(80, barY, (w - 160) * totalProgress, 12, 6);
-  ctx.fill();
+  // ── ILLUSTRATION DRAWING ─────────────────────────────────
+  drawSlideIllustration(ctx, w, h, index, mood, t, seededRand(index * 777), c);
 
-  // === PROGRESS DOTS ===
-  const dotY = 1820;
-  const dotSpacing = 44;
-  const startX = w/2 - (total - 1) * dotSpacing / 2;
+  // ── PROGRESS BAR ─────────────────────────────────────────
+  const barY = 1800;
+  ctx.fillStyle = c.accent + '20';
+  ctx.beginPath(); ctx.roundRect(60, barY, w - 120, 14, 7); ctx.fill();
+  const totalProg = (index + t) / total;
+  const progGrad = ctx.createLinearGradient(60, 0, 60 + (w-120)*totalProg, 0);
+  progGrad.addColorStop(0, c.glow);
+  progGrad.addColorStop(1, c.sec);
+  ctx.fillStyle = progGrad;
+  ctx.beginPath(); ctx.roundRect(60, barY, (w-120)*totalProg, 14, 7); ctx.fill();
+
+  // ── PROGRESS DOTS ────────────────────────────────────────
+  const dotY = 1840;
+  const spacing = 52;
+  const startDotX = w/2 - (total-1)*spacing/2;
   for (let d = 0; d < total; d++) {
     const isActive = d === index;
     const isPast = d < index;
-    const dotR = isActive ? 10 + Math.sin(t * Math.PI * 4) * 3 : 7;
-    ctx.beginPath();
-    ctx.arc(startX + d * dotSpacing, dotY, dotR, 0, Math.PI * 2);
-    ctx.fillStyle = isActive ? c.accent : isPast ? c.accent + '99' : c.accent + '30';
+    const dotR = isActive ? 12 + Math.sin(t*Math.PI*5)*3 : 8;
+    ctx.beginPath(); ctx.arc(startDotX + d*spacing, dotY, dotR, 0, Math.PI*2);
+    ctx.fillStyle = isActive ? c.accent : isPast ? c.sec + 'aa' : c.accent + '30';
     ctx.fill();
     if (isActive) {
-      ctx.strokeStyle = c.glow;
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      ctx.strokeStyle = c.glow; ctx.lineWidth = 3;
+      ctx.shadowColor = c.glow; ctx.shadowBlur = 15;
+      ctx.stroke(); ctx.shadowBlur = 0;
     }
   }
 
-  // === WATERMARK ===
-  ctx.globalAlpha = 0.35;
-  ctx.font = '28px sans-serif';
+  // ── WATERMARK ────────────────────────────────────────────
+  ctx.globalAlpha = 0.3;
+  ctx.font = '26px sans-serif';
   ctx.fillStyle = c.text;
-  ctx.fillText('julyforum.com', w/2, 1880);
+  ctx.textAlign = 'center';
+  ctx.fillText('julyforum.com', w/2, 1895);
   ctx.globalAlpha = 1;
 
-  // === BOTTOM GLOW BAR ===
-  ctx.fillStyle = topBarGrad;
-  ctx.fillRect(0, h - 8, w, 8);
+  // ── BOTTOM ACCENT BAR ────────────────────────────────────
+  ctx.fillStyle = barGrad; ctx.fillRect(0, h - 10, w, 10);
 
-  ctx.restore();
+  ctx.restore(); // restore scale transform
 }
 
+// ═══════════════════════════════════════════════════════════
+// OUTRO SLIDE — Stunning finale
+// ═══════════════════════════════════════════════════════════
 function drawOutroSlide(ctx, mood, t) {
   const w = 1080, h = 1920;
-  const moodColors = {
-    urgent:   { bg1: '#0d0000', bg2: '#1a0505', accent: '#ef4444', glow: '#ff0000', text: '#fff' },
-    sad:      { bg1: '#030318', bg2: '#0a0a2a', accent: '#818cf8', glow: '#6366f1', text: '#e0e7ff' },
-    positive: { bg1: '#001208', bg2: '#002a10', accent: '#22c55e', glow: '#16a34a', text: '#f0fdf4' },
-    angry:    { bg1: '#0d0300', bg2: '#1a0800', accent: '#f97316', glow: '#ea580c', text: '#fff7ed' },
-    neutral:  { bg1: '#060b18', bg2: '#0f172a', accent: '#ef4444', glow: '#dc2626', text: '#f8fafc' }
-  };
-  const c = moodColors[mood] || moodColors.neutral;
-  const rand = seededRand(777);
+  const c = {
+    urgent:   { bg1: '#0d0000', bg2: '#2d0505', accent: '#ef4444', glow: '#ff0000', sec: '#fca5a5', text: '#fff' },
+    sad:      { bg1: '#030318', bg2: '#0d1240', accent: '#818cf8', glow: '#6366f1', sec: '#c7d2fe', text: '#e0e7ff' },
+    positive: { bg1: '#001208', bg2: '#003d18', accent: '#22c55e', glow: '#16a34a', sec: '#86efac', text: '#f0fdf4' },
+    angry:    { bg1: '#0d0300', bg2: '#2d1000', accent: '#f97316', glow: '#ea580c', sec: '#fed7aa', text: '#fff7ed' },
+    neutral:  { bg1: '#060b18', bg2: '#1e1034', accent: '#a855f7', glow: '#7c3aed', sec: '#d8b4fe', text: '#faf5ff' },
+  }[mood] || { bg1: '#060b18', bg2: '#1e1034', accent: '#a855f7', glow: '#7c3aed', sec: '#d8b4fe', text: '#faf5ff' };
 
   // Background
-  const bg = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h * 0.8);
-  bg.addColorStop(0, c.bg2);
-  bg.addColorStop(1, c.bg1);
+  const bg = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, h);
+  bg.addColorStop(0, c.bg2); bg.addColorStop(1, c.bg1);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
 
-  // Expanding ring effect
-  for (let r = 0; r < 4; r++) {
-    const radius = 200 + r * 160 + t * 300;
-    const alpha = Math.max(0, 0.4 - t * 0.4 - r * 0.08);
-    ctx.beginPath();
-    ctx.arc(w/2, h/2, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = c.accent + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-    ctx.lineWidth = 4 - r;
-    ctx.stroke();
+  // Starfield
+  const rand = seededRand(999);
+  for (let s = 0; s < 200; s++) {
+    const sx = rand() * w, sy = rand() * h;
+    const alpha = (Math.sin(t * Math.PI * 4 + s * 0.5) * 0.5 + 0.5) * 0.7;
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.beginPath(); ctx.arc(sx, sy, rand() * 2.5 + 0.5, 0, Math.PI * 2); ctx.fill();
   }
 
-  // JOAF big logo — scale in
-  const logoScale = Math.min(1, t * 3);
+  // Expanding DNA-like double helix rings
+  for (let r = 0; r < 8; r++) {
+    const radius = 100 + r * 120 + t * 400;
+    const alpha = Math.max(0, 0.5 - t * 0.5 - r * 0.055);
+    ctx.beginPath(); ctx.arc(w/2, h/2 - 150, radius, 0, Math.PI * 2);
+    const ringGrad = ctx.createLinearGradient(w/2-radius, h/2-150, w/2+radius, h/2-150);
+    ringGrad.addColorStop(0, c.accent + '00');
+    ringGrad.addColorStop(0.5, c.accent + Math.floor(alpha*255).toString(16).padStart(2,'0'));
+    ringGrad.addColorStop(1, c.sec + '00');
+    ctx.strokeStyle = ringGrad; ctx.lineWidth = 3 + r * 0.5; ctx.stroke();
+  }
+
+  // JOAF Big Logo — cinematic reveal
+  const logoScale = t < 0.35 ? Math.pow(t / 0.35, 0.6) : 1;
   ctx.save();
   ctx.translate(w/2, h/2 - 200);
   ctx.scale(logoScale, logoScale);
-  // Glow
-  ctx.shadowColor = c.glow;
-  ctx.shadowBlur = 60;
+  // Outer glow
+  ctx.shadowColor = c.glow; ctx.shadowBlur = 80;
   ctx.fillStyle = c.accent;
-  ctx.font = 'bold 180px serif';
+  ctx.font = 'bold 200px serif';
   ctx.textAlign = 'center';
   ctx.fillText('JOAF', 0, 0);
   ctx.shadowBlur = 0;
   ctx.restore();
 
-  // Tagline fade in
-  const tagAlpha = Math.min(1, Math.max(0, t * 4 - 1));
-  ctx.globalAlpha = tagAlpha;
-  ctx.fillStyle = c.text;
-  ctx.font = 'bold 48px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম', w/2, h/2 + 80);
-  ctx.font = '38px sans-serif';
-  ctx.fillStyle = c.accent;
-  ctx.fillText('julyforum.com', w/2, h/2 + 160);
+  // Taglines — staggered fade in
+  const lines = ['জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম', 'julyforum.com'];
+  lines.forEach((line, i) => {
+    const alpha = Math.min(1, Math.max(0, t * 5 - 1.5 - i * 0.8));
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = 'center';
+    if (i === 0) {
+      ctx.font = 'bold 50px sans-serif';
+      ctx.fillStyle = c.text;
+      ctx.fillText(line, w/2, h/2 + 100);
+    } else {
+      ctx.font = '40px sans-serif';
+      ctx.fillStyle = c.accent;
+      ctx.shadowColor = c.glow; ctx.shadowBlur = 20;
+      ctx.fillText(line, w/2, h/2 + 180);
+      ctx.shadowBlur = 0;
+    }
+  });
   ctx.globalAlpha = 1;
 
-  // Particle burst
-  for (let p = 0; p < 60; p++) {
-    const angle = (p / 60) * Math.PI * 2;
-    const dist = t * 700 * (rand() * 0.5 + 0.5);
+  // Particle explosion burst
+  for (let p = 0; p < 100; p++) {
+    const angle = (p / 100) * Math.PI * 2;
+    const speed = rand() * 0.6 + 0.4;
+    const dist = t * 800 * speed;
     const px = w/2 + Math.cos(angle) * dist;
-    const py = h/2 + Math.sin(angle) * dist - 200;
-    const alpha = Math.max(0, (1 - t) * (rand() * 0.6 + 0.3));
-    ctx.beginPath();
-    ctx.arc(px, py, rand() * 5 + 2, 0, Math.PI * 2);
-    ctx.fillStyle = c.accent + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-    ctx.fill();
+    const py = (h/2 - 200) + Math.sin(angle) * dist;
+    const alpha = Math.max(0, (1 - t * 1.2) * (rand() * 0.6 + 0.3));
+    const size = rand() * 6 + 2;
+    ctx.beginPath(); ctx.arc(px, py, size, 0, Math.PI * 2);
+    const colors = [c.accent, c.sec, c.glow, '#ffffff'];
+    ctx.fillStyle = colors[p%4];
+    ctx.globalAlpha = alpha; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Confetti
+  for (let cf = 0; cf < 60; cf++) {
+    const cx = rand() * w;
+    const cy = (rand() * h + t * 600) % h;
+    const cw = rand() * 20 + 8, ch = rand() * 10 + 4;
+    const rot = rand() * Math.PI * 2 + t * 5;
+    const alpha = Math.min(1, t * 3) * 0.7;
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(rot);
+    ctx.globalAlpha = alpha;
+    const cfColors = [c.accent, c.sec, '#ffffff', '#ffff00', '#ff69b4'];
+    ctx.fillStyle = cfColors[cf % cfColors.length];
+    ctx.fillRect(-cw/2, -ch/2, cw, ch);
+    ctx.restore();
   }
 
-  // Bottom bar
-  const barGrad = ctx.createLinearGradient(0, 0, w, 0);
-  barGrad.addColorStop(0, 'transparent');
-  barGrad.addColorStop(0.5, c.accent);
-  barGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = barGrad;
-  ctx.fillRect(0, h - 8, w, 8);
-  ctx.fillRect(0, 0, w, 8);
+  // Top/bottom bars
+  const bGrad = ctx.createLinearGradient(0, 0, w, 0);
+  bGrad.addColorStop(0, 'transparent'); bGrad.addColorStop(0.5, c.accent); bGrad.addColorStop(1, 'transparent');
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = bGrad;
+  ctx.fillRect(0, 0, w, 10);
+  ctx.fillRect(0, h - 10, w, 10);
 }
 
 async function fbPostToReels() {
