@@ -877,6 +877,7 @@ addDoc(collection(db,'pageviews'), {
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
           <button onclick="fbGenerateReel()" id="fb-gen-btn" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">🎬 Reel বানাও</button>
           <button onclick="fbDownloadReel()" id="fb-download-btn" style="padding:8px 18px;background:#25d366;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:none">⬇️ Download করো</button>
+          <button onclick="fbPostToReels()" id="fb-post-reels-btn" style="padding:8px 18px;background:#1877f2;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:none">📤 FB Reels এ দাও</button>
         </div>
         <div id="fb-preview" style="margin-top:16px;display:none">
           <label style="font-size:11px;font-weight:700;color:var(--text2)">Preview</label>
@@ -2402,6 +2403,7 @@ News: ${text}` }]
 
     document.getElementById('fb-preview').style.display = 'block';
     document.getElementById('fb-download-btn').style.display = 'inline-block';
+    document.getElementById('fb-post-reels-btn').style.display = 'inline-block';
 
   } catch(e) {
     alert('Error: ' + e.message);
@@ -2901,6 +2903,24 @@ function drawOutroSlide(ctx, mood, t) {
   ctx.fillStyle = barGrad;
   ctx.fillRect(0, h - 8, w, 8);
   ctx.fillRect(0, 0, w, 8);
+}
+
+async function fbPostToReels() {
+  if (!reelBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(reelBlob);
+  a.download = 'joaf-reel.webm';
+  a.click();
+  const caption = document.getElementById('fb-caption').value || '';
+  try { await navigator.clipboard.writeText(caption); } catch(e) {}
+  setTimeout(() => {
+    window.open('https://business.facebook.com/latest/reels/composer/?ref=biz_web_content_manager_post_to_multiple_pages&asset_id=901104276426275&context_ref=POSTS', '_blank');
+  }, 1000);
+  const toast = document.createElement('div');
+  toast.textContent = '✅ Video download হয়েছে! Caption clipboard এ আছে — Extension pages select করবে';
+  toast.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#1877f2;color:#fff;padding:14px 24px;border-radius:10px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.4)';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
 }
 
 function fbDownloadReel() {
