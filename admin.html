@@ -2448,6 +2448,13 @@ async function renderVideoWithAudio(slides, mood) {
     }
   }
 
+  // OUTRO — 3 seconds
+  const outroStart = performance.now();
+  while (performance.now() - outroStart < 3000) {
+    const ot = (performance.now() - outroStart) / 3000;
+    drawOutroSlide(ctx, mood, ot);
+    await new Promise(r => setTimeout(r, FRAME_MS));
+  }
   recorder.stop();
   audioCtx.close();
   await new Promise(r => recorder.onstop = r);
