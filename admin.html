@@ -3601,3 +3601,10 @@ function seededRand(seed) {
   };
 }
 </script>
+<script>
+// Logo loader
+const JOAF_LOGO_IMG = new Image();
+let _logoLoaded = false;
+JOAF_LOGO_IMG.onload = () => { _logoLoaded = true; };
+JOAF_LOGO_IMG.src = '/img/joaf-logo.png';
+</script>
