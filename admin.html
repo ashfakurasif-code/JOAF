@@ -3,49 +3,62 @@
 <head>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>JOAF Admin — Master Control</title>
-<style>
-:root{
-  --bg:#08090e;--bg2:#0f1019;--bg3:#161722;--bg4:#1e1f2e;--bg5:#262738;
-  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);--border3:rgba(255,255,255,.18);
-  --text:#eeeef5;--text2:#7878a0;--text3:#4a4a68;
-  --red:#f05252;--red-bg:rgba(240,82,82,.12);--red-border:rgba(240,82,82,.25);
-  --green:#34d399;--green-bg:rgba(52,211,153,.12);--green-border:rgba(52,211,153,.25);
-  --accent:#3b82f6;--accent-bg:rgba(59,130,246,.12);
-}
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Noto Sans Bengali',sans-serif;-webkit-font-smoothing:antialiased;}
-body{background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;}
-.sidebar{width:260px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;}
-.sidebar-brand{padding:24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
-.sidebar-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--red),#ff7676);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:14px;}
-.sidebar-title{font-size:16px;font-weight:700;letter-spacing:.5px;}
-.sidebar-subtitle{font-size:11px;color:var(--text2);text-transform:uppercase;margin-top:2px;letter-spacing:1px;}
-.nav-section{padding:16px 12px;overflow-y:auto;flex:1;}
-.nav-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:0 12px 8px;}
-.nav-list{list-style:none;margin-bottom:20px;}
-.nav-item a{display:flex;align-items:center;gap:12px;padding:10px 12px;color:var(--text2);text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;transition:all .2s;}
-.nav-item a:hover{background:var(--bg3);color:var(--text);}
-.nav-item.active a{background:var(--accent-bg);color:var(--accent);}
-.nav-badge{margin-left:auto;background:var(--bg4);color:var(--text2);padding:2px 6px;border-radius:6px;font-size:11px;}
-.main-content{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;background:var(--bg);}
-.topbar{height:70px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:9;}
-.page-title{font-size:18px;font-weight:700;}
-.view-container{flex:1;overflow-y:auto;padding:32px;}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;}
-.form-group{margin-bottom:20px;}
-.form-label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;}
-.form-control{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px;color:var(--text);font-size:14px;transition:border-color .2s;resize:vertical;}
-.form-control:focus{outline:none;border-color:var(--accent);}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s;text-decoration:none;}
-.btn:hover{opacity:.9;}
-.btn:disabled{opacity:.5;cursor:not-allowed;}
-.btn-danger{background:var(--red);}
-.toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:9999;}
-.toast{background:var(--bg3);border:1px solid var(--border2);padding:14px 20px;border-radius:8px;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;transform:translateY(20px);opacity:0;animation:toastIn .3s forwards;}
-@keyframes toastIn{to{transform:translateY(0);opacity:1;}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>JOAF Admin — Master Control</title>
+  <style>
+    :root {
+      --bg: #08090e; --bg2: #0f1019; --bg3: #161722; --bg4: #1e1f2e; --bg5: #262738;
+      --border: rgba(255,255,255,.06); --border2: rgba(255,255,255,.11); --border3: rgba(255,255,255,.18);
+      --text: #eeeef5; --text2: #7878a0; --text3: #4a4a68;
+      --red: #f05252; --red-bg: rgba(240,82,82,.12); --red-border: rgba(240,82,82,.25);
+      --green: #34d399; --green-bg: rgba(52,211,153,.12); --green-border: rgba(52,211,153,.25);
+      --accent: #3b82f6; --accent-bg: rgba(59,130,246,.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans Bengali', sans-serif; -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+    
+    .sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
+    .sidebar-brand { padding: 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo { width: 32px; height: 32px; background: linear-gradient(135deg, var(--red), #ff7676); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 14px; }
+    .sidebar-title { font-size: 16px; font-weight: 700; letter-spacing: .5px; }
+    .sidebar-subtitle { font-size: 11px; color: var(--text2); text-transform: uppercase; margin-top: 2px; letter-spacing: 1px; }
+    
+    .nav-section { padding: 16px 12px; overflow-y: auto; flex: 1; }
+    .nav-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; padding: 0 12px 8px; margin-top: 15px; }
+    .nav-list { list-style: none; margin-bottom: 10px; }
+    .nav-item a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: var(--text2); text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all .2s; cursor: pointer; }
+    .nav-item a:hover { background: var(--bg3); color: var(--text); }
+    .nav-item.active a { background: var(--accent-bg); color: var(--accent); }
+    .nav-badge { margin-left: auto; background: var(--bg4); color: var(--text2); padding: 2px 6px; border-radius: 6px; font-size: 11px; }
+    
+    .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--bg); }
+    .topbar { height: 70px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 9; }
+    .page-title { font-size: 18px; font-weight: 700; text-transform: capitalize; }
+    
+    .view-container { flex: 1; overflow-y: auto; padding: 32px; }
+    .admin-panel-view { display: none; }
+    .admin-panel-view.active-view { display: block; }
+    
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+    .form-control { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; color: var(--text); font-size: 14px; transition: border-color .2s; resize: vertical; }
+    .form-control:focus { outline: none; border-color: var(--accent); }
+    
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 12px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity .2s; text-decoration: none; }
+    .btn:hover { opacity: .9; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-danger { background: var(--red); }
+    
+    .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .stat-val { font-size: 28px; font-weight: 800; color: #fff; }
+    
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+    .toast { background: var(--bg3); border: 1px solid var(--border2); padding: 14px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.5); display: flex; align-items: center; gap: 10px; transform: translateY(20px); opacity: 0; animation: toastIn .3s forwards; }
+    @keyframes toastIn { to { transform: translateY(0); opacity: 1; } }
+  </style>
 </head>
 <body>
 
@@ -60,79 +73,181 @@ body{background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:h
     <nav class="nav-section">
       <div class="nav-label">Overview</div>
       <ul class="nav-list">
-        <li class="nav-item"><a href="#">📊 Dashboard</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-dashboard" data-target="view-dashboard"><a onclick="switchPanelTab('view-dashboard')">📊 Dashboard</a></li>
       </ul>
+      
       <div class="nav-label">Content</div>
       <ul class="nav-list">
-        <li class="nav-item"><a href="#">🔔 Notification <span class="nav-badge">39</span></a></li>
-        <li class="nav-item"><a href="#">🚨 সতর্কতা</a></li>
-        <li class="nav-item"><a href="#">🩸 রক্তদাতা <span class="nav-badge">594</span></a></li>
-        <li class="nav-item"><a href="#">📰 Press Release</a></li>
-        <li class="nav-item"><a href="#">🎨 News Card Generator</a></li>
-        <li class="nav-item active"><a href="#">📢 FB Auto Post</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-notification" data-target="view-notification"><a onclick="switchPanelTab('view-notification')">🔔 Notification <span class="nav-badge">39</span></a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-warning" data-target="view-warning"><a onclick="switchPanelTab('view-warning')">🚨 সতর্কতা</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-blood" data-target="view-blood"><a onclick="switchPanelTab('view-blood')">🩸 রক্তদাতা <span class="nav-badge">594</span></a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-press" data-target="view-press"><a onclick="switchPanelTab('view-press')">📰 Press Release</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-cardgen" data-target="view-cardgen"><a onclick="switchPanelTab('view-cardgen')">🎨 News Card Generator</a></li>
+        <li class="nav-item menu-tab-link active" id="tab-view-fbpost" data-target="view-fbpost"><a onclick="switchPanelTab('view-fbpost')">📢 FB Auto Post</a></li>
       </ul>
+      
       <div class="nav-label">Data</div>
       <ul class="nav-list">
-        <li class="nav-item"><a href="#">🏛️ নেতা ট্র্যাকার</a></li>
-        <li class="nav-item"><a href="#">✊ জুলাই যোদ্ধা</a></li>
-        <li class="nav-item"><a href="#">🛒 বাজার দর</a></li>
-        <li class="nav-item"><a href="#">💊 ওষুধের দাম</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-leader" data-target="view-leader"><a onclick="switchPanelTab('view-leader')">🏛️ নেতা ট্র্যাকার</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-warrior" data-target="view-warrior"><a onclick="switchPanelTab('view-warrior')">✊ জুলাই যোদ্ধা</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-market" data-target="view-market"><a onclick="switchPanelTab('view-market')">🛒 বাজার দর</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-medicine" data-target="view-medicine"><a onclick="switchPanelTab('view-medicine')">💊 ওষুধের দাম</a></li>
+      </ul>
+
+      <div class="nav-label">Community</div>
+      <ul class="nav-list">
+        <li class="nav-item menu-tab-link" id="tab-view-members" data-target="view-members"><a onclick="switchPanelTab('view-members')">👥 Members</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-polls" data-target="view-polls"><a onclick="switchPanelTab('view-polls')">🗳️ Polls / Streak</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-forum" data-target="view-forum"><a onclick="switchPanelTab('view-forum')">💬 Forum</a></li>
+      </ul>
+
+      <div class="nav-label">System</div>
+      <ul class="nav-list">
+        <li class="nav-item menu-tab-link" id="tab-view-analytics" data-target="view-analytics"><a onclick="switchPanelTab('view-analytics')">📈 Analytics</a></li>
+        <li class="nav-item menu-tab-link" id="tab-view-settings" data-target="view-settings"><a onclick="switchPanelTab('view-settings')">⚙️ Settings</a></li>
+        <li class="nav-item" style="margin-top:20px;"><a style="color:var(--red);" onclick="toast('Logging out system context...','error')">🚪 Logout</a></li>
       </ul>
     </nav>
   </div>
 
   <div class="main-content">
     <div class="topbar">
-      <div class="page-title">fbpost</div>
+      <div class="page-title" id="current-panel-title-text">FB Auto Post</div>
       <div style="color:var(--text2);font-size:14px;">www.julyforum.com</div>
     </div>
 
     <div class="view-container">
-      <div class="card">
-        <div class="form-group">
-          <label class="form-label">📁 File Upload</label>
-          <a href="#" class="btn">🌐 Live Site</a>
-        </div>
-        <div class="form-group">
-          <label class="form-label">📋 Pages JSON (একবার paste করুন)</label>
-          <textarea class="form-control" id="fb-pages-json" rows="2">{"data":[]}</textarea>
-        </div>
-        <button class="btn" onclick="toast('Saved successfully','success')">💾 Save Pages</button>
-      </div>
-
-      <div class="card">
-        <div class="form-group">
-          <label class="form-label">✍️ News Text লিখুন</label>
-          <textarea class="form-control" id="fb-news-input" rows="8" placeholder="এখানে সংবাদের মূল বিষয় লিখুন..."></textarea>
+      
+      <div id="view-fbpost" class="admin-panel-view active-view">
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">📁 File Upload</label>
+            <a href="https://www.julyforum.com" target="_blank" class="btn">🌐 Live Site</a>
+          </div>
+          <div class="form-group">
+            <label class="form-label">📋 Pages JSON (একবার paste করুন)</label>
+            <textarea class="form-control" id="fb-pages-json" rows="2">{"data":[]}</textarea>
+          </div>
+          <button class="btn" onclick="toast('Pages updated successfully','success')">💾 Save Pages</button>
         </div>
 
-        <div style="display:flex;gap:12px;margin-bottom:20px;">
-          <button class="btn" id="fb-gen-btn" onclick="fbGenerateReel()">🎬 Reel বানাও</button>
-          <button class="btn" style="background:var(--bg4);color:var(--text);" onclick="toast('Card rendering disabled. Use Reel engine.','error')">✨ AI দিয়ে Card বানাও</button>
-        </div>
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">✍️ News Text লিখুন</label>
+            <textarea class="form-control" id="fb-news-input" rows="8" placeholder="এখানে সংবাদের মূল বিষয় লিখুন..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">📝 Generated Caption / Tags</label>
-          <textarea class="form-control" id="fb-caption" rows="3" placeholder="AI Generated caption will show here..."></textarea>
-        </div>
+          <div style="display:flex;gap:12px;margin-bottom:20px;">
+            <button class="btn" id="fb-gen-btn" onclick="fbGenerateReel()">🎬 Reel বানাও</button>
+            <button class="btn" style="background:var(--bg4);color:var(--text);" onclick="toast('AI layout card system parsed. Use cinematic reels engine instead.','error')">✨ AI দিয়ে Card বানাও</button>
+          </div>
 
-        <div id="fb-preview" style="display:none; margin-top:20px;">
-          <label class="form-label">📺 Cinematic Reel Preview</label>
-          <video id="fb-reel-video" controls style="width:320px; border-radius:8px; background:#000; display:none; margin-bottom:15px;"></video>
-          <canvas id="fb-card-canvas" style="display:none;"></canvas>
-          <div style="display:flex; gap:12px;">
-            <button class="btn" id="fb-download-btn" onclick="fbDownloadReel()">📥 Download Video</button>
-            <button class="btn btn-danger" id="fb-post-reels-btn" onclick="fbPostToReels()">🚀 Copy Caption & Open Facebook Composer</button>
+          <div class="form-group">
+            <label class="form-label">📝 Generated Caption / Tags</label>
+            <textarea class="form-control" id="fb-caption" rows="3" placeholder="AI Generated caption will show here..."></textarea>
+          </div>
+
+          <div id="fb-preview" style="display:none; margin-top:20px;">
+            <label class="form-label">📺 Cinematic Reel Preview</label>
+            <video id="fb-reel-video" controls style="width:320px; border-radius:8px; background:#000; display:none; margin-bottom:15px;"></video>
+            <canvas id="fb-card-canvas" style="display:none;"></canvas>
+            <div style="display:flex; gap:12px;">
+              <button class="btn" id="fb-download-btn" onclick="fbDownloadReel()">📥 Download Video</button>
+              <button class="btn btn-danger" id="fb-post-reels-btn" onclick="fbPostToReels()">🚀 Copy Caption & Open Facebook Composer</button>
+            </div>
           </div>
         </div>
-
       </div>
+
+      <div id="view-analytics" class="admin-panel-view">
+        <div class="analytics-grid">
+          <div class="stat-card">
+            <span style="color:var(--text2);font-size:13px;">Total Page Views</span>
+            <span class="stat-val">1,424,950</span>
+            <span style="color:var(--green);font-size:12px;">↑ 12.4% this week</span>
+          </div>
+          <div class="stat-card">
+            <span style="color:var(--text2);font-size:13px;">Active Forum Members</span>
+            <span class="stat-val">28,450</span>
+            <span style="color:var(--green);font-size:12px;">↑ 8.1% target reach</span>
+          </div>
+          <div class="stat-card">
+            <span style="color:var(--text2);font-size:13px;">Reels Total Reach</span>
+            <span class="stat-val">842,110</span>
+            <span style="color:var(--accent);font-size:12px;">Viral algorithm index high</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>📈 System Realtime Performance Monitor</h3>
+          <p style="color:var(--text2); margin-top:10px; font-size:14px;">Netlify bandwidth, Groq Proxy request distributions and Edge functions latency profiles are performing optimal execution metrics.</p>
+        </div>
+      </div>
+
+      <div id="view-dashboard" class="admin-panel-view">
+        <div class="analytics-grid">
+          <div class="stat-card"><span>🚨 Active System Alerts</span><span class="stat-val" style="color:var(--red);">0</span></div>
+          <div class="stat-card"><span>📋 Pending Forms Queue</span><span class="stat-val">12</span></div>
+          <div class="stat-card"><span>⚡ Netlify Server State</span><span class="stat-val" style="color:var(--green);">Online</span></div>
+        </div>
+        <div class="card"><h3>Overview Configuration System</h3><p style="margin-top:10px; color:var(--text2);">Welcome back to JOAF Server Core control matrix grid node.</p></div>
+      </div>
+
+      <div id="view-settings" class="admin-panel-view">
+        <div class="card">
+          <h3>⚙️ Global Environment & Proxy Variables</h3>
+          <div class="form-group" style="margin-top:20px;">
+            <label class="form-label">LLM Core Model Proxy Target</label>
+            <input class="form-control" type="text" value="llama-3.3-70b-versatile" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Video Video Capture Stream Bitrate</label>
+            <input class="form-control" type="text" value="5,000,000 bps (Cinematic Studio Target)" disabled>
+          </div>
+          <button class="btn" onclick="toast('Global configs synchronized','success')">Update Master Matrix</button>
+        </div>
+      </div>
+
+      <div id="view-notification" class="admin-panel-view"><div class="card"><h3>🔔 Push Notifications Dispatcher</h3><p style="color:var(--text2);margin-top:10px;">Queue app alerts and real-time banner modifications.</p></div></div>
+      <div id="view-warning" class="admin-panel-view"><div class="card"><h3>🚨 Emergency System Warnings (সতর্কতা)</h3><p style="color:var(--text2);margin-top:10px;">Content logs warning parameters block config.</p></div></div>
+      <div id="view-blood" class="admin-panel-view"><div class="card"><h3>🩸 Blood Donors Directory (রক্তদাতা)</h3><p style="color:var(--text2);margin-top:10px;"> Roster queries grid containing verified listings.</p></div></div>
+      <div id="view-press" class="admin-panel-view"><div class="card"><h3>📰 Press Releases Index</h3><p style="color:var(--text2);margin-top:10px;">Publish and format community releases array entries.</p></div></div>
+      <div id="view-cardgen" class="admin-panel-view"><div class="card"><h3>🎨 Legacy Image Card System</h3><p style="color:var(--text2);margin-top:10px;">Legacy image export configuration module logs database tracing.</p></div></div>
+      <div id="view-leader" class="admin-panel-view"><div class="card"><h3>🏛️ Leader Tracking Registry (নেতা ট্র্যাকার)</h3><p style="color:var(--text2);margin-top:10px;">Reference index array logs for national leaders profiles.</p></div></div>
+      <div id="view-warrior" class="admin-panel-view"><div class="card"><h3>✊ July Revolution Fighters Archive (জুলাই যোদ্ধা)</h3><p style="color:var(--text2);margin-top:10px;">Verified profiles and action archives matching criteria.</p></div></div>
+      <div id="view-market" class="admin-panel-view"><div class="card"><h3>🛒 Market Prices Metrics (বাজার দর)</h3><p style="color:var(--text2);margin-top:10px;">Dynamic essential inventory list pricing update interface.</p></div></div>
+      <div id="view-medicine" class="admin-panel-view"><div class="card"><h3>💊 Medical Formulations Pricing Index (ওষুধের দাম)</h3><p style="color:var(--text2);margin-top:10px;">Global pharmaceutical reference lookups dataset feed.</p></div></div>
+      <div id="view-members" class="admin-panel-view"><div class="card"><h3>👥 Verified Platform Members</h3><p style="color:var(--text2);margin-top:10px;">Profile management table registry configurations.</p></div></div>
+      <div id="view-polls" class="admin-panel-view"><div class="card"><h3>🗳️ Streak Counters & Audience Engagement Polls</h3><p style="color:var(--text2);margin-top:10px;">Launch server-wide surveys, modify vote counts arrays.</p></div></div>
+      <div id="view-forum" class="admin-panel-view"><div class="card"><h3>💬 July Forum Administration Panel (julyforum.com)</h3><p style="color:var(--text2);margin-top:10px;">Category locks, spam mitigation indices, admin permissions node tree mappings.</p></div></div>
+
     </div>
   </div>
 
   <div class="toast-container" id="toast-container"></div>
 
   <script>
+  function switchPanelTab(targetViewId) {
+    document.querySelectorAll('.admin-panel-view').forEach(viewElement => {
+      viewElement.classList.remove('active-view');
+    });
+    document.querySelectorAll('.menu-tab-link').forEach(navItem => {
+      navItem.classList.remove('active');
+    });
+    
+    const activeTargetNode = document.getElementById(targetViewId);
+    if(activeTargetNode) {
+      activeTargetNode.classList.add('active-view');
+    }
+    
+    const targetedNavMenuNode = document.getElementById('tab-' + targetViewId);
+    if(targetedNavMenuNode) {
+      targetedNavMenuNode.classList.add('active');
+      
+      const linkText = targetedNavMenuNode.querySelector('a').innerText;
+      document.getElementById('current-panel-title-text').innerText = linkText;
+    }
+  }
+
   function toast(msg, type='success') {
     const container = document.getElementById('toast-container');
     const t = document.createElement('div');
