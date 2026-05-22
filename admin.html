@@ -2528,167 +2528,60 @@ function t2vBuildPrompt(rawText, slides) {
 // ── Space Catalogue — probed in order, first alive wins ────────
 // Each entry: { base, fnIndex, buildData(prompt,neg,seed) }
 // HF Space API: POST /queue/join  →  EventSource /queue/data
-const T2V_SPACE_CATALOGUE = [
-  {
-    base: 'https://wan-video-wan2-1-t2v-1-3b.hf.space',
-    label: 'Wan2.1-1.3B (Fast)',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, n, 81, 20, 7.0, seed, 480, 832],
-  },
-  {
-    base: 'https://hysts-zeroscope-v2.hf.space',
-    label: 'ZeroScope-v2 XL',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, 24, 7.5, seed, 576, 1024],
-  },
-  {
-    base: 'https://multimodalart-stable-video-diffusion.hf.space',
-    label: 'Stable Video Diffusion',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, 25, seed, true],
-  },
-  {
-    base: 'https://damo-vilab-modelscope-text-to-video-synthesis.hf.space',
-    label: 'ModelScope T2V',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, 50, 7.5, seed],
-  },
-  {
-    base: 'https://wan-video-wan2-1-t2v-14b.hf.space',
-    label: 'Wan2.1-14B (HQ)',
-    fnIndex: 0,
-    buildData: (p, n, seed) => [p, n, 97, 25, 7.0, seed, 480, 832],
-  },
-];
+// ── Netlify Proxy দিয়ে HuggingFace Video ──────────────────────
+async function renderVideoWithAudio(slides, mood, rawText, logEl) {
+  if (logEl) logEl.innerHTML = '';
 
-// ── Probe: check if a space is alive (HEAD /info, 6s timeout) ──
-async function t2vProbeSpace(base) {
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 6000);
+  t2vLog(logEl, 1, 'Prompt কে Cinematic Matrix এ upgrade করা হচ্ছে...', 'stage');
+  await new Promise(r => setTimeout(r, 200));
+  const { positive: prompt, negative: negPrompt } = t2vBuildPrompt(rawText, slides);
+  t2vLog(logEl, 1, `✓ Enhanced prompt ready`, 'ok');
+
+  t2vLog(logEl, 2, 'Netlify → HuggingFace Wan2.1 API এ request পাঠানো হচ্ছে...', 'stage');
+  t2vLog(logEl, 2, '⏱ ৩–১০ মিনিট লাগতে পারে — model load হচ্ছে...', 'info');
+
+  const seed = Math.floor(Math.random() * 2147483647);
+
+  let elapsed = 0;
+  const hb = setInterval(() => {
+    elapsed += 10;
+    const m = Math.floor(elapsed/60), s = elapsed%60;
+    t2vLog(logEl, 3, `⟳ Generating... ${m>0?m+'m ':''}${s}s — page বন্ধ করবেন না`, 'active');
+  }, 10000);
+
   try {
-    const r = await fetch(`${base}/info`, { signal: ctrl.signal });
-    clearTimeout(tid);
-    return r.ok || r.status === 404; // 404 = alive but no /info — still usable
-  } catch { clearTimeout(tid); return false; }
+    const res = await fetch('/.netlify/functions/hf-video-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        negative_prompt: negPrompt,
+        num_frames: 81,
+        num_inference_steps: 20,
+        guidance_scale: 7.0,
+        seed,
+        height: 480,
+        width: 832,
+      }),
+    });
+
+    clearInterval(hb);
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`HF API error ${res.status}: ${err.slice(0,200)}`);
+    }
+
+    t2vLog(logEl, 4, '✓ Video data পাওয়া গেছে — blob তৈরি হচ্ছে...', 'ok');
+    const blob = await res.blob();
+    t2vLog(logEl, 5, `✅ Video ready — ${(blob.size/1024/1024).toFixed(1)} MB`, 'ok');
+    return blob;
+
+  } catch(e) {
+    clearInterval(hb);
+    throw e;
+  }
 }
-
-// ── One space attempt: join queue → EventSource → blob ─────────
-function t2vAttemptSpace(space, prompt, negPrompt, seed, logEl) {
-  return new Promise(async (resolve, reject) => {
-    const sessionHash = Math.random().toString(36).slice(2, 14);
-    let settled = false, heartbeatTimer, timeoutTimer;
-
-    const done  = (v) => { if(settled)return; settled=true; clearInterval(heartbeatTimer); clearTimeout(timeoutTimer); resolve(v); };
-    const fail  = (e) => { if(settled)return; settled=true; clearInterval(heartbeatTimer); clearTimeout(timeoutTimer); reject(e); };
-
-    // ── 1. Join queue ────────────────────────────────────────
-    let joinRes;
-    try {
-      joinRes = await fetch(`${space.base}/queue/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          data: space.buildData(prompt, negPrompt, seed),
-          fn_index: space.fnIndex,
-          session_hash: sessionHash,
-          event_data: null,
-        }),
-      });
-    } catch(e) { return fail(new Error(`join fetch failed: ${e.message}`)); }
-
-    if (!joinRes.ok) return fail(new Error(`HTTP ${joinRes.status} on /queue/join`));
-    t2vLog(logEl, 3, `✓ Queue joined → ${space.label}`, 'ok');
-
-    // ── 2. EventSource poll ──────────────────────────────────
-    let evtSource;
-    try {
-      evtSource = new EventSource(`${space.base}/queue/data?session_hash=${sessionHash}`);
-    } catch(e) { return fail(new Error(`EventSource failed: ${e.message}`)); }
-
-    let elapsedSec = 0;
-    heartbeatTimer = setInterval(() => {
-      elapsedSec += 9;
-      const m = Math.floor(elapsedSec/60), s = elapsedSec%60;
-      t2vLog(logEl, 4, `⟳ Generating... ${m>0?m+'m ':''}${s}s elapsed — page বন্ধ করবেন না`, 'active');
-    }, 9000);
-
-    // 22-minute hard ceiling per space
-    timeoutTimer = setTimeout(() => {
-      evtSource.close();
-      fail(new Error('timeout after 22min'));
-    }, 22*60*1000);
-
-    evtSource.onmessage = async (ev) => {
-      let msg;
-      try { msg = JSON.parse(ev.data); } catch { return; }
-
-      if (msg.msg === 'send_hash') {
-        // Some spaces need a hash acknowledgement
-        fetch(`${space.base}/queue/status`, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ session_hash: sessionHash })
-        }).catch(()=>{});
-      }
-
-      if (msg.msg === 'queue_full') {
-        evtSource.close(); fail(new Error('queue_full'));
-      }
-      if (msg.msg === 'estimation') {
-        const rank = msg.rank_eta ? `~${Math.round(msg.rank_eta)}s` : `#${msg.rank||'?'}`;
-        t2vLog(logEl, 3, `Queue position: ${rank}`, 'info');
-      }
-      if (msg.msg === 'process_starts') {
-        t2vLog(logEl, 4, '▶ Frame generation শুরু হয়েছে — cinematic lighting simulate হচ্ছে...', 'stage');
-      }
-      if (msg.msg === 'process_generating') {
-        const pct = msg.progress?.index && msg.progress?.length
-          ? Math.round(msg.progress.index/msg.progress.length*100)+'%' : '';
-        if (pct) t2vLog(logEl, 4, `Frames: ${pct}`, 'active');
-      }
-      if (msg.msg === 'process_completed') {
-        evtSource.close();
-        t2vLog(logEl, 5, '⟳ Video stream পাওয়া গেছে — blob তৈরি হচ্ছে...', 'stage');
-
-        // ── 3. Extract video URL from output ────────────────
-        const out = msg.output?.data;
-        let videoSrc = null;
-
-        const dig = (o) => {
-          if (!o) return null;
-          if (typeof o === 'string' && /\.(mp4|webm|mov)/i.test(o)) return o;
-          if (typeof o === 'string' && (o.startsWith('http')||o.startsWith('/file=')||o.startsWith('blob:'))) return o;
-          if (o?.video?.url) return o.video.url;
-          if (o?.url) return o.url;
-          if (o?.path) return (o.path.startsWith('http')?'':space.base+'/file=')+o.path;
-          if (Array.isArray(o)) { for(const x of o){const r=dig(x);if(r)return r;} }
-          if (typeof o==='object'){for(const k of Object.keys(o)){const r=dig(o[k]);if(r)return r;}}
-          return null;
-        };
-        videoSrc = dig(out);
-
-        if (!videoSrc) return fail(new Error('video URL পাওয়া যায়নি'));
-
-        // Make absolute URL
-        if (videoSrc.startsWith('/')) videoSrc = space.base + videoSrc;
-
-        try {
-          const vRes = await fetch(videoSrc);
-          if (!vRes.ok) throw new Error(`video fetch HTTP ${vRes.status}`);
-          const blob = await vRes.blob();
-          t2vLog(logEl, 5, `✅ Video ready — ${(blob.size/1024/1024).toFixed(1)} MB`, 'ok');
-          done(blob);
-        } catch(fe) { fail(fe); }
-      }
-    };
-
-    evtSource.onerror = (e) => {
-      // EventSource auto-retries; only fail after several consecutive errors
-      // We use the timeout as the real backstop — don't fail on first error
-      t2vLog(logEl, 3, '⟳ Connection flicker — reconnecting...', 'info');
-    };
-  });
-}
-
 // ── Main orchestrator ───────────────────────────────────────────
 async function renderVideoWithAudio(slides, mood, rawText, logEl) {
   if (logEl) logEl.innerHTML = '';
