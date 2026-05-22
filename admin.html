@@ -2369,19 +2369,26 @@ async function fbGenerateReel() {
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         max_tokens: 2000,
-        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার। নিচের news টা নিয়ে কাজ করো।
+        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার।
 
-ধাপ ১: news টাকে বিস্তারিত করো।
-ধাপ ২: ঠিক ৫টা slide এ ভাগ করো। প্রতিটা slide এর জন্য:
-  - text: slide content বাংলায় ২-৩ লাইন
-  - label: এই slide এর unique বাংলা শিরোনাম (সর্বোচ্চ ৩ শব্দ, news context অনুযায়ী — যেমন "সংঘাতের সূচনা", "মাঠের চিত্র", "রাষ্ট্রের নীরবতা", "জনতার ক্রোধ", "এগিয়ে চলো" — কখনো একই label repeat করবে না)
-  - theme: এই slide এর visual theme — এই list থেকে বেছে নাও context অনুযায়ী: aurora|cyber|ocean|gold|matrix|fire|storm|blood|galaxy|neon|forest|desert|ice|volcanic|cosmic
-  - illustration: এই slide এ কী animated drawing হবে — এই list থেকে: people|alert|ripple|chart|megaphone|fire|shield|broken|rise|hand|eye|clock|map|flag|chain|star|wave|spiral|pulse|explosion
+⚠️ গুরুত্বপূর্ণ নিয়ম:
+- নিচের news এর বিষয়বস্তু থেকে একটুও বের হবে না
+- slide এর text সরাসরি এই news এর তথ্য থেকে নেবে
+- কোনো কিছু বানিয়ে বা অনুমান করে লিখবে না
 
-শুধু JSON দাও:
+ধাপ ১: news টাকে ৫টা logical অংশে ভাগ করো।
+ধাপ ২: প্রতিটা অংশের জন্য:
+  - text: সেই অংশের তথ্য বাংলায় ২-৩ লাইনে (news থেকে সরাসরি)
+  - label: এই slide এর unique বাংলা শিরোনাম (সর্বোচ্চ ৩ শব্দ, এই news এর context অনুযায়ী, কখনো repeat করবে না)
+  - theme: context অনুযায়ী বেছে নাও: aurora|cyber|ocean|gold|matrix|fire|storm|blood|galaxy|neon|forest|desert|ice|volcanic|cosmic
+  - illustration: context অনুযায়ী বেছে নাও: people|alert|ripple|chart|megaphone|fire|shield|broken|rise|hand|eye|clock|map|flag|chain|star|wave|spiral|pulse|explosion
+ধাপ ৩: tags — এই news এর জন্য ৩-৫টা relevant English keyword (Facebook tags হিসেবে ব্যবহার হবে, comma separated, # ছাড়া)
+
+শুধু JSON দাও, অন্য কিছু না:
 {
   "mood": "urgent|sad|positive|neutral|angry",
   "caption": "Facebook Reels caption বাংলায়, emoji সহ, ৩টা hashtag শেষে",
+  "tags": "keyword1, keyword2, keyword3",
   "slides": [
     {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
     {"text": "...", "label": "...", "theme": "...", "illustration": "..."},
@@ -2396,11 +2403,14 @@ News: \${text}` }]
     });
     const aiData = await res.json();
     const raw = aiData.choices?.[0]?.message?.content || '{}';
+    // Robustly extract JSON — find first { to last }
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('AI দিয়ে JSON বের করা যায়নি');
+    if (!jsonMatch) throw new Error('AI JSON বের করা যায়নি: ' + raw.substring(0,100));
     const parsed = JSON.parse(jsonMatch[0]);
 
     document.getElementById('fb-caption').value = parsed.caption || text;
+    // Store tags globally so extension can use it
+    window._joafTags = parsed.tags || '';
 
     // New format: slides = [{text, label, theme, illustration}] or old string format
     const rawSlides = parsed.slides || [text];
@@ -3369,7 +3379,11 @@ async function fbPostToReels() {
   a.download = 'joaf-reel.webm';
   a.click();
   const caption = document.getElementById('fb-caption').value || '';
-  try { await navigator.clipboard.writeText(caption); } catch(e) {}
+  const tags = window._joafTags || '';
+  const clipText = caption + (tags ? '\n\nTags: ' + tags : '');
+  try { await navigator.clipboard.writeText(clipText); } catch(e) {}
+  // Also store separately for extension
+  window._joafTagsForExtension = tags;
   setTimeout(() => {
     window.open('https://business.facebook.com/latest/reels_composer/?ref=biz_web_home_post_to_multiple_pages&asset_id=901104276426275&context_ref=HOME', '_blank');
   }, 1000);
