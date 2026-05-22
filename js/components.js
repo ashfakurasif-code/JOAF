@@ -1615,6 +1615,7 @@ setTimeout(() => {
 
 
 
+
 // ── Dynamic latest press release in ticker ──────────────────
 (async function updatePressReleaseTicker() {
   try {
@@ -1629,8 +1630,14 @@ setTimeout(() => {
     const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
     if (snap.empty) return;
     const href = '/press-releases/view.html?id=' + snap.docs[0].id;
-    document.querySelectorAll('#joafTickerTrack .ticker-item a[href="/media-news.html"]').forEach(a => {
-      a.href = href;
-    });
+    const update = () => {
+      const links = document.querySelectorAll('#joafTickerTrack .ticker-item a[href="/media-news.html"]');
+      if (links.length) {
+        links.forEach(a => a.href = href);
+      } else {
+        setTimeout(update, 300);
+      }
+    };
+    update();
   } catch(e) { console.warn('Ticker press release update failed:', e); }
 })();
