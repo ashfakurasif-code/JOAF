@@ -2466,6 +2466,9 @@ async function fbAnalyzeImage(input) {
 
 async function fbGenerateReel() {
   const text = document.getElementById('fb-news-input').value.trim();
+  const imgInput = document.getElementById('fb-img-input');
+  const imgFile = imgInput && imgInput.files && imgInput.files[0];
+  if (!text && !imgFile) return alert('News text লিখুন অথবা Image upload করুন');
   if (!text) return alert('News text লিখুন');
   const btn = document.getElementById('fb-gen-btn');
   btn.textContent = '⏳ তৈরি হচ্ছে...';
@@ -2476,6 +2479,18 @@ async function fbGenerateReel() {
 
   try {
     // AI দিয়ে caption + slides + mood বানাও
+    // Pre-load image as base64 for vision API
+    window._fbImgBase64 = '';
+    const imgInputPre = document.getElementById('fb-img-input');
+    const imgFilePre = imgInputPre && imgInputPre.files && imgInputPre.files[0];
+    if (imgFilePre) {
+      window._fbImgBase64 = await new Promise(function(res){
+        const rd = new FileReader();
+        rd.onload = function(e){ res(e.target.result.split(',')[1]); };
+        rd.onerror = function(){ res(''); };
+        rd.readAsDataURL(imgFilePre);
+      });
+    }
     // Retry AI up to 2 times on failure
     let res, aiData;
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -2484,39 +2499,29 @@ async function fbGenerateReel() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: imgFile ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile',
         max_tokens: 2000,
-        messages: [{ role: 'user', content: `তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার।
-
+        messages: (function(){
+          var userContent = [];
+          var t2 = document.getElementById('fb-news-input').value.trim();
+          var imgF = document.getElementById('fb-img-input');
+          var imgFile2 = imgF && imgF.files && imgF.files[0];
+          if (imgFile2 && window._fbImgBase64) {
+            userContent.push({type:'image_url', image_url:{url:'data:'+(imgFile2.type||'image/jpeg')+';base64,'+window._fbImgBase64}});
+          }
+          userContent.push({type:'text', text:`তুমি JOAF এর সোশ্যাল মিডিয়া ম্যানেজার।
 ⚠️ STRICT RULES — এগুলো ভাঙলে চলবে না:
 1. slide এর "text" field এ কখনো hashtag (#), "Tags:", emoji দেবে না — শুধু plain বাংলা বাক্য
 2. slide এর "text" field এ caption এর কোনো অংশ দেবে না
 3. প্রতিটা slide এ আলাদা আলাদা তথ্য থাকবে — repeat করবে না
 4. caption এবং slide text সম্পূর্ণ আলাদা content হবে
-5. input যদি short slogan বা caption হয় — তাহলে সেটাকে expand করে news style এ ৩টা slide বানাও
-
-ধাপ ১: input content টাকে ৩টা distinct visual moment এ ভাগ করো
-ধাপ ২: slide 1 = attention-grabbing hook (১টা powerful বাক্য), slide 2 = বিস্তারিত তথ্য, slide 3 = call to action বা উপসংহার
-প্রতিটা slide এর জন্য:
-  - text: plain বাংলায় ২-৩টা বাক্য, কোনো hashtag বা emoji নেই
-  - label: ২-৩ শব্দের unique বাংলা শিরোনাম
-  - theme: aurora|cyber|ocean|gold|matrix|fire|storm|blood|galaxy|neon|forest|desert|ice|volcanic|cosmic
-  - illustration: people|alert|ripple|chart|megaphone|fire|shield|broken|rise|hand|eye|clock|map|flag|chain|star|wave|spiral|pulse|explosion
-ধাপ ৩: caption = separate punchy text with emojis and hashtags (slide text এর বাইরে)
-
-শুধু raw JSON দাও, markdown বা backtick নেই:
-{
-  "mood": "urgent|sad|positive|neutral|angry",
-  "caption": "Facebook caption বাংলায়, emoji সহ, ৩টা hashtag শেষে — এটা slide এ দেখাবে না",
-  "tags": "keyword1, keyword2, keyword3",
-  "slides": [
-    {"text": "hook sentence বাংলায়, কোনো hashtag নেই", "label": "শুরু", "theme": "cyber", "illustration": "alert"},
-    {"text": "বিস্তারিত তথ্য বাংলায়, কোনো hashtag নেই", "label": "বিস্তার", "theme": "ocean", "illustration": "people"},
-    {"text": "উপসংহার বা আহ্বান বাংলায়, কোনো hashtag নেই", "label": "আহ্বান", "theme": "matrix", "illustration": "megaphone"}
-  ]
-}
-
-News: ${text}` }]
+ধাপ ১: image ও/অথবা text থেকে ৩টা distinct visual moment এ ভাগ করো
+ধাপ ২: slide 1 = hook, slide 2 = বিস্তারিত, slide 3 = উপসংহার
+শুধু raw JSON দাও:
+{"mood":"urgent|sad|positive|neutral|angry","caption":"Bengali caption with emoji and hashtags","tags":"tag1, tag2, tag3","slides":[{"text":"hook বাংলায়","label":"শুরু","theme":"cyber","illustration":"alert"},{"text":"বিস্তারিত বাংলায়","label":"বিস্তার","theme":"ocean","illustration":"people"},{"text":"উপসংহার বাংলায়","label":"আহ্বান","theme":"matrix","illustration":"megaphone"}]}
+News/Context: ${t2 || '(image দেখে বিশ্লেষণ করো)'}`});
+          return [{role:'user', content:userContent}];
+        })()
       })
     });
           break;
