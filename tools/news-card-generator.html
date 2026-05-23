@@ -54,7 +54,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .up-ovl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:20;background:var(--bg);}
 .up-zone{width:300px;border:2px dashed var(--border3);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:.2s;position:relative;background:var(--bg2);}
 .up-zone:hover,.up-zone.drag{border-color:var(--accent);background:rgba(240,82,82,.05);}
-.up-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.up-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:5;pointer-events:all;}
 .ai-ovl{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:22;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);}
 .ai-ovl.show{display:flex;}
 .ai-box{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:24px 28px;text-align:center;min-width:260px;}
@@ -125,7 +125,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   <div class="sec">
     <div class="sec-h">📸 Image</div>
     <div style="border:2px dashed var(--border2);border-radius:8px;padding:9px;text-align:center;cursor:pointer;position:relative;" id="sbZone" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
-      <input type="file" id="fIn" accept="image/*" onchange="onFile(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+      <input type="file" id="fIn" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:5;pointer-events:all;">
       <div id="sbPrev" style="display:none;margin-bottom:5px"><img id="sbThumb" style="max-height:65px;border-radius:5px;max-width:100%"></div>
       <div id="sbLbl" style="font-size:11px;color:var(--text2)">📸 Click বা drag</div>
     </div>
@@ -209,7 +209,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 <div class="cvwrap" id="cvwrap">
   <div class="up-ovl" id="upOvl">
     <div class="up-zone" id="upZone">
-      <input type="file" id="fIn2" accept="image/*" onchange="onFile(event)">
+      <input type="file" id="fIn2" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:5;pointer-events:none;">
       <div style="font-size:38px;margin-bottom:8px">📸</div>
       <div style="font-size:13px;font-weight:700;margin-bottom:4px">News Image আপলোড করুন</div>
       <div style="font-size:11px;color:var(--text2)">TV channel বা news screenshot<br>drag & drop বা click</div>
@@ -812,6 +812,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ── File / AI ──
 function onFile(ev){const f=ev.target.files[0];if(f)loadF(f);}
 function loadF(file){
+  if(!file||!file.type.startsWith('image/')){showT('শুধু image file দিন!','er');return;}
   const r=new FileReader();
   r.onload=ev=>{
     const img=new Image();
@@ -821,10 +822,14 @@ function loadF(file){
       document.getElementById('sbPrev').style.display='block';
       document.getElementById('sbLbl').textContent='✅ loaded';
       document.getElementById('upOvl').style.display='none';
+      // Reset both inputs — same file পরেরবার onchange fire করবে
+      ['fIn','fIn2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       startAI();
     };
+    img.onerror=()=>showT('Image load হয়নি, অন্য file try করুন','er');
     img.src=ev.target.result;
   };
+  r.onerror=()=>showT('File read error!','er');
   r.readAsDataURL(file);
 }
 
@@ -901,7 +906,7 @@ function resetAll(){
   SRC=null;SB64=null;selId=null;iact=null;
   document.getElementById('eHl').value='';document.getElementById('eSub').value='';
   document.getElementById('eSrc').value='JOAF News';document.getElementById('eLoc').value='';
-  ['fIn','fIn2'].forEach(id=>document.getElementById(id).value='');
+  ['fIn','fIn2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('sbPrev').style.display='none';
   document.getElementById('sbLbl').textContent='📸 Click বা drag';
   document.getElementById('upOvl').style.display='flex';
@@ -952,10 +957,25 @@ function showT(msg,t='ok'){
   bSw('swLB',SWS,c=>{lBC=c;draw();});
   bSw('swFC',SWS,c=>{fC=c;draw();});
   apP(0,false);initEls();
+  // Sidebar file input
+  document.getElementById('fIn').addEventListener('change',e=>{const f=e.target.files[0];if(f)loadF(f);});
+  // ── Unified upload zone setup ──
   const uz=document.getElementById('upZone');
+  const fIn2=document.getElementById('fIn2');
+  // Drag events on the zone itself
   uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
-  uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
-  uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadF(f);});
+  uz.addEventListener('dragleave',e=>{if(!uz.contains(e.relatedTarget))uz.classList.remove('drag');});
+  uz.addEventListener('drop',e=>{
+    e.preventDefault();uz.classList.remove('drag');
+    const f=e.dataTransfer.files[0];
+    if(f)loadF(f);
+  });
+  // Click anywhere on zone triggers the hidden file input
+  uz.addEventListener('click',e=>{
+    if(e.target!==fIn2) fIn2.click();
+  });
+  // Input change
+  fIn2.addEventListener('change',e=>{const f=e.target.files[0];if(f)loadF(f);});
   window.addEventListener('resize',fitZ);
 })();
 </script>
