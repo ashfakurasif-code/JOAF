@@ -500,18 +500,7 @@ const JOAFComponents = {
     wa.innerHTML='<i class="zmdi zmdi-whatsapp"></i>';
     wa.onmouseenter=()=>wa.style.transform='scale(1.12)';wa.onmouseleave=()=>wa.style.transform='';
     document.body.appendChild(wa);
-    const fb=document.createElement('a');fb.href=`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-    fb.target='_blank';fb.rel='noopener';fb.setAttribute('aria-label','Facebook');
-    fb.style.cssText=S+'bottom:180px;background:#1877F2;color:#fff;';
-    fb.innerHTML='<i class="zmdi zmdi-facebook"></i>';
-    fb.onmouseenter=()=>fb.style.transform='scale(1.12)';fb.onmouseleave=()=>fb.style.transform='';
-    document.body.appendChild(fb);
-    const cp=document.createElement('button');cp.setAttribute('aria-label','লিংক কপি');
-    cp.style.cssText=S+'bottom:128px;background:#0f172a;color:#fff;border:none;cursor:pointer;';
-    cp.innerHTML='<i class="zmdi zmdi-link"></i>';
-    cp.onmouseenter=()=>cp.style.transform='scale(1.12)';cp.onmouseleave=()=>cp.style.transform='';
-    cp.onclick=()=>{navigator.clipboard.writeText(window.location.href).then(()=>{cp.innerHTML='<i class="zmdi zmdi-check"></i>';setTimeout(()=>cp.innerHTML='<i class="zmdi zmdi-link"></i>',2000);});};
-    document.body.appendChild(cp);
+
   },
 
   initAnimations() {
