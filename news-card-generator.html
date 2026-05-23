@@ -574,6 +574,7 @@ async function dFull(cv,fe=false){
     const badgeX=pad;
 ctx.fillStyle=cBC;rr(ctx,badgeX,tY,cbW,cbH,5*sc);ctx.fill();
     ctx.fillStyle=cTxt;ctx.fillText(catLabel,badgeX+cPX,tY+cPY+cSz*0.85);
+    tY+=cbH+10*sc;
   }
   if(sHL){
     ctx.font=`900 ${hlSz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
