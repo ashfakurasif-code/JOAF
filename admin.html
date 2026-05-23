@@ -1180,6 +1180,7 @@ window.doLogin = async function() {
     });
     if (res.status === 401) { setErr('❌ ভুল username বা password'); btn.disabled=false; btn.textContent='প্রবেশ করুন →'; return; }
     ADMIN_KEY = pass;
+    localStorage.setItem('joaf_admin_key', pass);
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     initDashboard();
@@ -1190,9 +1191,31 @@ window.doLogin = async function() {
 
 window.doLogout = function() {
   ADMIN_KEY = '';
+  localStorage.removeItem('joaf_admin_key');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 };
+
+
+// ── Auto-login from localStorage ──
+(async function autoLogin(){
+  const saved = localStorage.getItem('joaf_admin_key');
+  if(!saved) return;
+  try {
+    const res = await fetch('/.netlify/functions/send-notification',{
+      method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':saved},
+      body:JSON.stringify({_verify:true})
+    });
+    if(res.status !== 401){
+      ADMIN_KEY = saved;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      initDashboard();
+    } else {
+      localStorage.removeItem('joaf_admin_key');
+    }
+  } catch(e){ /* network error, show login */ }
+})();
 
 function setErr(msg) { document.getElementById('lerr').textContent = msg; }
 
