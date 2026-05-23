@@ -778,13 +778,13 @@ async function dFull(cv,fe){
 
   }
 
-  // 4. IMAGE — 60% of remaining height
+  // 4. IMAGE — full height from topBar to footer (bottom-anchored layout)
 
   const remH=H-topEnd-ftH;
 
-  const imgZH=Math.round(remH*0.55);
-
   const imgZY=topEnd;
+
+  const imgZH=remH; // image fills ALL remaining space
 
   if(sImg&&SRC){
 
@@ -812,21 +812,15 @@ async function dFull(cv,fe){
 
       ctx.drawImage(tmp,0,0,sw,sh,bDx,bDy,dw,dh);
 
-      // top fade
+      // top fade — subtle darkness at top
+      const gT=ctx.createLinearGradient(0,imgZY,0,imgZY+imgZH*0.25);
+      gT.addColorStop(0,`rgba(0,0,0,${ovl*0.5})`);gT.addColorStop(1,'transparent');
+      ctx.fillStyle=gT;ctx.fillRect(0,imgZY,W,imgZH*0.25);
 
-      const gT=ctx.createLinearGradient(0,imgZY,0,imgZY+imgZH*0.3);
-
-      gT.addColorStop(0,`rgba(0,0,0,${ovl*0.4})`);gT.addColorStop(1,'transparent');
-
-      ctx.fillStyle=gT;ctx.fillRect(0,imgZY,W,imgZH*0.3);
-
-      // bottom fade — strong, covers lower 55% of image
-
+      // bottom fade — strong gradient covers bottom 50% of image for text readability
       const gB=ctx.createLinearGradient(0,imgZY+imgZH*0.35,0,imgZY+imgZH);
-
-      gB.addColorStop(0,'transparent');gB.addColorStop(0.5,bg+'cc');gB.addColorStop(1,bg);
-
-      ctx.fillStyle=gB;ctx.fillRect(0,imgZY+imgZH*0.35,W,imgZH*0.72);
+      gB.addColorStop(0,'transparent');gB.addColorStop(0.45,bg+'dd');gB.addColorStop(1,bg);
+      ctx.fillStyle=gB;ctx.fillRect(0,imgZY+imgZH*0.35,W,imgZH*0.65);
 
       ctx.restore();
 
@@ -840,30 +834,39 @@ async function dFull(cv,fe){
 
     ctx.font=`${Math.round(36*sc)}px sans-serif`;
 
-    ctx.fillText('📸',W/2,imgZY+imgZH/2+10*sc);
+    ctx.fillText('📸',W/2,imgZY+imgZH*0.4+10*sc);
 
   }
 
-  // 5. TEXT ZONE — starts at 55% of image, overlapping
-
-  const txtBaseY=imgZY+Math.round(imgZH*0.72);
+  // 5. TEXT ZONE — bottom-anchored: calculate block height first, then place above footer
 
   const txtEndY=sFt?(H-ftH):H;
 
-  // bg fill for text zone (solid from txtBaseY+fadeH to end)
+  // pre-calculate text block height
+  ctx.font=`900 ${hlSz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
+  const hlLines=wrp(ctx,hl,W-pad*2-hOffX);
+  const hlBlockH=hlLines.slice(0,5).length*hlSz*hlLH;
 
-  const tg=ctx.createLinearGradient(0,txtBaseY,0,txtBaseY+imgZH*0.1);
+  const subSz=hlSz*0.5;
+  ctx.font=`400 ${subSz}px 'Hind Siliguri',sans-serif`;
+  const subLines=(sSub&&sub)?wrp(ctx,sub,W-pad*2,subSz).slice(0,3):[];
+  const subBlockH=subLines.length>0?subLines.length*subSz*1.45+16*sc:0;
 
+  const cSzH=sCat?(cSz+cPY*2+14*sc):0;
+
+  const totalTxtH=cSzH+(sHL?hlBlockH+8*sc:0)+subBlockH+16*sc;
+
+  // anchor text block to bottom
+  const txtBaseY=txtEndY-totalTxtH;
+
+  // solid bg under text block
+  const tg=ctx.createLinearGradient(0,txtBaseY-imgZH*0.08,0,txtBaseY);
   tg.addColorStop(0,bg+'00');tg.addColorStop(1,bg);
-
-  ctx.fillStyle=tg;ctx.fillRect(0,txtBaseY,W,imgZH*0.1);
-
-  ctx.fillStyle=bg;ctx.fillRect(0,txtBaseY+imgZH*0.1,W,txtEndY-(txtBaseY+imgZH*0.1));
+  ctx.fillStyle=tg;ctx.fillRect(0,txtBaseY-imgZH*0.08,W,imgZH*0.08);
+  ctx.fillStyle=bg;ctx.fillRect(0,txtBaseY,W,txtEndY-txtBaseY);
 
   // BADGE
-
-  let tY=txtBaseY+12*sc+bOffY;
-
+  let tY=txtBaseY+bOffY;
   const badgeX=pad+bOffX;
 
   if(sCat){
@@ -892,15 +895,13 @@ async function dFull(cv,fe){
 
     ctx.textAlign='left';ctx.fillStyle=hlC;
 
-    ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=10;
-
-    const hlLines=wrp(ctx,hl,W-hlX-pad);
+    ctx.shadowColor='rgba(0,0,0,.8)';ctx.shadowBlur=12;
 
     hlLines.slice(0,5).forEach((ln,i)=>ctx.fillText(ln,hlX,tY+i*hlSz*hlLH));
 
     ctx.shadowBlur=0;
 
-    tY+=hlLines.slice(0,5).length*hlSz*hlLH+16*sc;
+    tY+=hlLines.slice(0,5).length*hlSz*hlLH+8*sc;
 
   }
 
@@ -908,15 +909,13 @@ async function dFull(cv,fe){
 
   if(sSub&&sub){
 
-    tY+=sOffY;
-
-    const subSz=hlSz*0.5;
+    tY+=sOffY+8*sc;
 
     ctx.font=`400 ${subSz}px 'Hind Siliguri',sans-serif`;
 
     ctx.fillStyle=hlC+'cc';ctx.textAlign='left';
 
-    wrp(ctx,sub,W-pad*2,subSz).slice(0,3).forEach((ln,i)=>ctx.fillText(ln,pad,tY+i*subSz*1.45));
+    subLines.forEach((ln,i)=>ctx.fillText(ln,pad,tY+i*subSz*1.45));
 
   }
 
