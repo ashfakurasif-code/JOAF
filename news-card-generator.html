@@ -1,747 +1,1389 @@
 <!DOCTYPE html>
+
 <html lang="bn">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
 <title>JOAF News Card Studio</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;900&family=Noto+Sans+Bengali:wght@700;800;900&display=swap" rel="stylesheet">
+
 <style>
+
 *{margin:0;padding:0;box-sizing:border-box;}
+
 :root{
+
   --bg:#08090e;--bg2:#0f1019;--bg3:#161722;--bg5:#262738;
+
   --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);--border3:rgba(255,255,255,.18);
+
   --text:#eeeef5;--text2:#7878a0;--text3:#4a4a68;
+
   --red:#f05252;--green:#34d399;--amber:#fbbf24;
+
   --accent:#f05252;--accent2:#ff6b6b;
+
 }
+
 *{font-family:'Hind Siliguri',sans-serif;}
+
 body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
 .hdr{background:var(--bg2);border-bottom:1px solid var(--border2);padding:0 14px;height:48px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+
 .hdr-logo{width:26px;height:26px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#fff;flex-shrink:0;}
+
 .hdr-title{font-size:13px;font-weight:700;}
+
 .hdr-sub{font-size:10px;color:var(--text3);}
+
 .hdr-r{margin-left:auto;display:flex;gap:6px;align-items:center;}
+
 .btn{padding:6px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:.12s;display:inline-flex;align-items:center;gap:4px;}
+
 .btn-p{background:var(--accent);color:#fff;}.btn-p:hover{background:var(--accent2);}
+
 .btn-g{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}.btn-g:hover{color:var(--text);}
+
 .btn-gr{background:#065f46;color:#34d399;}
+
 .btn-f{width:100%;justify-content:center;}
+
 .studio{flex:1;display:flex;overflow:hidden;}
+
 .sb{width:260px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
+
 .sb::-webkit-scrollbar{width:3px;}.sb::-webkit-scrollbar-thumb{background:var(--bg5);}
+
 .sec{border-bottom:1px solid var(--border);padding:11px 13px;}
+
 .sec-h{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px;}
+
 .f{margin-bottom:7px;}
+
 .f label{font-size:10px;color:var(--text2);display:block;margin-bottom:3px;}
+
 .fi,.fta,.fsl{width:100%;padding:6px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:.12s;}
+
 .fi:focus,.fta:focus,.fsl:focus{border-color:var(--accent);}
+
 .fta{resize:vertical;min-height:48px;line-height:1.5;}
+
 .fsl option{background:var(--bg3);}
+
 .fg2{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+
 .pr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px;}
+
 .pr{border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:.12s;}
+
 .pr:hover{border-color:var(--border3);}
+
 .pr.on{border-color:var(--accent);}
+
 .pr-sw{height:28px;display:flex;align-items:center;justify-content:center;}
+
 .pr-nm{font-size:9px;text-align:center;padding:2px 0;background:var(--bg3);color:var(--text2);}
+
 .slider-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+
 .slider-row label{font-size:10px;color:var(--text2);min-width:44px;}
+
 .slider-row input[type=range]{flex:1;accent-color:var(--accent);height:3px;}
+
 .slider-val{font-size:10px;color:var(--amber);min-width:28px;text-align:right;}
+
 .vis-row{display:flex;gap:4px;flex-wrap:wrap;}
+
 .vbtn{padding:3px 8px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text3);transition:.12s;}
+
 .vbtn.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+
 .col-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+
 .col-row label{font-size:10px;color:var(--text2);min-width:52px;}
+
 .col-in{width:28px;height:18px;border-radius:3px;border:1px solid var(--border2);cursor:pointer;background:none;}
+
 .sw-row{display:flex;gap:3px;flex-wrap:wrap;}
+
 .sw{width:15px;height:15px;border-radius:3px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:.1s;}
+
 .sw:hover{transform:scale(1.2);}.sw.on{border-color:#fff;}
+
 .sw-c{width:15px;height:15px;border-radius:3px;border:1px solid var(--border2);overflow:hidden;position:relative;cursor:pointer;}
+
 .sw-c input{position:absolute;inset:-4px;opacity:0;cursor:pointer;width:200%;height:200%;}
+
 .cvwrap{flex:1;background:#040406;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+
 #cv{display:block;cursor:crosshair;}
+
 .zoom-ctrl{position:absolute;bottom:10px;right:10px;display:flex;gap:4px;z-index:10;}
+
 .up-ovl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:20;background:var(--bg);}
+
 .up-zone{width:300px;border:2px dashed var(--border3);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:.2s;position:relative;background:var(--bg2);}
+
 .up-zone:hover,.up-zone.drag{border-color:var(--accent);background:rgba(240,82,82,.05);}
+
 .up-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+
 .ai-ovl{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:22;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);}
+
 .ai-ovl.show{display:flex;}
+
 .ai-box{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:24px 28px;text-align:center;min-width:260px;}
+
 .spin{font-size:32px;animation:sp 1.4s linear infinite;margin-bottom:8px;}
+
 @keyframes sp{to{transform:rotate(360deg)}}
+
 .as{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);margin-top:6px;}
+
 .as.active{color:var(--amber);}.as.done{color:var(--green);}
+
 .as-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
 .as.active .as-dot{animation:pp 1s ease infinite;}
+
 @keyframes pp{0%,100%{opacity:1}50%{opacity:.2}}
+
 .ai-st{font-size:10px;padding:4px 7px;border-radius:5px;margin-top:5px;display:none;}
+
 .ai-st.run{display:block;background:rgba(251,191,36,.1);color:var(--amber);border:1px solid rgba(251,191,36,.2);}
+
 .ai-st.done{display:block;background:rgba(52,211,153,.1);color:var(--green);border:1px solid rgba(52,211,153,.2);}
+
 .ai-st.err{display:block;background:rgba(240,82,82,.1);color:var(--red);border:1px solid rgba(240,82,82,.2);}
+
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+
 .modal-bg.open{display:flex;}
+
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:22px;max-width:420px;width:100%;}
+
 .chk-list{display:flex;flex-direction:column;gap:5px;margin:12px 0;}
+
 .chk{display:flex;align-items:flex-start;gap:7px;padding:7px 9px;background:var(--bg3);border-radius:7px;border:1px solid var(--border);cursor:pointer;transition:.12s;}
+
 .chk.ok{border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.04);}
+
 .chk input{width:13px;height:13px;accent-color:var(--green);flex-shrink:0;margin-top:1px;}
+
 .chk label{font-size:11px;line-height:1.5;cursor:pointer;}
+
 .toast{position:fixed;bottom:14px;right:14px;padding:8px 14px;border-radius:7px;font-size:11px;font-weight:700;z-index:99999;display:none;}
+
 .toast.ok{background:rgba(5,20,12,.97);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+
 .toast.er{background:rgba(20,5,5,.97);color:var(--red);border:1px solid rgba(240,82,82,.25);}
+
 </style>
+
 </head>
+
 <body>
+
 <div class="hdr">
+
   <div class="hdr-logo">J</div>
+
   <div><div class="hdr-title">JOAF News Card Studio</div><div class="hdr-sub">Image → AI → Edit → JPG</div></div>
+
   <div class="hdr-r">
+
+    <a class="btn btn-g" onclick="history.back()" style="text-decoration:none;font-size:11px">← Admin</a>
+
     <button class="btn btn-g" onclick="resetAll()">↺ Reset</button>
+
     <button class="btn btn-p" onclick="openPF()">⬇ Download</button>
+
   </div>
+
 </div>
+
 <div class="studio">
+
 <div class="sb">
+
   <div class="sec">
+
     <div class="sec-h">📸 Image</div>
+
     <div style="border:2px dashed var(--border2);border-radius:8px;padding:9px;text-align:center;cursor:pointer;position:relative;" id="sbZone"
+
       onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+
       <input type="file" id="fIn" accept="image/*" onchange="onFile(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+
       <div id="sbPrev" style="display:none;margin-bottom:5px"><img id="sbThumb" style="max-height:65px;border-radius:5px;max-width:100%"></div>
+
       <div id="sbLbl" style="font-size:11px;color:var(--text2)">📸 Click বা drag</div>
+
     </div>
-    <button class="btn btn-g btn-f" style="margin-top:5px" onclick="document.getElementById('fIn').click()">📂 নতুন Image</button>
+
+    <div class="ai-st" id="aiSt"></div>
+
+    <button class="btn btn-g btn-f" style="margin-top:5px;font-size:11px" onclick="document.getElementById('fIn').click()">📂 নতুন Image</button>
+
   </div>
+
   <div class="sec">
+
     <div class="sec-h">📝 Content</div>
+
     <div class="f"><label>Category</label>
+
       <select class="fsl" id="eCat" onchange="draw()">
+
         <option value="breaking">🔴 BREAKING NEWS</option>
+
         <option value="exclusive">⚡ EXCLUSIVE</option>
+
         <option value="update">📢 আপডেট</option>
+
         <option value="analysis">🔍 বিশ্লেষণ</option>
+
         <option value="alert">🚨 সতর্কতা</option>
+
         <option value="positive">✅ সুখবর</option>
+
       </select></div>
+
     <div class="f"><label>Headline</label>
+
       <textarea class="fta" id="eHl" oninput="draw()" style="font-weight:700;font-size:13px" placeholder="মূল শিরোনাম..."></textarea></div>
-    <div class="f"><label>Sub-headline</label>
+
+    <div class="f"><label>Sub-headline <span style="color:var(--text3)">(optional)</span></label>
+
       <textarea class="fta" id="eSub" oninput="draw()" style="min-height:36px" placeholder="বিবরণ..."></textarea></div>
+
     <div class="fg2">
+
       <div class="f"><label>Source</label><input class="fi" id="eSrc" value="JOAF News" oninput="draw()"></div>
+
       <div class="f"><label>তারিখ</label><input class="fi" id="eDt" oninput="draw()"></div>
+
     </div>
+
     <div class="f"><label>📍 Location</label><input class="fi" id="eLoc" placeholder="ঢাকা" oninput="draw()"></div>
+
   </div>
+
   <div class="sec">
+
     <div class="sec-h">🎨 Style</div>
+
     <div class="pr-grid" id="prRow"></div>
+
     <div class="f"><label>Card Size</label>
+
       <select class="fsl" id="eSize" onchange="onSzCh()">
+
         <option value="1080,1080">◻ Square 1080×1080</option>
+
         <option value="1080,1350">▭ Portrait 1080×1350</option>
+
         <option value="1080,1920" selected>▯ Story 1080×1920</option>
+
         <option value="1920,1080">▬ Wide 1920×1080</option>
+
       </select></div>
+
   </div>
+
   <div class="sec">
+
     <div class="sec-h">🖼 Image Adjust</div>
+
     <div class="slider-row"><label>Crop Top</label><input type="range" id="sCT" min="0" max="60" value="15" oninput="sv(this,'vCT');draw()"><span class="slider-val" id="vCT">15%</span></div>
+
     <div class="slider-row"><label>Crop Bot</label><input type="range" id="sCB" min="0" max="60" value="5" oninput="sv(this,'vCB');draw()"><span class="slider-val" id="vCB">5%</span></div>
+
     <div class="slider-row"><label>Crop L</label><input type="range" id="sCL" min="0" max="50" value="0" oninput="sv(this,'vCL');draw()"><span class="slider-val" id="vCL">0%</span></div>
+
     <div class="slider-row"><label>Crop R</label><input type="range" id="sCR" min="0" max="50" value="0" oninput="sv(this,'vCR');draw()"><span class="slider-val" id="vCR">0%</span></div>
+
     <div class="slider-row"><label>Pan X</label><input type="range" id="sPX" min="-500" max="500" value="0" oninput="sv(this,'vPX','px');draw()"><span class="slider-val" id="vPX">0</span></div>
+
     <div class="slider-row"><label>Pan Y</label><input type="range" id="sPY" min="-500" max="500" value="0" oninput="sv(this,'vPY','px');draw()"><span class="slider-val" id="vPY">0</span></div>
+
     <div class="slider-row"><label>Scale</label><input type="range" id="sSC" min="50" max="250" value="100" oninput="sv(this,'vSC','%');draw()"><span class="slider-val" id="vSC">100%</span></div>
+
     <div class="slider-row"><label>Bright</label><input type="range" id="sBR" min="20" max="200" value="100" oninput="sv(this,'vBR','%');draw()"><span class="slider-val" id="vBR">100%</span></div>
+
     <div class="slider-row"><label>Contrast</label><input type="range" id="sCN" min="20" max="200" value="100" oninput="sv(this,'vCN','%');draw()"><span class="slider-val" id="vCN">100%</span></div>
+
     <div class="slider-row"><label>Overlay</label><input type="range" id="sOV" min="0" max="95" value="55" oninput="sv(this,'vOV','%');draw()"><span class="slider-val" id="vOV">55%</span></div>
+
     <button class="btn btn-g btn-f" style="font-size:10px;margin-top:4px" onclick="resetImg()">↺ Reset Image</button>
+
   </div>
+
   <div class="sec">
+
     <div class="sec-h">📐 Element Position</div>
+
     <div class="slider-row"><label>Badge Y</label><input type="range" id="sBY" min="-200" max="200" value="0" oninput="sv(this,'vBY','px');draw()"><span class="slider-val" id="vBY">0</span></div>
+
     <div class="slider-row"><label>Badge X</label><input type="range" id="sBX" min="-200" max="200" value="0" oninput="sv(this,'vBX','px');draw()"><span class="slider-val" id="vBX">0</span></div>
+
     <div class="slider-row"><label>Headline Y</label><input type="range" id="sHY" min="-200" max="200" value="0" oninput="sv(this,'vHY','px');draw()"><span class="slider-val" id="vHY">0</span></div>
+
     <div class="slider-row"><label>Headline X</label><input type="range" id="sHX" min="-200" max="200" value="0" oninput="sv(this,'vHX','px');draw()"><span class="slider-val" id="vHX">0</span></div>
+
     <div class="slider-row"><label>Sub Y</label><input type="range" id="sSY" min="-200" max="200" value="0" oninput="sv(this,'vSY','px');draw()"><span class="slider-val" id="vSY">0</span></div>
+
   </div>
+
   <div class="sec">
+
     <div class="sec-h">🔤 Text Style</div>
+
     <div class="slider-row"><label>HL Size</label><input type="range" id="sHS" min="18" max="80" value="44" oninput="sv(this,'vHS');draw()"><span class="slider-val" id="vHS">44</span></div>
+
     <div class="slider-row"><label>HL LineH</label><input type="range" id="sHLH" min="8" max="22" value="13" oninput="sv(this,'vHLH','','lh');draw()"><span class="slider-val" id="vHLH">1.3</span></div>
+
     <div class="slider-row"><label>Badge Sz</label><input type="range" id="sCS" min="10" max="26" value="15" oninput="sv(this,'vCS');draw()"><span class="slider-val" id="vCS">15</span></div>
+
     <div class="col-row"><label>HL Color</label><div class="sw-row" id="swHL"></div></div>
+
     <div class="col-row"><label>Badge BG</label><div class="sw-row" id="swCB"></div></div>
+
     <div class="col-row"><label>Badge Txt</label><input type="color" id="eCTxt" value="#ffffff" oninput="draw()" class="col-in"></div>
+
   </div>
+
   <div class="sec">
+
     <div class="sec-h">🏷 Top Bar</div>
+
     <div class="slider-row"><label>Height</label><input type="range" id="sTH" min="50" max="130" value="80" oninput="sv(this,'vTH');draw()"><span class="slider-val" id="vTH">80</span></div>
+
     <div class="col-row"><label>BG</label><input type="color" id="eTopBg" value="#ffffff" oninput="draw()" class="col-in"></div>
+
     <div class="col-row"><label>Text</label><input type="color" id="eTopTxt" value="#000000" oninput="draw()" class="col-in"></div>
+
     <div class="col-row"><label>Logo BG</label><div class="sw-row" id="swLB"></div></div>
+
   </div>
+
   <div class="sec">
+
     <div class="sec-h">📌 Footer</div>
+
     <div class="slider-row"><label>Height</label><input type="range" id="sFH" min="36" max="100" value="60" oninput="sv(this,'vFH');draw()"><span class="slider-val" id="vFH">60</span></div>
+
     <div class="slider-row"><label>Font</label><input type="range" id="sFF" min="9" max="26" value="15" oninput="sv(this,'vFF');draw()"><span class="slider-val" id="vFF">15</span></div>
+
     <div class="col-row"><label>BG</label><div class="sw-row" id="swFC"></div></div>
+
     <div class="col-row"><label>Text</label><input type="color" id="eFTxt" value="#ffffff" oninput="draw()" class="col-in"></div>
+
   </div>
+
   <div class="sec">
+
     <div class="sec-h">👁 Show / Hide</div>
+
     <div class="vis-row">
+
       <button class="vbtn on" id="vTop" onclick="tgV('vTop','sTop')">Top Bar</button>
+
       <button class="vbtn on" id="vStr" onclick="tgV('vStr','sStr')">Stripe</button>
+
       <button class="vbtn on" id="vImg" onclick="tgV('vImg','sImg')">Image</button>
+
       <button class="vbtn on" id="vCat" onclick="tgV('vCat','sCat')">Badge</button>
+
       <button class="vbtn on" id="vHL2" onclick="tgV('vHL2','sHL')">Headline</button>
+
       <button class="vbtn on" id="vSub" onclick="tgV('vSub','sSub')">Sub-hl</button>
+
       <button class="vbtn on" id="vFt" onclick="tgV('vFt','sFt')">Footer</button>
+
       <button class="vbtn on" id="vWm" onclick="tgV('vWm','sWm')">Watermark</button>
+
     </div>
+
   </div>
+
   <div class="sec" style="margin-top:auto">
+
     <button class="btn btn-gr btn-f" onclick="openPF()" style="margin-bottom:5px">✅ Check & Download</button>
+
     <button class="btn btn-g btn-f" onclick="quickDL()">⚡ Quick JPG</button>
+
   </div>
+
 </div>
+
 <div class="cvwrap" id="cvwrap">
+
   <div class="up-ovl" id="upOvl">
+
     <div class="up-zone" id="upZone">
+
       <input type="file" id="fIn2" accept="image/*" onchange="onFile(event)">
+
       <div style="font-size:38px;margin-bottom:8px">📸</div>
+
       <div style="font-size:13px;font-weight:700;margin-bottom:4px">News Image আপলোড করুন</div>
+
       <div style="font-size:11px;color:var(--text2)">TV channel বা news screenshot<br>drag & drop বা click</div>
+
     </div>
+
+    <div style="font-size:11px;color:var(--text3)">🔒 সম্পূর্ণ private · কোথাও upload হয় না</div>
+
   </div>
+
+  <div class="ai-ovl" id="aiOvl">
+
+    <div class="ai-box">
+
+      <div class="spin">🤖</div>
+
+      <div style="font-size:14px;font-weight:800;margin-bottom:2px" id="aiTtl">AI বিশ্লেষণ চলছে</div>
+
+      <div style="font-size:11px;color:var(--text2)">Groq Vision দিয়ে...</div>
+
+      <div id="as1" class="as active"><div class="as-dot"></div>Image পড়ছে</div>
+
+      <div id="as2" class="as"><div class="as-dot"></div>Headline বের করছে</div>
+
+      <div id="as3" class="as"><div class="as-dot"></div>Crop ঠিক করছে</div>
+
+      <div id="as4" class="as"><div class="as-dot"></div>Style নির্ধারণ করছে</div>
+
+      <div id="aiErr" style="display:none;margin-top:9px;padding:7px;background:rgba(240,82,82,.1);border-radius:6px;color:#ffaaaa;font-size:11px;line-height:1.5"></div>
+
+      <div id="aiAct" style="display:none;flex-direction:column;gap:4px;margin-top:9px">
+
+        <button class="btn btn-g btn-f" onclick="runAI()">🔄 আবার চেষ্টা</button>
+
+        <button class="btn btn-g btn-f" onclick="skipAI()">⏭ Skip</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
   <canvas id="cv"></canvas>
+
   <div class="zoom-ctrl">
+
     <button class="btn btn-g" style="padding:3px 9px;font-size:11px" onclick="zm(-.15)">−</button>
+
     <span id="zLbl" style="font-size:10px;color:var(--text2);padding:2px 7px;background:var(--bg2);border-radius:4px;border:1px solid var(--border)">100%</span>
+
     <button class="btn btn-g" style="padding:3px 9px;font-size:11px" onclick="zm(+.15)">+</button>
+
     <button class="btn btn-g" style="padding:3px 9px;font-size:11px" onclick="fitZ()">⊞</button>
+
   </div>
+
 </div>
+
 </div>
 
 <div class="modal-bg" id="pfModal">
+
   <div class="modal">
+
     <div style="font-size:14px;font-weight:900;margin-bottom:3px">✅ Download এর আগে চেক করুন</div>
+
+    <div style="font-size:11px;color:var(--text2)">সব tick করলেই download হবে</div>
+
     <div class="chk-list" id="chkList"></div>
+
     <div style="display:flex;gap:7px">
+
       <button class="btn btn-g" style="flex:1" onclick="closePF()">বাতিল</button>
+
       <button class="btn btn-gr" style="flex:1" id="dlBtn" onclick="confirmDL()" disabled>⬇ JPG Download</button>
+
     </div>
+
   </div>
+
 </div>
+
 <div class="toast" id="toast"></div>
 
 <script>
+
+const PROXY='/.netlify/functions/groq-proxy';
+
+const AI_MODELS=['meta-llama/llama-4-scout-17b-16e-instruct','llama-3.2-11b-vision-preview'];
+
 const SWS=['#e02020','#90161f','#f59e0b','#c9a227','#22c55e','#3b82f6','#8b5cf6','#f97316','#ffffff','#000000'];
+
 const HCS=['#ffffff','#ffff00','#ffe082','#f0f0f0','#bbf7d0','#bfdbfe','#111111'];
+
 const PRESETS=[
+
   {n:'Breaking',bg:'#0d0205',tBg:'#fff',tTxt:'#000',ft:'#e02020',ac:'#e02020',ov:55},
+
   {n:'Dark',bg:'#080808',tBg:'#fff',tTxt:'#000',ft:'#f59e0b',ac:'#f59e0b',ov:62},
+
   {n:'Gold',bg:'#0d0800',tBg:'#fff',tTxt:'#000',ft:'#c9a227',ac:'#c9a227',ov:58},
+
   {n:'White',bg:'#f0f0f0',tBg:'#90161f',tTxt:'#fff',ft:'#90161f',ac:'#90161f',ov:15},
+
   {n:'Navy',bg:'#060b1a',tBg:'#fff',tTxt:'#000',ft:'#1d4ed8',ac:'#3b82f6',ov:60},
+
   {n:'Forest',bg:'#020d06',tBg:'#fff',tTxt:'#000',ft:'#166534',ac:'#4ade80',ov:63},
-];
-const CHECKS=[
-  {id:'c1',t:'Source channel এর logo/watermark crop হয়েছে?'},
-  {id:'c2',t:'JOAF লোগো top bar এ আছে?'},
-  {id:'c3',t:'Category badge সঠিক?'},
-  {id:'c4',t:'Headline পরিষ্কার ও পাঠযোগ্য?'},
-  {id:'c5',t:'Footer এ www.julyforum.com আছে?'},
-  {id:'c6',t:'অন্য channel এর branding নেই?'},
+
 ];
 
-let SRC=null, SB64=null, ZL=1, curP=0;
+const CHECKS=[
+
+  {id:'c1',t:'Source channel এর logo/watermark crop হয়েছে?'},
+
+  {id:'c2',t:'JOAF লোগো top bar এ আছে?'},
+
+  {id:'c3',t:'Category badge সঠিক?'},
+
+  {id:'c4',t:'Headline পরিষ্কার ও পাঠযোগ্য?'},
+
+  {id:'c5',t:'Footer এ www.julyforum.com আছে?'},
+
+  {id:'c6',t:'অন্য channel এর branding নেই?'},
+
+];
+
+let SRC=null,SB64=null,ZL=1,curP=0;
+
 let sTop=true,sStr=true,sImg=true,sCat=true,sHL=true,sSub=true,sFt=true,sWm=true;
+
 let aC='#e02020',fC='#e02020',lBC='#e02020',hlC='#ffffff',cBC='#e02020';
 
 function g(id){return +document.getElementById(id)?.value||0;}
+
 function gv(id){return document.getElementById(id)?.value||'';}
+
 function gSz(){return gv('eSize').split(',').map(Number);}
 
 function sv(el,vid,unit='',type=''){
+
   const v=type==='lh'?(el.value/10).toFixed(1):el.value+(unit||'');
+
   document.getElementById(vid).textContent=v;
+
+}
+
+function bSw(id,colors,cb){
+
+  document.getElementById(id).innerHTML=colors.map(c=>`<div class="sw" style="background:${c}" onclick="(${cb.toString()})('${c}');document.querySelectorAll('#${id} .sw').forEach(e=>e.classList.remove('on'));this.classList.add('on')"></div>`).join('')+`<div class="sw-c"><input type="color" onchange="(${cb.toString()})(this.value)"></div>`;
+
 }
 
 function buildPR(){
+
   document.getElementById('prRow').innerHTML=PRESETS.map((p,i)=>`<div class="pr${i===curP?' on':''}" onclick="apP(${i})"><div class="pr-sw" style="background:${p.bg}"><span style="color:${p.ac};font-size:16px">●</span></div><div class="pr-nm">${p.n}</div></div>`).join('');
+
 }
 
 function apP(i,rd=true){
+
   curP=i;const p=PRESETS[i];
+
   aC=p.ac;fC=p.ft;lBC=p.ac;cBC=p.ac;
+
   document.getElementById('eTopBg').value=p.tBg;
+
   document.getElementById('eTopTxt').value=p.tTxt;
+
   document.getElementById('sOV').value=p.ov;
+
   document.getElementById('vOV').textContent=p.ov+'%';
+
   buildPR();if(rd)draw();
+
 }
 
 function tgV(btn,vn){
+
   if(vn==='sTop')sTop=!sTop;else if(vn==='sStr')sStr=!sStr;
+
   else if(vn==='sImg')sImg=!sImg;else if(vn==='sCat')sCat=!sCat;
+
   else if(vn==='sHL')sHL=!sHL;else if(vn==='sSub')sSub=!sSub;
+
   else if(vn==='sFt')sFt=!sFt;else if(vn==='sWm')sWm=!sWm;
+
   document.getElementById(btn).classList.toggle('on',eval(vn));
+
   draw();
-}
 
-function rr(ctx,x,y,w,h,r){ /* rounded rect function */ 
-  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
-  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
-  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
-  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-}
-
-function wrp(ctx,text,mxW,fsz){
-  if(fsz)ctx.font=`400 ${fsz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
-  const words=text.split(' '),lines=[];let cur='';
-  for(const w of words){const t=cur?cur+' '+w:w;if(ctx.measureText(t).width>mxW&&cur){lines.push(cur);cur=w;}else cur=t;}
-  if(cur)lines.push(cur);return lines;
-}
-
-let dT;
-function draw(){clearTimeout(dT);dT=setTimeout(_draw,50);}
-
-async function _draw(){
-  const cv=document.getElementById('cv');
-  await dFull(cv,false);
-  apZ();
-}
-
-async function dFull(cv,fe){
-  const[W,H]=gSz();cv.width=W;cv.height=H;
-  const ctx=cv.getContext('2d');
-  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  const sc=W/1080,pad=40*sc;
-  const tbH=g('sTH')*sc,ftH=g('sFH')*sc,ffSz=g('sFF')*sc;
-  const hlSz=g('sHS')*sc,hlLH=g('sHLH')/10;
-  const cSz=g('sCS')*sc,cPX=11*sc,cPY=7*sc;
-  const ovl=g('sOV')/100,brt=g('sBR')||100,cnt=g('sCN')||100,isc=(g('sSC')||100)/100;
-  const CT=g('sCT')/100,CB=g('sCB')/100,CL=g('sCL')/100,CR=g('sCR')/100;
-  const panX=g('sPX')*sc,panY=g('sPY')*sc;
-  const bOffX=g('sBX')*sc,bOffY=g('sBY')*sc;
-  const hOffX=g('sHX')*sc,hOffY=g('sHY')*sc;
-  const sOffY=g('sSY')*sc;
-  const tBg=gv('eTopBg')||'#fff',tTxt=gv('eTopTxt')||'#000';
-  const fTxt=gv('eFTxt')||'#fff',cTxt=gv('eCTxt')||'#fff';
-  const hl=gv('eHl')||'শিরোনাম লিখুন';
-  const sub=gv('eSub'),src=gv('eSrc')||'JOAF',dt=gv('eDt'),loc=gv('eLoc');
-  const catV=gv('eCat');
-  const catLabel={breaking:'🔴 BREAKING NEWS',exclusive:'⚡ EXCLUSIVE',update:'📢 আপডেট',analysis:'🔍 বিশ্লেষণ',alert:'🚨 সতর্কতা',positive:'✅ সুখবর'}[catV]||'📢';
-  const bg=PRESETS[curP].bg;
-
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  if(sStr){ctx.fillStyle=aC;ctx.fillRect(0,0,4*sc,H);}
-  const topEnd=sTop?tbH:0;
-  if(sTop){
-    ctx.fillStyle=tBg;ctx.fillRect(0,0,W,tbH);
-    const lsz=Math.min(tbH*0.68,52*sc);
-    const lbX=pad,lbY=(tbH-lsz)/2;
-    ctx.fillStyle=lBC;rr(ctx,lbX,lbY,lsz,lsz,lsz*0.18);ctx.fill();
-    // Logo
-    ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.font=`900 ${Math.round(lsz*0.55)}px sans-serif`;
-    ctx.fillText('J',lbX+lsz/2,lbY+lsz/2);
-    ctx.textBaseline='alphabetic';
-    // ... (বাকি top bar code আছে, সময় বাঁচাতে সংক্ষেপ করলাম)
-  }
-  // Image, Text, Footer etc. (পুরো লজিক আছে)
-  // ... 
-}
-
-function onFile(ev){const f=ev.target.files[0];if(f)loadF(f);}
-function loadF(file){
-  const r=new FileReader();
-  r.onload=ev=>{
-    const img=new Image();
-    img.onload=()=>{
-      SRC=img;SB64=ev.target.result;
-      document.getElementById('sbThumb').src=ev.target.result;
-      document.getElementById('sbPrev').style.display='block';
-      document.getElementById('sbLbl').textContent='✅ loaded';
-      document.getElementById('upOvl').style.display='none';
-    };
-    img.src=ev.target.result;
-  };
-  r.readAsDataURL(file);
-}
-
-function resetAll(){ /* reset logic */ }
-function openPF(){ /* modal */ }
-function confirmDL(){ /* download */ }
-function quickDL(){ /* quick download */ }
-
-function fitZ(){ /* zoom */ }
-function zm(d){ /* zoom */ }
-function apZ(){ /* apply zoom */ }
-
-document.addEventListener('DOMContentLoaded',()=>{
-  const d=new Date(Date.now()+6*3600000);
-  const mn=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-  document.getElementById('eDt').value=`${d.getDate()} ${mn[d.getMonth()]}, ${d.getFullYear()}`;
-  buildPR();
-  // color swatches
-  draw();
-});
-<script>
-// ==================== FULL SCRIPT ====================
-const SWS=['#e02020','#90161f','#f59e0b','#c9a227','#22c55e','#3b82f6','#8b5cf6','#f97316','#ffffff','#000000'];
-const HCS=['#ffffff','#ffff00','#ffe082','#f0f0f0','#bbf7d0','#bfdbfe','#111111'];
-const PRESETS=[
-  {n:'Breaking',bg:'#0d0205',tBg:'#fff',tTxt:'#000',ft:'#e02020',ac:'#e02020',ov:55},
-  {n:'Dark',bg:'#080808',tBg:'#fff',tTxt:'#000',ft:'#f59e0b',ac:'#f59e0b',ov:62},
-  {n:'Gold',bg:'#0d0800',tBg:'#fff',tTxt:'#000',ft:'#c9a227',ac:'#c9a227',ov:58},
-  {n:'White',bg:'#f0f0f0',tBg:'#90161f',tTxt:'#fff',ft:'#90161f',ac:'#90161f',ov:15},
-  {n:'Navy',bg:'#060b1a',tBg:'#fff',tTxt:'#000',ft:'#1d4ed8',ac:'#3b82f6',ov:60},
-  {n:'Forest',bg:'#020d06',tBg:'#fff',tTxt:'#000',ft:'#166534',ac:'#4ade80',ov:63},
-];
-const CHECKS=[
-  {id:'c1',t:'Source channel এর logo/watermark crop হয়েছে?'},
-  {id:'c2',t:'JOAF লোগো top bar এ আছে?'},
-  {id:'c3',t:'Category badge সঠিক?'},
-  {id:'c4',t:'Headline পরিষ্কার ও পাঠযোগ্য?'},
-  {id:'c5',t:'Footer এ www.julyforum.com আছে?'},
-  {id:'c6',t:'অন্য channel এর branding নেই?'},
-];
-
-let SRC=null, SB64=null, ZL=1, curP=0;
-let sTop=true,sStr=true,sImg=true,sCat=true,sHL=true,sSub=true,sFt=true,sWm=true;
-let aC='#e02020',fC='#e02020',lBC='#e02020',hlC='#ffffff',cBC='#e02020';
-
-function g(id){return +document.getElementById(id)?.value||0;}
-function gv(id){return document.getElementById(id)?.value||'';}
-function gSz(){return gv('eSize').split(',').map(Number);}
-
-function sv(el,vid,unit='',type=''){
-  const v = type==='lh' ? (el.value/10).toFixed(1) : el.value + (unit||'');
-  document.getElementById(vid).textContent = v;
-}
-
-function bSw(id, colors, cb){
-  let html = colors.map(c => `
-    <div class="sw" style="background:${c}" onclick="setColor('${id}','${c}');${cb}('${c}')"></div>
-  `).join('');
-  html += `<div class="sw-c"><input type="color" onchange="${cb}(this.value)"></div>`;
-  document.getElementById(id).innerHTML = html;
-}
-
-function setColor(id, color){
-  document.querySelectorAll(`#${id} .sw`).forEach(el => el.classList.remove('on'));
-}
-
-function buildPR(){
-  document.getElementById('prRow').innerHTML = PRESETS.map((p,i) => `
-    <div class="pr ${i===curP?'on':''}" onclick="apP(${i})">
-      <div class="pr-sw" style="background:${p.bg}"><span style="color:${p.ac};font-size:16px">●</span></div>
-      <div class="pr-nm">${p.n}</div>
-    </div>
-  `).join('');
-}
-
-function apP(i,rd=true){
-  curP = i;
-  const p = PRESETS[i];
-  aC = p.ac; fC = p.ft; lBC = p.ac; cBC = p.ac;
-  document.getElementById('eTopBg').value = p.tBg;
-  document.getElementById('eTopTxt').value = p.tTxt;
-  document.getElementById('sOV').value = p.ov;
-  document.getElementById('vOV').textContent = p.ov + '%';
-  buildPR();
-  if(rd) draw();
-}
-
-function tgV(btn,vn){
-  window[vn] = !window[vn];
-  document.getElementById(btn).classList.toggle('on', window[vn]);
-  draw();
 }
 
 function rr(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.lineTo(x+w-r,y);
-  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r);
-  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h);
-  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r);
-  ctx.quadraticCurveTo(x,y,x+r,y);
-  ctx.closePath();
+
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+
 }
 
 function wrp(ctx,text,mxW,fsz){
-  if(fsz) ctx.font = `400 ${fsz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
-  const words = text.split(' '), lines = [];
-  let cur = '';
-  for(const w of words){
-    const t = cur ? cur+' '+w : w;
-    if(ctx.measureText(t).width > mxW && cur){
-      lines.push(cur); cur = w;
-    } else cur = t;
-  }
-  if(cur) lines.push(cur);
-  return lines;
+
+  if(fsz)ctx.font=`400 ${fsz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
+
+  const words=text.split(' '),lines=[];let cur='';
+
+  for(const w of words){const t=cur?cur+' '+w:w;if(ctx.measureText(t).width>mxW&&cur){lines.push(cur);cur=w;}else cur=t;}
+
+  if(cur)lines.push(cur);return lines;
+
 }
 
 let dT;
-function draw(){ clearTimeout(dT); dT = setTimeout(_draw, 30); }
+
+function draw(){clearTimeout(dT);dT=setTimeout(_draw,50);}
 
 async function _draw(){
-  const cv = document.getElementById('cv');
-  await dFull(cv, false);
+
+  const cv=document.getElementById('cv');
+
+  await dFull(cv,false);
+
   apZ();
+
 }
 
-async function dFull(cv){
-  const [W, H] = gSz();
-  cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+async function dFull(cv,fe){
 
-  const sc = W/1080, pad = 40*sc;
-  const tbH = g('sTH')*sc, ftH = g('sFH')*sc;
-  const hlSz = g('sHS')*sc, hlLH = g('sHLH')/10;
-  const cSz = g('sCS')*sc, cPX = 11*sc, cPY = 7*sc;
-  const ovl = g('sOV')/100, brt = g('sBR')||100, cnt = g('sCN')||100, isc = (g('sSC')||100)/100;
-  const CT = g('sCT')/100, CB = g('sCB')/100, CL = g('sCL')/100, CR = g('sCR')/100;
-  const panX = g('sPX')*sc, panY = g('sPY')*sc;
-  const bOffX = g('sBX')*sc, bOffY = g('sBY')*sc;
-  const hOffX = g('sHX')*sc, hOffY = g('sHY')*sc;
-  const sOffY = g('sSY')*sc;
+  const[W,H]=gSz();cv.width=W;cv.height=H;
 
-  const tBg = gv('eTopBg')||'#fff', tTxt = gv('eTopTxt')||'#000';
-  const fTxt = gv('eFTxt')||'#fff', cTxt = gv('eCTxt')||'#fff';
-  const hl = gv('eHl')||'শিরোনাম লিখুন';
-  const sub = gv('eSub'), src = gv('eSrc')||'JOAF', dt = gv('eDt'), loc = gv('eLoc');
-  const catV = gv('eCat');
-  const catLabel = {breaking:'🔴 BREAKING NEWS',exclusive:'⚡ EXCLUSIVE',update:'📢 আপডেট',analysis:'🔍 বিশ্লেষণ',alert:'🚨 সতর্কতা',positive:'✅ সুখবর'}[catV]||'📢';
-  const bg = PRESETS[curP].bg;
+  const ctx=cv.getContext('2d');
 
-  // Background
-  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
-  if(sStr){ ctx.fillStyle = aC; ctx.fillRect(0,0,4*sc,H); }
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
 
-  const topEnd = sTop ? tbH : 0;
+  const sc=W/1080,pad=40*sc;
+
+  // params
+
+  const tbH=g('sTH')*sc,ftH=g('sFH')*sc,ffSz=g('sFF')*sc;
+
+  const hlSz=g('sHS')*sc,hlLH=g('sHLH')/10;
+
+  const cSz=g('sCS')*sc,cPX=11*sc,cPY=7*sc;
+
+  const ovl=g('sOV')/100,brt=g('sBR')||100,cnt=g('sCN')||100,isc=(g('sSC')||100)/100;
+
+  const CT=g('sCT')/100,CB=g('sCB')/100,CL=g('sCL')/100,CR=g('sCR')/100;
+
+  const panX=g('sPX')*sc,panY=g('sPY')*sc;
+
+  const bOffX=g('sBX')*sc,bOffY=g('sBY')*sc;
+
+  const hOffX=g('sHX')*sc,hOffY=g('sHY')*sc;
+
+  const sOffY=g('sSY')*sc;
+
+  const tBg=gv('eTopBg')||'#fff',tTxt=gv('eTopTxt')||'#000';
+
+  const fTxt=gv('eFTxt')||'#fff',cTxt=gv('eCTxt')||'#fff';
+
+  const hl=gv('eHl')||'শিরোনাম লিখুন';
+
+  const sub=gv('eSub'),src=gv('eSrc')||'JOAF',dt=gv('eDt'),loc=gv('eLoc');
+
+  const catV=gv('eCat');
+
+  const catLabel={breaking:'🔴 BREAKING NEWS',exclusive:'⚡ EXCLUSIVE',update:'📢 আপডেট',analysis:'🔍 বিশ্লেষণ',alert:'🚨 সতর্কতা',positive:'✅ সুখবর'}[catV]||'📢';
+
+  const bg=PRESETS[curP].bg;
+
+  // 1. BG
+
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // 2. LEFT STRIPE
+
+  if(sStr){ctx.fillStyle=aC;ctx.fillRect(0,0,4*sc,H);}
+
+  // 3. TOP BAR
+
+  const topEnd=sTop?tbH:0;
+
   if(sTop){
-    ctx.fillStyle = tBg; ctx.fillRect(0,0,W,tbH);
-    const lsz = Math.min(tbH*0.68, 52*sc);
-    const lbX = pad, lbY = (tbH-lsz)/2;
-    ctx.fillStyle = lBC;
-    rr(ctx, lbX, lbY, lsz, lsz, lsz*0.18); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.font = `900 ${Math.round(lsz*0.55)}px sans-serif`;
-    ctx.fillText('J', lbX+lsz/2, lbY+lsz/2);
-    ctx.textBaseline = 'alphabetic';
+
+    ctx.fillStyle=tBg;ctx.fillRect(0,0,W,tbH);
+
+    const lsz=Math.min(tbH*0.68,52*sc);
+
+    const lbX=pad,lbY=(tbH-lsz)/2;
+
+    ctx.fillStyle=lBC;rr(ctx,lbX,lbY,lsz,lsz,lsz*0.18);ctx.fill();
+
+    await drawLogo(ctx,lbX+lsz*0.08,lbY+lsz*0.08,lsz*0.84,lsz*0.84);
+
+    const tx=lbX+lsz+9*sc;
+
+    ctx.fillStyle=tTxt;ctx.textAlign='left';
+
+    ctx.font=`900 ${Math.round(19*sc)}px 'Hind Siliguri',sans-serif`;
+
+    ctx.fillText('JOAF',tx,lbY+lsz*0.42);
+
+    ctx.fillStyle=tTxt+'99';
+
+    ctx.font=`600 ${Math.round(10*sc)}px 'Hind Siliguri',sans-serif`;
+
+    ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম',tx,lbY+lsz*0.64);
+
+    ctx.fillStyle=aC;
+
+    ctx.font=`500 ${Math.round(9*sc)}px 'Hind Siliguri',sans-serif`;
+
+    ctx.fillText('www.julyforum.com',tx,lbY+lsz*0.84);
+
+    ctx.textAlign='right';
+
+    if(src&&src!=='JOAF News'){
+
+      ctx.font=`700 ${Math.round(11*sc)}px 'Hind Siliguri',sans-serif`;
+
+      const sbw=ctx.measureText('সূত্র: '+src).width+14*sc;
+
+      ctx.fillStyle=aC+'22';rr(ctx,W-pad-sbw,lbY+lsz*0.04,sbw,lsz*0.34,4*sc);ctx.fill();
+
+      ctx.fillStyle=aC;ctx.fillText('সূত্র: '+src,W-pad-6*sc,lbY+lsz*0.3);
+
+    }
+
+    ctx.fillStyle=tTxt+'77';
+
+    ctx.font=`500 ${Math.round(10*sc)}px 'Hind Siliguri',sans-serif`;
+
+    ctx.fillText(dt,W-pad,lbY+lsz*0.6);
+
+    if(loc){ctx.fillStyle=tTxt+'99';ctx.fillText('📍 '+loc,W-pad,lbY+lsz*0.82);}
+
   }
 
-  // Image Area
-  const remH = H - topEnd - ftH;
-  const imgZH = Math.round(remH * 0.60);
-  const imgZY = topEnd;
-  if(sImg && SRC){
-    const sx = Math.round(SRC.width*CL), sy = Math.round(SRC.height*CT);
-    const sw = Math.round(SRC.width*(1-CL-CR)), sh = Math.round(SRC.height*(1-CT-CB));
-    const tmp = document.createElement('canvas');
-    tmp.width = sw; tmp.height = sh;
-    const tc = tmp.getContext('2d');
-    tc.filter = `brightness(${brt}%) contrast(${cnt}%)`;
-    tc.drawImage(SRC, sx, sy, sw, sh, 0, 0, sw, sh);
+  // 4. IMAGE — 60% of remaining height
 
-    const ir = sw/sh, zr = W/imgZH;
-    let dw = ir > zr ? imgZH*ir*isc : W*isc;
-    let dh = ir > zr ? imgZH*isc : W/ir*isc;
-    const bDx = (W-dw)/2 + panX;
-    const bDy = imgZY + (imgZH-dh)/2 + panY;
+  const remH=H-topEnd-ftH;
 
-    ctx.save();
-    ctx.beginPath(); ctx.rect(0,imgZY,W,imgZH); ctx.clip();
-    ctx.drawImage(tmp, 0,0,sw,sh, bDx,bDy,dw,dh);
-    ctx.restore();
+  const imgZH=Math.round(remH*0.60);
+
+  const imgZY=topEnd;
+
+  if(sImg&&SRC){
+
+    const sx=Math.round(SRC.width*CL),sy=Math.round(SRC.height*CT);
+
+    const sw=Math.round(SRC.width*(1-CL-CR)),sh=Math.round(SRC.height*(1-CT-CB));
+
+    if(sw>2&&sh>2){
+
+      const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
+
+      const tc=tmp.getContext('2d');tc.filter=`brightness(${brt}%) contrast(${cnt}%)`;
+
+      tc.drawImage(SRC,sx,sy,sw,sh,0,0,sw,sh);
+
+      const ir=sw/sh,zr=W/imgZH;
+
+      let dw,dh;
+
+      if(ir>zr){dw=imgZH*ir*isc;dh=imgZH*isc;}else{dw=W*isc;dh=W/ir*isc;}
+
+      const bDx=(W-dw)/2+panX,bDy=imgZY+(imgZH-dh)/2+panY;
+
+      ctx.save();ctx.beginPath();ctx.rect(0,imgZY,W,imgZH);ctx.clip();
+
+      ctx.drawImage(tmp,0,0,sw,sh,bDx,bDy,dw,dh);
+
+      // top fade
+
+      const gT=ctx.createLinearGradient(0,imgZY,0,imgZY+imgZH*0.3);
+
+      gT.addColorStop(0,`rgba(0,0,0,${ovl*0.4})`);gT.addColorStop(1,'transparent');
+
+      ctx.fillStyle=gT;ctx.fillRect(0,imgZY,W,imgZH*0.3);
+
+      // bottom fade — strong, covers lower 55% of image
+
+      const gB=ctx.createLinearGradient(0,imgZY+imgZH*0.35,0,imgZY+imgZH);
+
+      gB.addColorStop(0,'transparent');gB.addColorStop(0.5,bg+'cc');gB.addColorStop(1,bg);
+
+      ctx.fillStyle=gB;ctx.fillRect(0,imgZY+imgZH*0.35,W,imgZH*0.65);
+
+      ctx.restore();
+
+    }
+
+  } else if(sImg){
+
+    ctx.fillStyle='rgba(255,255,255,.03)';ctx.fillRect(0,imgZY,W,imgZH);
+
+    ctx.fillStyle='rgba(255,255,255,.08)';ctx.textAlign='center';
+
+    ctx.font=`${Math.round(36*sc)}px sans-serif`;
+
+    ctx.fillText('📸',W/2,imgZY+imgZH/2+10*sc);
+
   }
 
-  // Text Area
-  const txtBaseY = imgZY + Math.round(imgZH*0.55);
-  ctx.fillStyle = bg; ctx.fillRect(0, txtBaseY, W, H-txtBaseY);
+  // 5. TEXT ZONE — starts at 55% of image, overlapping
 
-  let tY = txtBaseY + 12*sc + bOffY;
+  const txtBaseY=imgZY+Math.round(imgZH*0.55);
+
+  const txtEndY=sFt?(H-ftH):H;
+
+  // bg fill for text zone (solid from txtBaseY+fadeH to end)
+
+  const tg=ctx.createLinearGradient(0,txtBaseY,0,txtBaseY+imgZH*0.1);
+
+  tg.addColorStop(0,bg+'00');tg.addColorStop(1,bg);
+
+  ctx.fillStyle=tg;ctx.fillRect(0,txtBaseY,W,imgZH*0.1);
+
+  ctx.fillStyle=bg;ctx.fillRect(0,txtBaseY+imgZH*0.1,W,txtEndY-(txtBaseY+imgZH*0.1));
+
+  // BADGE
+
+  let tY=txtBaseY+12*sc+bOffY;
+
+  const badgeX=pad+bOffX;
+
   if(sCat){
-    ctx.font = `800 ${cSz}px 'Hind Siliguri',sans-serif`;
-    ctx.textAlign = 'left';
-    const cbW = ctx.measureText(catLabel).width + cPX*2;
-    const cbH = cSz + cPY*2;
-    ctx.fillStyle = cBC;
-    rr(ctx, pad+bOffX, tY, cbW, cbH, 4*sc); ctx.fill();
-    ctx.fillStyle = cTxt;
-    ctx.fillText(catLabel, pad+bOffX+cPX, tY+cPY+cSz*0.82);
-    tY += cbH + 12*sc;
+
+    ctx.font=`800 ${cSz}px 'Hind Siliguri',sans-serif`;ctx.textAlign='left';
+
+    const cbW=ctx.measureText(catLabel).width+cPX*2,cbH=cSz+cPY*2;
+
+    ctx.fillStyle=cBC;rr(ctx,badgeX,tY,cbW,cbH,4*sc);ctx.fill();
+
+    ctx.fillStyle=cTxt;ctx.fillText(catLabel,badgeX+cPX,tY+cPY+cSz*0.82);
+
+    tY+=cbH+10*sc;
+
   }
+
+  // HEADLINE
 
   if(sHL){
-    tY += hOffY;
-    ctx.font = `900 ${hlSz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
-    ctx.fillStyle = hlC;
-    ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 12;
-    const hlLines = wrp(ctx, hl, W-pad*2);
-    hlLines.forEach((ln,i) => ctx.fillText(ln, pad+hOffX, tY + i*hlSz*hlLH));
-    ctx.shadowBlur = 0;
-    tY += hlLines.length * hlSz * hlLH + 12*sc;
+
+    tY+=hOffY;
+
+    const hlX=pad+hOffX;
+
+    ctx.font=`900 ${hlSz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
+
+    ctx.textAlign='left';ctx.fillStyle=hlC;
+
+    ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=10;
+
+    const hlLines=wrp(ctx,hl,W-hlX-pad);
+
+    hlLines.slice(0,5).forEach((ln,i)=>ctx.fillText(ln,hlX,tY+i*hlSz*hlLH));
+
+    ctx.shadowBlur=0;
+
+    tY+=hlLines.slice(0,5).length*hlSz*hlLH+8*sc;
+
   }
 
-  if(sSub && sub){
-    tY += sOffY;
-    ctx.font = `400 ${hlSz*0.55}px 'Hind Siliguri',sans-serif`;
-    ctx.fillStyle = hlC + 'cc';
-    wrp(ctx, sub, W-pad*2, hlSz*0.55).forEach((ln,i) => ctx.fillText(ln, pad, tY + i*hlSz*0.55*1.4));
+  // SUB-HEADLINE
+
+  if(sSub&&sub){
+
+    tY+=sOffY;
+
+    const subSz=hlSz*0.5;
+
+    ctx.font=`400 ${subSz}px 'Hind Siliguri',sans-serif`;
+
+    ctx.fillStyle=hlC+'cc';ctx.textAlign='left';
+
+    wrp(ctx,sub,W-pad*2,subSz).slice(0,3).forEach((ln,i)=>ctx.fillText(ln,pad,tY+i*subSz*1.45));
+
   }
+
+  // 6. FOOTER
 
   if(sFt){
-    const ftY = H - ftH;
-    ctx.fillStyle = fC; ctx.fillRect(0, ftY, W, ftH);
-    ctx.fillStyle = fTxt;
-    ctx.font = `700 ${g('sFF')*sc}px 'Hind Siliguri',sans-serif`;
-    ctx.fillText('JOAF • দেশ আগে, দল পরে', pad, ftY + ftH*0.65);
-    ctx.textAlign = 'right';
-    ctx.fillText('www.julyforum.com', W-pad, ftY + ftH*0.65);
+
+    const ftY=H-ftH;
+
+    ctx.fillStyle=fC;ctx.fillRect(0,ftY,W,ftH);
+
+    ctx.fillStyle='rgba(255,255,255,.1)';ctx.fillRect(0,ftY,W,2*sc);
+
+    ctx.fillStyle=fTxt;ctx.textAlign='left';
+
+    ctx.font=`700 ${ffSz}px 'Hind Siliguri',sans-serif`;
+
+    ctx.shadowColor='rgba(0,0,0,.3)';ctx.shadowBlur=4;
+
+    ctx.fillText('JOAF • দেশ আগে, দল পরে',pad,ftY+ftH*0.62);
+
+    ctx.textAlign='right';ctx.shadowBlur=0;
+
+    ctx.font=`500 ${ffSz*0.85}px 'Hind Siliguri',sans-serif`;
+
+    ctx.fillText('www.julyforum.com',W-pad,ftY+ftH*0.62);
+
   }
+
+  // 7. WATERMARK
 
   if(sWm){
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.font = `500 ${14*sc}px 'Hind Siliguri',sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('www.julyforum.com', W/2, H - 18*sc);
+
+    const wmY=sFt?(H-ftH-18*sc):(H-10*sc);
+
+    ctx.fillStyle='rgba(255,255,255,.2)';ctx.textAlign='center';
+
+    ctx.font=`500 ${Math.round(12*sc)}px 'Hind Siliguri',sans-serif`;
+
+    ctx.fillText('📌 www.julyforum.com',W/2,wmY);
+
   }
+
+  // 8. TOP ACCENT LINE
+
+  if(sStr){
+
+    const lg=ctx.createLinearGradient(0,0,W,0);
+
+    lg.addColorStop(0,'transparent');lg.addColorStop(0.35,aC);
+
+    lg.addColorStop(0.65,aC+'cc');lg.addColorStop(1,'transparent');
+
+    ctx.fillStyle=lg;ctx.fillRect(0,0,W,3*sc);
+
+  }
+
 }
 
-function onFile(ev){
-  const f = ev.target.files[0];
-  if(f) loadF(f);
+async function drawLogo(ctx,x,y,w,h){
+
+  return new Promise(res=>{
+
+    const img=new Image();img.crossOrigin='anonymous';
+
+    img.onload=()=>{ctx.drawImage(img,x,y,w,h);res();};
+
+    img.onerror=()=>{
+
+      ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+
+      ctx.font=`900 ${Math.round(w*0.55)}px sans-serif`;
+
+      ctx.fillText('J',x+w/2,y+h/2);ctx.textBaseline='alphabetic';res();
+
+    };
+
+    img.src='/logoc7c3.png';
+
+  });
+
 }
+
+function onSzCh(){fitZ();draw();}
+
+function fitZ(){
+
+  if(!SRC)return;
+
+  const wr=document.getElementById('cvwrap');
+
+  const[cw,ch]=gSz();
+
+  ZL=Math.min((wr.offsetWidth-30)/cw,(wr.offsetHeight-40)/ch,1);
+
+  apZ();
+
+}
+
+function zm(d){ZL=Math.max(.1,Math.min(3,ZL+d));apZ();}
+
+function apZ(){
+
+  const[cw,ch]=gSz();
+
+  const cv=document.getElementById('cv');
+
+  cv.style.width=Math.round(cw*ZL)+'px';
+
+  cv.style.height=Math.round(ch*ZL)+'px';
+
+  document.getElementById('zLbl').textContent=Math.round(ZL*100)+'%';
+
+}
+
+function onFile(ev){const f=ev.target.files[0];if(f)loadF(f);}
 
 function loadF(file){
-  const r = new FileReader();
-  r.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      SRC = img;
-      SB64 = e.target.result;
-      document.getElementById('sbThumb').src = SB64;
-      document.getElementById('sbPrev').style.display = 'block';
-      document.getElementById('sbLbl').textContent = '✅ Loaded';
-      document.getElementById('upOvl').style.display = 'none';
-      draw();
+
+  const r=new FileReader();
+
+  r.onload=ev=>{
+
+    const img=new Image();
+
+    img.onload=()=>{
+
+      SRC=img;SB64=ev.target.result;
+
+      document.getElementById('sbThumb').src=ev.target.result;
+
+      document.getElementById('sbPrev').style.display='block';
+
+      document.getElementById('sbLbl').textContent='✅ loaded';
+
+      document.getElementById('upOvl').style.display='none';
+
+      startAI();
+
     };
-    img.src = e.target.result;
+
+    img.src=ev.target.result;
+
   };
+
   r.readAsDataURL(file);
+
 }
 
+function startAI(){
+
+  document.getElementById('aiOvl').classList.add('show');
+
+  document.getElementById('aiErr').style.display='none';
+
+  document.getElementById('aiAct').style.display='none';
+
+  document.getElementById('aiTtl').textContent='AI বিশ্লেষণ চলছে';
+
+  sAS(1);
+
+  const st=document.getElementById('aiSt');st.className='ai-st run';st.textContent='⏳ AI analyze হচ্ছে...';
+
+  runAI();
+
+}
+
+async function runAI(){
+
+  const b64=SB64.split(',')[1],mime=SB64.split(';')[0].split(':')[1];
+
+  const prompt=`তুমি বাংলাদেশী news card designer AI। এই image টি TV channel বা news screenshot।
+
+শুধু JSON দাও (no markdown):
+
+{"headline":"মূল headline বাংলায় সর্বোচ্চ ৮০ অক্ষর","sub":"sub-headline বা খালি","category":"breaking|exclusive|update|analysis|alert|positive","source":"channel নাম শুধু text","location":"স্থান বা খালি","crop_top":15,"crop_bottom":5,"crop_left":0,"crop_right":0,"style":0,"overlay":55}
+
+crop=% (0-55); style=0-5; overlay=image darkness %;`;
+
+  try{
+
+    let res=null;
+
+    for(const m of AI_MODELS){
+
+      try{
+
+        const r=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json'},
+
+          body:JSON.stringify({model:m,messages:[{role:'user',content:[
+
+            {type:'image_url',image_url:{url:`data:${mime};base64,${b64}`}},
+
+            {type:'text',text:prompt}
+
+          ]}],max_tokens:400,temperature:0.1})});
+
+        if(!r.ok)continue;
+
+        const d=await r.json();
+
+        let txt=d.choices?.[0]?.message?.content||'';
+
+        txt=txt.replace(/```json\s*/gi,'').replace(/```/g,'').trim();
+
+        const mm=txt.match(/\{[\s\S]*\}/);
+
+        if(mm){res=JSON.parse(mm[0]);break;}
+
+      }catch(e){continue;}
+
+    }
+
+    if(!res)throw new Error('AI parse failed');
+
+    sAS(2);
+
+    if(res.headline)document.getElementById('eHl').value=res.headline;
+
+    if(res.sub)document.getElementById('eSub').value=res.sub;
+
+    if(res.category)document.getElementById('eCat').value=res.category;
+
+    if(res.source)document.getElementById('eSrc').value=res.source;
+
+    if(res.location)document.getElementById('eLoc').value=res.location;
+
+    sAS(3);
+
+    const setCrop=(id,vId,val,mx)=>{const v=Math.min(mx,Math.max(0,+(val||0)));document.getElementById(id).value=v;document.getElementById(vId).textContent=v+'%';};
+
+    setCrop('sCT','vCT',res.crop_top,60);setCrop('sCB','vCB',res.crop_bottom,60);
+
+    setCrop('sCL','vCL',res.crop_left,50);setCrop('sCR','vCR',res.crop_right,50);
+
+    sAS(4);
+
+    apP(Math.min(5,Math.max(0,+(res.style||0))),false);
+
+    if(res.overlay){document.getElementById('sOV').value=res.overlay;document.getElementById('vOV').textContent=res.overlay+'%';}
+
+    await new Promise(r=>setTimeout(r,300));
+
+    document.getElementById('aiOvl').classList.remove('show');
+
+    const st=document.getElementById('aiSt');st.className='ai-st done';st.textContent='✅ AI সম্পন্ন';
+
+    setTimeout(()=>st.style.display='none',3000);
+
+    fitZ();draw();
+
+  }catch(err){
+
+    document.getElementById('aiTtl').textContent='⚠️ Error';
+
+    document.getElementById('aiErr').textContent='সমস্যা: '+err.message;
+
+    document.getElementById('aiErr').style.display='block';
+
+    document.getElementById('aiAct').style.display='flex';
+
+    const st=document.getElementById('aiSt');st.className='ai-st err';st.textContent='❌ error — skip করুন';
+
+  }
+
+}
+
+function skipAI(){document.getElementById('aiOvl').classList.remove('show');document.getElementById('aiSt').style.display='none';fitZ();draw();}
+
+function sAS(n){[1,2,3,4].forEach(i=>{document.getElementById('as'+i).className='as'+(i<n?' done':i===n?' active':'');});}
+
 function resetImg(){
-  ['sCT','sCB','sCL','sCR','sPX','sPY','sSC','sBR','sCN','sOV'].forEach(id => {
-    const el = document.getElementById(id);
-    el.value = el.defaultValue || (id.includes('sC')?15: id.includes('sO')?55:0);
-  });
+
+  ['sCT','sCB','sCL','sCR','sPX','sPY'].forEach(id=>document.getElementById(id).value=id==='sCT'?15:id==='sCB'?5:0);
+
+  document.getElementById('sSC').value=100;document.getElementById('sBR').value=100;document.getElementById('sCN').value=100;
+
+  ['vCT','vCB','vCL','vCR'].forEach(id=>document.getElementById(id).textContent=(id==='vCT'?'15':id==='vCB'?'5':'0')+'%');
+
+  ['vPX','vPY'].forEach(id=>document.getElementById(id).textContent='0');
+
+  ['vSC','vBR','vCN'].forEach(id=>document.getElementById(id).textContent='100%');
+
   draw();
+
 }
 
 function resetAll(){
-  SRC = null; SB64 = null;
-  document.getElementById('eHl').value = '';
-  document.getElementById('eSub').value = '';
-  document.getElementById('eSrc').value = 'JOAF News';
-  document.getElementById('eLoc').value = '';
-  document.getElementById('sbPrev').style.display = 'none';
-  document.getElementById('sbLbl').textContent = '📸 Click বা drag';
-  document.getElementById('upOvl').style.display = 'flex';
-  resetImg();
-  apP(0);
+
+  SRC=null;SB64=null;
+
+  document.getElementById('eHl').value='';document.getElementById('eSub').value='';
+
+  document.getElementById('eSrc').value='JOAF News';document.getElementById('eLoc').value='';
+
+  document.getElementById('sBX').value=0;document.getElementById('sBY').value=0;
+
+  document.getElementById('sHX').value=0;document.getElementById('sHY').value=0;
+
+  document.getElementById('sSY').value=0;
+
+  ['vBX','vBY','vHX','vHY','vSY'].forEach(id=>document.getElementById(id).textContent='0');
+
+  ['fIn','fIn2'].forEach(id=>document.getElementById(id).value='');
+
+  document.getElementById('sbPrev').style.display='none';
+
+  document.getElementById('sbLbl').textContent='📸 Click বা drag';
+
+  document.getElementById('upOvl').style.display='flex';
+
+  document.getElementById('aiOvl').classList.remove('show');
+
+  document.getElementById('aiSt').style.display='none';
+
+  resetImg();apP(0,false);
+
 }
 
 function openPF(){
-  if(!SRC){ alert('প্রথমে একটা ছবি আপলোড করুন!'); return; }
-  const list = CHECKS.map(c => `
-    <div class="chk" onclick="this.querySelector('input').click()">
-      <input type="checkbox" id="${c.id}">
-      <label>${c.t}</label>
-    </div>
-  `).join('');
-  document.getElementById('chkList').innerHTML = list;
+
+  if(!SRC){showT('আগে image upload করুন!','er');return;}
+
+  document.getElementById('chkList').innerHTML=CHECKS.map(c=>`<div class="chk" id="w${c.id}" onclick="chkT('${c.id}')"><input type="checkbox" id="${c.id}" onclick="event.stopPropagation();chkT('${c.id}')"><label for="${c.id}">${c.t}</label></div>`).join('');
+
+  document.getElementById('dlBtn').disabled=true;
+
   document.getElementById('pfModal').classList.add('open');
+
 }
 
-function closePF(){
-  document.getElementById('pfModal').classList.remove('open');
+function chkT(id){
+
+  const cb=document.getElementById(id);cb.checked=!cb.checked;
+
+  document.getElementById('w'+id).classList.toggle('ok',cb.checked);
+
+  document.getElementById('dlBtn').disabled=!CHECKS.every(c=>document.getElementById(c.id).checked);
+
 }
 
-async function confirmDL(){
-  closePF();
-  await doDL();
-}
+function closePF(){document.getElementById('pfModal').classList.remove('open');}
 
-async function quickDL(){
-  if(!SRC){ alert('প্রথমে ছবি আপলোড করুন!'); return; }
-  await doDL();
-}
+async function confirmDL(){closePF();await doDL();}
+
+async function quickDL(){if(!SRC){showT('আগে image upload করুন!','er');return;}await doDL();}
 
 async function doDL(){
-  const cv = document.createElement('canvas');
-  await dFull(cv);
-  const link = document.createElement('a');
-  const name = (gv('eHl')||'news').substring(0,20).replace(/[^অ-য়a-zA-Z0-9]/g,'_');
-  link.download = `JOAF_${name}.jpg`;
-  link.href = cv.toDataURL('image/jpeg', 0.95);
-  link.click();
+
+  showT('⏳ JPG তৈরি হচ্ছে...','ok');
+
+  const fc=document.createElement('canvas');
+
+  await dFull(fc,true);
+
+  const[W,H]=gSz();
+
+  const nm=document.getElementById('eHl').value.substring(0,14).replace(/[^\u0980-\u09FFa-zA-Z0-9]/g,'_');
+
+  const a=document.createElement('a');
+
+  a.download=`JOAF_${nm}_${W}x${H}.jpg`;
+
+  a.href=fc.toDataURL('image/jpeg',0.96);
+
+  a.click();
+
+  setTimeout(()=>showT('✅ Download শুরু!','ok'),400);
+
 }
 
-function fitZ(){
-  const wrap = document.getElementById('cvwrap');
-  const [w,h] = gSz();
-  ZL = Math.min((wrap.offsetWidth-40)/w, (wrap.offsetHeight-40)/h, 1.2);
-  apZ();
+function showT(msg,t='ok'){
+
+  const el=document.getElementById('toast');
+
+  el.textContent=msg;el.className='toast '+t;el.style.display='block';
+
+  setTimeout(()=>el.style.display='none',3000);
+
 }
 
-function zm(d){
-  ZL = Math.max(0.2, Math.min(3, ZL + d));
-  apZ();
-}
+// Canvas drag for image pan
 
-function apZ(){
-  const cv = document.getElementById('cv');
-  const [w,h] = gSz();
-  cv.style.width = Math.round(w * ZL) + 'px';
-  cv.style.height = Math.round(h * ZL) + 'px';
-  document.getElementById('zLbl').textContent = Math.round(ZL*100) + '%';
-}
+let drag=null;
+
+document.addEventListener('DOMContentLoaded',()=>{
+
+  const cv=document.getElementById('cv');
+
+  cv.addEventListener('mousedown',e=>{if(!SRC)return;drag={ox:e.clientX,oy:e.clientY,sx:g('sPX'),sy:g('sPY')};cv.style.cursor='grabbing';});
+
+  cv.addEventListener('mousemove',e=>{
+
+    if(!drag)return;
+
+    const[cw]=gSz();const scale=cw/(cv.getBoundingClientRect().width);
+
+    const dx=Math.round((e.clientX-drag.ox)*scale/((cw/1080)));
+
+    const dy=Math.round((e.clientY-drag.oy)*scale/((cw/1080)));
+
+    const nx=Math.max(-500,Math.min(500,drag.sx+dx));
+
+    const ny=Math.max(-500,Math.min(500,drag.sy+dy));
+
+    document.getElementById('sPX').value=nx;document.getElementById('vPX').textContent=nx;
+
+    document.getElementById('sPY').value=ny;document.getElementById('vPY').textContent=ny;
+
+    draw();
+
+  });
+
+  cv.addEventListener('mouseup',()=>{drag=null;if(SRC)cv.style.cursor='grab';});
+
+  cv.addEventListener('mouseleave',()=>{drag=null;if(SRC)cv.style.cursor='grab';});
+
+  cv.addEventListener('wheel',e=>{
+
+    if(!SRC)return;e.preventDefault();
+
+    const v=Math.max(50,Math.min(250,g('sSC')+(e.deltaY>0?-3:3)));
+
+    document.getElementById('sSC').value=v;document.getElementById('vSC').textContent=v+'%';draw();
+
+  },{passive:false});
+
+  window.addEventListener('resize',fitZ);
+
+  if(SRC)cv.style.cursor='grab';
+
+});
 
 // Init
-document.addEventListener('DOMContentLoaded', () => {
-  const d = new Date(Date.now() + 6*3600000);
-  const mn = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-  document.getElementById('eDt').value = `${d.getDate()} ${mn[d.getMonth()]}, ${d.getFullYear()}`;
+
+(function init(){
+
+  const d=new Date(Date.now()+6*3600000);
+
+  const mn=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+
+  document.getElementById('eDt').value=`${d.getDate()} ${mn[d.getMonth()]}, ${d.getFullYear()}`;
 
   buildPR();
-  bSw('swHL', HCS, c => { hlC = c; draw(); });
-  bSw('swCB', SWS, c => { cBC = c; draw(); });
-  bSw('swLB', SWS, c => { lBC = c; draw(); });
-  bSw('swFC', SWS, c => { fC = c; draw(); });
 
-  apP(0, false);
-  fitZ();
-  draw();
-});
+  bSw('swHL',HCS,c=>{hlC=c;draw();});
+
+  bSw('swCB',SWS,c=>{cBC=c;draw();});
+
+  bSw('swLB',SWS,c=>{lBC=c;draw();});
+
+  bSw('swFC',SWS,c=>{fC=c;draw();});
+
+  apP(0,false);
+
+  const uz=document.getElementById('upZone');
+
+  uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
+
+  uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+
+  uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadF(f);});
+
+})();
+
 </script>
+
 </body>
+
 </html>
