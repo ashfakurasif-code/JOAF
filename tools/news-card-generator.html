@@ -315,7 +315,8 @@ function gSz(){return gv('eSize').split(',').map(Number);}
 function sv(el,vid,unit=''){document.getElementById(vid).textContent=el.value+(unit||'');}
 
 function bSw(id,colors,cb){
-  document.getElementById(id).innerHTML=colors.map(c=>`<div class="sw" style="background:${c}" onclick="(${cb.toString()})('${c}');document.querySelectorAll('#${id} .sw').forEach(e=>e.classList.remove('on'));this.classList.add('on')"></div>`).join('')+`<div class="sw-c"><input type="color" onchange="(${cb.toString()})(this.value)"></div>`;
+  window['_bsw_'+id]=cb;
+  document.getElementById(id).innerHTML=colors.map(c=>`<div class="sw" style="background:${c}" onclick="window['_bsw_${id}']('${c}');document.querySelectorAll('#${id} .sw').forEach(e=>e.classList.remove('on'));this.classList.add('on')"></div>`).join('')+`<div class="sw-c"><input type="color" onchange="window['_bsw_${id}'](this.value)"></div>`;
 }
 
 function buildPR(){
