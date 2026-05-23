@@ -895,6 +895,20 @@ addDoc(collection(db,'pageviews'), {
           <span id="fb-pages-status" style="font-size:11px;margin-left:8px;color:var(--green)"></span>
         </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">✍️ News Text লিখুন</label>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2)">🖼️ অথবা Image Upload করুন</label>
+            <div id="img-upload-zone" style="margin-top:4px;border:2px dashed var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:.15s;position:relative;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+              <input type="file" id="fb-img-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="fbAnalyzeImage(this)">
+              <div id="img-upload-preview" style="display:none;margin-bottom:6px"><img id="img-preview-thumb" style="max-height:80px;border-radius:6px;border:1px solid var(--border)"></div>
+              <div id="img-upload-label" style="font-size:11px;color:var(--text2)">📸 Click করুন বা drag করুন<br><span style="font-size:10px;color:var(--text3)">AI image analyze করে text তৈরি করবে</span></div>
+              <div id="img-analyze-status" style="font-size:11px;color:var(--amber);margin-top:4px;display:none">⏳ Image analyze হচ্ছে...</div>
+            </div>
+          </div>
+        </div>
         <label style="font-size:11px;font-weight:700;color:var(--text2)">✍️ News Text লিখুন</label>
         <textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical" placeholder="এখানে সংবাদের মূল বিষয় লিখুন..."></textarea>
         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
@@ -2393,6 +2407,62 @@ async function fbPostAll(){alert('Pages JSON দিয়ে post করুন')
 async function fbGenerateCard(){await fbGenerateReel();}
 // ── FB Reel Generator ─────────────────────────────────────────
 let reelBlob = null;
+
+
+async function fbAnalyzeImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('img-upload-preview');
+  const thumb = document.getElementById('img-preview-thumb');
+  const label = document.getElementById('img-upload-label');
+  const status = document.getElementById('img-analyze-status');
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    thumb.src = e.target.result;
+    preview.style.display = 'block';
+    label.style.display = 'none';
+    status.style.display = 'block';
+    status.textContent = 'Image analyze হচ্ছে...';
+    try {
+      const base64 = e.target.result.split(',')[1];
+      const mimeType = file.type || 'image/jpeg';
+      const res = await fetch('/.netlify/functions/groq-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image_url',
+                image_url: { url: 'data:' + mimeType + ';base64,' + base64 }
+              },
+              {
+                type: 'text',
+                text: 'এই image টি analyze করো। এটি একটি বাংলাদেশী সংবাদ বা ঘটনার ছবি হতে পারে। Image থেকে যা দেখছ তার উপর ভিত্তি করে একটি বাংলা news summary লেখো। Summary তে থাকবে: কী ঘটেছে, কোথায়, কে জড়িত (যদি বোঝা যায়), এবং সম্ভাব্য তারিখ বা সময়। শুধু বাংলায় ৩-৫ বাক্যে লেখো, কোনো hashtag বা extra formatting ছাড়া।'
+              }
+            ]
+          }]
+        })
+      });
+      const data = await res.json();
+      const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (text) {
+        document.getElementById('fb-news-input').value = text.trim();
+        status.textContent = 'Image analyze সম্পন্ন';
+        status.style.color = 'var(--green)';
+      } else {
+        throw new Error('AI response নেই');
+      }
+    } catch(err) {
+      status.textContent = 'Error: ' + err.message;
+      status.style.color = 'var(--red)';
+    }
+  };
+  reader.readAsDataURL(file);
+}
 
 async function fbGenerateReel() {
   const text = document.getElementById('fb-news-input').value.trim();
