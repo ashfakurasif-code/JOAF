@@ -1522,9 +1522,9 @@ async function initDashboard() {
     const donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
 
     // Set KPIs
-    setEl('ds-sub', activeCount); setEl('b-notif', activeCount); setEl('n-sub', activeCount); setEl('an-subs', activeCount);
+    setEl('ds-sub', activeCount); setEl('b-notif', activeCount); setEl('n-sub', activeCount); setEl('an-subs', activeCount); setEl('an-kpi-subs', activeCount); anCachedSubs = activeCount;
     setEl('ds-donors', donors); setEl('ds-alerts', alerts); setEl('ds-notifs', notifs);
-    setEl('b-blood', donors); setEl('n-total', notifs); setEl('an-notifs', notifs);
+    setEl('b-blood', donors); setEl('n-total', notifs); setEl('an-notifs', notifs); setEl('an-kpi-notif', notifs); anCachedNotifs = notifs;
 
     const subSubEl = document.getElementById('ds-sub-sub');
     if(subSubEl){ subSubEl.textContent = `${subSnap.size-activeCount} inactive`; }
@@ -2551,6 +2551,7 @@ let anLiveCount  = 0;
 let anFeedFilter = 'all';
 let anUnsubscribe = null;
 let anChartInst = null, anCatInst = null, anDevInst = null;
+let anCachedSubs = null, anCachedNotifs = null;
 
 // ── Config maps (single source of truth) ──────────────────────────────
 const PAGE_LABELS = {
