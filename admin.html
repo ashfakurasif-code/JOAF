@@ -44,7 +44,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .upload-result.error{background:var(--red-bg);color:var(--red);}
 
 /* ══ LOGIN ══════════════════════════════════════ */
-#loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;background-image:radial-gradient(ellipse at 20% 50%,rgba(240,82,82,.04) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(96,165,250,.04) 0%,transparent 60%);}
+#loginScreen{position:fixed;inset:0;background:var(--bg);display:var(--ls-display,flex);align-items:center;justify-content:center;z-index:9999;background-image:radial-gradient(ellipse at 20% 50%,rgba(240,82,82,.04) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(96,165,250,.04) 0%,transparent 60%);}
 .lcard{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:36px 32px;width:340px;}
 .lcard-top{text-align:center;margin-bottom:28px;}
 .lcard-top .logo-circle{width:52px;height:52px;background:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px;}
@@ -314,6 +314,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
 
 
 <!-- ══ LOGIN ══════════════════════════════════════ -->
+<script>if(localStorage.getItem('joaf_admin_key')){document.documentElement.style.setProperty('--ls-display','none');}else{document.documentElement.style.setProperty('--ls-display','flex');}</script>
 <div id="loginScreen">
   <div class="lcard">
     <div class="lcard-top">
