@@ -97,7 +97,8 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .ham-btn span{display:block;width:20px;height:2px;background:currentColor;border-radius:2px;transition:.2s;}
 
 /* PAGES */
-.page{padding:22px;display:none;flex:1;}
+.page{padding:22px;display:none;flex:1;min-height:0;}
+#page-newscard{padding:0;height:100%;}
 .page.active{display:block;}
 
 /* ══ MOBILE RESPONSIVE ══════════════════════════ */
@@ -328,7 +329,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
       <div class="ni" onclick="goPage('alert-page',this)"><span class="ic">🚨</span>সতর্কতা</div>
       <div class="ni" onclick="goPage('blood',this)"><span class="ic">🩸</span>রক্তদাতা <span class="nbadge green" id="b-blood">—</span></div>
       <div class="ni" onclick="goPage('press',this)"><span class="ic">📰</span>Press Release</div>
-      <div class="ni" onclick="window.open('/news-card-generator.html','_self')" style="color:var(--amber)"><span class="ic">🎨</span>News Card Generator</div>
+      <div class="ni" onclick="goPage('newscard',this)" style="color:var(--amber)"><span class="ic">🎨</span>News Card Generator</div>
       <div class="ni" onclick="goPage('fbpost',this)"><span class="ic">📢</span>FB Auto Post</div>
 
       <div class="nsec">Data</div>
@@ -369,6 +370,11 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
         <button class="tbtn" onclick="openModal('uploadModal')" style="color:var(--green);border-color:var(--green-border)">📁 File Upload</button>
         <a href="https://julyforum.com" target="_blank" class="tbtn">🌐 Live Site</a>
       </div>
+    </div>
+
+    <!-- ══ NEWS CARD GENERATOR ══ -->
+    <div class="page" id="page-newscard" style="padding:0;overflow:hidden;">
+      <iframe src="/news-card-generator.html" style="width:100%;height:100%;border:none;display:block;" id="ncgFrame"></iframe>
     </div>
 
     <!-- ══ DASHBOARD ══ -->
@@ -1176,6 +1182,7 @@ window.closeSidebar = function() {
 };
 
 // ── Navigation ──────────────────────────────────────────
+window.addEventListener('message',function(e){if(e.data==='goAdmin')goPage('dashboard',document.querySelector('.ni:first-child'));});
 window.goPage = function(id, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
@@ -1186,7 +1193,7 @@ window.goPage = function(id, el) {
     'alert-page':'🚨 সতর্কতা',blood:'🩸 রক্তদাতা',press:'📰 Press Release',
     leader:'🏛️ নেতা ট্র্যাকার',warrior:'✊ জুলাই যোদ্ধা',bajar:'🛒 বাজার দর',
     medicine:'💊 ওষুধের দাম',members:'👥 Members',polls:'🗳️ Polls',
-    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',fbpost:'📢 FB Auto Post'};
+    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',fbpost:'📢 FB Auto Post',newscard:'🎨 News Card Generator'};
   document.getElementById('pageTitle').textContent = titles[id] || id;
   // Lazy load page data
   const loaders = {

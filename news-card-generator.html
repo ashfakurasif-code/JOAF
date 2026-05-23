@@ -115,7 +115,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   <div class="hdr-logo">J</div>
   <div><div class="hdr-title">JOAF News Card Studio</div><div class="hdr-sub">Image upload → AI analyze → Edit → JPG download</div></div>
   <div class="hdr-r">
-    <a class="hdr-back" onclick="history.back()">← Admin</a>
+    <a class="hdr-back" onclick="window.parent.postMessage('goAdmin','*')">← Admin</a>
     <button class="btn btn-g btn-sm" onclick="resetAll()">↺ Reset</button>
     <button class="btn btn-p btn-sm" onclick="openPF()">⬇️ Download</button>
   </div>
