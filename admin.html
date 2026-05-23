@@ -407,44 +407,62 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
 
     <!-- ══ DASHBOARD ══ -->
     <div class="page active" id="page-dashboard">
-      <div class="stats-grid">
-        <div class="scard blue" data-icon="🔔"><div class="scard-num" id="ds-sub">—</div><div class="scard-label">Push Subscribers</div><div class="scard-sub text-muted">Active devices</div></div>
-        <div class="scard green" data-icon="🩸"><div class="scard-num" id="ds-donors">—</div><div class="scard-label">রক্তদাতা</div><div class="scard-sub text-muted">Total donors</div></div>
-        <div class="scard red" data-icon="🚨"><div class="scard-num" id="ds-alerts">—</div><div class="scard-label">সতর্কতা</div><div class="scard-sub text-muted">Active alerts</div></div>
-        <div class="scard amber" data-icon="🔔"><div class="scard-num" id="ds-notifs">—</div><div class="scard-label">Notifications Sent</div><div class="scard-sub text-muted">All time</div></div>
-        <div class="scard purple" data-icon="💬"><div class="scard-num" id="ds-polls">—</div><div class="scard-label">Poll Voters</div><div class="scard-sub text-muted">Registered users</div></div>
+
+      <!-- ── KPI row (array-driven) ── -->
+      <div class="stats-grid" style="margin-bottom:14px">
+        <div class="scard blue"   data-icon="🔔"><div class="scard-num" id="ds-sub">—</div><div class="scard-label">Push Subscribers</div><div class="scard-sub" id="ds-sub-sub" style="color:var(--green)">Active devices</div></div>
+        <div class="scard green"  data-icon="🩸"><div class="scard-num" id="ds-donors">—</div><div class="scard-label">রক্তদাতা</div><div class="scard-sub text-muted">Total donors</div></div>
+        <div class="scard red"    data-icon="🚨"><div class="scard-num" id="ds-alerts">—</div><div class="scard-label">সতর্কতা</div><div class="scard-sub text-muted">Active alerts</div></div>
+        <div class="scard amber"  data-icon="📤"><div class="scard-num" id="ds-notifs">—</div><div class="scard-label">Notifications</div><div class="scard-sub" id="ds-notif-today" style="color:var(--text2)">All time</div></div>
+        <div class="scard purple" data-icon="👁️"><div class="scard-num" id="ds-today-pv">—</div><div class="scard-label">আজকের Visit</div><div class="scard-sub" id="ds-pv-change" style="color:var(--text2)">vs গতকাল</div></div>
       </div>
 
+      <!-- ── 3-col main grid ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+
+        <!-- Traffic sparkline -->
+        <div class="card" style="padding:14px">
+          <div class="card-header" style="margin-bottom:10px">
+            <div><div class="card-title">📈 আজকের Traffic</div><div class="card-sub" id="ds-pv-label" style="font-size:10px;color:var(--text2)">Hourly visits</div></div>
+            <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--green)">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite;display:inline-block"></span>Live
+            </span>
+          </div>
+          <div style="position:relative;height:90px"><canvas id="ds-spark"></canvas></div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card" style="padding:14px">
+          <div class="card-header" style="margin-bottom:10px"><div class="card-title">⚡ Quick Actions</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <button class="btn btn-primary" style="font-size:11px;padding:7px" onclick="goPage('notification',document.querySelector('.ni:nth-child(6)'))">🔔 Notification</button>
+            <button class="btn btn-ghost"   style="font-size:11px;padding:7px" onclick="goPage('alert-page',document.querySelector('.ni:nth-child(7)'))">🚨 Alert দিন</button>
+            <button class="btn btn-ghost"   style="font-size:11px;padding:7px" onclick="goPage('blood',document.querySelector('.ni:nth-child(8)'))">🩸 Donors</button>
+            <button class="btn btn-ghost"   style="font-size:11px;padding:7px" onclick="goPage('analytics',document.querySelector('.ni:nth-child(5)'))">📊 Analytics</button>
+          </div>
+        </div>
+
+        <!-- System health -->
+        <div class="card" style="padding:14px">
+          <div class="card-header" style="margin-bottom:10px"><div class="card-title">🟢 System Health</div></div>
+          <div id="ds-health" style="display:flex;flex-direction:column;gap:7px"></div>
+        </div>
+
+      </div>
+
+      <!-- ── 2-col bottom grid ── -->
       <div class="card-2col">
         <div class="card">
-          <div class="card-header">
-            <div><div class="card-title">⚡ Quick Actions</div><div class="card-sub">সবচেয়ে বেশি ব্যবহৃত</div></div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="btn btn-primary btn-full" onclick="goPage('notification',document.querySelector('.ni:nth-child(6)'))">🔔 Notification পাঠান</button>
-            <button class="btn btn-ghost btn-full" onclick="goPage('alert-page',document.querySelector('.ni:nth-child(7)'))">🚨 নতুন সতর্কতা দিন</button>
-            <button class="btn btn-ghost btn-full" onclick="goPage('blood',document.querySelector('.ni:nth-child(8)'))">🩸 রক্তদাতা দেখুন</button>
-            <button class="btn btn-ghost btn-full" onclick="goPage('bajar',document.querySelector('.ni:nth-child(13)'))">🛒 বাজার দর Update</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div><div class="card-title">📋 Recent Notifications</div></div>
-          </div>
+          <div class="card-header"><div class="card-title">📋 সাম্প্রতিক Notification</div><button class="btn btn-ghost btn-sm" onclick="goPage('notification',document.querySelector('.ni:nth-child(6)'))">সব →</button></div>
           <div id="dash-history"><div class="loading">লোড হচ্ছে...</div></div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title">🩸 সাম্প্রতিক রক্তের অনুরোধ</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="goPage('blood',document.querySelector('.ni:nth-child(8)'))">সব দেখুন →</button>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🩸 সাম্প্রতিক রক্তের অনুরোধ</div><button class="btn btn-ghost btn-sm" onclick="goPage('blood',document.querySelector('.ni:nth-child(8)'))">সব →</button></div>
+          <div id="dash-blood"><div class="loading">লোড হচ্ছে...</div></div>
         </div>
-        <div id="dash-blood"><div class="loading">লোড হচ্ছে...</div></div>
       </div>
-    </div>
 
+    </div>
     <!-- ══ NOTIFICATION ══ -->
     <div class="page" id="page-notification">
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
@@ -837,14 +855,25 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
           <div id="an-device-legend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
         </div>
 
-        <!-- Recent visits live feed -->
+          <!-- engagement metrics -->
         <div class="card">
-          <div class="card-header"><div class="card-title">🕐 সাম্প্রতিক Visit</div><span style="font-size:10px;color:var(--text2)">শেষ ২০টি</span></div>
-          <div id="an-feed" style="max-height:220px;overflow-y:auto"><div class="loading">লোড হচ্ছে...</div></div>
+          <div class="card-header"><div class="card-title">📊 Engagement</div></div>
+          <div id="an-engagement" style="display:flex;flex-direction:column;gap:7px"></div>
         </div>
 
-        <!-- GA embed link -->
-        <div class="card" style="grid-column:1/-1;background:var(--blue-bg);border-color:var(--blue-border)">
+      </div>
+
+      <!-- full-width live feed -->
+      <div class="card" style="margin-top:12px;padding:14px">
+        <div class="card-header" style="margin-bottom:10px">
+          <div class="card-title">🔴 Live Visit Feed</div>
+          <span style="font-size:10px;color:var(--text2)" id="an-feed-label">শেষ ৩০টি visit</span>
+        </div>
+        <div id="an-feed" style="max-height:260px;overflow-y:auto"><div class="loading">লোড হচ্ছে...</div></div>
+      </div>
+
+      <!-- GA embed link -->
+        <div class="card" style="margin-top:12px;background:var(--blue-bg);border-color:var(--blue-border)">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div>
               <div style="font-size:13px;font-weight:800;color:var(--blue)">📈 Google Analytics</div>
@@ -1261,53 +1290,94 @@ window.goPage = function(id, el) {
 
 // ── Dashboard init ──────────────────────────────────────
 async function initDashboard() {
-  // Stats — push_subscriptions is write-only, get count from function
-  try {
-    // Get subscriber count from Netlify function
-    fetch('/.netlify/functions/send-notification', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
-      body: JSON.stringify({_verify:true})
-    }).then(async r => {
-      // Get actual count from Firestore via a separate count approach
-      const subSnap = await getDocs(collection(db,'push_subscriptions'));
-      const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
-      setEl('ds-sub', activeCount);
-      setEl('b-notif', activeCount);
-      setEl('n-sub', activeCount);
-      setEl('an-subs', activeCount);
-    }).catch(()=>{});
-  } catch(e) {}
+  let dsSparkInst = null;
+
+  // ── Health indicators (array-driven) ──
+  const HEALTH_ITEMS = [
+    { label: 'Firebase',        check: async () => { const s=await getDocs(collection(db,'push_subscriptions')); return {ok:true,val:'Connected'}; } },
+    { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
+    { label: 'Notifications Fn',check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
+  ];
+  const healthEl = document.getElementById('ds-health');
+  if(healthEl){
+    healthEl.innerHTML = HEALTH_ITEMS.map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">${i.label}</span><span class="badge badge-loading" id="dsh-${i.label.replace(/[^a-z]/gi,'')}" style="font-size:10px;padding:2px 8px;border-radius:50px;background:var(--bg3)">...</span></div>`).join('');
+    HEALTH_ITEMS.forEach(async item => {
+      const el = document.getElementById('dsh-'+item.label.replace(/[^a-z]/gi,''));
+      try {
+        const {ok, val} = await item.check();
+        if(el) { el.textContent=val; el.style.background=ok?'rgba(52,211,153,.12)':'rgba(248,113,113,.12)'; el.style.color=ok?'var(--green)':'var(--red)'; }
+      } catch(e) { if(el){el.textContent='Error';el.style.color='var(--red)';} }
+    });
+  }
 
   try {
-    const [donorSnap, alertSnap, histSnap] = await Promise.all([
+    // Parallel load: subscribers + donors + alerts + notifications
+    const [subSnap, donorSnap, alertSnap, histSnap] = await Promise.all([
+      getDocs(collection(db,'push_subscriptions')),
       getDocs(collection(db,'donors')),
       getDocs(collection(db,'alerts')),
       getDocs(collection(db,'notification_history'))
     ]);
+
+    const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
     const donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
+
+    // Set KPIs
+    setEl('ds-sub', activeCount); setEl('b-notif', activeCount); setEl('n-sub', activeCount); setEl('an-subs', activeCount);
     setEl('ds-donors', donors); setEl('ds-alerts', alerts); setEl('ds-notifs', notifs);
-    setEl('b-blood', donors);
-    setEl('n-total', notifs);
-    setEl('an-notifs', notifs);
+    setEl('b-blood', donors); setEl('n-total', notifs); setEl('an-notifs', notifs);
 
-    // Today notifs
+    const subSubEl = document.getElementById('ds-sub-sub');
+    if(subSubEl){ subSubEl.textContent = `${subSnap.size-activeCount} inactive`; }
+
+    // Today notifications
     const today = new Date(); today.setHours(0,0,0,0);
-    let todayCount = 0;
-    histSnap.forEach(d => { const t = d.data().sentAt?.toDate?.(); if(t && t >= today) todayCount++; });
-    setEl('n-today', todayCount);
+    let todayNotifs = 0;
+    histSnap.forEach(d=>{const t=d.data().sentAt?.toDate?.();if(t&&t>=today)todayNotifs++;});
+    setEl('n-today', todayNotifs);
+    const todaySubEl = document.getElementById('ds-notif-today');
+    if(todaySubEl) todaySubEl.textContent = `আজ ${todayNotifs}টি পাঠানো`;
 
-    // History
+    // Recent history
     const hDocs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
-      .sort((a,b)=>( (b.sentAt?.seconds||0)-(a.sentAt?.seconds||0) )).slice(0,5);
+      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0))).slice(0,5);
     renderHistory('dash-history', hDocs);
 
-    // Dashboard blood preview
+    // Blood preview
     const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
     renderBloodPreview(bDocs);
-  } catch(e) { console.log('dashboard error',e); }
-}
+  } catch(e) { console.log('dashboard error', e); }
 
+  // Pageview sparkline (today hourly)
+  try {
+    const pvSnap = await getDocs(collection(db,'pageviews'));
+    const now = new Date(); const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+    const yesterdayStart = new Date(todayStart.getTime()-86400000);
+    const pvDocs = pvSnap.docs.map(d=>({...d.data(), tsMs: d.data().ts?.toMillis?.()||0}));
+    const todayPv = pvDocs.filter(d=>d.tsMs>=todayStart.getTime()).length;
+    const yestPv  = pvDocs.filter(d=>d.tsMs>=yesterdayStart.getTime()&&d.tsMs<todayStart.getTime()).length;
+    setEl('ds-today-pv', todayPv);
+
+    const pvChangeEl = document.getElementById('ds-pv-change');
+    if(pvChangeEl){ const diff=todayPv-yestPv; pvChangeEl.textContent=(diff>=0?'▲ +':'▼ ')+diff+' গতকাল'; pvChangeEl.style.color=diff>=0?'var(--green)':'var(--red)'; }
+
+    // Build hourly sparkline for today
+    const hours=24, labels=[], data=[];
+    for(let i=0;i<hours;i++){
+      const hS=new Date(todayStart.getTime()+i*3600000), hE=new Date(hS.getTime()+3600000);
+      labels.push(i+':00');
+      data.push(pvDocs.filter(d=>d.tsMs>=hS.getTime()&&d.tsMs<hE.getTime()).length);
+    }
+    const sparkCtx = document.getElementById('ds-spark');
+    if(sparkCtx && typeof Chart!=='undefined'){
+      const gridC='rgba(255,255,255,0.04)', textC='#7878a0';
+      if(dsSparkInst){dsSparkInst.data.labels=labels;dsSparkInst.data.datasets[0].data=data;dsSparkInst.update('none');}
+      else dsSparkInst=new Chart(sparkCtx,{type:'bar',data:{labels,datasets:[{label:'Visits',data,backgroundColor:'rgba(96,165,250,0.25)',hoverBackgroundColor:'rgba(96,165,250,0.6)',borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f1019',titleColor:'#eeeef5',bodyColor:'#7878a0',callbacks:{title:l=>'Hour '+l[0].label,label:l=>`${l.raw} visit`}}},scales:{x:{display:false,grid:{display:false}},y:{display:false,beginAtZero:true,grid:{display:false}}}}});
+    }
+    const labelEl = document.getElementById('ds-pv-label');
+    if(labelEl) labelEl.textContent = `আজ মোট ${todayPv}টি visit`;
+  } catch(e) { console.log('sparkline error',e); }
+}
 // ── Notification ────────────────────────────────────────
 const NOTIF_DEFAULTS = {
   bajar:{title:'🛒 আজকের বাজার দর',body:'চাল, ডাল, সবজির দাম আপডেট হয়েছে।',url:'/bajar.html'},
