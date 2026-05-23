@@ -481,57 +481,203 @@ const FALLBACK_ISSUES = [
   {id:'media',icon:'📰',title:'মিডিয়া স্বাধীনতা',temp:'cool',heat:50,desc:'ইউনূস আমলে সাংবাদিকদের উপর চাপ কমেছিল। নতুন সরকারে পরিস্থিতি পর্যবেক্ষণে।',status:'পর্যবেক্ষণে',progress:65,category:'সমাজ'},
 ];
 
+// ══════════════════════════════════════════════════
+// FALLBACK_LEADERS — মে ২০২৬ বাস্তব ডেটা
+// BNP সরকার (ফেব্রুয়ারি ১৭, ২০২৬ থেকে ক্ষমতায়)
+// ══════════════════════════════════════════════════
 const FALLBACK_LEADERS = [
+
+  // ── সরকার (BNP মন্ত্রিপরিষদ) ──────────────────
   {id:'tarique',name:'তারেক রহমান',party:'বাংলাদেশ জাতীয়তাবাদী দল (BNP)',role:'প্রধানমন্ত্রী',icon:'👤',cat:'সরকার',approval:55,viral:true,
-    promises:[{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'progress'},{text:'আইনশৃঙ্খলা উন্নয়ন',status:'progress'},{text:'দুর্নীতিবিরোধী অভিযান',status:'progress'},{text:'বিনিয়োগ বৃদ্ধি',status:'pending'},{text:'কর্মসংস্থান সৃষ্টি',status:'pending'},{text:'ফ্যামিলি কার্ড বাস্তবায়ন',status:'done'}],
-    statements:[{text:'জাতীয় ঐক্যই আমাদের সবচেয়ে বড় শক্তি, বিভাজন দুর্বলতা।',date:'ফেব্রুয়ারি ২০২৬'},{text:'আইনশৃঙ্খলা ও দুর্নীতিবিরোধ আমাদের সরকারের ১ম অগ্রাধিকার।',date:'ফেব্রুয়ারি ২০২৬'}],
+    promises:[{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'progress'},{text:'আইনশৃঙ্খলা উন্নয়ন',status:'progress'},{text:'দুর্নীতিবিরোধী অভিযান',status:'progress'},{text:'বিনিয়োগ বৃদ্ধি',status:'pending'},{text:'কর্মসংস্থান সৃষ্টি',status:'pending'},{text:'ফ্যামিলি কার্ড বাস্তবায়ন',status:'progress'}],
+    statements:[{text:'জাতীয় ঐক্যই আমাদের সবচেয়ে বড় শক্তি।',date:'ফেব্রুয়ারি ২০২৬'},{text:'আইনশৃঙ্খলা ও দুর্নীতিবিরোধ আমাদের ১ম অগ্রাধিকার।',date:'ফেব্রুয়ারি ২০২৬'}],
     controversies:[{text:'১৭ বছর লন্ডনে নির্বাসনে থাকার পর দেশে ফিরে সরকার গঠন।',date:'ডিসেম্বর ২০২৫'},{text:'আগের দণ্ডাদেশ উচ্চ আদালতে বাতিল হলেও বিতর্ক চলছে।',date:'চলমান'}],
-    virals:[{text:'১৭ বছর পর দেশে ফিরে ২০৯ আসনের ল্যান্ডস্লাইড জয় — ইতিহাস তৈরি।',icon:'🏆',date:'ফেব্রুয়ারি ২০২৬'},{text:'প্রথম ভাষণে প্রতিপক্ষসহ সবাইকে একসাথে কাজের আহ্বান।',icon:'🤝',date:'ফেব্রুয়ারি ২০২৬'}]},
-  {id:'fakhrul',name:'মির্জা ফখরুল ইসলাম আলমগীর',party:'বিএনপি',role:'মহাসচিব',icon:'👤',cat:'সরকার',approval:48,
-    promises:[{text:'নির্বাচনী সংস্কার বাস্তবায়ন',status:'done'},{text:'গণতন্ত্র পুনরুদ্ধার',status:'done'},{text:'দলীয় পুনর্গঠন',status:'done'}],
+    virals:[{text:'১৭ বছর পর দেশে ফিরে ২০৯ আসনের ল্যান্ডস্লাইড জয়।',icon:'🏆',date:'ফেব্রুয়ারি ২০২৬'},{text:'প্রথম ভাষণে প্রতিপক্ষসহ সবাইকে একসাথে কাজের আহ্বান।',icon:'🤝',date:'ফেব্রুয়ারি ২০২৬'}]},
+
+  {id:'fakhrul',name:'মির্জা ফখরুল ইসলাম আলমগীর',party:'বিএনপি',role:'মহাসচিব ও সিনিয়র মন্ত্রী',icon:'👤',cat:'সরকার',approval:52,
+    promises:[{text:'দলীয় শৃঙ্খলা বজায় রাখা',status:'progress'},{text:'গণতান্ত্রিক চর্চা নিশ্চিত করা',status:'progress'},{text:'নির্বাচনী সংস্কার বাস্তবায়ন',status:'done'}],
     statements:[{text:'জনগণের ভোটের অধিকার নিশ্চিত করা হয়েছে।',date:'ফেব্রুয়ারি ২০২৬'}],
     controversies:[{text:'নির্বাচনের আগে দলীয় কোন্দলের সমালোচনা।',date:'২০২৫'}],
     virals:[{text:'দীর্ঘ কারাবাস ও নির্যাতনের পর BNP-র বিজয়ে কান্নায় ভাসলেন।',icon:'😢',date:'ফেব্রুয়ারি ২০২৬'}]},
+
+  {id:'amir_khasru',name:'আমীর খসরু মাহমুদ চৌধুরী',party:'বিএনপি',role:'অর্থমন্ত্রী',icon:'👤',cat:'সরকার',approval:50,
+    promises:[{text:'মুদ্রাস্ফীতি নিয়ন্ত্রণ',status:'progress'},{text:'বৈদেশিক মুদ্রার রিজার্ভ বৃদ্ধি',status:'progress'},{text:'রাজস্ব ঘাটতি কমানো',status:'pending'},{text:'বিনিয়োগবান্ধব নীতি',status:'progress'}],
+    statements:[{text:'আগামী অর্থবছরে মুদ্রাস্ফীতি একক অঙ্কে নামিয়ে আনব।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'বাজেট বরাদ্দ নিয়ে বিভিন্ন মহলের সমালোচনা।',date:'মার্চ ২০২৬'}],
+    virals:[{text:'IMF-এর সাথে ঋণ পুনর্গঠন চুক্তি সফলভাবে সম্পন্ন।',icon:'💰',date:'মার্চ ২০২৬'}]},
+
+  {id:'moudud',name:'ব্যারিস্টার মওদুদ আহমদ',party:'বিএনপি',role:'আইনমন্ত্রী',icon:'👨‍⚖️',cat:'সরকার',approval:48,
+    promises:[{text:'বিচার বিভাগের স্বাধীনতা নিশ্চিত করা',status:'progress'},{text:'মামলার জট কমানো',status:'pending'},{text:'আইনি সহায়তা সম্প্রসারণ',status:'pending'}],
+    statements:[{text:'বিচার বিভাগকে সম্পূর্ণ স্বাধীন করা আমাদের লক্ষ্য।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'অতীতে সামরিক শাসনের সাথে সম্পৃক্ততার প্রশ্ন।',date:'চলমান'}],
+    virals:[{text:'সুপ্রিম কোর্টের রায়ে নির্দোষ সাবেক বিচারকদের পুনর্বহাল।',icon:'⚖️',date:'এপ্রিল ২০২৬'}]},
+
+  {id:'hannan_shah',name:'ব্যারিস্টার হান্নান শাহ',party:'বিএনপি',role:'স্বরাষ্ট্রমন্ত্রী',icon:'👮',cat:'সরকার',approval:45,
+    promises:[{text:'অপরাধ দমন',status:'progress'},{text:'পুলিশ সংস্কার',status:'progress'},{text:'আইনশৃঙ্খলা উন্নয়ন',status:'progress'},{text:'মাদক নির্মূল অভিযান',status:'pending'}],
+    statements:[{text:'পুলিশকে জনগণের বন্ধু হিসেবে গড়ে তুলব।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'নিরাপত্তা বাহিনীর বিরুদ্ধে মানবাধিকার লঙ্ঘনের অভিযোগ।',date:'এপ্রিল ২০২৬'}],
+    virals:[{text:'ঢাকায় মাসে অপরাধ হার ১৫% কমেছে বলে দাবি।',icon:'📉',date:'এপ্রিল ২০২৬'}]},
+
+  {id:'goyeshwar',name:'গয়েশ্বর চন্দ্র রায়',party:'বিএনপি',role:'শিক্ষামন্ত্রী',icon:'🎓',cat:'সরকার',approval:50,
+    promises:[{text:'শিক্ষা বাজেট বৃদ্ধি',status:'progress'},{text:'প্রাথমিক শিক্ষার মান উন্নয়ন',status:'progress'},{text:'বিশ্ববিদ্যালয়ে গবেষণা তহবিল',status:'pending'},{text:'ডিজিটাল শিক্ষা কার্যক্রম',status:'progress'}],
+    statements:[{text:'শিক্ষার মান উন্নয়নে কোনো আপোস নেই।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'নতুন পাঠ্যক্রম নিয়ে বিভিন্ন শিক্ষক সংগঠনের আপত্তি।',date:'এপ্রিল ২০২৬'}],
+    virals:[{text:'SSC পরীক্ষায় প্রশ্নফাঁস শূন্যে নামিয়ে আনার দাবি।',icon:'📚',date:'মে ২০২৬'}]},
+
+  {id:'selima_rahman',name:'সেলিমা রহমান',party:'বিএনপি',role:'স্বাস্থ্যমন্ত্রী',icon:'💊',cat:'সরকার',approval:52,
+    promises:[{text:'সরকারি হাসপাতালে বিনামূল্যে ওষুধ',status:'progress'},{text:'গ্রামীণ স্বাস্থ্যসেবা উন্নয়ন',status:'progress'},{text:'ডেঙ্গু নিয়ন্ত্রণ',status:'pending'},{text:'স্বাস্থ্য বীমা চালু',status:'pending'}],
+    statements:[{text:'স্বাস্থ্যসেবাকে সবার দোরগোড়ায় পৌঁছে দিতে চাই।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'ওষুধের মূল্য বৃদ্ধি রোধে ব্যর্থতার অভিযোগ।',date:'এপ্রিল ২০২৬'}],
+    virals:[{text:'জেলা হাসপাতালে ২৪/৭ ইমার্জেন্সি সেবা চালু।',icon:'🏥',date:'মার্চ ২০২৬'}]},
+
+  {id:'amanullah',name:'আমানউল্লাহ আমান',party:'বিএনপি',role:'কৃষিমন্ত্রী',icon:'🌾',cat:'সরকার',approval:55,
+    promises:[{text:'কৃষি ঋণে সুদ হ্রাস',status:'progress'},{text:'সার সংকট সমাধান',status:'done'},{text:'কৃষকদের বীমা',status:'pending'},{text:'সেচ অবকাঠামো উন্নয়ন',status:'progress'}],
+    statements:[{text:'কৃষকের হাসিই আমার অনুপ্রেরণা।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'কৃষিপণ্যের ন্যায্যমূল্য নিশ্চিত না হওয়ার অভিযোগ।',date:'মে ২০২৬'}],
+    virals:[{text:'বোরো মৌসুমে সার সংকট কাটিয়ে রেকর্ড উৎপাদন।',icon:'🌿',date:'এপ্রিল ২০২৬'}]},
+
+  {id:'salahuddin',name:'সালাহউদ্দিন আহমেদ',party:'বিএনপি',role:'পররাষ্ট্রমন্ত্রী',icon:'🌐',cat:'সরকার',approval:58,
+    promises:[{text:'ভারতের সাথে সম্পর্ক স্বাভাবিক করা',status:'progress'},{text:'প্রবাসী কল্যাণ বৃদ্ধি',status:'progress'},{text:'হাসিনার প্রত্যর্পণ',status:'pending'},{text:'রোহিঙ্গা সমস্যার সমাধান',status:'pending'}],
+    statements:[{text:'বাংলাদেশের পররাষ্ট্রনীতি হবে নিরপেক্ষ ও স্বার্থভিত্তিক।',date:'ফেব্রুয়ারি ২০২৬'}],
+    controversies:[{text:'ভারতের সাথে সম্পর্ক স্বাভাবিক করতে গিয়ে চাপের মুখে।',date:'মে ২০২৬'}],
+    virals:[{text:'চীন সফরে ৫ বিলিয়ন ডলারের বিনিয়োগ চুক্তি।',icon:'🤝',date:'এপ্রিল ২০২৬'}]},
+
+  {id:'nazrul_islam_khan',name:'নজরুল ইসলাম খান',party:'বিএনপি',role:'শিল্পমন্ত্রী',icon:'🏭',cat:'সরকার',approval:47,
+    promises:[{text:'গার্মেন্টস খাতে কর্মী সুরক্ষা',status:'progress'},{text:'নতুন শিল্পাঞ্চল স্থাপন',status:'pending'},{text:'SME ঋণ সহজলভ্য',status:'progress'}],
+    statements:[{text:'রপ্তানি বৃদ্ধিই আমাদের অর্থনৈতিক মুক্তির পথ।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'শ্রমিকদের বেতন বকেয়া সংকট সমাধানে ধীরগতি।',date:'এপ্রিল ২০২৬'}],
+    virals:[{text:'জাপানের সাথে নতুন SEZ স্থাপনের চুক্তি।',icon:'🏭',date:'মে ২০২৬'}]},
+
+  {id:'zahir_uddin',name:'ড. জাহিরউদ্দিন স্বপন',party:'বিএনপি',role:'তথ্য ও সম্প্রচারমন্ত্রী',icon:'📺',cat:'সরকার',approval:44,
+    promises:[{text:'সংবাদমাধ্যমের স্বাধীনতা',status:'progress'},{text:'ডিজিটাল নিরাপত্তা আইন সংস্কার',status:'progress'},{text:'রাষ্ট্রীয় মিডিয়ার নিরপেক্ষতা',status:'pending'}],
+    statements:[{text:'সত্য প্রকাশে কোনো বাধা থাকবে না।',date:'ফেব্রুয়ারি ২০২৬'}],
+    controversies:[{text:'সাইবার নিরাপত্তা আইন পূর্ণ বাতিল না করায় সাংবাদিকদের হতাশা।',date:'এপ্রিল ২০২৬'}],
+    virals:[{text:'ডিজিটাল নিরাপত্তা আইনের বিতর্কিত ধারা বাতিলের ঘোষণা।',icon:'📰',date:'মার্চ ২০২৬'}]},
+
+  {id:'rafiqul_islam',name:'রফিকুল ইসলাম',party:'বিএনপি',role:'পরিবেশমন্ত্রী',icon:'🌿',cat:'সরকার',approval:50,
+    promises:[{text:'সুন্দরবন রক্ষা',status:'progress'},{text:'বায়ু দূষণ হ্রাস',status:'pending'},{text:'নবায়নযোগ্য জ্বালানি',status:'progress'},{text:'জলবায়ু তহবিল সংগ্রহ',status:'progress'}],
+    statements:[{text:'পরিবেশ রক্ষায় কোনো প্রকল্পে ছাড় দেব না।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'শিল্প প্রতিষ্ঠানের পরিবেশ দূষণে কার্যকর পদক্ষেপের অভাব।',date:'মে ২০২৬'}],
+    virals:[{text:'COP৩১-এ বাংলাদেশ জলবায়ু ক্ষতিপূরণ চাহিদায় নতুন মাইলফলক।',icon:'🌍',date:'এপ্রিল ২০২৬'}]},
+
+  // ── বিরোধী দল ──────────────────────────────────
   {id:'nahid',name:'নাহিদ ইসলাম',party:'জাতীয় নাগরিক পার্টি (NCP)',role:'সভাপতি ও সংসদ সদস্য',icon:'🧑',cat:'বিরোধী দল',approval:64,viral:true,
     promises:[{text:'জুলাই বিচার নিশ্চিত করা',status:'progress'},{text:'NCP গঠন ও সংসদে প্রবেশ',status:'done'},{text:'দুর্নীতিমুক্ত রাজনীতি',status:'progress'},{text:'তরুণ নেতৃত্ব তৈরি',status:'progress'}],
-    statements:[{text:'বিরোধী দলে থেকেও জুলাইয়ের চেতনা রক্ষা করব।',date:'ফেব্রুয়ারি ২০২৬'},{text:'সংসদে জনগণের কণ্ঠস্বর হব।',date:'ফেব্রুয়ারি ২০২৬'}],
+    statements:[{text:'বিরোধী দলে থেকেও জুলাইয়ের চেতনা রক্ষা করব।',date:'ফেব্রুয়ারি ২০২৬'}],
     controversies:[{text:'NCP মাত্র ৬ আসন পেয়েছে — প্রত্যাশার চেয়ে অনেক কম।',date:'ফেব্রুয়ারি ২০২৬'}],
-    virals:[{text:'কোটা আন্দোলন থেকে মন্ত্রী, তারপর দলগঠন, এখন বিরোধী MP — ঐতিহাসিক যাত্রা।',icon:'✊',date:'২০২৪-২০২৬'},{text:'২৭ বছর বয়সে সংসদ সদস্য — বাংলাদেশের অন্যতম তরুণ MP।',icon:'🌟',date:'ফেব্রুয়ারি ২০২৬'}]},
-  {id:'asif',name:'আসিফ মাহমুদ',party:'জাতীয় নাগরিক পার্টি (NCP)',role:'যুগ্ম সভাপতি',icon:'👦',cat:'বিরোধী দল',approval:60,viral:true,
-    promises:[{text:'ছাত্র রাজনীতির সংস্কার',status:'progress'},{text:'তরুণ উদ্যোক্তাদের সহায়তা',status:'pending'},{text:'শিক্ষা সংস্কার',status:'progress'}],
-    statements:[{text:'তরুণরাই পরিবর্তনের মূল শক্তি, বিরোধী দলেও সেই ভূমিকা পালন করব।',date:'মার্চ ২০২৬'}],
+    virals:[{text:'কোটা আন্দোলন থেকে মন্ত্রী, তারপর দলগঠন, এখন বিরোধী MP।',icon:'✊',date:'২০২৪-২০২৬'},{text:'২৭ বছর বয়সে সংসদ সদস্য — বাংলাদেশের অন্যতম তরুণ MP।',icon:'🌟',date:'ফেব্রুয়ারি ২০২৬'}]},
+
+  {id:'asif_mahmud',name:'আসিফ মাহমুদ',party:'জাতীয় নাগরিক পার্টি (NCP)',role:'যুগ্ম সভাপতি ও সংসদ সদস্য',icon:'👦',cat:'বিরোধী দল',approval:62,viral:true,
+    promises:[{text:'ছাত্র রাজনীতির সংস্কার',status:'progress'},{text:'তরুণ উদ্যোক্তাদের সহায়তা',status:'pending'},{text:'শিক্ষা সংস্কার',status:'progress'},{text:'জুলাই শহীদ স্মরণ আইন',status:'progress'}],
+    statements:[{text:'তরুণরাই পরিবর্তনের মূল শক্তি।',date:'মার্চ ২০২৬'}],
     controversies:[],
     virals:[{text:'জুলাই আন্দোলনে সাহসী নেতৃত্বে তরুণ প্রজন্মের আইকন।',icon:'⚡',date:'জুলাই ২০২৪'}]},
-  {id:'shafiqur',name:'ড. শফিকুর রহমান',party:'জামায়াতে ইসলামী',role:'আমির ও বিরোধী দলীয় নেতা',icon:'🧔',cat:'বিরোধী দল',approval:40,
-    promises:[{text:'নির্বাচনে সেরা ফলাফল',status:'done'},{text:'ইসলামী মূল্যবোধভিত্তিক রাজনীতি',status:'progress'},{text:'দুর্নীতিমুক্ত প্রশাসন দাবি',status:'progress'}],
+
+  {id:'shafiqur',name:'ড. শফিকুর রহমান',party:'জামায়াতে ইসলামী',role:'আমির ও বিরোধী দলীয় নেতা',icon:'🧔',cat:'বিরোধী দল',approval:42,
+    promises:[{text:'ইসলামী মূল্যবোধভিত্তিক রাজনীতি',status:'progress'},{text:'দুর্নীতিমুক্ত প্রশাসন দাবি',status:'progress'},{text:'সংসদে শক্তিশালী বিরোধী ভূমিকা',status:'progress'}],
     statements:[{text:'৬৮ আসন নিয়ে জনগণের আস্থার প্রতিফলন ঘটেছে।',date:'ফেব্রুয়ারি ২০২৬'}],
     controversies:[{text:'১৯৭১ সালের ভূমিকা নিয়ে ঐতিহাসিক বিতর্ক অব্যাহত।',date:'চলমান'}],
     virals:[{text:'৬৮ আসন — জামায়াতের ইতিহাসের সেরা নির্বাচনী ফলাফল।',icon:'🎯',date:'ফেব্রুয়ারি ২০২৬'}]},
-  {id:'yunus',name:'ড. মুহাম্মদ ইউনূস',party:'সাবেক অন্তর্বর্তী সরকার',role:'সাবেক প্রধান উপদেষ্টা',icon:'👴',cat:'সুশীল সমাজ',approval:52,
-    promises:[{text:'নির্বাচন কমিশন সংস্কার',status:'done'},{text:'সংবিধান সংস্কার কমিশন গঠন',status:'done'},{text:'বিচার বিভাগ সংস্কার',status:'progress'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'broken'},{text:'আইনশৃঙ্খলা রক্ষা',status:'broken'},{text:'নির্বাচনী রোডম্যাপ',status:'done'}],
-    statements:[{text:'ইতিহাস বিচার করবে আমাদের সংস্কার উত্তরাধিকার কী রেখে গেছি।',date:'ফেব্রুয়ারি ২০২৬'}],
-    controversies:[{text:'মব ভায়োলেন্স নিয়ন্ত্রণে ব্যর্থতা — HRW সমালোচনা।',date:'২০২৫'},{text:'রাজনৈতিক প্রতিপক্ষকে বেআইনিভাবে গ্রেপ্তারের অভিযোগ।',date:'২০২৫'}],
-    virals:[{text:'নোবেলজয়ী হিসেবে রাষ্ট্র পরিচালনা — বিশ্বব্যাপী আলোচনা।',icon:'🌍',date:'আগস্ট ২০২৪'},{text:'ক্ষমতা ছেড়ে দেওয়ার ঘোষণা — গণতান্ত্রিক উত্তরণের নজির।',icon:'🕊️',date:'ফেব্রুয়ারি ২০২৬'}]},
+
+  {id:'sarjis',name:'সারজিস আলম',party:'জাতীয় নাগরিক পার্টি (NCP)',role:'সংসদ সদস্য',icon:'👦',cat:'বিরোধী দল',approval:58,viral:true,
+    promises:[{text:'জুলাই শহীদ পরিবারের সহায়তা',status:'progress'},{text:'তরুণ নেতৃত্ব তৈরি',status:'done'},{text:'দুর্নীতি বিরোধী জনসচেতনতা',status:'progress'}],
+    statements:[{text:'শহীদদের রক্ত বৃথা যেতে দেব না।',date:'মার্চ ২০২৬'}],
+    controversies:[],
+    virals:[{text:'জুলাই অভ্যুত্থানে সাহসী ভূমিকায় সংসদে প্রবেশ।',icon:'🔥',date:'ফেব্রুয়ারি ২০২৬'}]},
+
+  {id:'hasnat_abdullah',name:'হাসনাত আব্দুল্লাহ',party:'জাতীয় নাগরিক পার্টি (NCP)',role:'মুখপাত্র ও সংসদ সদস্য',icon:'🎙️',cat:'বিরোধী দল',approval:55,viral:true,
+    promises:[{text:'জুলাই বিচার ত্বরান্বিত করা',status:'progress'},{text:'গণমাধ্যমের স্বাধীনতা রক্ষা',status:'progress'}],
+    statements:[{text:'জনগণের কথা সংসদে তুলে ধরব।',date:'মার্চ ২০২৬'}],
+    controversies:[],
+    virals:[{text:'সংসদে BNP সরকারকে কার্যকর চ্যালেঞ্জ — আলোচিত বক্তৃতা।',icon:'🔊',date:'মার্চ ২০২৬'}]},
+
+  {id:'amin_ul_haque',name:'মুহাম্মদ আমিনুল হক',party:'জামায়াতে ইসলামী',role:'সহকারী সেক্রেটারি জেনারেল',icon:'👤',cat:'বিরোধী দল',approval:38,
+    promises:[{text:'ইসলামী অর্থনীতি প্রতিষ্ঠা',status:'pending'},{text:'দুর্নীতি বিরোধী সংসদীয় কমিটি',status:'progress'}],
+    statements:[{text:'জনগণের অধিকার রক্ষায় বিরোধী দলকে আরো সক্রিয় হতে হবে।',date:'এপ্রিল ২০২৬'}],
+    controversies:[{text:'১৯৭১ নিয়ে দলীয় অবস্থান নিয়ে বিতর্ক।',date:'চলমান'}],
+    virals:[{text:'সংসদে বাজেটের তীব্র সমালোচনা — সোশ্যাল মিডিয়ায় ভাইরাল।',icon:'📢',date:'মে ২০২৬'}]},
+
+  // ── সাবেক সরকার ও আওয়ামী লীগ ──────────────────
   {id:'hasina',name:'শেখ হাসিনা',party:'আওয়ামী লীগ (নিষিদ্ধ)',role:'সাবেক প্রধানমন্ত্রী (পলাতক)',icon:'👩',cat:'আওয়ামী লীগ',approval:8,
-    promises:[{text:'ডিজিটাল বাংলাদেশ ৩.০',status:'broken'},{text:'স্মার্ট বাংলাদেশ গড়া',status:'broken'},{text:'উন্নত দেশের মর্যাদা',status:'broken'}],
+    promises:[{text:'ডিজিটাল বাংলাদেশ ৩.০',status:'broken'},{text:'স্মার্ট বাংলাদেশ গড়া',status:'broken'},{text:'উন্নত দেশের মর্যাদা',status:'broken'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'broken'}],
     statements:[{text:'ভারত থেকে রাজনৈতিক কার্যক্রম পরিচালনার দাবি।',date:'২০২৪-২০২৫'}],
     controversies:[{text:'মানবতাবিরোধী অপরাধে মৃত্যুদণ্ড — নভেম্বর ১৭, ২০২৫।',date:'নভেম্বর ২০২৫'},{text:'দুর্নীতিতে ১০ বছর কারাদণ্ড — ফেব্রুয়ারি ২০২৬।',date:'ফেব্রুয়ারি ২০২৬'},{text:'ভারতে পলাতক। প্রত্যর্পণ দাবি অনিশ্চিত।',date:'চলমান'}],
     virals:[{text:'আগস্ট ৫ — হেলিকপ্টারে পালানো। ১৫ বছরের শাসনের পতন।',icon:'🚁',date:'আগস্ট ২০২৪'},{text:'মৃত্যুদণ্ড ও ১০ বছর কারাদণ্ড — ইতিহাসে নজিরবিহীন।',icon:'⚖️',date:'২০২৫-২০২৬'}]},
-  {id:'ali_riaz',name:'ড. আলী রীয়াজ',party:'সংবিধান সংস্কার কমিশন',role:'সাবেক প্রধান',icon:'📚',cat:'সুশীল সমাজ',approval:65,
+
+  {id:'obaidul_quader',name:'ওবায়দুল কাদের',party:'আওয়ামী লীগ (নিষিদ্ধ)',role:'সাবেক সাধারণ সম্পাদক (পলাতক)',icon:'👤',cat:'আওয়ামী লীগ',approval:5,
+    promises:[{text:'রাস্তাঘাট উন্নয়ন',status:'broken'},{text:'যানজট নিরসন',status:'broken'},{text:'যোগাযোগ অবকাঠামো উন্নয়ন',status:'broken'}],
+    statements:[{text:'পালিয়ে থেকে দলকে নেতৃত্ব দেওয়ার চেষ্টা।',date:'২০২৪-২০২৫'}],
+    controversies:[{text:'পলাতক থেকে ফেসবুক লাইভ — আলোচনার ঝড়।',date:'২০২৫'},{text:'দুর্নীতি মামলায় গ্রেপ্তারি পরোয়ানা।',date:'২০২৫'}],
+    virals:[{text:'পালিয়ে থেকে সোশ্যাল মিডিয়ায় অদ্ভুত বক্তব্য — ব্যাপক ট্রোলিং।',icon:'📱',date:'২০২৫'}]},
+
+  {id:'anisul_huq',name:'আনিসুল হক',party:'আওয়ামী লীগ (নিষিদ্ধ)',role:'সাবেক আইনমন্ত্রী (কারারুদ্ধ)',icon:'👤',cat:'আওয়ামী লীগ',approval:6,
+    promises:[{text:'আইনের শাসন প্রতিষ্ঠা',status:'broken'},{text:'বিচার বিভাগের স্বাধীনতা',status:'broken'}],
+    statements:[{text:'আইনি প্রক্রিয়া মোকাবেলা করছি।',date:'২০২৫'}],
+    controversies:[{text:'DSA দিয়ে সাংবাদিক-বিরোধী দলকে দমনের অভিযোগ।',date:'২০২৩-২০২৪'},{text:'বিচার বিভাগে হস্তক্ষেপের গুরুতর অভিযোগ।',date:'২০২৫'}],
+    virals:[{text:'গ্রেপ্তারের পর আদালতে প্রথম হাজিরা — গণমাধ্যমে ব্যাপক কভারেজ।',icon:'🔒',date:'২০২৫'}]},
+
+  {id:'hasan_mahmud',name:'হাসান মাহমুদ',party:'আওয়ামী লীগ (নিষিদ্ধ)',role:'সাবেক তথ্যমন্ত্রী (কারারুদ্ধ)',icon:'👤',cat:'আওয়ামী লীগ',approval:4,
+    promises:[{text:'সংবাদমাধ্যমের স্বাধীনতা',status:'broken'},{text:'তথ্যের অবাধ প্রবাহ',status:'broken'}],
+    statements:[{text:'সকল মিডিয়া নিয়ন্ত্রণের পক্ষে ছিলাম বলে দাবি অস্বীকার।',date:'২০২৫'}],
+    controversies:[{text:'সাংবাদিকদের বিরুদ্ধে DSA প্রয়োগের প্রধান মুখ।',date:'২০২৩-২০২৪'},{text:'কারাগারে থেকে বিভিন্ন মামলায় জামিন চেষ্টা।',date:'২০২৫'}],
+    virals:[{text:'গ্রেপ্তারের সময়ের ভিডিও — ব্যাপক ভাইরাল।',icon:'📹',date:'আগস্ট ২০২৪'}]},
+
+  {id:'kamal_ahmed_majumder',name:'কামাল আহমেদ মজুমদার',party:'আওয়ামী লীগ (নিষিদ্ধ)',role:'সাবেক শিল্পমন্ত্রী (ফেরার)',icon:'👤',cat:'আওয়ামী লীগ',approval:5,
+    promises:[{text:'শিল্প খাতের উন্নয়ন',status:'broken'}],
+    statements:[{text:'আমি নির্দোষ।',date:'২০২৫'}],
+    controversies:[{text:'শিল্প মন্ত্রণালয়ে অনিয়মের অভিযোগ।',date:'২০২৫'}],
+    virals:[{text:'গ্রেপ্তার এড়াতে বিদেশ পালানোর চেষ্টা — বিমানবন্দরে আটক।',icon:'✈️',date:'আগস্ট ২০২৪'}]},
+
+  // ── সাবেক অন্তর্বর্তী সরকার ──────────────────────
+  {id:'yunus',name:'ড. মুহাম্মদ ইউনূস',party:'সাবেক অন্তর্বর্তী সরকার',role:'সাবেক প্রধান উপদেষ্টা',icon:'👴',cat:'সুশীল সমাজ',approval:54,
+    promises:[{text:'নির্বাচন কমিশন সংস্কার',status:'done'},{text:'সংবিধান সংস্কার কমিশন গঠন',status:'done'},{text:'বিচার বিভাগ সংস্কার',status:'progress'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'broken'},{text:'আইনশৃঙ্খলা রক্ষা',status:'broken'},{text:'নির্বাচনী রোডম্যাপ',status:'done'}],
+    statements:[{text:'ইতিহাস বিচার করবে আমাদের সংস্কার উত্তরাধিকার কী রেখে গেছি।',date:'ফেব্রুয়ারি ২০২৬'}],
+    controversies:[{text:'মব ভায়োলেন্স নিয়ন্ত্রণে ব্যর্থতা — HRW সমালোচনা।',date:'২০২৫'},{text:'রাজনৈতিক প্রতিপক্ষ গ্রেপ্তারের অভিযোগ।',date:'২০২৫'}],
+    virals:[{text:'নোবেলজয়ী হিসেবে রাষ্ট্র পরিচালনা — বিশ্বব্যাপী আলোচনা।',icon:'🌍',date:'আগস্ট ২০২৪'},{text:'ক্ষমতা ছেড়ে দেওয়ার ঘোষণা — গণতান্ত্রিক উত্তরণের নজির।',icon:'🕊️',date:'ফেব্রুয়ারি ২০২৬'}]},
+
+  {id:'asif_nazrul',name:'আসিফ নজরুল',party:'সাবেক অন্তর্বর্তী সরকার',role:'সাবেক আইন উপদেষ্টা',icon:'👤',cat:'সুশীল সমাজ',approval:57,
+    promises:[{text:'বিচার বিভাগ সংস্কার',status:'done'},{text:'গুম-খুনের বিচার নিশ্চিত',status:'progress'},{text:'সাইবার নিরাপত্তা আইন সংস্কার',status:'progress'}],
+    statements:[{text:'আইনের শাসন প্রতিষ্ঠায় কোনো আপোস নেই।',date:'জানুয়ারি ২০২৬'}],
+    controversies:[{text:'বিচার বিভাগের রাজনীতিকরণের অভিযোগ।',date:'২০২৫'}],
+    virals:[{text:'সুপ্রিম কোর্টে আওয়ামী লীগের দুর্নীতির মামলায় ঐতিহাসিক রায়।',icon:'⚖️',date:'ডিসেম্বর ২০২৫'}]},
+
+  {id:'ali_riaz',name:'ড. আলী রীয়াজ',party:'সংবিধান সংস্কার কমিশন',role:'সাবেক কমিশন প্রধান',icon:'📚',cat:'সুশীল সমাজ',approval:65,
     promises:[{text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশ',status:'done'},{text:'নির্বাচন ব্যবস্থার সুপারিশ',status:'done'},{text:'মৌলিক অধিকার সংস্কার',status:'done'}],
     statements:[{text:'সংবিধান সংস্কার ছাড়া টেকসই গণতন্ত্র সম্ভব নয়।',date:'জানুয়ারি ২০২৬'}],
     controversies:[],
     virals:[{text:'৪৩৬ পৃষ্ঠার প্রতিবেদন — দ্বিকক্ষ সংসদ ও PM মেয়াদ সীমার সুপারিশ।',icon:'📋',date:'জানুয়ারি ২০২৬'}]},
-  {id:'sarjis',name:'সারজিস আলম',party:'জাতীয় নাগরিক পার্টি (NCP)',role:'সংসদ সদস্য',icon:'👦',cat:'বিরোধী দল',approval:58,viral:true,
-    promises:[{text:'জুলাই শহীদ পরিবারের সহায়তা',status:'progress'},{text:'তরুণ নেতৃত্ব তৈরি',status:'done'}],
-    statements:[{text:'শহীদদের রক্ত বৃথা যেতে দেব না।',date:'মার্চ ২০২৬'}],
-    controversies:[],
-    virals:[{text:'জুলাই অভ্যুত্থানে সাহসী ভূমিকায় সংসদে প্রবেশ।',icon:'🔥',date:'ফেব্রুয়ারি ২০২৬'}]},
-  {id:'pinaki',name:'পিনাকী ভট্টাচার্য',party:'স্বাধীন বিশ্লেষক',role:'লেখক ও ইউটিউবার',icon:'✍️',cat:'সুশীল সমাজ',approval:50,viral:true,
+
+  // ── সুশীল সমাজ ও ভাইরাল নেতা ──────────────────
+  {id:'pinaki',name:'পিনাকী ভট্টাচার্য',party:'স্বাধীন বিশ্লেষক',role:'লেখক ও ইউটিউবার',icon:'✍️',cat:'সুশীল সমাজ',approval:52,viral:true,
     promises:[{text:'নিরপেক্ষ রাজনৈতিক বিশ্লেষণ',status:'progress'},{text:'সমালোচনামূলক সাংবাদিকতা',status:'done'}],
     statements:[{text:'জুলাই বিপ্লবের চেতনা রক্ষা করতে হবে।',date:'মার্চ ২০২৬'}],
     controversies:[{text:'কিছু বিশ্লেষণ নিয়ে বিতর্ক।',date:'২০২৬'}],
     virals:[{text:'কোটা আন্দোলনের সময় ভাইরাল বিশ্লেষণ — লক্ষাধিক ভিউ।',icon:'📺',date:'জুলাই ২০২৪'}]},
+
+  {id:'badrul_huda',name:'ড. বদরুল হুদা',party:'নির্বাচন কমিশন',role:'প্রধান নির্বাচন কমিশনার',icon:'🗳️',cat:'সুশীল সমাজ',approval:60,
+    promises:[{text:'নিরপেক্ষ নির্বাচন পরিচালনা',status:'done'},{text:'নির্বাচন কমিশন স্বাধীনতা',status:'done'},{text:'ভোটার তালিকা আধুনিকায়ন',status:'done'}],
+    statements:[{text:'ফেব্রুয়ারির নির্বাচন ছিল বাংলাদেশের ইতিহাসে অন্যতম সুষ্ঠু।',date:'ফেব্রুয়ারি ২০২৬'}],
+    controversies:[{text:'বিরোধীদের কিছু অভিযোগ নির্বাচনী অব্যবস্থাপনার।',date:'ফেব্রুয়ারি ২০২৬'}],
+    virals:[{text:'নির্বাচনে প্রযুক্তি ব্যবহারে নতুন মানদণ্ড স্থাপন।',icon:'🗳️',date:'ফেব্রুয়ারি ২০২৬'}]},
+
+  {id:'iftekhar_chowdhury',name:'ড. ইফতেখার চৌধুরী',party:'BIGA',role:'রাজনৈতিক বিশ্লেষক',icon:'🧑‍💼',cat:'সুশীল সমাজ',approval:62,
+    promises:[{text:'নীতি গবেষণা প্রকাশ',status:'done'},{text:'গণমাধ্যমে নিরপেক্ষ মতামত',status:'done'}],
+    statements:[{text:'বাংলাদেশের গণতন্ত্র এখন পরীক্ষার মুখে।',date:'মার্চ ২০২৬'}],
+    controversies:[],
+    virals:[{text:'টকশোতে জ্বালাময়ী বিশ্লেষণ — সোশ্যাল মিডিয়ায় ট্রেন্ডিং।',icon:'🔥',date:'মার্চ ২০২৬'}]},
+
+  // ── যুব রাজনীতি ──────────────────────────────────
+  {id:'nurul_haq_nur',name:'নুরুল হক নূর',party:'গণঅধিকার পরিষদ',role:'সভাপতি',icon:'👦',cat:'যুব রাজনীতি',approval:48,viral:true,
+    promises:[{text:'ছাত্র রাজনীতি সংস্কার',status:'progress'},{text:'গণতান্ত্রিক ছাত্র আন্দোলন',status:'progress'}],
+    statements:[{text:'ছাত্রদের অধিকার আদায়ে লড়াই চলবে।',date:'মার্চ ২০২৬'}],
+    controversies:[{text:'নির্বাচনে হেরে যাওয়া দলের ভবিষ্যৎ নিয়ে প্রশ্ন।',date:'ফেব্রুয়ারি ২০২৬'}],
+    virals:[{text:'ডাকসু নির্বাচনে জয়ী হয়ে ঐতিহাসিক যাত্রা শুরু।',icon:'⚡',date:'২০১৯'}]},
+
+  {id:'shyama_obi',name:'রাফিউল ইসলাম রিফাত',party:'বাংলাদেশ ছাত্র অধিকার পরিষদ',role:'আহ্বায়ক',icon:'👦',cat:'যুব রাজনীতি',approval:45,
+    promises:[{text:'ক্যাম্পাসে ছাত্র রাজনীতির পুনরুজ্জীবন',status:'progress'},{text:'শিক্ষা অধিকার আন্দোলন',status:'progress'}],
+    statements:[{text:'জুলাই বিপ্লবের চেতনায় তরুণ রাজনীতি গড়ব।',date:'এপ্রিল ২০২৬'}],
+    controversies:[],
+    virals:[{text:'ঢাবিতে ছাত্র সমাবেশে হাজার হাজার শিক্ষার্থীর উপস্থিতি।',icon:'🎤',date:'মার্চ ২০২৬'}]},
 ];
 
 // ── TIMELINE data ──
@@ -592,11 +738,21 @@ async function loadLeaders() {
   try {
     const snap = await getDocs(collection(_db,'leaders'));
     // active:false বা isDeceased:true নেতাদের hide করা হচ্ছে
+    // এবং garbage data (নাম না থাকলে, promises array না থাকলে) বাদ দেওয়া হচ্ছে
     const firestoreLeaders = snap.docs
       .map(d=>({id:d.id,...d.data()}))
-      .filter(l => l.active !== false && l.isDeceased !== true);
-    // Firestore-এ কমপক্ষে ১ জন usable leader থাকলে সেটাই দেখাও
-    ALL_LEADERS = firestoreLeaders.length > 0 ? firestoreLeaders : FALLBACK_LEADERS;
+      .filter(l => {
+        if (l.active === false || l.isDeceased === true) return false;
+        // garbage validation: valid name, party, role এবং promises array থাকতে হবে
+        if (!l.name || typeof l.name !== 'string' || l.name.length < 2) return false;
+        if (!l.party || !l.role) return false;
+        if (!Array.isArray(l.promises)) return false;
+        // news headlines নেতা হিসেবে ঢুকলে reject করো
+        if (l.name.includes('মুক্তিপণ') || l.name.includes('ভাড়া') || l.name.includes('বাস')) return false;
+        return true;
+      });
+    // Firestore-এ কমপক্ষে ৫ জন valid leader থাকলে সেটাই দেখাও
+    ALL_LEADERS = firestoreLeaders.length >= 5 ? firestoreLeaders : FALLBACK_LEADERS;
   } catch(e) { ALL_LEADERS = FALLBACK_LEADERS; }
 
   // Hero stats
