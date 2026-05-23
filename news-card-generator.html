@@ -366,10 +366,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 
     <div class="slider-row"><label>Height</label><input type="range" id="sTH" min="50" max="130" value="80" oninput="sv(this,'vTH');draw()"><span class="slider-val" id="vTH">80</span></div>
 
-    <div class="slider-row"><label>Logo Sz</label><input type="range" id="sLS" min="20" max="80" value="52" oninput="sv(this,'vLS');draw()"><span class="slider-val" id="vLS">52</span></div>
-
-    <div class="slider-row"><label>Top Font</label><input type="range" id="sTFS" min="8" max="30" value="19" oninput="sv(this,'vTFS');draw()"><span class="slider-val" id="vTFS">19</span></div>
-
     <div class="col-row"><label>BG</label><input type="color" id="eTopBg" value="#ffffff" oninput="draw()" class="col-in"></div>
 
     <div class="col-row"><label>Text</label><input type="color" id="eTopTxt" value="#000000" oninput="draw()" class="col-in"></div>
@@ -668,6 +664,8 @@ async function _draw(){
 
   apZ();
 
+  drawOverlay();
+
 }
 
 async function dFull(cv,fe){
@@ -683,8 +681,6 @@ async function dFull(cv,fe){
   // params
 
   const tbH=g('sTH')*sc,ftH=g('sFH')*sc,ffSz=g('sFF')*sc;
-
-  const topLogoSz=(g('sLS')||52)*sc,topFontSz=(g('sTFS')||19)*sc;
 
   const hlSz=g('sHS')*sc,hlLH=g('sHLH')/10;
 
@@ -716,6 +712,9 @@ async function dFull(cv,fe){
 
   const bg=PRESETS[curP].bg;
 
+  // element bounds registry (for interactive selection)
+  if(!fe) elBounds=[];
+
   // 1. BG
 
   ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
@@ -732,7 +731,7 @@ async function dFull(cv,fe){
 
     ctx.fillStyle=tBg;ctx.fillRect(0,0,W,tbH);
 
-    const lsz=Math.min(tbH*0.68,topLogoSz);
+    const lsz=Math.min(tbH*0.68,52*sc);
 
     const lbX=pad,lbY=(tbH-lsz)/2;
 
@@ -744,19 +743,19 @@ async function dFull(cv,fe){
 
     ctx.fillStyle=tTxt;ctx.textAlign='left';
 
-    ctx.font=`900 ${Math.round(topFontSz)}px 'Hind Siliguri',sans-serif`;
+    ctx.font=`900 ${Math.round(19*sc)}px 'Hind Siliguri',sans-serif`;
 
     ctx.fillText('JOAF',tx,lbY+lsz*0.42);
 
     ctx.fillStyle=tTxt+'99';
 
-    ctx.font=`600 ${Math.round(topFontSz*0.53)}px 'Hind Siliguri',sans-serif`;
+    ctx.font=`600 ${Math.round(10*sc)}px 'Hind Siliguri',sans-serif`;
 
     ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম',tx,lbY+lsz*0.64);
 
     ctx.fillStyle=aC;
 
-    ctx.font=`500 ${Math.round(topFontSz*0.47)}px 'Hind Siliguri',sans-serif`;
+    ctx.font=`500 ${Math.round(9*sc)}px 'Hind Siliguri',sans-serif`;
 
     ctx.fillText('www.julyforum.com',tx,lbY+lsz*0.84);
 
@@ -781,6 +780,8 @@ async function dFull(cv,fe){
     ctx.fillText(dt,W-pad,lbY+lsz*0.6);
 
     if(loc){ctx.fillStyle=tTxt+'99';ctx.fillText('📍 '+loc,W-pad,lbY+lsz*0.82);}
+
+    if(!fe) elBounds.push({id:'topbar',x:0,y:0,w:W,h:tbH,label:'Top Bar'});
 
   }
 
@@ -882,6 +883,8 @@ async function dFull(cv,fe){
 
     ctx.fillStyle=cTxt;ctx.fillText(catLabel,badgeX+cPX,tY+cPY+cSz*0.82);
 
+    if(!fe) elBounds.push({id:'badge',x:badgeX,y:tY,w:cbW,h:cbH,label:'Badge'});
+
     tY+=cbH+10*sc;
 
   }
@@ -906,7 +909,10 @@ async function dFull(cv,fe){
 
     ctx.shadowBlur=0;
 
-    tY+=hlLines.slice(0,5).length*hlSz*hlLH+8*sc;
+    const hlH=hlLines.slice(0,5).length*hlSz*hlLH;
+    if(!fe) elBounds.push({id:'headline',x:hlX,y:tY-hlSz,w:W-hlX-pad,h:hlH+hlSz*0.3,label:'Headline'});
+
+    tY+=hlH+8*sc;
 
   }
 
@@ -922,7 +928,10 @@ async function dFull(cv,fe){
 
     ctx.fillStyle=hlC+'cc';ctx.textAlign='left';
 
-    wrp(ctx,sub,W-pad*2,subSz).slice(0,3).forEach((ln,i)=>ctx.fillText(ln,pad,tY+i*subSz*1.45));
+    const subLns=wrp(ctx,sub,W-pad*2,subSz).slice(0,3);
+    subLns.forEach((ln,i)=>ctx.fillText(ln,pad,tY+i*subSz*1.45));
+
+    if(!fe) elBounds.push({id:'sub',x:pad,y:tY-subSz,w:W-pad*2,h:subLns.length*subSz*1.45+subSz*0.3,label:'Sub-headline'});
 
   }
 
@@ -949,6 +958,8 @@ async function dFull(cv,fe){
     ctx.font=`500 ${ffSz*0.85}px 'Hind Siliguri',sans-serif`;
 
     ctx.fillText('www.julyforum.com',W-pad,ftY+ftH*0.62);
+
+    if(!fe) elBounds.push({id:'footer',x:0,y:ftY,w:W,h:ftH,label:'Footer'});
 
   }
 
@@ -1007,6 +1018,164 @@ async function drawLogo(ctx,x,y,w,h){
 }
 
 function onSzCh(){fitZ();draw();}
+
+// ── Interactive element selection ──
+let elBounds=[], selEl=null, dragEl=null, resizeEl=null, dragStart=null;
+const HANDLE=10; // handle size in canvas px
+
+function drawOverlay(){
+  const ov=document.getElementById('cvOverlay');
+  const cv=document.getElementById('cv');
+  const rect=cv.getBoundingClientRect();
+  ov.style.width=rect.width+'px';
+  ov.style.height=rect.height+'px';
+  ov.width=rect.width;
+  ov.height=rect.height;
+  const ctx=ov.getContext('2d');
+  ctx.clearRect(0,0,ov.width,ov.height);
+  const[W]=gSz();
+  const sc=rect.width/W;
+  elBounds.forEach(el=>{
+    const x=el.x*sc,y=el.y*sc,w=el.w*sc,h=el.h*sc;
+    const isSel=selEl&&selEl.id===el.id;
+    ctx.strokeStyle=isSel?'#f05252':'rgba(255,255,255,0.35)';
+    ctx.lineWidth=isSel?2:1;
+    ctx.setLineDash(isSel?[]:[4,3]);
+    ctx.strokeRect(x,y,w,h);
+    if(isSel){
+      // label
+      ctx.fillStyle='#f05252';
+      ctx.font='bold 10px sans-serif';
+      ctx.fillText(el.label,x+4,y-4>0?y-4:y+12);
+      // handles: TL,TR,BL,BR,TC,BC,LC,RC
+      const hs=[[x,y],[x+w,y],[x,y+h],[x+w,y+h],[x+w/2,y],[x+w/2,y+h],[x,y+h/2],[x+w,y+h/2]];
+      hs.forEach(([hx,hy])=>{
+        ctx.fillStyle='#fff';
+        ctx.strokeStyle='#f05252';
+        ctx.lineWidth=1.5;
+        ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(hx,hy,4,0,Math.PI*2);ctx.fill();ctx.stroke();
+      });
+    }
+  });
+}
+
+function cvPt(e){
+  const ov=document.getElementById('cvOverlay');
+  const r=ov.getBoundingClientRect();
+  const[W,H]=gSz();
+  const sc=W/r.width;
+  return {x:(e.clientX-r.left)*sc, y:(e.clientY-r.top)*sc};
+}
+
+function hitEl(pt){
+  for(let i=elBounds.length-1;i>=0;i--){
+    const el=elBounds[i];
+    if(pt.x>=el.x&&pt.x<=el.x+el.w&&pt.y>=el.y&&pt.y<=el.y+el.h) return el;
+  }
+  return null;
+}
+
+function elToSliders(el){
+  // map element id to its offset sliders
+  const map={
+    topbar:{x:null,y:null},
+    badge:{x:'sBX',y:'sBY'},
+    headline:{x:'sHX',y:'sHY'},
+    sub:{x:null,y:'sSY'},
+    footer:{x:null,y:null},
+  };
+  return map[el.id]||{x:null,y:null};
+}
+
+function setSliderVal(id,val){
+  if(!id)return;
+  const el=document.getElementById(id);
+  if(!el)return;
+  const vid='v'+id.slice(1);
+  const mn=+el.min,mx=+el.max;
+  val=Math.max(mn,Math.min(mx,Math.round(val)));
+  el.value=val;
+  const vEl=document.getElementById(vid);
+  if(vEl)vEl.textContent=val;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // create overlay canvas on top of main canvas
+  const cvwrap=document.getElementById('cvwrap');
+  const ov=document.createElement('canvas');
+  ov.id='cvOverlay';
+  ov.style.cssText='position:absolute;top:0;left:0;cursor:default;pointer-events:auto;';
+  cvwrap.appendChild(ov);
+
+  // position overlay when main canvas moves
+  const posOv=()=>{
+    const cv=document.getElementById('cv');
+    const r=cv.getBoundingClientRect();
+    const wr=cvwrap.getBoundingClientRect();
+    ov.style.left=(r.left-wr.left)+'px';
+    ov.style.top=(r.top-wr.top)+'px';
+  };
+
+  const origApZ=apZ;
+  window.apZ=function(){origApZ();posOv();drawOverlay();};
+
+  ov.addEventListener('mousedown',e=>{
+    const pt=cvPt(e);
+    const hit=hitEl(pt);
+    if(hit){
+      selEl=hit;
+      dragEl={el:hit,startPt:pt,startX:hit.x,startY:hit.y};
+      const sliders=elToSliders(hit);
+      dragEl.sx=sliders.x?g(sliders.x):null;
+      dragEl.sy=sliders.y?g(sliders.y):null;
+      dragEl.sliders=sliders;
+      ov.style.cursor='grabbing';
+    } else {
+      selEl=null;
+      dragEl=null;
+    }
+    drawOverlay();
+    e.stopPropagation();
+  });
+
+  ov.addEventListener('mousemove',e=>{
+    const pt=cvPt(e);
+    if(dragEl){
+      const dx=pt.x-dragEl.startPt.x;
+      const dy=pt.y-dragEl.startPt.y;
+      // convert canvas px delta to slider units (sliders are in 1080-space px, not scaled)
+      const[W]=gSz();
+      const sliderSc=1080/W;
+      if(dragEl.sliders.x&&dragEl.sx!==null) setSliderVal(dragEl.sliders.x, dragEl.sx+Math.round(dx*sliderSc));
+      if(dragEl.sliders.y&&dragEl.sy!==null) setSliderVal(dragEl.sliders.y, dragEl.sy+Math.round(dy*sliderSc));
+      draw();
+    } else {
+      const hit=hitEl(pt);
+      ov.style.cursor=hit?'grab':'default';
+    }
+  });
+
+  ov.addEventListener('mouseup',()=>{
+    dragEl=null;
+    ov.style.cursor='default';
+  });
+
+  ov.addEventListener('mouseleave',()=>{dragEl=null;});
+
+  // wheel on overlay = image zoom
+  ov.addEventListener('wheel',e=>{
+    if(!SRC)return;e.preventDefault();
+    const v=Math.max(50,Math.min(250,g('sSC')+(e.deltaY>0?-3:3)));
+    document.getElementById('sSC').value=v;document.getElementById('vSC').textContent=v+'%';draw();
+  },{passive:false});
+
+  window.addEventListener('resize',()=>{fitZ();posOv();});
+
+  // patch draw to also redraw overlay
+  const orig_draw=draw;
+  window._drawOverlayAfter=true;
+});
 
 function fitZ(){
 
@@ -1304,57 +1473,7 @@ function showT(msg,t='ok'){
 
 }
 
-// Canvas drag for image pan
-
-let drag=null;
-
-document.addEventListener('DOMContentLoaded',()=>{
-
-  const cv=document.getElementById('cv');
-
-  cv.addEventListener('mousedown',e=>{if(!SRC)return;drag={ox:e.clientX,oy:e.clientY,sx:g('sPX'),sy:g('sPY')};cv.style.cursor='grabbing';});
-
-  cv.addEventListener('mousemove',e=>{
-
-    if(!drag)return;
-
-    const[cw]=gSz();const scale=cw/(cv.getBoundingClientRect().width);
-
-    const dx=Math.round((e.clientX-drag.ox)*scale/((cw/1080)));
-
-    const dy=Math.round((e.clientY-drag.oy)*scale/((cw/1080)));
-
-    const nx=Math.max(-500,Math.min(500,drag.sx+dx));
-
-    const ny=Math.max(-500,Math.min(500,drag.sy+dy));
-
-    document.getElementById('sPX').value=nx;document.getElementById('vPX').textContent=nx;
-
-    document.getElementById('sPY').value=ny;document.getElementById('vPY').textContent=ny;
-
-    draw();
-
-  });
-
-  cv.addEventListener('mouseup',()=>{drag=null;if(SRC)cv.style.cursor='grab';});
-
-  cv.addEventListener('mouseleave',()=>{drag=null;if(SRC)cv.style.cursor='grab';});
-
-  cv.addEventListener('wheel',e=>{
-
-    if(!SRC)return;e.preventDefault();
-
-    const v=Math.max(50,Math.min(250,g('sSC')+(e.deltaY>0?-3:3)));
-
-    document.getElementById('sSC').value=v;document.getElementById('vSC').textContent=v+'%';draw();
-
-  },{passive:false});
-
-  window.addEventListener('resize',fitZ);
-
-  if(SRC)cv.style.cursor='grab';
-
-});
+// old image-pan drag removed — handled by overlay system
 
 // Init
 
