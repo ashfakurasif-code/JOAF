@@ -14,7 +14,7 @@ const JOAF = {
     address: "রোড-৯, দক্ষিণ বনশ্রী, ঢাকা-১২১৯",
     logo: "/logoc7c3.png",
     favicon: "/favicon.ico",
-    baseUrl: "https://julyforum.com",
+    baseUrl: "https://www.julyforum.com",
     fbAppId: "1114707634145642",
     gaId: "G-QV3CFV7R98",
     version: "6.0.0",
