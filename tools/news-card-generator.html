@@ -678,9 +678,8 @@ function desel(){selId=null;updPanel();drawOv();}
 document.addEventListener('DOMContentLoaded',()=>{
   const ov=document.getElementById('cvOv');
 
-  ov.addEventListener('mousedown',e=>{
-    e.preventDefault();
-    const mx=e.offsetX,my=e.offsetY;
+  // mousedown handled by pointerdown
+  if(false){const mx=0,my=0;
     // check handles on selected el first
     if(selId&&ELS[selId]){
       const r=elR(ELS[selId]);
@@ -744,10 +743,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   ov.addEventListener('mouseup',()=>{iact=null;});
   ov.addEventListener('mouseleave',()=>{iact=null;});
   // ── Touch support ──
-  function getTouchPos(e){
+  // Unified pointer events (mouse + touch + stylus)
+  ov.style.touchAction='none';
+  function getPos(e){
     const rect=ov.getBoundingClientRect();
-    const t=e.touches[0]||e.changedTouches[0];
-    return {x:t.clientX-rect.left, y:t.clientY-rect.top};
+    return {x:(e.clientX-rect.left),y:(e.clientY-rect.top)};
   }
   function doDown(mx,my){
     if(selId&&ELS[selId]){
@@ -773,9 +773,19 @@ document.addEventListener('DOMContentLoaded',()=>{
     else applyResize(el,iact.handle,dx,dy,iact.startEl);
     draw();
   }
-  ov.addEventListener('touchstart',e=>{e.preventDefault();const p=getTouchPos(e);doDown(p.x,p.y);},{passive:false});
-  ov.addEventListener('touchmove',e=>{e.preventDefault();const p=getTouchPos(e);doMove(p.x,p.y);},{passive:false});
-  ov.addEventListener('touchend',e=>{e.preventDefault();iact=null;},{passive:false});
+  ov.addEventListener('pointerdown',e=>{e.preventDefault();ov.setPointerCapture(e.pointerId);const p=getPos(e);doDown(p.x,p.y);});
+  ov.addEventListener('pointermove',e=>{
+    const p=getPos(e);
+    if(iact){doMove(p.x,p.y);}
+    else if(!e.buttons){
+      let cur='default';
+      if(selId&&ELS[selId]){const r=elR(ELS[selId]);const hi=hitH(r,p.x,p.y);if(hi>=0){cur=H_CURSORS[hi];}else if(inBox(r,p.x,p.y)){cur='move';}}
+      if(cur==='default'){const ids=Object.keys(ELS).reverse();for(const id of ids){const el=ELS[id];if(!el.vis)continue;if(inBox(elR(el),p.x,p.y)){cur='pointer';break;}}}
+      ov.style.cursor=cur;
+    }
+  });
+  ov.addEventListener('pointerup',()=>{iact=null;});
+  ov.addEventListener('pointercancel',()=>{iact=null;});
 
 
   ov.addEventListener('wheel',e=>{
