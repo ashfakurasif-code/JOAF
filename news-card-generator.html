@@ -522,7 +522,7 @@ async function dFull(cv,fe=false){
     ctx.fillStyle=tTxt+'77';ctx.font=`500 ${Math.round(11*sc)}px 'Hind Siliguri',sans-serif`;ctx.fillText(dt,W-pad,lbY+lsz*0.63);
     if(loc){ctx.fillStyle=tTxt+'99';ctx.fillText('📍 '+loc,W-pad,lbY+lsz*0.84);}
   }
-  const imgZH=Math.round(H*0.48),imgZY=topEnd+(sTop?2*sc:0);
+  const imgZH=Math.round(H*0.52),imgZY=topEnd+(sTop?2*sc:0);
   if(sImg&&SRC){
     const sx=Math.round(SRC.width*CL),sy=Math.round(SRC.height*CT);
     const sw=Math.round(SRC.width*(1-CL-CR)),sh=Math.round(SRC.height*(1-CT-CB));
@@ -538,7 +538,7 @@ async function dFull(cv,fe=false){
       const ovT=ctx.createLinearGradient(0,imgZY,0,imgZY+imgZH*0.32);
       ovT.addColorStop(0,`rgba(0,0,0,${ovl*0.5})`);ovT.addColorStop(1,'transparent');
       ctx.fillStyle=ovT;ctx.fillRect(0,imgZY,W,imgZH*0.32);
-      const ovB=ctx.createLinearGradient(0,imgZY+imgZH*0.38,0,imgZY+imgZH);
+      const ovB=ctx.createLinearGradient(0,imgZY+imgZH*0.28,0,imgZY+imgZH);
       ovB.addColorStop(0,'transparent');ovB.addColorStop(1,bg+'ee');
       ctx.fillStyle=ovB;ctx.fillRect(0,imgZY+imgZH*0.52,W,imgZH*0.48);
       ctx.restore();
@@ -562,10 +562,10 @@ async function dFull(cv,fe=false){
     ctx.fillStyle='rgba(255,255,255,.09)';ctx.font=`${Math.round(38*sc)}px sans-serif`;
     ctx.textAlign='center';ctx.fillText('📸',W/2,imgZY+imgZH/2+12*sc);
   }
-  const txtZY=imgZY+(sImg?Math.round(imgZH*0.58):0);
+  const txtZY=imgZY+(sImg?Math.round(imgZH*0.42):0);
   const txtZEnd=sFt?(H-ftH):H;
   const tg=ctx.createLinearGradient(0,txtZY,0,txtZEnd);
-  tg.addColorStop(0,bg+'00');tg.addColorStop(0.08,bg+'dd');tg.addColorStop(0.25,bg);tg.addColorStop(1,bg);
+  tg.addColorStop(0,bg+'00');tg.addColorStop(0.05,bg+'cc');tg.addColorStop(0.15,bg);tg.addColorStop(1,bg);
   ctx.fillStyle=tg;ctx.fillRect(0,txtZY,W,txtZEnd-txtZY);
   const defBadgeY=txtZY+14*sc;
 let tY=elPos.badge?elPos.badge.y:defBadgeY;
