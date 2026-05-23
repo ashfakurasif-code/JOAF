@@ -782,7 +782,7 @@ async function dFull(cv,fe){
 
   const remH=H-topEnd-ftH;
 
-  const imgZH=Math.round(remH*0.45);
+  const imgZH=Math.round(remH*0.55);
 
   const imgZY=topEnd;
 
@@ -826,7 +826,7 @@ async function dFull(cv,fe){
 
       gB.addColorStop(0,'transparent');gB.addColorStop(0.5,bg+'cc');gB.addColorStop(1,bg);
 
-      ctx.fillStyle=gB;ctx.fillRect(0,imgZY+imgZH*0.35,W,imgZH*0.65);
+      ctx.fillStyle=gB;ctx.fillRect(0,imgZY+imgZH*0.35,W,imgZH*0.72);
 
       ctx.restore();
 
@@ -846,7 +846,7 @@ async function dFull(cv,fe){
 
   // 5. TEXT ZONE — starts at 55% of image, overlapping
 
-  const txtBaseY=imgZY+Math.round(imgZH*0.65);
+  const txtBaseY=imgZY+Math.round(imgZH*0.72);
 
   const txtEndY=sFt?(H-ftH):H;
 
