@@ -98,7 +98,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 
 /* PAGES */
 .page{padding:22px;display:none;flex:1;min-height:0;overflow:auto;}
-.page.active{display:flex;flex-direction:column;}
+.page.active{display:block;}
 #page-newscard{padding:0;}
 
 
@@ -374,7 +374,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
     </div>
 
     <!-- ══ NEWS CARD GENERATOR ══ -->
-    <div class="page" id="page-newscard" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="page" id="page-newscard" style="padding:0;overflow:hidden;height:calc(100vh - 48px);display:flex;flex-direction:column;">
       <iframe src="/news-card-generator.html" style="width:100%;flex:1;border:none;display:block;min-height:0;" id="ncgFrame"></iframe>
     </div>
 
