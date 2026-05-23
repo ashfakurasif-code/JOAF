@@ -292,6 +292,184 @@ tr:hover td{background:rgba(255,255,255,.02);}
   .page{padding:8px 6px;}
 }
 
+/* ══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE SYSTEM v2 — array-backpropagation patches
+   Breakpoints: 768px (tablet), 520px (phone), 380px (small)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Responsive grid classes (generated from layout array) ── */
+.rg-3col  { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+.rg-4col  { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.rg-kpi   { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:14px; }
+.rg-3stat { grid-template-columns:repeat(3,1fr) !important; }
+.rg-4stat { grid-template-columns:repeat(4,1fr) !important; }
+
+/* ── Topbar improvements ── */
+.topbar-right { flex-shrink:0; }
+.topbar-left  { overflow:hidden; }
+.topbar-left h2 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+
+/* ── Notification page quick-send grid ── */
+.qgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+
+/* ── Analytics filter bar ── */
+.an-filter-bar { display:flex; gap:6px; flex-wrap:wrap; }
+#an-kpi-row .an-kpi { min-width:0; }
+
+/* ── Feed rows prevent overflow ── */
+.an-feed-row { min-width:0; }
+.an-feed-row > div { min-width:0; }
+
+/* ════════════ 768px — Tablet ════════════ */
+@media(max-width:768px){
+
+  /* Layout */
+  .rg-3col  { grid-template-columns:1fr !important; }
+  .rg-4col  { grid-template-columns:1fr 1fr !important; }
+  .rg-kpi   { grid-template-columns:repeat(3,1fr) !important; }
+  .rg-3stat { grid-template-columns:repeat(3,1fr) !important; }
+  .rg-4stat { grid-template-columns:repeat(2,1fr) !important; }
+  .card-2col{ grid-template-columns:1fr !important; }
+  .stats-grid{ grid-template-columns:repeat(2,1fr) !important; }
+
+  /* Topbar */
+  .topbar   { padding:10px 12px; gap:8px; }
+  .topbar-left h2 { font-size:13px !important; max-width:140px; }
+  .topbar-right .tbtn span { display:none; }
+  .topbar-right .tbtn { padding:6px 8px; min-width:32px; justify-content:center; }
+
+  /* Pages */
+  .page     { padding:12px 10px; }
+  .card     { padding:12px 10px !important; }
+  .card-header { flex-wrap:wrap; gap:6px; }
+
+  /* Notification quick-send */
+  .qgrid    { grid-template-columns:repeat(3,1fr) !important; }
+  .qbtn     { padding:9px 6px; font-size:10px; }
+  .qbtn .qi { font-size:15px; }
+
+  /* Tables */
+  .tbl-wrap { border-radius:8px; }
+  table     { font-size:11px; }
+  th,td     { padding:7px 8px; }
+  table th:nth-child(n+5),
+  table td:nth-child(n+5) { display:none; }
+
+  /* Analytics */
+  #an-kpi-row .kpi-num  { font-size:18px; }
+  #an-kpi-row .kpi-label{ font-size:9px; }
+  #an-kpi-row .kpi-icon { font-size:13px; }
+  #an-kpi-row .an-kpi   { padding:9px 10px; }
+  .an-tab   { padding:4px 7px; font-size:10px; }
+  #an-chart-peak, #an-chart-avg { font-size:9px; }
+
+  /* Heatmap */
+  #an-heatmap { height:36px; }
+
+  /* Feed */
+  #an-feed  { max-height:220px; }
+
+  /* Modals */
+  .modal    { max-width:96vw !important; width:96vw !important;
+              padding:16px 12px !important; border-radius:12px !important; }
+  .modal-btns { flex-wrap:wrap; }
+  .modal h3 { font-size:14px; }
+
+  /* Forms */
+  .field-2,.field-3 { grid-template-columns:1fr !important; }
+  .field input,.field textarea,.field select { font-size:13px; }
+  .btn-row  { flex-wrap:wrap; gap:6px; }
+  .btn-full { justify-content:center; }
+
+  /* Dashboard sparkline height */
+  #ds-spark { max-height:70px; }
+
+  /* Sidebar nav items text */
+  .ni span.ni-label { font-size:11px; }
+}
+
+/* ════════════ 520px — Phone ════════════ */
+@media(max-width:520px){
+
+  .rg-4col  { grid-template-columns:1fr !important; }
+  .rg-kpi   { grid-template-columns:repeat(2,1fr) !important; }
+  .rg-3stat { grid-template-columns:repeat(2,1fr) !important; }
+  .rg-4stat { grid-template-columns:repeat(2,1fr) !important; }
+  .stats-grid{ grid-template-columns:1fr 1fr !important; }
+
+  .page     { padding:10px 8px; }
+  .card     { padding:10px 8px !important; border-radius:10px !important; }
+  .topbar   { padding:8px 10px; }
+  .topbar-left h2 { max-width:100px; font-size:12px !important; }
+
+  /* Notification */
+  .qgrid    { grid-template-columns:repeat(2,1fr) !important; }
+
+  /* Analytics insight grid → stack */
+  #page-analytics > div[style*="repeat(4"] { grid-template-columns:1fr !important; }
+
+  /* Chart height reduce */
+  #an-chart { max-height:150px; }
+  #page-analytics .card[style*="height:200px"] canvas,
+  #page-analytics canvas { max-height:150px; }
+
+  /* Feed filter bar scroll */
+  .an-filter-bar,.an-filter-bar ~ div { flex-wrap:wrap; }
+
+  /* KPI card compact */
+  #an-kpi-row .an-kpi { padding:8px; border-radius:9px; }
+  #an-kpi-row .kpi-num { font-size:16px; }
+
+  /* Topbar right: keep only hamburger + one action */
+  .topbar-right .tbtn:not(:last-child) { display:none; }
+  .topbar-right .tbtn:last-child { display:inline-flex; }
+}
+
+/* ════════════ 380px — Small phone ════════════ */
+@media(max-width:380px){
+
+  .rg-kpi   { grid-template-columns:repeat(2,1fr) !important; }
+  .stats-grid{ grid-template-columns:1fr 1fr !important; }
+  .page     { padding:8px 6px; }
+  .card     { padding:8px 6px !important; }
+  .scard    { padding:10px 8px; }
+  .scard-num{ font-size:16px !important; }
+  .scard-label{ font-size:10px; }
+  .topbar   { padding:7px 8px; }
+  .topbar-left h2 { max-width:80px; font-size:11px !important; }
+  .topbar-right .tbtn { padding:5px 7px; font-size:10px; }
+  .btn      { font-size:11px; padding:6px 10px; }
+  .btn-sm   { font-size:9px; padding:3px 8px; }
+  .an-tab   { padding:3px 6px; font-size:9px; }
+  #an-kpi-row .an-kpi   { padding:6px 7px; }
+  #an-kpi-row .kpi-num  { font-size:14px; }
+  #an-kpi-row .kpi-label{ font-size:8px; letter-spacing:0; }
+  .an-feed-row { gap:5px; }
+  .an-feed-row > div > div:first-child { font-size:10px; }
+}
+
+/* ── Fix: analytics 4-col insight grid on tablet stacks to 2-col ── */
+@media(min-width:521px) and (max-width:900px){
+  .rg-4col  { grid-template-columns:1fr 1fr !important; }
+  #page-analytics > div[class="rg-4col"] { grid-template-columns:1fr 1fr !important; }
+}
+
+/* ── Touch: larger tap targets on mobile ── */
+@media(hover:none) and (pointer:coarse){
+  .btn      { min-height:38px; }
+  .btn-sm   { min-height:30px; }
+  .an-tab   { min-height:30px; }
+  .an-filter{ min-height:28px; }
+  .qbtn     { min-height:52px; }
+  .ni       { min-height:40px; }
+  select, input[type="range"] { min-height:38px; }
+}
+
+/* ── Prevent horizontal scroll on all pages ── */
+.page { overflow-x:hidden !important; }
+.main { overflow-x:hidden; }
+body  { overflow-x:hidden; }
+
 </style>
 </head>
 <body>
@@ -418,7 +596,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
       </div>
 
       <!-- ── 3-col main grid ── -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="gap:12px;margin-bottom:12px" class="rg-3col">
 
         <!-- Traffic sparkline -->
         <div class="card" style="padding:14px">
@@ -465,7 +643,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
     </div>
     <!-- ══ NOTIFICATION ══ -->
     <div class="page" id="page-notification">
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stats-grid rg-3stat">
         <div class="scard blue" data-icon="📱"><div class="scard-num" id="n-sub">—</div><div class="scard-label">Total Subscribers</div></div>
         <div class="scard amber" data-icon="📤"><div class="scard-num" id="n-today">—</div><div class="scard-label">আজ পাঠানো</div></div>
         <div class="scard green" data-icon="✅"><div class="scard-num" id="n-total">—</div><div class="scard-label">মোট Notification</div></div>
@@ -561,7 +739,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
 
     <!-- ══ BLOOD ══ -->
     <div class="page" id="page-blood">
-      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stats-grid rg-4stat">
         <div class="scard green" data-icon="🩸"><div class="scard-num" id="bl-total">—</div><div class="scard-label">মোট দাতা</div></div>
         <div class="scard blue" data-icon="✅"><div class="scard-num" id="bl-active">—</div><div class="scard-label">সক্রিয়</div></div>
         <div class="scard red" data-icon="🔴"><div class="scard-num" id="bl-apos">—</div><div class="scard-label">A+ গ্রুপ</div></div>
@@ -796,7 +974,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
     <div class="page" id="page-analytics">
 
       <!-- ┌─ HEADER BAR ─────────────────────────────────────────────┐ -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;row-gap:8px;">
 
         <!-- live pill -->
         <div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:50px;">
@@ -823,7 +1001,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
       </div>
 
       <!-- ┌─ KPI ROW (6 cards, array-driven in JS) ─────────────────┐ -->
-      <div id="an-kpi-row" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px"></div>
+      <div id="an-kpi-row" class="rg-kpi"></div>
 
       <!-- ┌─ MAIN CHART (full-width) ────────────────────────────────┐ -->
       <div class="card" style="margin-bottom:12px;padding:16px 18px">
@@ -847,7 +1025,7 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
       </div>
 
       <!-- ┌─ 4-COL INSIGHT GRID ─────────────────────────────────────┐ -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">
+      <div class="rg-4col" style="margin-bottom:12px">
 
         <!-- Top Pages -->
         <div class="card" style="padding:14px">
