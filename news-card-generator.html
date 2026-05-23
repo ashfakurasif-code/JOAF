@@ -578,7 +578,7 @@ function hitH(r,mx,my){
   const hs=handles(r);
   for(let i=0;i<hs.length;i++){
     const dx=mx-hs[i].x,dy=my-hs[i].y;
-    if(Math.sqrt(dx*dx+dy*dy)<7) return i;
+    if(Math.sqrt(dx*dx+dy*dy)<20) return i;
   }
   return -1;
 }
@@ -743,6 +743,40 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   ov.addEventListener('mouseup',()=>{iact=null;});
   ov.addEventListener('mouseleave',()=>{iact=null;});
+  // ── Touch support ──
+  function getTouchPos(e){
+    const rect=ov.getBoundingClientRect();
+    const t=e.touches[0]||e.changedTouches[0];
+    return {x:t.clientX-rect.left, y:t.clientY-rect.top};
+  }
+  function doDown(mx,my){
+    if(selId&&ELS[selId]){
+      const r=elR(ELS[selId]);
+      const hi=hitH(r,mx,my);
+      if(hi>=0){iact={type:'resize',handle:hi,startMouse:{x:mx,y:my},startEl:{...ELS[selId]}};return;}
+      if(inBox(r,mx,my)){iact={type:'move',startMouse:{x:mx,y:my},startEl:{...ELS[selId]}};return;}
+    }
+    const ids=Object.keys(ELS).reverse();
+    let hit=null;
+    for(const id of ids){const el=ELS[id];if(!el.vis)continue;if(inBox(elR(el),mx,my)){hit=el;break;}}
+    selId=hit?hit.id:null;
+    if(hit)iact={type:'move',startMouse:{x:mx,y:my},startEl:{...hit}};
+    else iact=null;
+    updPanel();drawOv();
+  }
+  function doMove(mx,my){
+    if(!iact)return;
+    const dx=(mx-iact.startMouse.x)/ZL;
+    const dy=(my-iact.startMouse.y)/ZL;
+    const el=ELS[selId];
+    if(iact.type==='move'){if(!el.lockX)el.x=iact.startEl.x+dx;el.y=iact.startEl.y+dy;updPanel();}
+    else applyResize(el,iact.handle,dx,dy,iact.startEl);
+    draw();
+  }
+  ov.addEventListener('touchstart',e=>{e.preventDefault();const p=getTouchPos(e);doDown(p.x,p.y);},{passive:false});
+  ov.addEventListener('touchmove',e=>{e.preventDefault();const p=getTouchPos(e);doMove(p.x,p.y);},{passive:false});
+  ov.addEventListener('touchend',e=>{e.preventDefault();iact=null;},{passive:false});
+
 
   ov.addEventListener('wheel',e=>{
     e.preventDefault();
