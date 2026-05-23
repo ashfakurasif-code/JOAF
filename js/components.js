@@ -493,12 +493,25 @@ const JOAFComponents = {
   },
 
   addWhatsApp() {
-    const a=document.createElement('a');a.href=`https://wa.me/?text=${encodeURIComponent(JOAF.site.name+'\n'+window.location.href)}`;
-    a.target='_blank';a.rel='noopener';a.setAttribute('aria-label','WhatsApp');
-    a.style.cssText='position:fixed;bottom:128px;right:18px;z-index:9990;background:#25d366;color:#fff;border-radius:50%;width:44px;height:44px;font-size:22px;box-shadow:0 4px 14px rgba(0,0,0,.26);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .2s;';
-    a.innerHTML='<i class="zmdi zmdi-whatsapp"></i>';
-    a.onmouseenter=()=>a.style.transform='scale(1.12)';a.onmouseleave=()=>a.style.transform='';
-    document.body.appendChild(a);
+    const S='position:fixed;right:18px;z-index:9990;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.26);transition:transform .2s;font-size:22px;';
+    const wa=document.createElement('a');wa.href=`https://wa.me/?text=${encodeURIComponent(JOAF.site.name+'\n'+window.location.href)}`;
+    wa.target='_blank';wa.rel='noopener';wa.setAttribute('aria-label','WhatsApp');
+    wa.style.cssText=S+'bottom:232px;background:#25d366;color:#fff;';
+    wa.innerHTML='<i class="zmdi zmdi-whatsapp"></i>';
+    wa.onmouseenter=()=>wa.style.transform='scale(1.12)';wa.onmouseleave=()=>wa.style.transform='';
+    document.body.appendChild(wa);
+    const fb=document.createElement('a');fb.href=`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
+    fb.target='_blank';fb.rel='noopener';fb.setAttribute('aria-label','Facebook');
+    fb.style.cssText=S+'bottom:180px;background:#1877F2;color:#fff;';
+    fb.innerHTML='<i class="zmdi zmdi-facebook"></i>';
+    fb.onmouseenter=()=>fb.style.transform='scale(1.12)';fb.onmouseleave=()=>fb.style.transform='';
+    document.body.appendChild(fb);
+    const cp=document.createElement('button');cp.setAttribute('aria-label','লিংক কপি');
+    cp.style.cssText=S+'bottom:128px;background:#0f172a;color:#fff;border:none;cursor:pointer;';
+    cp.innerHTML='<i class="zmdi zmdi-link"></i>';
+    cp.onmouseenter=()=>cp.style.transform='scale(1.12)';cp.onmouseleave=()=>cp.style.transform='';
+    cp.onclick=()=>{navigator.clipboard.writeText(window.location.href).then(()=>{cp.innerHTML='<i class="zmdi zmdi-check"></i>';setTimeout(()=>cp.innerHTML='<i class="zmdi zmdi-link"></i>',2000);});};
+    document.body.appendChild(cp);
   },
 
   initAnimations() {
