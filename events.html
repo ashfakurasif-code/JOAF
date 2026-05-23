@@ -4,6 +4,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap">
   <meta charset="UTF-8">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"JOAF ইভেন্ট — অনুষ্ঠান ও কার্যক্রম","description":"JOAF আয়োজিত সভা, সেমিনার ও নাগরিক কার্যক্রমের তথ্য।","url":"https://www.julyforum.com/events.html","publisher":{"@type":"Organization","name":"JOAF","url":"https://www.julyforum.com"},"inLanguage":"bn"}</script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>ইভেন্ট — JOAF</title>
   <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর ইভেন্টসমূহ।">
@@ -147,5 +149,6 @@ const _ref = document.referrer;
 const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 </script>
+<div id="joaf-share-bar" style="position:fixed;bottom:16px;right:16px;z-index:8888;display:flex;flex-direction:column;gap:8px;"><a href="https://wa.me/?text=JOAF%20ইভেন্ট%20—%20অনুষ্ঠান%20ও%20কার্যক্রম%20https%3A%2F%2Fwww.julyforum.com%2Fevents.html" target="_blank" style="width:44px;height:44px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">💬</a><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.julyforum.com%2Fevents.html" target="_blank" style="width:44px;height:44px;background:#1877F2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">👍</a><button onclick="navigator.clipboard.writeText('https://www.julyforum.com/events.html').then(()=>{this.textContent='✅';setTimeout(()=>this.textContent='🔗',2000)})" style="width:44px;height:44px;background:#0f172a;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)">🔗</button></div>
 </body>
 </html>
