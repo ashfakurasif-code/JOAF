@@ -203,6 +203,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:var(--
 .viral-card{padding:8px 10px;background:#fefce8;border-radius:8px;margin-bottom:6px;display:flex;gap:8px;align-items:flex-start;border:1px solid #fef08a;}
 .viral-icon{font-size:18px;flex-shrink:0;}
 
+/* ── VOTE SYSTEM ── */
+.vote-row{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface2);}
+.vote-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 10px;border:1.5px solid var(--border);border-radius:50px;background:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;transition:.15s;}
+.vote-btn:active{transform:scale(.95);}
+.vote-btn.up:hover,.vote-btn.up.voted{background:#dcfce7;border-color:#22c55e;color:#15803d;}
+.vote-btn.down:hover,.vote-btn.down.voted{background:#fee2e2;border-color:#ef4444;color:#b91c1c;}
+.vote-btn.voted{cursor:default;}
+.vote-total{font-size:10px;color:var(--ink4);text-align:center;min-width:40px;}
+/* ── ISSUE REACT ── */
+.ic-reacts{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.react-btn{display:flex;align-items:center;gap:3px;padding:4px 9px;border-radius:50px;border:1.5px solid var(--border);background:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;color:var(--ink2);}
+.react-btn:active{transform:scale(.92);}
+.react-btn.reacted{border-color:var(--blue-m);background:#eff6ff;color:var(--blue-m);}
 /* Detail modal */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:none;align-items:flex-end;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
 .modal-bg.open{display:flex;}
@@ -609,6 +622,7 @@ async function loadLeaders() {
     `<button class="lf-btn${c==='সব'?' active':''}" onclick="setLeaderCat('${c}',this)">${c}</button>`
   ).join('');
 
+  await Promise.all([loadVotes(), loadReacts()]);
   renderHeatmap();
   renderReportCards();
   renderLeaders();
@@ -645,6 +659,9 @@ function renderHeatmap() {
       <div class="ic-meta"><span>${issue.status}</span><span>🌡️ ${issue.heat||0}/100</span></div>
       <div style="font-size:10px;color:var(--ink4);margin-top:6px;display:flex;align-items:center;gap:4px">
         <span>👆 tap — AI বিশ্লেষণ · ৬০+ relevant মানুষ</span>
+      </div>
+      <div class="ic-reacts" onclick="event.stopPropagation()">
+        ${REACT_EMOJIS.map(em=>{const cnt=(REACT_CACHE[issue.id]||{})[em]||0;const myR=localStorage.getItem('ir_'+issue.id);const rc=myR===em?'reacted':'';return `<button class="react-btn ${rc}" onclick="reactIssue('${issue.id}','${em}',this)">${em}<span class="rc-n">${cnt||''}</span></button>`;}).join('')}
       </div>
     </div>`;
   }).join('');
@@ -956,6 +973,11 @@ window.renderLeaders = function() {
         ${['promises','statements','controversies','virals'].map(t=>`<button class="ldr-tab${tab===t?' active':''}" onclick="setLdrTab('${l.id}','${t}')">${t==='promises'?'✅':t==='statements'?'💬':t==='controversies'?'⚠️':'🔥'}</button>`).join('')}
       </div>
       <div class="ldr-content">${content[tab]}</div>
+      <div class="vote-row" onclick="event.stopPropagation()">
+        <button class="vote-btn up ${localStorage.getItem('vl_'+l.id)==='up'?'voted':''}" onclick="voteLeader('${l.id}','up',this)">👍 <span class="vote-count-up data-lid" data-lid="${l.id}">${(VOTE_CACHE[l.id]||{}).up||0}</span></button>
+        <div class="vote-total data-lid" data-lid="${l.id}">${((VOTE_CACHE[l.id]||{}).up||0)+((VOTE_CACHE[l.id]||{}).down||0)} ভোট</div>
+        <button class="vote-btn down ${localStorage.getItem('vl_'+l.id)==='down'?'voted':''}" onclick="voteLeader('${l.id}','down',this)">👎 <span class="vote-count-down data-lid" data-lid="${l.id}">${(VOTE_CACHE[l.id]||{}).down||0}</span></button>
+      </div>
     </div>`;
   }).join('') || '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink4)">কোনো নেতা পাওয়া যায়নি</div>';
 };
@@ -982,6 +1004,61 @@ window.closeModal = function(e) {
   if (e.target.classList.contains('modal-bg')) document.getElementById('detail-modal').classList.remove('open');
 };
 
+// ══ COMMUNITY VOTE SYSTEM ══
+const VOTE_CACHE = {};
+async function loadVotes() {
+  try {
+    const { getDocs, collection: col } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await getDocs(col(_db, 'leader_votes'));
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (!VOTE_CACHE[d.lid]) VOTE_CACHE[d.lid] = {up:0, down:0};
+      if (d.type === 'up') VOTE_CACHE[d.lid].up++; else VOTE_CACHE[d.lid].down++;
+    });
+  } catch(e) { console.warn('Vote load failed:', e); }
+}
+window.voteLeader = async function(lid, type, btn) {
+  const key = 'vl_' + lid;
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, type);
+  const row = btn.closest('.vote-row');
+  if (row) { row.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('voted')); btn.classList.add('voted'); }
+  if (!VOTE_CACHE[lid]) VOTE_CACHE[lid] = {up:0, down:0};
+  VOTE_CACHE[lid][type]++;
+  document.querySelectorAll('[data-lid="' + lid + '"].vote-total').forEach(el => el.textContent = (VOTE_CACHE[lid].up + VOTE_CACHE[lid].down) + ' ভোট');
+  document.querySelectorAll('[data-lid="' + lid + '"].vote-count-up').forEach(el => el.textContent = VOTE_CACHE[lid].up);
+  document.querySelectorAll('[data-lid="' + lid + '"].vote-count-down').forEach(el => el.textContent = VOTE_CACHE[lid].down);
+  try {
+    const { addDoc, collection: col, serverTimestamp: sts } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    await addDoc(col(_db, 'leader_votes'), {lid, type, ts: sts()});
+  } catch(e) { console.warn('Vote save failed:', e); }
+};
+const REACT_EMOJIS = ['\U0001f525','\U0001f621','\U0001f622','\U0001f44f'];
+const REACT_CACHE = {};
+async function loadReacts() {
+  try {
+    const { getDocs, collection: col } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await getDocs(col(_db, 'issue_reacts'));
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (!REACT_CACHE[d.iid]) REACT_CACHE[d.iid] = {};
+      REACT_CACHE[d.iid][d.emoji] = (REACT_CACHE[d.iid][d.emoji]||0) + 1;
+    });
+  } catch(e) { console.warn('React load failed:', e); }
+}
+window.reactIssue = async function(iid, emoji, btn) {
+  const key = 'ir_' + iid;
+  if (localStorage.getItem(key) === emoji) return;
+  localStorage.setItem(key, emoji);
+  if (!REACT_CACHE[iid]) REACT_CACHE[iid] = {};
+  REACT_CACHE[iid][emoji] = (REACT_CACHE[iid][emoji]||0) + 1;
+  const row = btn.closest('.ic-reacts');
+  if (row) { row.querySelectorAll('.react-btn').forEach(b => b.classList.remove('reacted')); btn.classList.add('reacted'); const cn=btn.querySelector('.rc-n'); if(cn) cn.textContent=REACT_CACHE[iid][emoji]||''; }
+  try {
+    const { addDoc, collection: col, serverTimestamp: sts } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    await addDoc(col(_db, 'issue_reacts'), {iid, emoji, ts: sts()});
+  } catch(e) { console.warn('React save failed:', e); }
+};
 loadLeaders();
 </script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
