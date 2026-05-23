@@ -815,27 +815,27 @@ function catColor(cat) {
 
 // ── LOAD LEADERS ──
 async function loadLeaders() {
-  // First generate AI issues, then load leaders in parallel
   await generateIssues();
   try {
     const snap = await getDocs(collection(_db,'leaders'));
-    // active:false বা isDeceased:true নেতাদের hide করা হচ্ছে
-    // এবং garbage data (নাম না থাকলে, promises array না থাকলে) বাদ দেওয়া হচ্ছে
     const firestoreLeaders = snap.docs
       .map(d=>({id:d.id,...d.data()}))
       .filter(l => {
         if (l.active === false || l.isDeceased === true) return false;
-        // garbage validation: valid name, party, role এবং promises array থাকতে হবে
+        if (!l.dataVersion || l.dataVersion < 6) return false;
         if (!l.name || typeof l.name !== 'string' || l.name.length < 2) return false;
-        if (!l.party || !l.role) return false;
-        if (!Array.isArray(l.promises)) return false;
-        // news headlines নেতা হিসেবে ঢুকলে reject করো
+        if (!l.party || !l.role || !l.cat) return false;
+        if (!Array.isArray(l.promises) || l.promises.length === 0) return false;
+        if (typeof l.approval !== 'number' || l.approval < 1 || l.approval > 100) return false;
         if (l.name.includes('মুক্তিপণ') || l.name.includes('ভাড়া') || l.name.includes('বাস')) return false;
         return true;
       });
-    // Firestore-এ কমপক্ষে ৫ জন valid leader থাকলে সেটাই দেখাও
-    ALL_LEADERS = firestoreLeaders.length >= 5 ? firestoreLeaders : FALLBACK_LEADERS;
-  } catch(e) { ALL_LEADERS = FALLBACK_LEADERS; }
+    // ✅ valid v6 leaders পেলে Firestore, নইলে FALLBACK (quota/error সব ক্ষেত্রে)
+    ALL_LEADERS = firestoreLeaders.length >= 10 ? firestoreLeaders : FALLBACK_LEADERS;
+  } catch(e) {
+    // Firestore quota শেষ বা network error — FALLBACK দেখাও
+    ALL_LEADERS = FALLBACK_LEADERS;
+  }
 
   // Hero stats
   const avg = Math.round(ALL_LEADERS.reduce((s,l)=>s+(l.approval||0),0)/ALL_LEADERS.length);
