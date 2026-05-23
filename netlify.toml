@@ -34,7 +34,7 @@
 
 # news-card-generator can be embedded in admin iframe (same origin)
 [[headers]]
-  for = "/news-card-generator.html"
+  for = "/tools/news-card-generator.html"
   [headers.values]
     Cache-Control = "public, max-age=300, stale-while-revalidate=600"
     X-Frame-Options = "SAMEORIGIN"
