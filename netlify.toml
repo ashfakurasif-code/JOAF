@@ -32,6 +32,14 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
 
+# news-card-generator can be embedded in admin iframe (same origin)
+[[headers]]
+  for = "/news-card-generator.html"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=600"
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+
 [[headers]]
   for = "/netlify/functions/*"
   [headers.values]
