@@ -124,7 +124,7 @@ exports.handler = async (event) => {
     );
 
     const body = JSON.parse(event.body);
-    const { type, title: customTitle, body: customBody, url: customUrl, _verify } = body;
+    const { type, title: customTitle, body: customBody, url: customUrl, _verify, district: filterDistrict } = body;
 
     // শুধু key verify
     if (_verify) {
@@ -147,7 +147,13 @@ exports.handler = async (event) => {
     }
 
     // Active subscriptions নাও
-    const docs = await getActiveSubscriptions();
+    let docs = await getActiveSubscriptions();
+    // district filter — blood/alert/weather type এ শুধু matching district পাবে
+    if (filterDistrict && ['blood','alert','weather'].includes(type)) {
+      const fd = docs.filter(d => d.district === filterDistrict);
+      // যদি filter করলে কেউ না থাকে — সবাইকে পাঠাও (broader reach)
+      if (fd.length > 0) docs = fd;
+    }
     if (!docs.length) {
       return { statusCode: 200, headers, body: JSON.stringify({ success: true, sent: 0, message: 'No subscribers' }) };
     }

@@ -1217,6 +1217,11 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
     <div class="field"><label>Title</label><input type="text" id="nm-title"></div>
     <div class="field"><label>Message</label><textarea id="nm-body"></textarea></div>
     <div class="field"><label>Link</label><input type="text" id="nm-url"></div>
+    <div class="field" id="nm-district-row" style="display:none">
+      <label>জেলা ফিল্টার <small style="color:#9ca3af">(শুধু এই জেলার subscriber রা পাবেন — ফাঁকা রাখলে সবাই পাবেন)</small></label>
+      <select id="nm-district" style="width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;"><option value="">সব জেলা (সকল subscriber)</option></select>
+      <script>(function(){if(document.getElementById('nm-district').options.length>1)return;const D=['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ','কুমিল্লা','নারায়ণগঞ্জ','গাজীপুর','টাঙ্গাইল','ফরিদপুর','যশোর','নোয়াখালী','বগুড়া','দিনাজপুর','পাবনা','নরসিংদী','মানিকগঞ্জ','মুন্সীগঞ্জ','শরীয়তপুর','মাদারীপুর','গোপালগঞ্জ','কিশোরগঞ্জ','নেত্রকোনা','জামালপুর','শেরপুর','ব্রাহ্মণবাড়িয়া','চাঁদপুর','ফেনী','লক্ষ্মীপুর','কক্সবাজার','বান্দরবান','রাঙ্গামাটি','খাগড়াছড়ি','হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','নওগাঁ','চাঁপাইনবাবগঞ্জ','নাটোর','সিরাজগঞ্জ','জয়পুরহাট','সাতক্ষীরা','ঝিনাইদহ','মাগুরা','নড়াইল','বাগেরহাট','মেহেরপুর','চুয়াডাঙ্গা','কুষ্টিয়া','ঝালকাঠি','পটুয়াখালী','পিরোজপুর','ভোলা','বরগুনা','লালমনিরহাট','নীলফামারী','গাইবান্ধা','কুড়িগ্রাম','পঞ্চগড়','ঠাকুরগাঁও'].sort();const s=document.getElementById('nm-district');D.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;s.appendChild(o);});})();</script>
+    </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeModal('notifModal')">বাতিল</button>
       <button class="btn btn-ghost" onclick="resetNotifModal()">↺ Default</button>
@@ -1608,6 +1613,9 @@ window.openNotifModal = function(type) {
   document.getElementById('nm-title').value = d.title;
   document.getElementById('nm-body').value = d.body;
   document.getElementById('nm-url').value = d.url;
+  // district filter row — blood/alert/weather type এ দেখাও
+  const distRow = document.getElementById('nm-district-row');
+  if (distRow) distRow.style.display = ['blood','alert','weather'].includes(type) ? 'block' : 'none';
   openModal('notifModal');
 };
 
@@ -1620,12 +1628,15 @@ window.resetNotifModal = function() {
 };
 
 window.sendFromModal = async function() {
-  const title = document.getElementById('nm-title').value.trim();
-  const body  = document.getElementById('nm-body').value.trim();
-  const url   = document.getElementById('nm-url').value.trim();
+  const title    = document.getElementById('nm-title').value.trim();
+  const body     = document.getElementById('nm-body').value.trim();
+  const url      = document.getElementById('nm-url').value.trim();
+  const district = document.getElementById('nm-district')?.value || '';
   if (!title || !body) return toast('Title ও Message দিন','error');
   closeModal('notifModal');
-  await callSendNotif({type:currentNotifType, title, body, url:url||'/'});
+  const payload = {type:currentNotifType, title, body, url:url||'/'};
+  if (district) payload.district = district;
+  await callSendNotif(payload);
 };
 
 window.sendCustomNotif = async function() {

@@ -58,6 +58,7 @@ exports.handler = async (event) => {
       subscription,
       endpoint:   subscription.endpoint,
       deviceInfo: deviceInfo || {},
+      district:   (body.district || ''),
       active:     true,
       updatedAt:  new Date().toISOString(),
     });

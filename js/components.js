@@ -741,6 +741,21 @@ const JOAFComponents = {
           const lat = document.getElementById('jbr-lat').value;
           const lng = document.getElementById('jbr-lng').value;
           await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,lat:lat?parseFloat(lat):null,lng:lng?parseFloat(lng):null,createdAt:serverTimestamp()});
+          // 🔔 Push notification — same district subscribers কে জানাও
+          try {
+            const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
+            await fetch('/.netlify/functions/send-notification', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Admin-Key': _adminKey },
+              body: JSON.stringify({
+                type: 'blood',
+                title: `🩸 ${district} এ ${blood} রক্তদাতা যোগ দিয়েছেন!`,
+                body: `${name} — ${district}${area ? ', ' + area : ''}। এখনই যোগাযোগ করুন।`,
+                url: '/rokto.html',
+                district,
+              })
+            });
+          } catch(_ne) {}
           alert('✅ সফলভাবে নিবন্ধন হয়েছে! আপনাকে ধন্যবাদ।');
           document.getElementById('joaf-blood-reg-modal').classList.remove('open');
           ['jbr-name','jbr-phone','jbr-area'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
@@ -1445,12 +1460,19 @@ async function joafSubscribePush() {
 
 async function joafSaveSubscription(sub) {
   try {
-    // Netlify function এ পাঠাও — সেখান থেকে Firestore এ save হবে
+    // user district বের করো — localStorage থেকে (polls login / blood reg)
+    let _userDistrict = '';
+    try {
+      const _cu = localStorage.getItem('joaf_current_user');
+      if (_cu) { const _p = JSON.parse(_cu); _userDistrict = _p.district || ''; }
+    } catch(_) {}
+
     await fetch('/.netlify/functions/save-subscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         subscription: sub.toJSON(),
+        district: _userDistrict,
         deviceInfo: {
           userAgent: navigator.userAgent.substring(0, 150),
           platform: navigator.platform || '',

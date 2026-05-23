@@ -239,6 +239,10 @@
 
                 <input type="text" id="lName" class="f-inp" placeholder="আপনার নাম লিখুন">
                 <input type="tel" id="lPhone" class="f-inp" placeholder="মোবাইল নম্বর (01XXXXXXXXX)">
+                <select id="lDistrict" class="f-inp" style="appearance:none;background:#f9fafb;"><option value="">জেলা বেছে নিন (ঐচ্ছিক)</option></select>
+                <script>
+                (function(){const D=['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ','কুমিল্লা','নারায়ণগঞ্জ','গাজীপুর','টাঙ্গাইল','ফরিদপুর','যশোর','নোয়াখালী','বগুড়া','দিনাজপুর','পাবনা','নরসিংদী','মানিকগঞ্জ','মুন্সীগঞ্জ','শরীয়তপুর','মাদারীপুর','গোপালগঞ্জ','কিশোরগঞ্জ','নেত্রকোনা','জামালপুর','শেরপুর','ব্রাহ্মণবাড়িয়া','চাঁদপুর','ফেনী','লক্ষ্মীপুর','কক্সবাজার','বান্দরবান','রাঙ্গামাটি','খাগড়াছড়ি','হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','নওগাঁ','চাঁপাইনবাবগঞ্জ','নাটোর','সিরাজগঞ্জ','জয়পুরহাট','সাতক্ষীরা','ঝিনাইদহ','মাগুরা','নড়াইল','বাগেরহাট','মেহেরপুর','চুয়াডাঙ্গা','কুষ্টিয়া','ঝালকাঠি','পটুয়াখালী','পিরোজপুর','ভোলা','বরগুনা','লালমনিরহাট','নীলফামারী','গাইবান্ধা','কুড়িগ্রাম','পঞ্চগড়','ঠাকুরগাঁও'].sort();const s=document.getElementById('lDistrict');D.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;s.appendChild(o);});})();
+                </script>
                 <button class="login-btn" onclick="doLogin()">
                   <i class="zmdi zmdi-check-circle"></i> প্রবেশ করুন
                 </button>
@@ -387,7 +391,10 @@
           <div class="lb-wrap joaf-reveal">
             <div class="lb-header">
               <h4>🏆 লিডারবোর্ড</h4>
-              <span id="lbTotal">০ জন অংশগ্রহণকারী</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span id="lbTotal">০ জন অংশগ্রহণকারী</span>
+                <button onclick="shareMyStreak()" id="shareStreakBtn" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:50px;padding:4px 12px;font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;">📤 শেয়ার</button>
+              </div>
             </div>
             <div id="lbList">
               <div style="padding:28px;text-align:center;color:#9ca3af;font-size:14px">
@@ -480,8 +487,15 @@ function doLogin() {
     streak:0, maxStreak:0, lastVote:null, voteDays:[],
     totalVotes:0, cycles:0, claimedCycles:0, votes:{}, taka:0
   };
-  u.name = name; u.phone = phone;
+  const district = (document.getElementById('lDistrict')?.value) || u.district || '';
+  u.name = name; u.phone = phone; u.district = district;
   LS.set(uid, u); LS.set('cu', uid);
+  // subscription এ district update করো
+  if (district && typeof joafPushSubscribe === 'function') {
+    navigator.serviceWorker?.ready.then(reg => reg.pushManager.getSubscription()).then(sub => {
+      if (sub && typeof joafSaveSubscription === 'function') joafSaveSubscription(sub);
+    }).catch(()=>{});
+  }
   // Try to restore from Firestore (new device recovery)
   if (typeof window._restorePollUser === 'function') {
     window._restorePollUser(uid).then(restored => {
@@ -975,6 +989,76 @@ function onVote(pid, oi) {
 function showMore() { showN += 10; renderPolls(activeCat); }
 
 // ── Leaderboard ───────────────────────────────────────────────
+// ── Streak Share Card ────────────────────────────────────────
+function shareMyStreak() {
+  if (!CU) { alert('আগে লগইন করুন'); return; }
+  const s   = CU.streak || 0;
+  const cyc = CU.cycles || 0;
+  const rank = (() => {
+    const users = [];
+    LS.keys().forEach(k => { if (k.startsWith('u')) { const u=LS.get(k); if(u?.name&&u?.phone) users.push(u); } });
+    users.sort((a,b) => ((b.cycles||0)-(a.cycles||0)) || ((b.streak||0)-(a.streak||0)));
+    const idx = users.findIndex(u => u.id === CU.id);
+    return idx >= 0 ? idx + 1 : '?';
+  })();
+
+  // Canvas দিয়ে share card বানাও
+  const canvas = document.createElement('canvas');
+  canvas.width = 600; canvas.height = 320;
+  const ctx = canvas.getContext('2d');
+
+  // Background gradient
+  const bg = ctx.createLinearGradient(0,0,600,320);
+  bg.addColorStop(0,'#0d0d1a'); bg.addColorStop(1,'#0f3460');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,600,320);
+
+  // Accent line
+  ctx.fillStyle='#90161f'; ctx.fillRect(0,0,6,320);
+
+  // Title
+  ctx.fillStyle='#ffffff'; ctx.font='bold 26px sans-serif';
+  ctx.fillText('JOAF জনমঞ্চ 🔥',30,55);
+
+  // Streak number (big)
+  ctx.font='bold 90px sans-serif';
+  ctx.fillStyle='#fbbf24';
+  ctx.fillText(s,30,170);
+  ctx.font='bold 22px sans-serif';
+  ctx.fillStyle='#e5e7eb';
+  ctx.fillText('দিনের Streak',165,140);
+  ctx.fillText('🏆 র‌্যাংক: #'+rank,165,175);
+  ctx.fillText('🔄 '+cyc+' চক্র সম্পন্ন',165,210);
+
+  // Name
+  ctx.font='bold 18px sans-serif';
+  ctx.fillStyle='rgba(255,255,255,.7)';
+  ctx.fillText(CU.name,30,240);
+
+  // Bottom CTA
+  ctx.fillStyle='rgba(255,255,255,.3)';
+  ctx.fillRect(0,270,600,50);
+  ctx.fillStyle='#ffffff';
+  ctx.font='14px sans-serif';
+  ctx.fillText('julyforum.com এ ভোট দিন, streak রাখুন, পুরস্কার জিতুন!',30,302);
+
+  // Share
+  canvas.toBlob(async blob => {
+    const text = `🔥 JOAF-এ আমার ${s} দিনের Streak চলছে!
+🏆 র‌্যাংক: #${rank} | 🔄 ${cyc} চক্র সম্পন্ন
+
+তুমিও ভোট দাও → julyforum.com/joaf-polls.html`;
+    if (navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'streak.png',{type:'image/png'})]})) {
+      try {
+        await navigator.share({ files:[new File([blob],'streak.png',{type:'image/png'})], title:'আমার JOAF Streak', text });
+        return;
+      } catch(_) {}
+    }
+    // Fallback: WhatsApp
+    const wa = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(wa,'_blank');
+  },'image/png');
+}
+
 function renderLB() {
   const lbEl    = document.getElementById('lbList');
   const totalEl = document.getElementById('lbTotal');
@@ -1023,6 +1107,7 @@ function renderLB() {
       <div class="lb-right">
         <div class="lb-earn">${bn(earned)} টাকা</div>
         <div class="lb-streak">${bn(u.cycles||0)} চক্র</div>
+        ${isMe ? `<button onclick="shareMyStreak()" style="margin-top:4px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:800;font-family:inherit;cursor:pointer;">📤</button>` : ''}
       </div>
     </div>`;
   }).join('');
