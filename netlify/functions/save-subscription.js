@@ -1,34 +1,56 @@
 // netlify/functions/save-subscription.js
-// User এর push subscription Firestore এ save করে
-// firebase-admin বাদ — Firestore REST API ব্যবহার করা হচ্ছে
+// Appwrite Database এ push subscription save করে (Firestore বাদ)
 
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const AW_PROJECT  = '6a11b6cd000b59f318eb';
+const AW_KEY      = process.env.APPWRITE_API_KEY;
+const DB_ID       = 'joaf';
+const COL_ID      = 'push_subscriptions';
 
-const BASE = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents`;
+const BASE = `${AW_ENDPOINT}/databases/${DB_ID}/collections/${COL_ID}/documents`;
 
-function toField(v) {
-  if (typeof v === 'string')  return { stringValue: v };
-  if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-  if (typeof v === 'boolean') return { booleanValue: v };
-  if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-    return { mapValue: { fields: Object.fromEntries(Object.entries(v).map(([k, vv]) => [k, toField(vv)])) } };
-  }
-  return { nullValue: null };
+async function awGet(docId) {
+  const r = await fetch(`${BASE}/${docId}`, {
+    headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY }
+  });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error('AW GET failed: ' + r.status);
+  return await r.json();
 }
 
-async function firestoreSet(collection, docId, data) {
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `${BASE}/${collection}/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
-  });
-  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
-  return await r.json();
+async function awUpsert(docId, data) {
+  // Try update first, then create
+  const existing = await awGet(docId);
+  if (existing) {
+    // PATCH (update)
+    const r = await fetch(`${BASE}/${docId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': AW_PROJECT,
+        'X-Appwrite-Key': AW_KEY
+      },
+      body: JSON.stringify({ data })
+    });
+    if (!r.ok) throw new Error('AW PATCH failed: ' + r.status);
+    return await r.json();
+  } else {
+    // POST (create)
+    const r = await fetch(BASE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': AW_PROJECT,
+        'X-Appwrite-Key': AW_KEY
+      },
+      body: JSON.stringify({ documentId: docId, data, permissions: [] })
+    });
+    if (!r.ok) {
+      const err = await r.text();
+      throw new Error('AW POST failed: ' + r.status + ' ' + err);
+    }
+    return await r.json();
+  }
 }
 
 exports.handler = async (event) => {
@@ -37,43 +59,32 @@ exports.handler = async (event) => {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
   };
-
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
-  }
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
   try {
     const body = JSON.parse(event.body);
-    const { subscription, deviceInfo } = body;
+    const { subscription, deviceInfo, district } = body;
 
     if (!subscription || !subscription.endpoint) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid subscription' }) };
     }
 
-    // endpoint দিয়ে unique ID বানাও
-    const id = Buffer.from(subscription.endpoint).toString('base64').slice(-20);
+    // endpoint দিয়ে unique ID বানাও (safe characters only)
+    const id = Buffer.from(subscription.endpoint).toString('base64')
+      .replace(/[^a-zA-Z0-9]/g, '').slice(-20);
 
-    await firestoreSet('push_subscriptions', id, {
-      subscription,
-      endpoint:   subscription.endpoint,
-      deviceInfo: deviceInfo || {},
-      district:   (body.district || ''),
-      active:     true,
-      updatedAt:  new Date().toISOString(),
+    await awUpsert(id, {
+      endpoint:         subscription.endpoint,
+      subscriptionJson: JSON.stringify(subscription),
+      district:         district || '',
+      active:           true,
+      updatedAt:        new Date().toISOString(),
     });
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ success: true, id }),
-    };
+    return { statusCode: 200, headers, body: JSON.stringify({ success: true, id }) };
   } catch (err) {
     console.error('save-subscription error:', err);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: err.message }),
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
