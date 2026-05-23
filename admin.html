@@ -2553,125 +2553,264 @@ function t2vBuildPrompt(rawText, slides) {
 }
 async function renderVideoWithAudio(slides, mood, rawText, logEl) {
   if (logEl) logEl.innerHTML = '';
-  const log = (s,m,t) => t2vLog(logEl,s,m,t);
-
-  log(1,'Core concept extract করা হচ্ছে — 9:16 Reel Matrix তৈরি...','stage');
-  await new Promise(r=>setTimeout(r,400));
-
-  const base = rawText || slides.map(s=>typeof s==='string'?s:s.text||'').join('. ');
-  const prompt = encodeURIComponent(
-    'cinematic viral short reel scene of ' + base +
-    ', highly photorealistic, 8k resolution, ultra-detailed, dynamic motion blur, ' +
-    'cinematic volumetric backlighting, professional color grading, epic atmosphere, ' +
-    'vertical 9:16 composition, trending on social media, hyper-realistic'
-  );
-
-  log(2,'AI Image frames generate হচ্ছে — Pollinations Engine...','stage');
-
-  // Generate 6 frames with slight seed variation for motion feel
-  const frameCount = 6;
-  const frames = [];
-  const seeds = Array.from({length:frameCount},(_,i)=>Math.floor(Math.random()*9999)+i*111);
-
-  for (let i=0;i<frameCount;i++) {
-    log(2,`Frame ${i+1}/${frameCount} render হচ্ছে...`,'info');
-    const url = `https://image.pollinations.ai/prompt/${prompt}?width=608&height=1080&seed=${seeds[i]}&nologo=true&model=flux`;
+  const log = function(s,m,t){ t2vLog(logEl,s,m,t); };
+  log(1,'News content analyze হচ্ছে...','stage');
+  await new Promise(function(r){setTimeout(r,300);});
+  var moodScenes = {
+    urgent:'dark dramatic crime scene bangladesh night red lighting cinematic',
+    sad:'somber bangladesh village night blue lighting mournful atmosphere',
+    angry:'tense protest crowd bangladesh dramatic orange lighting',
+    positive:'bright bangladesh celebration golden hour joyful',
+    neutral:'bangladesh news studio dramatic professional lighting'
+  };
+  var scenePrompt = moodScenes[mood] || moodScenes.neutral;
+  var rt = rawText || '';
+  if (rt.indexOf('খুন')>-1||rt.indexOf('হত্যা')>-1||rt.indexOf('মাদক')>-1)
+    scenePrompt='dark crime scene bangladesh village night police emergency cinematic red blue lighting no text';
+  else if (rt.indexOf('বন্যা')>-1||rt.indexOf('পানি')>-1)
+    scenePrompt='flood bangladesh dramatic aerial cinematic no text';
+  else if (rt.indexOf('আগুন')>-1)
+    scenePrompt='fire night bangladesh orange flames dramatic cinematic no text';
+  else if (rt.indexOf('আন্দোলন')>-1||rt.indexOf('বিক্ষোভ')>-1)
+    scenePrompt='protest crowd bangladesh dramatic lighting cinematic no text';
+  var fullPrompt = encodeURIComponent(scenePrompt+', photorealistic 8k cinematic volumetric lighting no text no watermark no logo');
+  log(2,'AI Background frames generate হচ্ছে...','stage');
+  var frames = [];
+  for (var i=0;i<3;i++) {
+    log(2,'Background '+(i+1)+'/3 তৈরি হচ্ছে...','info');
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Frame fetch failed');
-      const blob = await res.blob();
-      const imgUrl = URL.createObjectURL(blob);
-      await new Promise((resolve,reject)=>{
-        const img = new Image();
-        img.onload = ()=>{ frames.push(img); resolve(); };
-        img.onerror = reject;
-        img.src = imgUrl;
+      var seed = Math.floor(Math.random()*99999)+i*1111;
+      var furl = 'https://image.pollinations.ai/prompt/'+fullPrompt+'?width=608&height=1080&seed='+seed+'&nologo=true&model=flux';
+      var fres = await fetch(furl);
+      if (!fres.ok) throw new Error('failed');
+      var fblob = await fres.blob();
+      var fimgUrl = URL.createObjectURL(fblob);
+      await new Promise(function(resolve){
+        var img = new Image();
+        img.onload = function(){ frames.push(img); resolve(); };
+        img.onerror = function(){ resolve(); };
+        img.src = fimgUrl;
       });
-    } catch(e) {
-      log(2,`Frame ${i+1} skip — ${e.message}`,'info');
-    }
+    } catch(fe){ log(2,'Frame '+(i+1)+' skip','info'); }
   }
-
-  if (frames.length === 0) throw new Error('কোনো frame তৈরি হয়নি — internet check করুন');
-
-  log(3,'GPU Node থেকে frames compile হচ্ছে — Canvas Video Engine...','stage');
-
-  // Canvas animation → video blob
-  const W=608, H=1080, FPS=24, HOLD=FPS*1.5; // each frame holds 1.5s
-  const canvas = document.createElement('canvas');
+  log(3,'Audio + Video compile হচ্ছে...','stage');
+  var W=608, H=1080, FPS=24;
+  var canvas = document.createElement('canvas');
   canvas.width=W; canvas.height=H;
-  const ctx = canvas.getContext('2d');
-
-  let stream, recorder, chunks=[];
-  try {
-    stream = canvas.captureStream(FPS);
-    recorder = new MediaRecorder(stream, {mimeType:'video/webm;codecs=vp9', videoBitsPerSecond:8000000});
-  } catch(e) {
-    stream = canvas.captureStream(FPS);
-    recorder = new MediaRecorder(stream, {videoBitsPerSecond:6000000});
-  }
-
-  recorder.ondataavailable = e=>{ if(e.data.size>0) chunks.push(e.data); };
-
-  const videoBlob = await new Promise(resolve=>{
-    recorder.onstop = ()=>{
-      const blob = new Blob(chunks,{type:'video/webm'});
-      resolve(blob);
-    };
-    recorder.start();
-
-    let frameIdx=0, holdCount=0;
-    const totalFrames = frames.length * HOLD;
-    let drawn=0;
-
-    const TRANSITION_FRAMES=FPS*0.4; // 0.4s crossfade
-
-    function drawFrame() {
-      if (drawn >= totalFrames) { recorder.stop(); return; }
-
-      const cur = frames[frameIdx % frames.length];
-      const next = frames[(frameIdx+1) % frames.length];
-      const transProgress = holdCount > (HOLD-TRANSITION_FRAMES)
-        ? (holdCount-(HOLD-TRANSITION_FRAMES))/TRANSITION_FRAMES : 0;
-
-      // Ken Burns zoom effect
-      const zoom = 1 + (holdCount/HOLD)*0.06;
-      const offsetX = (W*(zoom-1)/2);
-      const offsetY = (H*(zoom-1)/2);
-
-      ctx.clearRect(0,0,W,H);
-
-      // Current frame with Ken Burns
-      ctx.globalAlpha=1;
-      ctx.drawImage(cur,-offsetX,-offsetY,W*zoom,H*zoom);
-
-      // Crossfade to next
-      if (transProgress>0) {
-        ctx.globalAlpha=transProgress;
-        ctx.drawImage(next,0,0,W,H);
-        ctx.globalAlpha=1;
-      }
-
-      // Cinematic letterbox removed (9:16 full)
-      // Vignette overlay
-      const vignette=ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.9);
-      vignette.addColorStop(0,'transparent');
-      vignette.addColorStop(1,'rgba(0,0,0,0.45)');
-      ctx.fillStyle=vignette; ctx.fillRect(0,0,W,H);
-
-      holdCount++;
-      if (holdCount>=HOLD) { holdCount=0; frameIdx++; }
-      drawn++;
-      setTimeout(drawFrame, 1000/FPS);
-    }
-    drawFrame();
-    log(4,'Hyper-Realistic Frame Streams compile হচ্ছে...','active');
+  var ctx2d = canvas.getContext('2d');
+  var slideTexts = slides.map(function(s){return typeof s==='string'?s:(s.text||'');}).filter(Boolean);
+  if (!slideTexts.length) slideTexts.push(rt.substring(0,120));
+  var logoImg = null;
+  await new Promise(function(resolve){
+    var img = new Image(); img.crossOrigin='anonymous';
+    img.onload=function(){ logoImg=img; resolve(); };
+    img.onerror=function(){ resolve(); };
+    img.src='/logoc7c3.png';
   });
-
-  log(5,'✅ Video ready — DOM এ inject হচ্ছে...','ok');
+  var audioCtx2 = new (window.AudioContext||window.webkitAudioContext)();
+  var audioDest = audioCtx2.createMediaStreamDestination();
+  var videoStream = canvas.captureStream(FPS);
+  var combinedStream;
+  try {
+    combinedStream = new MediaStream(videoStream.getVideoTracks().concat(audioDest.stream.getAudioTracks()));
+  } catch(e) { combinedStream = videoStream; }
+  var recorder, chunks=[];
+  try {
+    recorder = new MediaRecorder(combinedStream, {mimeType:'video/webm;codecs=vp9,opus', videoBitsPerSecond:6000000});
+  } catch(e) {
+    try { recorder = new MediaRecorder(combinedStream, {mimeType:'video/webm', videoBitsPerSecond:4000000}); }
+    catch(e2) { recorder = new MediaRecorder(videoStream, {videoBitsPerSecond:4000000}); }
+  }
+  recorder.ondataavailable = function(e){ if(e.data.size>0) chunks.push(e.data); };
+  var SLIDE_DUR = FPS*4;
+  var TOTAL_SLIDES = slideTexts.length+1;
+  var TOTAL_FRAMES = TOTAL_SLIDES*SLIDE_DUR;
+  var accentMap = {urgent:'#ef4444',sad:'#818cf8',positive:'#22c55e',angry:'#f97316',neutral:'#a855f7'};
+  var accent = accentMap[mood]||'#a855f7';
+  var moodLabelMap = {urgent:'🔴 জরুরি সংবাদ',sad:'😢 দুঃখজনক',positive:'✅ ইতিবাচক',angry:'⚠️ গুরুত্বপূর্ণ',neutral:'📢 সর্বশেষ'};
+  var lastAudioSlide = -1;
+  var videoBlob = await new Promise(function(resolve){
+    recorder.onstop=function(){ resolve(new Blob(chunks,{type:'video/webm'})); };
+    recorder.start(100);
+    var frameNum=0;
+    function drawNextFrame(){
+      if(frameNum>=TOTAL_FRAMES){ recorder.stop(); return; }
+      var slideIdx = Math.floor(frameNum/SLIDE_DUR);
+      var slideFrame = frameNum%SLIDE_DUR;
+      var t = slideFrame/SLIDE_DUR;
+      if(slideIdx !== lastAudioSlide) {
+        lastAudioSlide = slideIdx;
+        playSlideAudioToDestination(audioCtx2, audioDest, mood, slideIdx, TOTAL_SLIDES, 4.2);
+      }
+      if(frames.length>0){
+        var bg = frames[slideIdx%frames.length];
+        var zoom = 1+t*0.05;
+        var ox=(W*(zoom-1))/2, oy=(H*(zoom-1))/2;
+        ctx2d.drawImage(bg,-ox,-oy,W*zoom,H*zoom);
+      } else {
+        var bgGrad=ctx2d.createLinearGradient(0,0,0,H);
+        bgGrad.addColorStop(0,'#0a0020'); bgGrad.addColorStop(1,'#060b18');
+        ctx2d.fillStyle=bgGrad; ctx2d.fillRect(0,0,W,H);
+      }
+      ctx2d.fillStyle='rgba(0,0,0,0.52)'; ctx2d.fillRect(0,0,W,H);
+      var vig=ctx2d.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.85);
+      vig.addColorStop(0,'transparent'); vig.addColorStop(1,'rgba(0,0,0,0.55)');
+      ctx2d.fillStyle=vig; ctx2d.fillRect(0,0,W,H);
+      ctx2d.fillStyle=accent; ctx2d.fillRect(0,0,W,8);
+      ctx2d.fillStyle=accent; ctx2d.fillRect(0,8,W,56);
+      ctx2d.fillStyle='#fff';
+      ctx2d.font="bold 26px 'Noto Sans Bengali',Arial,sans-serif";
+      ctx2d.textAlign='left'; ctx2d.fillText('◉ JOAF NEWS',20,46);
+      ctx2d.font="bold 22px 'Noto Sans Bengali',Arial,sans-serif";
+      ctx2d.textAlign='right'; ctx2d.fillStyle='rgba(255,255,255,0.9)';
+      ctx2d.fillText(moodLabelMap[mood]||'📢 সংবাদ',W-16,46);
+      var logoSize=180, logoY=90;
+      ctx2d.save(); ctx2d.shadowColor=accent; ctx2d.shadowBlur=25;
+      ctx2d.beginPath(); ctx2d.arc(W/2,logoY+logoSize/2,logoSize/2+6,0,Math.PI*2);
+      ctx2d.strokeStyle=accent; ctx2d.lineWidth=3; ctx2d.stroke(); ctx2d.restore();
+      if(logoImg) ctx2d.drawImage(logoImg,W/2-logoSize/2,logoY,logoSize,logoSize);
+      else { ctx2d.fillStyle=accent; ctx2d.font='bold 40px Arial'; ctx2d.textAlign='center'; ctx2d.fillText('JOAF',W/2,logoY+90); }
+      var dg=ctx2d.createLinearGradient(W/2-220,0,W/2+220,0);
+      dg.addColorStop(0,'transparent'); dg.addColorStop(0.5,accent); dg.addColorStop(1,'transparent');
+      ctx2d.fillStyle=dg; ctx2d.globalAlpha=Math.min(1,t*5);
+      ctx2d.fillRect(W/2-220,logoY+logoSize+12,440,4); ctx2d.globalAlpha=1;
+      var isOutro = slideIdx>=slideTexts.length;
+      if(!isOutro){
+        var rawT=(slideTexts[slideIdx]||'');
+        var cleanT=rawT.replace(/#\S+/g,'').replace(/Tags?:.*/gi,'').trim();
+        var len=cleanT.length;
+        var fontSize=len<40?50:len<80?40:len<140?32:26;
+        ctx2d.font='bold '+fontSize+'px \'Noto Sans Bengali\',Arial,sans-serif';
+        ctx2d.textAlign='center';
+        var words=cleanT.split(' '), lines2=[];
+        var line2='';
+        for(var wi=0;wi<words.length;wi++){
+          var test=line2+words[wi]+' ';
+          if(ctx2d.measureText(test).width>W-60&&line2){lines2.push(line2.trim());line2=words[wi]+' ';}
+          else line2=test;
+        }
+        if(line2.trim()) lines2.push(line2.trim());
+        var lineH=fontSize*1.6, startY2=logoY+logoSize+45;
+        for(var li=0;li<Math.min(lines2.length,6);li++){
+          var rev=Math.min(1,Math.max(0,t*6-li*0.4));
+          ctx2d.globalAlpha=rev;
+          ctx2d.shadowColor='rgba(0,0,0,0.9)'; ctx2d.shadowBlur=10;
+          ctx2d.fillStyle=li%2===0?'#ffffff':(accent==='#ef4444'?'#fca5a5':accent==='#22c55e'?'#86efac':'#d8b4fe');
+          ctx2d.fillText(lines2[li],W/2,startY2+li*lineH);
+          ctx2d.shadowBlur=0; ctx2d.globalAlpha=1;
+        }
+        ctx2d.font='bold 20px Arial'; ctx2d.fillStyle=accent; ctx2d.textAlign='center';
+        ctx2d.fillText('● '+(slideIdx+1)+' / '+slideTexts.length,W/2,H-170);
+      } else {
+        if(logoImg) ctx2d.drawImage(logoImg,W/2-110,H/2-260,220,220);
+        ctx2d.font="bold 36px 'Noto Sans Bengali',Arial"; ctx2d.fillStyle='#fff'; ctx2d.textAlign='center';
+        ctx2d.shadowColor=accent; ctx2d.shadowBlur=20;
+        ctx2d.fillText('জুলাই অনলাইন অ্যাক্টিভিস্টস ফোরাম',W/2,H/2+20);
+        ctx2d.shadowBlur=0;
+        ctx2d.font='bold 26px Arial'; ctx2d.fillStyle=accent;
+        ctx2d.fillText('julyforum.com',W/2,H/2+70);
+      }
+      var prog=frameNum/TOTAL_FRAMES;
+      ctx2d.fillStyle='rgba(255,255,255,0.12)';
+      ctx2d.beginPath(); ctx2d.roundRect(30,H-130,W-60,8,4); ctx2d.fill();
+      ctx2d.fillStyle=accent;
+      ctx2d.beginPath(); ctx2d.roundRect(30,H-130,(W-60)*prog,8,4); ctx2d.fill();
+      ctx2d.fillStyle='rgba(0,0,0,0.5)'; ctx2d.fillRect(0,H-48,W,48);
+      ctx2d.font='bold 18px Arial'; ctx2d.fillStyle=accent; ctx2d.textAlign='center';
+      ctx2d.fillText('julyforum.com',W/2,H-18);
+      ctx2d.fillStyle='rgba(255,255,255,0.6)'; ctx2d.fillRect(0,H-6,W,6);
+      frameNum++;
+      setTimeout(drawNextFrame, 1000/FPS);
+    }
+    drawNextFrame();
+    log(4,'Frames + Audio compile হচ্ছে...','active');
+  });
+  log(5,'Video ready — '+(videoBlob.size/1024/1024).toFixed(1)+' MB','ok');
   return videoBlob;
 }
-
+function playSlideAudioToDestination(audioCtx, dest, mood, slideIndex, totalSlides, duration) {
+  var master = audioCtx.createGain();
+  var now = audioCtx.currentTime;
+  master.gain.setValueAtTime(0, now);
+  master.gain.linearRampToValueAtTime(0.65, now+0.25);
+  master.gain.setValueAtTime(0.65, now+duration-0.4);
+  master.gain.linearRampToValueAtTime(0, now+duration);
+  try { master.connect(dest); } catch(e){}
+  try { master.connect(audioCtx.destination); } catch(e){}
+  function makeRev(d,dc){
+    var len=audioCtx.sampleRate*d;
+    var buf=audioCtx.createBuffer(2,len,audioCtx.sampleRate);
+    for(var ch=0;ch<2;ch++){var da=buf.getChannelData(ch);for(var i=0;i<len;i++)da[i]=(Math.random()*2-1)*Math.pow(1-i/len,dc);}
+    var conv=audioCtx.createConvolver(); conv.buffer=buf;
+    var g=audioCtx.createGain(); g.gain.value=0.28;
+    conv.connect(g); g.connect(master); return conv;
+  }
+  var rev=makeRev(2,3);
+  function n(freq,start,dur,vol,type){
+    vol=vol||0.25; type=type||'sine';
+    var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(0,now+start);
+    g.gain.linearRampToValueAtTime(vol,now+start+0.05);
+    g.gain.setValueAtTime(vol*0.7,now+start+dur*0.6);
+    g.gain.linearRampToValueAtTime(0,now+start+dur);
+    o.connect(g); g.connect(master); g.connect(rev);
+    o.start(now+start); o.stop(now+start+dur+0.1);
+  }
+  function p(start,vol,freq,dec){
+    vol=vol||0.4; freq=freq||80; dec=dec||0.1;
+    var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.frequency.setValueAtTime(freq,now+start);
+    o.frequency.exponentialRampToValueAtTime(freq*0.3,now+start+dec*2);
+    g.gain.setValueAtTime(vol,now+start);
+    g.gain.exponentialRampToValueAtTime(0.001,now+start+dec*3);
+    o.connect(g); g.connect(master); o.start(now+start); o.stop(now+start+dec*3+0.1);
+  }
+  function pad(freq,start,dur,vol){
+    vol=vol||0.12;
+    [1,1.5,2,3].forEach(function(h,i){
+      var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type='sine'; o.frequency.value=freq*h;
+      g.gain.setValueAtTime(0,now+start);
+      g.gain.linearRampToValueAtTime(vol/(i+1),now+start+0.8);
+      g.gain.setValueAtTime(vol/(i+1),now+start+dur-0.4);
+      g.gain.linearRampToValueAtTime(0,now+start+dur);
+      o.connect(g); g.connect(rev); o.start(now+start); o.stop(now+start+dur+0.1);
+    });
+  }
+  var si = slideIndex % 3;
+  if(mood==='urgent'){
+    if(si===0){ [220,277,330,440,554].forEach(function(f,i){ n(f,i*0.28,0.35,0.28,'sawtooth'); }); [0,0.5,1,1.5,2,2.5].forEach(function(t){ p(t,0.55,65,0.1); }); pad(110,0,duration,0.1); }
+    else if(si===1){ [330,415,494,659,554,440].forEach(function(f,i){ n(f,i*0.4,0.5,0.3,'square'); }); [0,0.2,0.5,0.7,1.2,1.4].forEach(function(t){ p(t,0.5,75,0.09); }); pad(165,0,duration,0.12); }
+    else { [440,554,659,880,784,659].forEach(function(f,i){ n(f,i*0.35,0.45,0.32,'sawtooth'); }); [0,0.15,0.3,0.6,0.75,0.9].forEach(function(t){ p(t,0.65,58,0.11); }); pad(220,0,duration,0.14); }
+  } else if(mood==='sad'){
+    if(si===0){ [523,466,415,370,330,294,261].forEach(function(f,i){ n(f,i*0.65,0.85,0.2,'sine'); }); pad(130,0,duration,0.1); [0,2,4].forEach(function(t){ p(t,0.12,88,0.22); }); }
+    else if(si===1){ [261,294,330,311,294,261,247,261].forEach(function(f,i){ n(f,i*0.5,0.7,0.18,'sine'); }); pad(130,0,duration,0.08); [0,1.5,3].forEach(function(t){ p(t,0.1,80,0.25); }); }
+    else { [294,330,370,349,330,311,294,261].forEach(function(f,i){ n(f,i*0.55,0.75,0.2,'sine'); }); pad(196,0,duration,0.1); }
+  } else if(mood==='positive'){
+    if(si===0){ [261,329,392,523,659,784,880].forEach(function(f,i){ n(f,i*0.28,0.38,0.26,'triangle'); }); [0,0.5,1,1.5,2].forEach(function(t){ p(t,0.28,100,0.07); }); pad(196,0,duration,0.1); }
+    else if(si===1){ [523,659,784,880,1047,880,784,659].forEach(function(f,i){ n(f,i*0.38,0.42,0.28,'triangle'); }); [0,0.25,0.5,0.75,1].forEach(function(t){ p(t,0.32,110,0.06); }); pad(261,0,duration,0.12); }
+    else { [784,880,988,1047,988,880,784].forEach(function(f,i){ n(f,i*0.32,0.38,0.3,'triangle'); }); [0,0.3,0.6,0.9].forEach(function(t){ p(t,0.38,120,0.06); }); pad(392,0,duration,0.14); }
+  } else if(mood==='angry'){
+    if(si===0){ [110,138,165,220,196].forEach(function(f,i){ n(f,i*0.45,0.65,0.28,'sawtooth'); }); [0,0.25,0.5,0.75,1,1.25].forEach(function(t){ p(t,0.6,52,0.14); }); pad(55,0,duration,0.12); }
+    else if(si===1){ [0,0.2,0.4,0.6,0.8,1,1.2,1.4].forEach(function(t,i){ p(t,i%2===0?0.68:0.38,i%2===0?58:85,0.11); }); [165,220,196,247,220].forEach(function(f,i){ n(f,i*0.55,0.7,0.24,'square'); }); pad(110,0,duration,0.1); }
+    else { [0,0.12,0.25,0.38,0.5,0.62,0.75,0.88].forEach(function(t,i){ p(t,0.72,i%3===0?52:72,0.1); }); [220,277,330,415,494].forEach(function(f,i){ n(f,i*0.38,0.48,0.28,'sawtooth'); }); pad(110,0,duration,0.14); }
+  } else {
+    if(si===0){ [261,329,392,329,392,466,392,329].forEach(function(f,i){ n(f,i*0.38,0.48,0.2,'triangle'); }); [0,1,2,3].forEach(function(t){ p(t,0.18,85,0.1); }); pad(130,0,duration,0.08); }
+    else if(si===1){ [329,392,440,494,440,392,349,329].forEach(function(f,i){ n(f,i*0.42,0.52,0.22,'sine'); }); [0,1.5,3].forEach(function(t){ p(t,0.16,90,0.12); }); pad(196,0,duration,0.1); }
+    else { [392,440,494,523,494,440,392,349].forEach(function(f,i){ n(f,i*0.45,0.55,0.2,'sine'); }); pad(261,0,duration,0.12); [0,2,4].forEach(function(t){ p(t,0.14,95,0.1); }); }
+  }
+  if(slideIndex>0){
+    var wb=audioCtx.createBuffer(1,audioCtx.sampleRate*0.3,audioCtx.sampleRate);
+    var wd=wb.getChannelData(0);
+    for(var i=0;i<wd.length;i++) wd[i]=(Math.random()*2-1)*Math.sin(i/wd.length*Math.PI)*0.5;
+    var ws=audioCtx.createBufferSource(); ws.buffer=wb;
+    var wf=audioCtx.createBiquadFilter(); wf.type='bandpass';
+    wf.frequency.setValueAtTime(700,now); wf.frequency.linearRampToValueAtTime(150,now+0.3);
+    var wg=audioCtx.createGain(); wg.gain.value=0.25;
+    ws.connect(wf); wf.connect(wg); wg.connect(master); ws.start(now);
+  }
+}
 function playSlideSound(audioCtx, dest, mood, slideIndex, totalSlides) {
   const now = audioCtx.currentTime;
   const dur = 6.5;
