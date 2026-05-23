@@ -679,33 +679,7 @@ function desel(){selId=null;updPanel();drawOv();}
 document.addEventListener('DOMContentLoaded',()=>{
   const ov=document.getElementById('cvOv');
 
-  // mousedown handled by pointerdown
-  if(false){const mx=0,my=0;
-    // check handles on selected el first
-    if(selId&&ELS[selId]){
-      const r=elR(ELS[selId]);
-      const hi=hitH(r,mx,my);
-      if(hi>=0){
-        iact={type:'resize',handle:hi,startMouse:{x:mx,y:my},startEl:{...ELS[selId]}};
-        return;
-      }
-      if(inBox(r,mx,my)){
-        iact={type:'move',startMouse:{x:mx,y:my},startEl:{...ELS[selId]}};
-        return;
-      }
-    }
-    // hit test all (reversed = topmost first)
-    const ids=Object.keys(ELS).reverse();
-    let hit=null;
-    for(const id of ids){
-      const el=ELS[id];if(!el.vis)continue;
-      if(inBox(elR(el),mx,my)){hit=el;break;}
-    }
-    selId=hit?hit.id:null;
-    if(hit) iact={type:'move',startMouse:{x:mx,y:my},startEl:{...hit}};
-    else iact=null;
-    updPanel();drawOv();
-  });
+  // mousedown handled by pointerdown (legacy handler removed)
 
   ov.addEventListener('mousemove',e=>{
     const mx=e.offsetX,my=e.offsetY;
