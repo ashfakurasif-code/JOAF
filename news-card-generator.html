@@ -562,27 +562,26 @@ async function dFull(cv,fe=false){
     ctx.fillStyle='rgba(255,255,255,.09)';ctx.font=`${Math.round(38*sc)}px sans-serif`;
     ctx.textAlign='center';ctx.fillText('📸',W/2,imgZY+imgZH/2+12*sc);
   }
-  const txtZY=imgZY+(sImg?Math.round(imgZH*0.42):0);
+  const txtZY=sImg?(imgZY+Math.round(imgZH*0.45)):(topEnd+10*sc);
   const txtZEnd=sFt?(H-ftH):H;
   const tg=ctx.createLinearGradient(0,txtZY,0,txtZEnd);
   tg.addColorStop(0,bg+'00');tg.addColorStop(0.05,bg+'cc');tg.addColorStop(0.15,bg);tg.addColorStop(1,bg);
   ctx.fillStyle=tg;ctx.fillRect(0,txtZY,W,txtZEnd-txtZY);
-  const defBadgeY=txtZY+14*sc;
-let tY=elPos.badge?elPos.badge.y:defBadgeY;
+  const defBadgeY=txtZY+14*sc;let tY=defBadgeY;
   if(sCat){
     ctx.font=`800 ${cSz}px 'Hind Siliguri',sans-serif`;ctx.textAlign='left';
     const cbW=ctx.measureText(catLabel).width+cPX*2,cbH=cSz+cPY*2;
-    const badgeX=elPos.badge?elPos.badge.x:pad;
+    const badgeX=pad;
 ctx.fillStyle=cBC;rr(ctx,badgeX,tY,cbW,cbH,5*sc);ctx.fill();
     ctx.fillStyle=cTxt;ctx.fillText(catLabel,badgeX+cPX,tY+cPY+cSz*0.85);
-    if(!elPos.hl)tY+=(hlLines.slice(0,5).length*hlSz*hlLH+8*sc);
+    tY+=hlLines.slice(0,5).length*hlSz*hlLH+8*sc;
   }
   if(sHL){
     ctx.font=`900 ${hlSz}px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
     ctx.textAlign='left';ctx.fillStyle=hlC;
     ctx.shadowColor='rgba(0,0,0,.65)';ctx.shadowBlur=8;
-    const hlX=elPos.hl?elPos.hl.x:pad;
-const hlLines=wrp(ctx,hl,W-hlX*2);
+    const hlX=pad;
+const hlLines=wrp(ctx,hl,W-pad*2);
     hlLines.slice(0,5).forEach((ln,i)=>ctx.fillText(ln,hlX,tY+i*hlSz*hlLH));
     ctx.shadowBlur=0;tY+=hlLines.slice(0,5).length*hlSz*hlLH+8*sc;
   }
@@ -590,9 +589,7 @@ const hlLines=wrp(ctx,hl,W-hlX*2);
     const subSz=hlSz*0.52;
     ctx.font=`400 ${subSz}px 'Hind Siliguri',sans-serif`;
     ctx.fillStyle=hlC+'cc';ctx.textAlign='left';
-    const subX=elPos.sub?elPos.sub.x:pad;
-const subY=elPos.sub?elPos.sub.y:tY;
-wrp(ctx,sub,W-subX*2,subSz).slice(0,3).forEach((ln,i)=>ctx.fillText(ln,subX,subY+i*subSz*1.45));
+    wrp(ctx,sub,W-pad*2,subSz).slice(0,3).forEach((ln,i)=>ctx.fillText(ln,pad,tY+i*subSz*1.45));
   }
   if(sFt){
     const ftY=H-ftH;
