@@ -515,8 +515,16 @@ const JOAFComponents = {
   },
 
   initAnimations() {
-    const SEL='.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom';
+    const DIRS=['joaf-reveal','joaf-reveal-left','joaf-reveal-right','joaf-reveal-top','joaf-reveal-scale','joaf-reveal-zoom'];
+    const SEL='.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom,.joaf-reveal-top';
     if(!('IntersectionObserver' in window)){document.querySelectorAll(SEL).forEach(el=>el.classList.add('visible'));return;}
+    document.querySelectorAll('.joaf-reveal').forEach(el=>{
+      const keep=['joaf-reveal-left','joaf-reveal-right','joaf-reveal-scale','joaf-reveal-flip','joaf-reveal-zoom','joaf-reveal-top'];
+      if(!keep.some(c=>el.classList.contains(c))){
+        el.classList.remove('joaf-reveal');
+        el.classList.add(DIRS[Math.floor(Math.random()*DIRS.length)]);
+      }
+    });
     const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),i*55);obs.unobserve(e.target);}});},{threshold:.05,rootMargin:'0px 0px -30px 0px'});
     document.querySelectorAll(SEL).forEach(el=>{if(!el.classList.contains('visible'))obs.observe(el);});
   },
