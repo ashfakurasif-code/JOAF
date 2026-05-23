@@ -2724,8 +2724,8 @@ function renderAnalytics(){
       {val:hourCount,  sub:(hourDiff>=0?'▲ +':'▼ ')+Math.abs(hourDiff)+' আগের', subColor:hourDiff>=0?'var(--green)':'var(--red)'},
       {val:weekCount,  sub:null, subColor:null},
       {val:uniqueToday,sub:null, subColor:null},
-      {val:null,       sub:null, subColor:null}, // subs filled by initDashboard
-      {val:null,       sub:null, subColor:null}, // notifs filled by initDashboard
+      {val:anCachedSubs,  sub:null, subColor:null}, // subs from initDashboard cache
+      {val:anCachedNotifs,sub:null, subColor:null}, // notifs from initDashboard cache
     ];
 
     const kpiRow = document.getElementById('an-kpi-row');
