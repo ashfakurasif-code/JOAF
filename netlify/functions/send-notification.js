@@ -26,7 +26,12 @@ function toField(v) {
 async function getActiveSubscriptions() {
   // REST API-তে where clause সীমিত, তাই সব এনে JS-এ filter
   const url = `${BASE}/push_subscriptions?key=${FB_CONFIG.apiKey}&pageSize=500`;
-  const r = await fetch(url);
+  let r;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    r = await fetch(url);
+    if (r.status !== 429) break;
+    await new Promise(res => setTimeout(res, (attempt + 1) * 1500));
+  }
   if (!r.ok) throw new Error('Firestore GET failed: ' + r.status);
   const data = await r.json();
   return (data.documents || []).map(doc => {
