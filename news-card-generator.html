@@ -377,11 +377,16 @@ function hitTest(x,y){
   const tbH=g('sTH')*sc,ftH=g('sFH')*sc;
   if(y<tbH)return{type:'top'};
   if(y>ch-ftH)return{type:'ft'};
-  const imgH=Math.round(ch*0.36),imgY=tbH;
-  if(sImg&&y>=imgY&&y<=imgY+imgH)return{type:'img'};
-  const txtY=imgY+imgH;
-  if(sCat&&y>=txtY&&y<=txtY+40*sc)return{type:'badge'};
-  if(sHL&&y>=txtY+40*sc&&y<=txtY+160*sc)return{type:'hl'};
+  const imgZH=Math.round(ch*0.48),imgY=tbH;
+  const txtStartY=imgY+Math.round(imgZH*0.58);
+  if(tool==='move'||tool==='crop'){
+    if(sCat&&y>=txtStartY&&y<=txtStartY+44*sc)return{type:'badge'};
+    if(sHL&&y>=txtStartY+44*sc&&y<=txtStartY+200*sc)return{type:'hl'};
+  }
+  if(sImg&&y>=imgY&&y<=imgY+imgZH)return{type:'img'};
+  const txtY=imgY+imgZH;
+  if(sCat&&y>=txtY&&y<=txtY+44*sc)return{type:'badge'};
+  if(sHL&&y>=txtY+44*sc&&y<=txtY+200*sc)return{type:'hl'};
   return{type:'img'};
 }
 function mD(e){if(!SRC)return;const{x,y}=cvXY(e);const[cw,ch]=gSz();if(tool==='crop'||hitTest(x,y).type==='crop'){const ds={T:Math.abs(y-CT*ch),B:Math.abs(y-(1-CB)*ch),L:Math.abs(x-CL*cw),R:Math.abs(x-(1-CR)*cw)};const n=Object.entries(ds).reduce((a,b)=>b[1]<a[1]?b:a);drag={type:'crop_'+n[0],ox:x,oy:y};return;}if(tool==='img'||hitTest(x,y).type==='img'){drag={type:'img',ox:x,oy:y,sx:imgPanX,sy:imgPanY};return;}drag={type:'noop'};}
