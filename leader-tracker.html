@@ -1033,7 +1033,7 @@ window.voteLeader = async function(lid, type, btn) {
     await addDoc(col(_db, 'leader_votes'), {lid, type, ts: sts()});
   } catch(e) { console.warn('Vote save failed:', e); }
 };
-const REACT_EMOJIS = ['\U0001f525','\U0001f621','\U0001f622','\U0001f44f'];
+const REACT_EMOJIS = ['🔥','😡','😢','👏'];
 const REACT_CACHE = {};
 async function loadReacts() {
   try {
