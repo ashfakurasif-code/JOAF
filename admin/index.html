@@ -1439,7 +1439,8 @@ window.doLogout = function() {
       ADMIN_KEY = saved;
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
-      initDashboard();
+      const savedTab=localStorage.getItem('adminTab');
+      if(savedTab&&savedTab!=='dashboard'){const ni=document.querySelector(`.ni[onclick*="'${savedTab}'"]`);goPage(savedTab,ni);}else{initDashboard();}
     } else {
       localStorage.removeItem('joaf_admin_key');
     }
@@ -1463,6 +1464,8 @@ window.closeSidebar = function() {
 // ── Navigation ──────────────────────────────────────────
 window.addEventListener('message',function(e){if(e.data==='goAdmin')goPage('dashboard',document.querySelector('.ni:first-child'));});
 window.goPage = function(id, el) {
+  localStorage.setItem('adminTab', id);
+  localStorage.setItem('adminTab', id);
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
   const page = document.getElementById('page-'+id);
