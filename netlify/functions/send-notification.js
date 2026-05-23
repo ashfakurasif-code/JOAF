@@ -111,7 +111,7 @@ exports.handler = async (event) => {
     }
 
     // Appwrite থেকে active subscriptions নাও
-    let docs = await awList(COL_SUBS, ['equal("active", [true])']);
+    let docs = await awList(COL_SUBS);
 
     // district filter
     if (filterDistrict && ['blood','alert','weather'].includes(type)) {
