@@ -3745,21 +3745,18 @@ window.saOpenPostHelper = async function() {
   if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ সব page এ post হচ্ছে...</div>'; }
 
   try {
-    let imageBase64 = null, imageType = null;
+    let imageUrl = null;
     if (file) {
-      imageBase64 = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result.split(',')[1]);
-        r.onerror = rej;
-        r.readAsDataURL(file);
-      });
-      imageType = file.type || 'image/jpeg';
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', 'ml_default');
+      const cldRes = await fetch('https://api.cloudinary.com/v1_1/dou71pfe1/image/upload', { method: 'POST', body: fd });
+      const cldData = await cldRes.json();
+      if (!cldData.secure_url) throw new Error('Cloudinary upload failed: ' + (cldData.error?.message || 'unknown'));
+      imageUrl = cldData.secure_url;
     }
 
-    const resp = await fetch('/.netlify/functions/fb-autopost', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64, imageType, caption, excludeIds })
+      body: JSON.stringify({ imageUrl, caption, excludeIds })
     });
     const data = await resp.json();
 
