@@ -1545,9 +1545,8 @@ window.closeSidebar = function() {
 
 // ── Navigation ──────────────────────────────────────────
 window.addEventListener('message',function(e){if(e.data==='goAdmin')goPage('dashboard',document.querySelector('.ni:first-child'));});
+var _pageLoaded = new Set();
 window.goPage = function(id, el) {
-  localStorage.setItem('adminTab', id);
-  localStorage.setItem('adminTab', id);
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
   const page = document.getElementById('page-'+id);
@@ -1566,7 +1565,7 @@ window.goPage = function(id, el) {
     warrior: loadWarriors, bajar: loadBajar, medicine: loadMedicines,
     members: loadMembers, polls: loadPolls, forum: loadForum, analytics: loadAnalytics
   };
-  if (loaders[id]) loaders[id]();
+  if (loaders[id] && !_pageLoaded.has(id)) { _pageLoaded.add(id); loaders[id](); } else if (id === 'analytics') { loaders[id] && loaders[id](); }
   if(window.innerWidth <= 768) closeSidebar();
   // Stop analytics real-time listener when leaving that page
   if(id !== 'analytics' && typeof stopAnalyticsListener === 'function') stopAnalyticsListener();
@@ -3872,11 +3871,17 @@ window.fbHelperRemoveExclude = function(i) {
 window.saPreviewImg = function(input) {
   const file = input.files[0];
   if (!file) return;
-  const url = URL.createObjectURL(file);
+  const blob = file.slice(0, file.size, file.type);
+  blob._name = file.name;
+  blob._type = file.type;
+  if (window._saPreviewUrl) URL.revokeObjectURL(window._saPreviewUrl);
+  const url = URL.createObjectURL(blob);
+  window._saPreviewUrl = url;
+  window._saImgFile = blob;
   document.getElementById('sa-thumb').src = url;
   document.getElementById('sa-img-preview').style.display = 'block';
   document.getElementById('sa-img-label').textContent = '✅ ' + file.name;
-  window._saImgFile = file;
+  input.value = '';
 };
 
 window.saOpenPostHelper = async function() {
@@ -4035,8 +4040,9 @@ window.fbHelperOpenSuite = function(type) {
 function pushToSAPanel(file, previewSrc, isVideo, caption) {
   // Revoke previous objectURL to free memory
   if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); }
+  const blob = file.slice(0, file.size, file.type);
   window._saPreviewUrl = previewSrc;
-  window._saImgFile = file;
+  window._saImgFile = blob;
   const preview = document.getElementById('sa-img-preview');
   const label = document.getElementById('sa-img-label');
   if (preview) {
