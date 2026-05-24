@@ -536,7 +536,6 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
       <div class="ni" onclick="goPage('blood',this)"><span class="ic">🩸</span>রক্তদাতা <span class="nbadge green" id="b-blood">—</span></div>
       <div class="ni" onclick="goPage('press',this)"><span class="ic">📰</span>Press Release</div>
       <div class="ni" onclick="goPage('newscard',this)" style="color:var(--amber)"><span class="ic">🎨</span>News Card Generator</div>
-      <div class="ni" onclick="goPage('reelstudio',this)" style="color:var(--purple)"><span class="ic">🎬</span>FB Reel Studio</div>
       <div class="ni" onclick="goPage('fbpost',this)"><span class="ic">📢</span>FB Auto Post</div>
 
       <div class="nsec">Data</div>
@@ -584,10 +583,6 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
       <iframe src="/tools/news-card-generator.html" style="width:100%;flex:1;border:none;display:block;min-height:0;" id="ncgFrame"></iframe>
     </div>
 
-    <!-- ══ FB REEL STUDIO ══ -->
-    <div class="page" id="page-reelstudio" style="padding:0;overflow:hidden;height:calc(100vh - 48px);flex-direction:column;">
-      <iframe src="/tools/fb-reel-studio.html" style="width:100%;flex:1;border:none;display:block;min-height:0;" id="reelFrame"></iframe>
-    </div>
 
     <!-- ══ DASHBOARD ══ -->
     <div class="page active" id="page-dashboard">
@@ -1536,7 +1531,7 @@ window.goPage = function(id, el) {
     'alert-page':'🚨 সতর্কতা',blood:'🩸 রক্তদাতা',press:'📰 Press Release',
     leader:'🏛️ নেতা ট্র্যাকার',warrior:'✊ জুলাই যোদ্ধা',bajar:'🛒 বাজার দর',
     medicine:'💊 ওষুধের দাম',members:'👥 Members',polls:'🗳️ Polls',
-    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',fbpost:'📢 FB Auto Post',newscard:'🎨 News Card Generator',reelstudio:'🎬 FB Reel Studio'};
+    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',fbpost:'📢 FB Auto Post',newscard:'🎨 News Card Generator'};
   document.getElementById('pageTitle').textContent = titles[id] || id;
   // Lazy load page data
   const loaders = {
@@ -3375,7 +3370,7 @@ async function renderVideoWithAudio(slides, mood, rawText, logEl) {
     log(2,'Background '+(i+1)+'/3...','info');
     try {
       const seed = Math.floor(Math.random()*99999) + i*1111;
-      const fres = await fetch('https://image.pollinations.ai/prompt/'+fullPrompt+'?width=1080&height=1920&seed='+seed+'&nologo=true&model=flux');
+      const fres = await fetch('https://image.pollinations.ai/prompt/'+fullPrompt+'?width=608&height=1080&seed='+seed+'&nologo=true&model=flux');
       if (!fres.ok) throw new Error('failed');
       const fblob = await fres.blob();
       const fimgUrl = URL.createObjectURL(fblob);

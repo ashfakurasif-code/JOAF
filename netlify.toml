@@ -55,10 +55,3 @@
   to = "/.netlify/functions/press-release-og"
   status = 200
   query = {id = ":id"}
-# fb-reel-studio can be embedded in admin iframe (same origin)
-[[headers]]
-  for = "/tools/fb-reel-studio.html"
-  [headers.values]
-    Cache-Control = "public, max-age=300, stale-while-revalidate=600"
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
