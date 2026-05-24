@@ -2,6 +2,7 @@ const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
 const AW_PROJECT = '6a11b6cd000b59f318eb';
 const AW_KEY = process.env.APPWRITE_API_KEY;
 const DB_ID = 'joaf';
+const DEFAULT_DOC_PERMISSIONS = ['read("any")', 'update("any")', 'delete("any")'];
 
 const BASE_HEADERS = {
   'Content-Type': 'application/json',
@@ -126,8 +127,8 @@ async function awListAll(collection, queries = [], limit = 200) {
   return all;
 }
 
-async function awCreate(collection, data, docId = 'unique()') {
-  const payload = { documentId: safeDocId(docId) || 'unique()', data: encodeData(data), permissions: [] };
+async function awCreate(collection, data, docId = 'unique()', permissions = DEFAULT_DOC_PERMISSIONS) {
+  const payload = { documentId: safeDocId(docId) || 'unique()', data: encodeData(data), permissions };
   return awRequest(`/databases/${DB_ID}/collections/${collection}/documents`, {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -142,12 +143,12 @@ async function awUpdate(collection, docId, data) {
   });
 }
 
-async function awUpsert(collection, docId, data) {
+async function awUpsert(collection, docId, data, permissions = DEFAULT_DOC_PERMISSIONS) {
   const existing = await awGet(collection, docId);
   if (existing) {
     return awUpdate(collection, docId, data);
   }
-  return awCreate(collection, data, docId);
+  return awCreate(collection, data, docId, permissions);
 }
 
 module.exports = {
@@ -168,4 +169,5 @@ module.exports = {
   awCreate,
   awUpdate,
   awUpsert,
+  DEFAULT_DOC_PERMISSIONS,
 };

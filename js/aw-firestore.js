@@ -1,6 +1,7 @@
 const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
 const AW_PROJECT = '6a11b6cd000b59f318eb';
 const AW_DB = 'joaf';
+const DEFAULT_DOC_PERMISSIONS = ['read("any")', 'update("any")', 'delete("any")'];
 
 let _sdkPromise;
 let _apps = [];
@@ -221,7 +222,7 @@ export async function getDocs(ref) {
 export async function addDoc(colRef, data) {
   const { db, ID } = await getSdk();
   const payload = encodeData(data);
-  return db.createDocument(AW_DB, colRef.name, ID.unique(), payload);
+  return db.createDocument(AW_DB, colRef.name, ID.unique(), payload, DEFAULT_DOC_PERMISSIONS);
 }
 
 export async function setDoc(docRef, data, options = {}) {
@@ -240,13 +241,13 @@ export async function setDoc(docRef, data, options = {}) {
     try {
       return await db.updateDocument(AW_DB, docRef.name, id, merged);
     } catch (err) {
-      return await db.createDocument(AW_DB, docRef.name, id, merged);
+      return await db.createDocument(AW_DB, docRef.name, id, merged, DEFAULT_DOC_PERMISSIONS);
     }
   }
   try {
     return await db.updateDocument(AW_DB, docRef.name, id, payload);
   } catch (err) {
-    return await db.createDocument(AW_DB, docRef.name, id, payload);
+    return await db.createDocument(AW_DB, docRef.name, id, payload, DEFAULT_DOC_PERMISSIONS);
   }
 }
 

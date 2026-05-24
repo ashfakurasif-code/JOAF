@@ -12,10 +12,16 @@ const AW_PROJ = '6a11b6cd000b59f318eb';
 const AW_KEY  = 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b';
 const AW_DB   = 'joaf';
 
+const DEFAULT_COLLECTION_PERMISSIONS = ['read("any")', 'create("any")', 'update("any")', 'delete("any")'];
+const DEFAULT_DOC_PERMISSIONS = ['read("any")', 'update("any")', 'delete("any")'];
+const PRIVATE_DOC_PERMISSIONS = [];
+
 const COLLECTIONS = [
   {
     fs_col: 'push_subscriptions', aw_col: 'push_subscriptions',
-    fields: { endpoint:'string', subscriptionJson:'string', district:'string', active:'boolean', updatedAt:'string' }
+    fields: { endpoint:'string', subscriptionJson:'string', district:'string', active:'boolean', updatedAt:'string' },
+    collectionPermissions: [],
+    docPermissions: PRIVATE_DOC_PERMISSIONS
   },
   {
     fs_col: 'leaders', aw_col: 'leaders',
@@ -151,7 +157,28 @@ const AW_H = { 'Content-Type':'application/json', 'X-Appwrite-Project':AW_PROJ, 
 
 async function awColExists(col) {
   const r = await fetch(`${AW_BASE}/databases/${AW_DB}/collections/${col}`, { headers: AW_H });
-  return r.ok;
+  if (!r.ok) return null;
+  return await r.json();
+}
+
+async function awUpdateCollectionPermissions(col, existing, permissions) {
+  const body = {
+    name: existing?.name || col,
+    permissions,
+    documentSecurity: existing?.documentSecurity ?? true,
+    enabled: existing?.enabled ?? true,
+  };
+  const r = await fetch(`${AW_BASE}/databases/${AW_DB}/collections/${col}`, {
+    method: 'PUT',
+    headers: AW_H,
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const e = await r.text();
+    console.log(`  ⚠️  Permissions update failed: ${(e || '').slice(0, 120)}`);
+    return false;
+  }
+  return true;
 }
 
 async function awCreateAttr(col, key, type, size=500) {
@@ -204,18 +231,25 @@ function awExpectedType(t) {
   return 'string'; // string, string65535
 }
 
-async function awSetupCollection(col, fields, dynamic) {
-  const exists = await awColExists(col);
+async function awSetupCollection(col, fields, dynamic, collectionPermissions = DEFAULT_COLLECTION_PERMISSIONS) {
+  const existing = await awColExists(col);
+  const exists = !!existing;
 
   if (!exists) {
     console.log(`  🔨 Creating collection: ${col}`);
     const r = await fetch(`${AW_BASE}/databases/${AW_DB}/collections`, {
       method:'POST', headers:AW_H,
-      body: JSON.stringify({ collectionId:col, name:col, permissions:['read("any")'] })
+      body: JSON.stringify({ collectionId:col, name:col, permissions: collectionPermissions })
     });
     if (!r.ok) { console.log(`  ❌ Create failed: ${(await r.text()).slice(0,100)}`); return false; }
     await sleep(1000);
   } else {
+    const targetPerms = (collectionPermissions || []).slice().sort();
+    const currentPerms = (existing.permissions || []).slice().sort();
+    if (JSON.stringify(targetPerms) !== JSON.stringify(currentPerms)) {
+      console.log(`  🔐 Updating collection permissions`);
+      await awUpdateCollectionPermissions(col, existing, collectionPermissions);
+    }
     console.log(`  ℹ️  Collection exists — checking schema...`);
     // ── Schema audit: delete attrs with wrong type so they get recreated ──
     const existingAttrs = await awGetAttrs(col);
@@ -263,10 +297,10 @@ async function awSetupCollection(col, fields, dynamic) {
   return await awWaitAttrsReady(col, attrKeys);
 }
 
-async function awInsert(col, docId, data) {
+async function awInsert(col, docId, data, permissions = DEFAULT_DOC_PERMISSIONS) {
   const r = await fetch(`${AW_BASE}/databases/${AW_DB}/collections/${col}/documents`, {
     method:'POST', headers:AW_H,
-    body: JSON.stringify({ documentId:docId, data, permissions:[] })
+    body: JSON.stringify({ documentId:docId, data, permissions })
   });
   if (r.status === 409) return 'exists';
   if (!r.ok) { const e=await r.text(); return 'fail:' + (JSON.parse(e).message||e).slice(0,80); }
@@ -276,6 +310,8 @@ async function awInsert(col, docId, data) {
 // ── Per-collection migration ─────────────────────────────────
 async function migrateCollection(config) {
   const { fs_col, aw_col, fields, dynamic } = config;
+  const collectionPermissions = config.collectionPermissions ?? DEFAULT_COLLECTION_PERMISSIONS;
+  const docPermissions = config.docPermissions ?? DEFAULT_DOC_PERMISSIONS;
   console.log(`\n${'─'.repeat(50)}`);
   console.log(`📦 ${fs_col} → ${aw_col}`);
 
@@ -291,14 +327,18 @@ async function migrateCollection(config) {
   if (!fsDocs.length) { console.log(`  ⚠️  Empty — skip`); return { col:fs_col, ok:0, skip:0, fail:0 }; }
 
   // Layer 2: Setup Appwrite collection + wait for attrs
-  const ready = await awSetupCollection(aw_col, fields, dynamic);
+  const ready = await awSetupCollection(aw_col, fields, dynamic, collectionPermissions);
   if (!ready) return { col:fs_col, ok:0, skip:0, fail:fsDocs.length, error:'attr setup failed' };
 
   // Layer 3: Insert docs
-  let ok=0, skip=0, fail=0;
+  let ok=0, skip=0, fail=0, idChanges=0;
   for (const doc of fsDocs) {
     const { _id, ...rest } = doc;
     const docId = sanitizeId(_id);
+    if (docId !== _id) {
+      idChanges++;
+      if (idChanges <= 5) console.log(`    ⚠️  ID sanitized: ${_id} → ${docId}`);
+    }
 
     let data;
     if (dynamic) {
@@ -313,7 +353,7 @@ async function migrateCollection(config) {
       }
     }
 
-    const res = await awInsert(aw_col, docId, data);
+    const res = await awInsert(aw_col, docId, data, docPermissions);
     if      (res === 'ok')     ok++;
     else if (res === 'exists') skip++;
     else                       { fail++; console.log(`    ❌ ${docId}: ${res}`); }
@@ -321,6 +361,7 @@ async function migrateCollection(config) {
     await sleep(150);
   }
 
+  if (idChanges > 0) console.log(`  🧭 ID sanitized: ${idChanges}`);
   console.log(`  📊 ok=${ok} skip(exists)=${skip} fail=${fail}`);
   return { col:fs_col, ok, skip, fail };
 }
