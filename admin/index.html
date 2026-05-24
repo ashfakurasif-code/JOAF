@@ -1237,6 +1237,23 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <div id="fb-post-log" style="margin-top:10px;font-size:11px;max-height:180px;overflow-y:auto;"></div>
           </div>
+          <!-- STANDALONE FB POST CARD -->
+          <div class="card" style="margin:0;">
+            <div class="card-header" style="padding-bottom:8px;">
+              <div class="card-title" style="font-size:13px;">📤 সরাসরি FB Pages এ Post</div>
+            </div>
+            <div style="margin-bottom:10px;">
+              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">🖼️ Image বেছে নিন</label>
+              <div id="sa-drop" onclick="document.getElementById('sa-img-input').click()" style="border:2px dashed var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+                <input type="file" id="sa-img-input" accept="image/*" style="display:none" onchange="saPreviewImg(this)">
+                <div id="sa-img-preview" style="display:none;margin-bottom:6px;"><img id="sa-thumb" style="max-height:80px;border-radius:6px;border:1px solid var(--border)"></div>
+                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Click করে image select করুন</div>
+              </div>
+            </div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">✍️ Caption</label>
+            <textarea id="sa-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;margin-bottom:10px;" placeholder="Caption লিখুন..."></textarea>
+            <button onclick="saOpenPostHelper()" style="width:100%;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">📤 FB Pages এ Post করুন</button>
+          </div>
         </div>
       </div>
       <style>
@@ -3700,6 +3717,103 @@ window.fbHelperRemoveExclude = function(i) {
   list.splice(i, 1);
   localStorage.setItem('joaf_fb_exclude', JSON.stringify(list));
   fbHelperRenderExcludes();
+};
+
+window.saPreviewImg = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('sa-thumb').src = url;
+  document.getElementById('sa-img-preview').style.display = 'block';
+  document.getElementById('sa-img-label').textContent = '✅ ' + file.name;
+  window._saImgFile = file;
+};
+
+window.saOpenPostHelper = function() {
+  const caption = (document.getElementById('sa-caption').value || '').trim();
+  const file = window._saImgFile;
+
+  // Download image if selected
+  if (file) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(file);
+    a.download = file.name;
+    a.click();
+  }
+
+  // Copy caption
+  if (caption) {
+    navigator.clipboard.writeText(caption).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = caption; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    });
+  }
+
+  // Show popup
+  let popup = document.getElementById('fb-post-helper-popup');
+  if (popup) popup.remove();
+  popup = document.createElement('div');
+  popup.id = 'fb-post-helper-popup';
+  popup.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);';
+
+  const excList = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  const excHtml = excList.length
+    ? '<div style="margin-top:8px;padding:8px 10px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:6px;font-size:11px;color:var(--amber);line-height:1.7;">⚠️ এই page গুলো skip করুন:<br><b>' + excList.join(', ') + '</b></div>'
+    : '';
+
+  popup.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:400px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.6);font-family:inherit;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:900;color:#fff;">📤 FB Pages এ Post</div>
+        <button onclick="document.getElementById('fb-post-helper-popup').remove()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:0 4px;line-height:1;">×</button>
+      </div>
+      <div style="padding:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;font-size:12px;color:var(--green);margin-bottom:14px;line-height:1.6;">
+        ${file ? '✅ Image download শুরু হয়েছে' : '⚠️ কোনো image select করা হয়নি'}<br>
+        ${caption ? '✅ Caption clipboard এ copy হয়েছে' : '⚠️ Caption খালি'}
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">Meta Business Suite খুলুন → Create Post → সব page select করুন → Image upload → Caption paste করুন</div>
+      <div style="display:flex;gap:8px;margin-bottom:4px;">
+        <button onclick="window.open('https://business.facebook.com/latest/composer/?entry_point=biz_mgr_nav_menu','_blank')" style="flex:1;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🖼️ Image Post</button>
+        <button onclick="window.open('https://business.facebook.com/latest/reels_composer/','_blank')" style="flex:1;padding:11px;background:#e1306c;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🎬 Reel</button>
+      </div>
+      ${excHtml}
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">⚙️ Exclude Pages</div>
+        <div id="sa-exc-tags" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;min-height:20px;"></div>
+        <div style="display:flex;gap:6px;">
+          <input id="sa-exc-input" placeholder="Page name..." style="flex:1;padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit;" onkeydown="if(event.key==='Enter')saAddExclude()">
+          <button onclick="saAddExclude()" style="padding:7px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ Add</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(popup);
+  popup.addEventListener('click', e => { if(e.target===popup) popup.remove(); });
+  saRenderExcludes();
+};
+
+window.saAddExclude = function() {
+  const inp = document.getElementById('sa-exc-input');
+  const val = (inp.value || '').trim();
+  if (!val) return;
+  const list = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  if (!list.includes(val)) { list.push(val); localStorage.setItem('joaf_fb_exclude', JSON.stringify(list)); }
+  inp.value = '';
+  saRenderExcludes();
+};
+
+window.saRenderExcludes = function() {
+  const container = document.getElementById('sa-exc-tags');
+  if (!container) return;
+  const list = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  container.innerHTML = list.map((p,i) => `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:50px;font-size:11px;color:#fca5a5;">🚫 ${p}<button onclick="saRemoveExclude(${i})" style="background:none;border:none;color:#fca5a5;cursor:pointer;font-size:13px;padding:0;line-height:1;">×</button></span>`).join('');
+};
+
+window.saRemoveExclude = function(i) {
+  const list = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  list.splice(i,1);
+  localStorage.setItem('joaf_fb_exclude', JSON.stringify(list));
+  saRenderExcludes();
 };
 
 window.fbHelperOpenSuite = function(type) {
