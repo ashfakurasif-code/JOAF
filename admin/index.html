@@ -4027,25 +4027,13 @@ window.saOpenPostHelper = async function() {
             method: 'POST', body: fd
           });
         } else if (file) {
-          // Image post: step 1 — upload unpublished photo to get media_fbid
+          // Image post — single step: source + message directly to /photos
           const fdPhoto = new FormData();
           fdPhoto.append('source', file);
-          fdPhoto.append('published', 'false');
+          fdPhoto.append('message', caption);
           fdPhoto.append('access_token', page.access_token);
-          const uploadRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/photos`, {
+          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/photos`, {
             method: 'POST', body: fdPhoto
-          });
-          const uploadData = await uploadRes.json();
-          if (uploadData.error) { results.push({ name: page.name, ok: false, error: uploadData.error.message }); continue; }
-          // Step 2 — publish feed post with attached photo
-          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: caption,
-              attached_media: [{ media_fbid: uploadData.id }],
-              access_token: page.access_token
-            })
           });
         } else {
           postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
