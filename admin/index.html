@@ -3243,126 +3243,283 @@ News: ${text}` });
 
 // ── INSTANT CARD RENDERER (1080x1920, hook-first) ──────────
 async function drawInstantCard(slideTexts, mood, hook, rawText) {
+
   const canvas = document.getElementById('fb-card-canvas');
+
   const ctx = canvas.getContext('2d');
+
   const W = 1080, H = 1920;
 
-  // Mood color map
   const moodColors = {
-    urgent:   { bg1: '#1a0000', bg2: '#2d0505', accent: '#ef4444', sec: '#fca5a5' },
-    sad:      { bg1: '#030318', bg2: '#0d1240', accent: '#818cf8', sec: '#c7d2fe' },
-    positive: { bg1: '#001208', bg2: '#003d18', accent: '#22c55e', sec: '#86efac' },
-    angry:    { bg1: '#0d0300', bg2: '#2d1000', accent: '#f97316', sec: '#fed7aa' },
-    neutral:  { bg1: '#060b18', bg2: '#1e1034', accent: '#a855f7', sec: '#d8b4fe' },
+
+    urgent:   { bg1: '#0d0000', bg2: '#3d0a0a', accent: '#ef4444', sec: '#fca5a5', glow: '#ff000044' },
+
+    sad:      { bg1: '#010112', bg2: '#0d1340', accent: '#818cf8', sec: '#c7d2fe', glow: '#4444ff33' },
+
+    positive: { bg1: '#001008', bg2: '#003d18', accent: '#22c55e', sec: '#86efac', glow: '#00ff4433' },
+
+    angry:    { bg1: '#0d0200', bg2: '#3d1500', accent: '#f97316', sec: '#fed7aa', glow: '#ff770033' },
+
+    neutral:  { bg1: '#05030f', bg2: '#1a0f30', accent: '#a855f7', sec: '#d8b4fe', glow: '#aa44ff33' },
+
   };
+
   const c = moodColors[mood] || moodColors.neutral;
 
-  // Background gradient
-  const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, c.bg2); bg.addColorStop(1, c.bg1);
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  // ── BACKGROUND: deep radial gradient ──
 
-  // Vignette
-  const vig = ctx.createRadialGradient(W/2, H/2, H*0.15, W/2, H/2, H*0.75);
-  vig.addColorStop(0, 'transparent'); vig.addColorStop(1, 'rgba(0,0,0,0.6)');
-  ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = c.bg1; ctx.fillRect(0, 0, W, H);
 
-  // Top accent bar
-  const barGrad = ctx.createLinearGradient(0, 0, W, 0);
-  barGrad.addColorStop(0, 'transparent'); barGrad.addColorStop(0.3, c.accent); barGrad.addColorStop(0.7, c.sec); barGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = barGrad; ctx.fillRect(0, 0, W, 10);
+  const radBg = ctx.createRadialGradient(W/2, H*0.35, 80, W/2, H*0.35, H*0.85);
 
-  // JOAF badge top-left
-  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(24, 20, 200, 54, 10); ctx.fill();
-  ctx.font = "bold 28px 'Noto Sans Bengali',Arial,sans-serif"; ctx.fillStyle = c.accent; ctx.textAlign = 'left';
-  ctx.fillText('⚡ JOAF', 40, 57);
+  radBg.addColorStop(0, c.bg2);
 
-  // Mood label top-right
-  const moodLabels = { urgent: '🔴 জরুরি', sad: '😢 দুঃখজনক', positive: '✅ সুখবর', angry: '⚠️ সতর্কতা', neutral: '📢 সংবাদ' };
-  ctx.font = "bold 26px 'Noto Sans Bengali',Arial,sans-serif"; ctx.fillStyle = c.sec; ctx.textAlign = 'right';
-  ctx.fillText(moodLabels[mood] || '📢', W - 30, 57);
+  radBg.addColorStop(0.6, c.bg1);
 
-  // Logo (if available)
-  if (window.JOAF_LOGO_IMG && window._logoLoaded) {
-    ctx.save(); ctx.globalAlpha = 0.7;
-    ctx.drawImage(window.JOAF_LOGO_IMG, W/2 - 80, 90, 160, 160);
-    ctx.restore();
+  radBg.addColorStop(1, '#000000');
+
+  ctx.fillStyle = radBg; ctx.fillRect(0, 0, W, H);
+
+  // ── NOISE TEXTURE overlay ──
+
+  for (let i = 0; i < 8000; i++) {
+
+    const x = Math.random()*W, y = Math.random()*H;
+
+    ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.025})`;
+
+    ctx.fillRect(x, y, 1, 1);
+
   }
 
-  // Divider
-  const divGrad = ctx.createLinearGradient(W/2-300, 0, W/2+300, 0);
-  divGrad.addColorStop(0, 'transparent'); divGrad.addColorStop(0.5, c.accent); divGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = divGrad; ctx.fillRect(W/2 - 300, 270, 600, 4);
+  // ── TOP ACCENT BAR ──
 
-  // Hook text — GIANT, scroll-stopper
-  const hookText = hook || slideTexts[0] || rawText.substring(0, 60);
-  const hookFontSize = hookText.length < 20 ? 96 : hookText.length < 35 ? 78 : 62;
-  ctx.font = `bold ${hookFontSize}px 'Noto Sans Bengali',Arial,sans-serif`;
-  ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
-  const hookWords = hookText.split(' ');
-  const hookLines = [];
-  let hLine = '';
-  for (const w of hookWords) {
-    if (ctx.measureText(hLine + w + ' ').width > 960 && hLine) { hookLines.push(hLine.trim()); hLine = w + ' '; }
-    else hLine += w + ' ';
-  }
-  if (hLine.trim()) hookLines.push(hLine.trim());
-  const hookStartY = 320;
-  hookLines.forEach((ln, li) => {
-    ctx.shadowColor = c.accent; ctx.shadowBlur = 20;
-    ctx.fillStyle = li % 2 === 0 ? '#ffffff' : c.sec;
-    ctx.fillText(ln, W/2, hookStartY + li * hookFontSize * 1.25);
-    ctx.shadowBlur = 0;
-  });
+  const barGrad = ctx.createLinearGradient(0,0,W,0);
 
-  // Content slides text
-  const contentStartY = hookStartY + hookLines.length * hookFontSize * 1.25 + 60;
-  const contentFontSize = 52;
-  let curY = contentStartY;
-  slideTexts.slice(0, 3).forEach((slideText, si) => {
-    if (si === 0) return; // hook already shown
-    const cleanT = slideText.replace(/#\S+/g, '').trim();
-    ctx.font = `bold ${contentFontSize}px 'Noto Sans Bengali',Arial,sans-serif`;
-    ctx.fillStyle = si % 2 === 0 ? c.sec : '#e0e0ff';
-    ctx.textAlign = 'center';
-    const sWords = cleanT.split(' ');
-    const sLines = [];
-    let sLine = '';
-    for (const w of sWords) {
-      if (ctx.measureText(sLine + w + ' ').width > 940 && sLine) { sLines.push(sLine.trim()); sLine = w + ' '; }
-      else sLine += w + ' ';
-    }
-    if (sLine.trim()) sLines.push(sLine.trim());
-    sLines.forEach((ln, li) => {
-      ctx.fillText(ln, W/2, curY + li * contentFontSize * 1.4);
-    });
-    curY += sLines.length * contentFontSize * 1.4 + 40;
-  });
+  barGrad.addColorStop(0,'transparent'); barGrad.addColorStop(0.3,c.accent); barGrad.addColorStop(0.7,c.sec); barGrad.addColorStop(1,'transparent');
 
-  // Pulsing rings illustration (middle area)
-  const ringY = Math.max(curY + 100, 1350);
-  for (let r = 0; r < 4; r++) {
-    const radius = 60 + r * 70;
-    ctx.beginPath(); ctx.arc(W/2, ringY, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = c.accent; ctx.globalAlpha = 0.12 - r * 0.025; ctx.lineWidth = 3; ctx.stroke();
-  }
-  ctx.globalAlpha = 0.6;
-  ctx.beginPath(); ctx.arc(W/2, ringY, 40, 0, Math.PI * 2);
-  ctx.fillStyle = c.accent; ctx.fill();
-  ctx.globalAlpha = 1;
+  ctx.fillStyle = barGrad; ctx.fillRect(0, 0, W, 8);
 
-  // Progress bar
-  ctx.fillStyle = c.accent + '30'; ctx.beginPath(); ctx.roundRect(60, 1800, W-120, 12, 6); ctx.fill();
-  ctx.fillStyle = c.accent; ctx.beginPath(); ctx.roundRect(60, 1800, W-120, 12, 6); ctx.fill();
+  // ── JOAF BADGE top-left ──
 
-  // Bottom watermark
-  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 1850, W, 70);
+  ctx.save();
+
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+
+  ctx.beginPath(); ctx.roundRect(28, 28, 210, 60, 12); ctx.fill();
+
+  ctx.strokeStyle = c.accent + '88'; ctx.lineWidth = 1.5;
+
+  ctx.beginPath(); ctx.roundRect(28, 28, 210, 60, 12); ctx.stroke();
+
   ctx.font = "bold 30px 'Noto Sans Bengali',Arial,sans-serif";
-  ctx.fillStyle = c.accent; ctx.textAlign = 'center';
-  ctx.fillText('julyforum.com', W/2, 1893);
 
-  // Bottom bar
-  ctx.fillStyle = barGrad; ctx.fillRect(0, H - 10, W, 10);
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left';
+
+  ctx.fillText('⚡', 44, 68);
+
+  ctx.fillStyle = c.accent;
+
+  ctx.fillText('JOAF', 80, 68);
+
+  ctx.restore();
+
+  // ── MOOD BADGE top-right ──
+
+  const moodLabels = { urgent:'🔴 জরুরি', sad:'😢 দুঃখজনক', positive:'✅ সুখবর', angry:'⚠️ সতর্কতা', neutral:'📢 সংবাদ' };
+
+  const mLabel = moodLabels[mood] || '📢 সংবাদ';
+
+  ctx.save();
+
+  ctx.font = "bold 26px 'Noto Sans Bengali',Arial,sans-serif";
+
+  const mw = ctx.measureText(mLabel).width + 40;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+
+  ctx.beginPath(); ctx.roundRect(W - mw - 20, 28, mw, 60, 12); ctx.fill();
+
+  ctx.strokeStyle = c.sec + '66'; ctx.lineWidth = 1.5;
+
+  ctx.beginPath(); ctx.roundRect(W - mw - 20, 28, mw, 60, 12); ctx.stroke();
+
+  ctx.fillStyle = c.sec; ctx.textAlign = 'right';
+
+  ctx.fillText(mLabel, W - 32, 68);
+
+  ctx.restore();
+
+  // ── DIVIDER LINE ──
+
+  const divGrad = ctx.createLinearGradient(W/2-400,0,W/2+400,0);
+
+  divGrad.addColorStop(0,'transparent'); divGrad.addColorStop(0.5,c.accent); divGrad.addColorStop(1,'transparent');
+
+  ctx.fillStyle = divGrad; ctx.fillRect(W/2-400, 110, 800, 3);
+
+  // ── HOOK TEXT — giant scroll-stopper ──
+
+  const hookText = hook || slideTexts[0] || rawText.substring(0, 60);
+
+  const hookFontSize = hookText.length < 18 ? 100 : hookText.length < 30 ? 82 : hookText.length < 45 ? 68 : 56;
+
+  ctx.font = `900 ${hookFontSize}px 'Noto Sans Bengali',Arial,sans-serif`;
+
+  ctx.textAlign = 'center';
+
+  const hookWords = hookText.split(' ');
+
+  const hookLines = [];
+
+  let hLine = '';
+
+  for (const w of hookWords) {
+
+    if (ctx.measureText(hLine + w + ' ').width > 980 && hLine) { hookLines.push(hLine.trim()); hLine = w + ' '; }
+
+    else hLine += w + ' ';
+
+  }
+
+  if (hLine.trim()) hookLines.push(hLine.trim());
+
+  const hookStartY = 180;
+
+  hookLines.forEach((ln, li) => {
+
+    const y = hookStartY + li * hookFontSize * 1.28;
+
+    // Glow
+
+    ctx.save();
+
+    ctx.shadowColor = c.accent; ctx.shadowBlur = 40;
+
+    ctx.fillStyle = li === 0 ? '#ffffff' : c.sec;
+
+    ctx.fillText(ln, W/2, y);
+
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+
+  });
+
+  // ── ACCENT GLOW under hook ──
+
+  const hookEndY = hookStartY + hookLines.length * hookFontSize * 1.28;
+
+  const glowGrad = ctx.createRadialGradient(W/2, hookEndY + 40, 10, W/2, hookEndY + 40, 320);
+
+  glowGrad.addColorStop(0, c.glow); glowGrad.addColorStop(1, 'transparent');
+
+  ctx.fillStyle = glowGrad; ctx.fillRect(0, hookEndY - 60, W, 400);
+
+  // ── THICK ACCENT DIVIDER ──
+
+  ctx.fillStyle = divGrad; ctx.fillRect(W/2-300, hookEndY + 30, 600, 5);
+
+  // ── CONTENT SLIDES ──
+
+  let curY = hookEndY + 90;
+
+  const contentFontSize = 54;
+
+  slideTexts.slice(1, 5).forEach((slideText, si) => {
+
+    const cleanT = slideText.replace(/#\S+/g, '').replace(/^\d+\.\s*/, '').trim();
+
+    if (!cleanT) return;
+
+    ctx.font = `bold ${contentFontSize}px 'Noto Sans Bengali',Arial,sans-serif`;
+
+    ctx.textAlign = 'center';
+
+    const sWords = cleanT.split(' ');
+
+    const sLines = [];
+
+    let sLine = '';
+
+    for (const w of sWords) {
+
+      if (ctx.measureText(sLine + w + ' ').width > 960 && sLine) { sLines.push(sLine.trim()); sLine = w + ' '; }
+
+      else sLine += w + ' ';
+
+    }
+
+    if (sLine.trim()) sLines.push(sLine.trim());
+
+    // Bullet pill
+
+    ctx.save();
+
+    ctx.fillStyle = c.accent + '22';
+
+    const pillH = sLines.length * contentFontSize * 1.35 + 30;
+
+    ctx.beginPath(); ctx.roundRect(60, curY - contentFontSize, W - 120, pillH + 10, 16); ctx.fill();
+
+    ctx.strokeStyle = c.accent + '44'; ctx.lineWidth = 1;
+
+    ctx.beginPath(); ctx.roundRect(60, curY - contentFontSize, W - 120, pillH + 10, 16); ctx.stroke();
+
+    ctx.restore();
+
+    // Bullet dot
+
+    ctx.fillStyle = c.accent;
+
+    ctx.beginPath(); ctx.arc(90, curY - contentFontSize/2 + 8, 10, 0, Math.PI*2); ctx.fill();
+
+    sLines.forEach((ln, li) => {
+
+      ctx.fillStyle = si % 2 === 0 ? '#f0f0ff' : c.sec;
+
+      ctx.shadowColor = c.accent; ctx.shadowBlur = 8;
+
+      ctx.fillText(ln, W/2, curY + li * contentFontSize * 1.35);
+
+      ctx.shadowBlur = 0;
+
+    });
+
+    curY += sLines.length * contentFontSize * 1.35 + 55;
+
+  });
+
+  // ── BOTTOM GLOW ──
+
+  const botGlow = ctx.createLinearGradient(0, H-400, 0, H);
+
+  botGlow.addColorStop(0,'transparent'); botGlow.addColorStop(1, c.glow);
+
+  ctx.fillStyle = botGlow; ctx.fillRect(0, H-400, W, 400);
+
+  // ── www.julyforum.com watermark ──
+
+  ctx.save();
+
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, H-80, W, 80);
+
+  ctx.font = "bold 32px 'Noto Sans Bengali',Arial,sans-serif";
+
+  ctx.fillStyle = c.accent; ctx.textAlign = 'center';
+
+  ctx.shadowColor = c.accent; ctx.shadowBlur = 12;
+
+  ctx.fillText('www.julyforum.com', W/2, H - 32);
+
+  ctx.shadowBlur = 0;
+
+  ctx.restore();
+
+  // ── BOTTOM BAR ──
+
+  ctx.fillStyle = barGrad; ctx.fillRect(0, H - 8, W, 8);
+
 }
 
 // ── Status Logger ──────────────────────────────────────────────
