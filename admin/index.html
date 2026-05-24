@@ -3571,18 +3571,144 @@ function playSlideAudioToDestination(audioCtx,dest,mood,slideIndex,totalSlides,d
 }
 
 window.fbPostToReels = async function() {
+  // Build or show the popup
+  let popup = document.getElementById('fb-post-helper-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'fb-post-helper-popup';
+    popup.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);';
+    popup.innerHTML = `
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:420px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,0.6);font-family:inherit;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+          <div style="font-size:15px;font-weight:900;color:#fff;">📤 FB Pages এ Post করুন</div>
+          <button onclick="document.getElementById('fb-post-helper-popup').remove()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;">×</button>
+        </div>
+
+        <!-- Step 1: Image -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">STEP 1 — Image Download করুন</div>
+          <button id="fbh-img-btn" onclick="fbHelperDownloadImg()" style="width:100%;padding:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left;">⬇️ Image Save করুন <span style="font-size:10px;color:var(--text3);font-weight:400;">(joaf-post.jpg)</span></button>
+          <div id="fbh-img-status" style="font-size:10px;color:var(--green);margin-top:4px;display:none;">✅ Image ডাউনলোড হয়েছে</div>
+        </div>
+
+        <!-- Step 2: Caption -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">STEP 2 — Caption Copy করুন</div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;color:var(--text);max-height:90px;overflow-y:auto;line-height:1.5;margin-bottom:6px;" id="fbh-caption-preview"></div>
+          <button onclick="fbHelperCopyCaption(this)" style="width:100%;padding:9px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Caption Copy করুন</button>
+          <div id="fbh-copy-status" style="font-size:10px;color:var(--green);margin-top:4px;display:none;">✅ Clipboard এ Copy হয়েছে</div>
+        </div>
+
+        <!-- Exclude list -->
+        <div style="margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">⚙️ Exclude Pages (এই page গুলোতে post করবেন না)</div>
+          <div id="fbh-exclude-tags" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;min-height:22px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input id="fbh-exclude-input" placeholder="Page name টাইপ করুন..." style="flex:1;padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit;" onkeydown="if(event.key==='Enter')fbHelperAddExclude()">
+            <button onclick="fbHelperAddExclude()" style="padding:7px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ Add</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;">এগুলো save থাকবে। Business Suite এ manually skip করুন।</div>
+        </div>
+
+        <!-- Step 3: Open Business Suite -->
+        <div style="margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">STEP 3 — Meta Business Suite খুলুন</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="fbHelperOpenSuite('post')" style="flex:1;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🖼️ Image Post</button>
+            <button onclick="fbHelperOpenSuite('reel')" style="flex:1;padding:11px;background:#e1306c;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🎬 Reel</button>
+          </div>
+          <div id="fbh-exclude-reminder" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:6px;font-size:11px;color:var(--amber);line-height:1.6;"></div>
+        </div>
+      </div>`;
+    document.body.appendChild(popup);
+    popup.addEventListener('click', e => { if(e.target===popup) popup.remove(); });
+  }
+
+  // Fill caption preview
+  const caption = document.getElementById('fb-caption')?.value || '';
+  const tags = window._joafTags || '';
+  const fullCaption = caption + (tags ? '\n\n' + tags : '');
+  const prev = document.getElementById('fbh-caption-preview');
+  if (prev) prev.textContent = fullCaption || '(caption নেই — আগে Generate করুন)';
+
+  // Render exclude tags from localStorage
+  fbHelperRenderExcludes();
+};
+
+window.fbHelperDownloadImg = function() {
   const canvas = document.getElementById('fb-card-canvas');
   if (_fbCurrentMode === 'card' && canvas) {
     const a = document.createElement('a');
-    a.download = 'joaf-card.jpg'; a.href = canvas.toDataURL('image/jpeg',0.95); a.click();
+    a.download = 'joaf-post.jpg'; a.href = canvas.toDataURL('image/jpeg', 0.95); a.click();
   } else if (reelBlob) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(reelBlob); a.download = 'joaf-reel.webm'; a.click();
-  }
-  const caption = document.getElementById('fb-caption').value || '';
+  } else { alert('আগে Generate করুন'); return; }
+  document.getElementById('fbh-img-status').style.display = 'block';
+  document.getElementById('fbh-img-btn').style.background = 'rgba(34,197,94,.1)';
+  document.getElementById('fbh-img-btn').style.borderColor = 'var(--green)';
+};
+
+window.fbHelperCopyCaption = function(btn) {
+  const caption = document.getElementById('fb-caption')?.value || '';
   const tags = window._joafTags || '';
-  try { await navigator.clipboard.writeText(caption + (tags?'\n\n'+tags:'')); } catch(e) {}
-  setTimeout(() => window.open('https://business.facebook.com/latest/reels_composer/', '_blank'), 800);
+  const full = caption + (tags ? '\n\n' + tags : '');
+  if (!full.trim()) { alert('Caption নেই'); return; }
+  navigator.clipboard.writeText(full).then(() => {
+    btn.textContent = '✅ Copied!';
+    document.getElementById('fbh-copy-status').style.display = 'block';
+    setTimeout(() => { btn.textContent = '📋 Caption Copy করুন'; }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = full; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Caption Copy করুন'; }, 2000);
+  });
+};
+
+window.fbHelperAddExclude = function() {
+  const inp = document.getElementById('fbh-exclude-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  const list = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  if (!list.includes(val)) { list.push(val); localStorage.setItem('joaf_fb_exclude', JSON.stringify(list)); }
+  inp.value = '';
+  fbHelperRenderExcludes();
+};
+
+window.fbHelperRenderExcludes = function() {
+  const list = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  const container = document.getElementById('fbh-exclude-tags');
+  if (!container) return;
+  container.innerHTML = list.map((p,i) => `
+    <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:50px;font-size:11px;color:#fca5a5;">
+      🚫 ${p}
+      <button onclick="fbHelperRemoveExclude(${i})" style="background:none;border:none;color:#fca5a5;cursor:pointer;font-size:13px;padding:0;line-height:1;">×</button>
+    </span>`).join('');
+  // Update reminder
+  const rem = document.getElementById('fbh-exclude-reminder');
+  if (rem && list.length > 0) {
+    rem.style.display = 'block';
+    rem.innerHTML = '⚠️ Business Suite এ এই page গুলো skip করুন:<br><b>' + list.join(', ') + '</b>';
+  } else if (rem) { rem.style.display = 'none'; }
+};
+
+window.fbHelperRemoveExclude = function(i) {
+  const list = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  list.splice(i, 1);
+  localStorage.setItem('joaf_fb_exclude', JSON.stringify(list));
+  fbHelperRenderExcludes();
+};
+
+window.fbHelperOpenSuite = function(type) {
+  const url = type === 'reel'
+    ? 'https://business.facebook.com/latest/reels_composer/'
+    : 'https://business.facebook.com/latest/composer/?entry_point=biz_mgr_nav_menu';
+  window.open(url, '_blank');
+  // Show reminder again
+  fbHelperRenderExcludes();
 };
 
 function fbDownloadReel() {
