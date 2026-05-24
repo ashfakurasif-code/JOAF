@@ -3747,13 +3747,21 @@ window.saOpenPostHelper = async function() {
   try {
     let imageUrl = null;
     if (file) {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('upload_preset', 'ml_default');
-      const cldRes = await fetch('https://api.cloudinary.com/v1_1/dou71pfe1/image/upload', { method: 'POST', body: fd });
-      const cldData = await cldRes.json();
-      if (!cldData.secure_url) throw new Error('Cloudinary upload failed: ' + (cldData.error?.message || 'unknown'));
-      imageUrl = cldData.secure_url;
+      const ghBase64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      const ghFilename = 'fb-post-' + Date.now() + '.' + (file.name.split('.').pop() || 'jpg');
+      const ghRes = await fetch('/.netlify/functions/github-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: ghFilename, content: ghBase64, folder: 'uploads', message: 'FB post image' })
+      });
+      const ghData = await ghRes.json();
+      if (!ghData.url) throw new Error('Image upload failed: ' + (ghData.error || 'unknown'));
+      imageUrl = ghData.url;
     }
 
 
