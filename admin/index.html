@@ -1232,7 +1232,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
               <div style="font-size:13px;font-weight:700;">Preview এখানে আসবে</div>
             </div>
             <div id="fb-preview" style="display:none;text-align:center;">
-              <canvas id="fb-card-canvas" width="1080" height="1920" style="width:100%;max-width:280px;border-radius:12px;display:block;margin:0 auto;box-shadow:0 8px 32px rgba(0,0,0,.5);"></canvas>
+              <canvas id="fb-card-canvas" width="1080" height="1080" style="width:100%;max-width:280px;border-radius:12px;display:block;margin:0 auto;box-shadow:0 8px 32px rgba(0,0,0,.5);"></canvas>
               <video id="fb-reel-video" controls style="width:100%;max-width:280px;border-radius:12px;margin-top:8px;display:none;"></video>
             </div>
             <div id="fb-post-log" style="margin-top:10px;font-size:11px;max-height:180px;overflow-y:auto;"></div>
@@ -3249,7 +3249,7 @@ News: ${text}` });
   }
 }
 
-// ── INSTANT CARD RENDERER (1080x1920, hook-first) ──────────
+// ── INSTANT CARD RENDERER (1080x1080 square) ──────────
 async function drawInstantCard(slideTexts, mood, hook, rawText) {
 
   const canvas = document.getElementById('fb-card-canvas');
