@@ -3734,58 +3734,76 @@ window.saOpenPostHelper = async function() {
   const caption = (document.getElementById('sa-caption').value || '').trim();
   const file = window._saImgFile;
   const btn = document.querySelector('[onclick="saOpenPostHelper()"]');
-
   if (!caption) { alert('Caption লিখুন'); return; }
 
   const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  const TOKEN = localStorage.getItem('joaf_fb_token') || '';
 
-  // UI: loading
+  if (!TOKEN) { alert('FB Token নেই — Settings এ FB Token সেট করুন'); return; }
+
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting হচ্ছে...'; }
   const logEl = document.getElementById('sa-post-log');
-  if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ সব page এ post হচ্ছে...</div>'; }
+  if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ Pages fetch করছি...</div>'; }
 
   try {
-    let imageUrl = null;
-    if (file) {
-      const ghBase64 = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result.split(',')[1]);
-        r.onerror = rej;
-        r.readAsDataURL(file);
-      });
-      const ghFilename = 'fb-post-' + Date.now() + '.' + (file.name.split('.').pop() || 'jpg');
-      const ghRes = await fetch('/.netlify/functions/github-upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: ghFilename, content: ghBase64, folder: 'uploads', message: 'FB post image' })
-      });
-      const ghData = await ghRes.json();
-      if (!ghData.url) throw new Error('Image upload failed: ' + (ghData.error || 'unknown'));
-      imageUrl = ghData.url;
+    // 1. Fetch all pages from FB directly
+    let pages = [];
+    let url = `https://graph.facebook.com/v19.0/me/accounts?limit=50&access_token=${TOKEN}`;
+    while (url) {
+      const r = await fetch(url);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      pages = pages.concat(d.data || []);
+      url = d.paging?.next || null;
     }
 
+    // 2. Filter excluded
+    pages = pages.filter(p => !excludeIds.includes(p.id) && !excludeIds.includes(p.name.trim()));
+    if (!pages.length) throw new Error('কোনো page পাওয়া যায়নি');
 
-    const resp = await fetch('/.netlify/functions/fb-autopost', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageUrl, caption, excludeIds })
-    });
-    const data = await resp.json();
+    if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">⏳ ${pages.length}টা page এ post হচ্ছে...</div>`;
 
-    if (data.error) {
-      if (logEl) logEl.innerHTML = '<div style="color:#f87171">❌ Error: ' + data.error + '</div>';
-    } else {
-      const rows = data.results.map(r =>
-        '<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;">' +
-        (r.ok ? '✅' : '❌') + ' ' + r.name + (r.error ? ' — <span style="color:#f87171">' + r.error + '</span>' : '') +
-        '</div>'
-      ).join('');
-      if (logEl) logEl.innerHTML =
-        '<div style="font-weight:700;color:var(--green);margin-bottom:8px;">✅ ' + data.ok + '/' + data.total + ' page এ post সফল</div>' +
-        '<div style="max-height:200px;overflow-y:auto;">' + rows + '</div>';
+    // 3. Post to each page
+    const results = [];
+    for (const page of pages) {
+      try {
+        let postRes, postData;
+        if (file) {
+          // Image post via FormData — binary direct to FB
+          const fd = new FormData();
+          fd.append('source', file);
+          fd.append('message', caption);
+          fd.append('access_token', page.access_token);
+          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/photos`, {
+            method: 'POST', body: fd
+          });
+        } else {
+          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: caption, access_token: page.access_token })
+          });
+        }
+        postData = await postRes.json();
+        if (postData.error) results.push({ name: page.name, ok: false, error: postData.error.message });
+        else results.push({ name: page.name, ok: true });
+      } catch(e) {
+        results.push({ name: page.name, ok: false, error: e.message });
+      }
     }
+
+    const ok = results.filter(r => r.ok).length;
+    const rows = results.map(r =>
+      `<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;">` +
+      (r.ok ? '✅' : '❌') + ' ' + r.name + (r.error ? ` — <span style="color:#f87171">${r.error}</span>` : '') +
+      `</div>`
+    ).join('');
+    if (logEl) logEl.innerHTML =
+      `<div style="font-weight:700;color:var(--green);margin-bottom:8px;">✅ ${ok}/${results.length} page এ post সফল</div>` +
+      `<div style="max-height:200px;overflow-y:auto;">${rows}</div>`;
+
   } catch(e) {
-    if (logEl) logEl.innerHTML = '<div style="color:#f87171">❌ Network error: ' + e.message + '</div>';
+    if (logEl) logEl.innerHTML = `<div style="color:#f87171">❌ Error: ${e.message}</div>`;
   }
 
   if (btn) { btn.disabled = false; btn.textContent = '📤 FB Pages এ Post করুন'; }
