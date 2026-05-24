@@ -1618,12 +1618,26 @@ setTimeout(() => {
 
 
 
+
+// ── Appwrite helpers (press_releases read) ──
+const _AW_BASE = 'https://fra.cloud.appwrite.io/v1/databases/joaf/collections';
+const _AW_PROJ = '6a11b6cd000b59f318eb';
+async function _awList(col, qs=[], lim=5) {
+  try {
+    let url = `${_AW_BASE}/${col}/documents?limit=${lim}`;
+    qs.forEach(q => url += `&queries[]=${encodeURIComponent(q)}`);
+    const r = await fetch(url, {headers:{'X-Appwrite-Project':_AW_PROJ}});
+    if (!r.ok) return [];
+    return (await r.json()).documents || [];
+  } catch(e) { return []; }
+}
+
 // ── Dynamic latest press release in ticker ──────────────────
 (async function injectLatestPressRelease() {
   try {
     const _prDocs = await _awList('press_releases',['orderDesc("$createdAt")'],1);
     const snap = { empty: _prDocs.length===0, docs: _prDocs.map(d=>({id:d.$id,data:()=>d})) };
-    if (snap.empty) return;
+    
     const href = '/press-releases/view.html?id=' + snap[0].$id;
     const tryUpdate = () => {
       const links = [...document.querySelectorAll('#joafTickerTrack .ticker-item a')]

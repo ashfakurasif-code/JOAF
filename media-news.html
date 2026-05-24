@@ -132,7 +132,6 @@ async function renderAllPress() {
   grid.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-danger" role="status"></div></div>';
   try {
     const _docs = await _awReadPressReleases(50);
-    const snap = { docs: _docs };
     if (snap.empty) {
       grid.innerHTML = '<div class="col-12 text-center py-4 text-muted">কোনো press release নেই।</div>';
       return;

@@ -500,31 +500,12 @@ const JOAFComponents = {
     wa.innerHTML='<i class="zmdi zmdi-whatsapp"></i>';
     wa.onmouseenter=()=>wa.style.transform='scale(1.12)';wa.onmouseleave=()=>wa.style.transform='';
     document.body.appendChild(wa);
-    const fb=document.createElement('a');fb.href=`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-    fb.target='_blank';fb.rel='noopener';fb.setAttribute('aria-label','Facebook');
-    fb.style.cssText=S+'bottom:180px;background:#1877F2;color:#fff;';
-    fb.innerHTML='<i class="zmdi zmdi-facebook"></i>';
-    fb.onmouseenter=()=>fb.style.transform='scale(1.12)';fb.onmouseleave=()=>fb.style.transform='';
-    document.body.appendChild(fb);
-    const cp=document.createElement('button');cp.setAttribute('aria-label','লিংক কপি');
-    cp.style.cssText=S+'bottom:128px;background:#0f172a;color:#fff;border:none;cursor:pointer;';
-    cp.innerHTML='<i class="zmdi zmdi-link"></i>';
-    cp.onmouseenter=()=>cp.style.transform='scale(1.12)';cp.onmouseleave=()=>cp.style.transform='';
-    cp.onclick=()=>{navigator.clipboard.writeText(window.location.href).then(()=>{cp.innerHTML='<i class="zmdi zmdi-check"></i>';setTimeout(()=>cp.innerHTML='<i class="zmdi zmdi-link"></i>',2000);});};
-    document.body.appendChild(cp);
+
   },
 
   initAnimations() {
-    const DIRS=['joaf-reveal','joaf-reveal-left','joaf-reveal-right','joaf-reveal-top','joaf-reveal-scale','joaf-reveal-zoom'];
-    const SEL='.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom,.joaf-reveal-top';
+    const SEL='.joaf-reveal,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale,.joaf-reveal-flip,.joaf-reveal-zoom';
     if(!('IntersectionObserver' in window)){document.querySelectorAll(SEL).forEach(el=>el.classList.add('visible'));return;}
-    document.querySelectorAll('.joaf-reveal').forEach(el=>{
-      const keep=['joaf-reveal-left','joaf-reveal-right','joaf-reveal-scale','joaf-reveal-flip','joaf-reveal-zoom','joaf-reveal-top'];
-      if(!keep.some(c=>el.classList.contains(c))){
-        el.classList.remove('joaf-reveal');
-        el.classList.add(DIRS[Math.floor(Math.random()*DIRS.length)]);
-      }
-    });
     const obs=new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),i*55);obs.unobserve(e.target);}});},{threshold:.05,rootMargin:'0px 0px -30px 0px'});
     document.querySelectorAll(SEL).forEach(el=>{if(!el.classList.contains('visible'))obs.observe(el);});
   },
@@ -1637,12 +1618,26 @@ setTimeout(() => {
 
 
 
+
+// ── Appwrite helpers (press_releases read) ──
+const _AW_BASE = 'https://fra.cloud.appwrite.io/v1/databases/joaf/collections';
+const _AW_PROJ = '6a11b6cd000b59f318eb';
+async function _awList(col, qs=[], lim=5) {
+  try {
+    let url = `${_AW_BASE}/${col}/documents?limit=${lim}`;
+    qs.forEach(q => url += `&queries[]=${encodeURIComponent(q)}`);
+    const r = await fetch(url, {headers:{'X-Appwrite-Project':_AW_PROJ}});
+    if (!r.ok) return [];
+    return (await r.json()).documents || [];
+  } catch(e) { return []; }
+}
+
 // ── Dynamic latest press release in ticker ──────────────────
 (async function injectLatestPressRelease() {
   try {
     const _prDocs = await _awList('press_releases',['orderDesc("$createdAt")'],1);
     const snap = { empty: _prDocs.length===0, docs: _prDocs.map(d=>({id:d.$id,data:()=>d})) };
-    if (snap.empty) return;
+    
     const href = '/press-releases/view.html?id=' + snap[0].$id;
     const tryUpdate = () => {
       const links = [...document.querySelectorAll('#joafTickerTrack .ticker-item a')]

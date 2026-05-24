@@ -891,10 +891,10 @@ function initFilter() {
   try {
     
     const _prDocs = await _awReadPressReleases(4);
-    const snap = { docs: _prDocs };
-    if (!snap.empty) {
+    
+    if (_prDocs && _prDocs.length > 0) {
       grid.innerHTML = snap.map((doc, i) => { const p = doc;
-        const viewUrl = '/press-releases/view.html?id=' + doc.id;
+        const viewUrl = '/press-releases/view.html?id=' + doc.$id;
         const shortSummary = (p.summary||'').length > 58 ? (p.summary||'').substring(0,55).replace(/[\s,।]+$/,'')+'...' : (p.summary||'');
         const dateDisplay = p.date ? (typeof BanglaUtil!=='undefined' ? BanglaUtil.formatDateShort(p.date) : p.date) : '';
         return `
