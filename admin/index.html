@@ -1253,6 +1253,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">✍️ Caption</label>
             <textarea id="sa-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;margin-bottom:10px;" placeholder="Caption লিখুন..."></textarea>
             <button onclick="saOpenPostHelper()" style="width:100%;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">📤 FB Pages এ Post করুন</button>
+            <div id="sa-post-log" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
           </div>
         </div>
       </div>
@@ -3729,67 +3730,56 @@ window.saPreviewImg = function(input) {
   window._saImgFile = file;
 };
 
-window.saOpenPostHelper = function() {
+window.saOpenPostHelper = async function() {
   const caption = (document.getElementById('sa-caption').value || '').trim();
   const file = window._saImgFile;
+  const btn = document.querySelector('[onclick="saOpenPostHelper()"]');
 
-  // Download image if selected
-  if (file) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(file);
-    a.download = file.name;
-    a.click();
-  }
+  if (!caption) { alert('Caption লিখুন'); return; }
 
-  // Copy caption
-  if (caption) {
-    navigator.clipboard.writeText(caption).catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = caption; document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
+  const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+
+  // UI: loading
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting হচ্ছে...'; }
+  const logEl = document.getElementById('sa-post-log');
+  if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ সব page এ post হচ্ছে...</div>'; }
+
+  try {
+    let imageBase64 = null, imageType = null;
+    if (file) {
+      imageBase64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      imageType = file.type || 'image/jpeg';
+    }
+
+    const resp = await fetch('/.netlify/functions/fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64, imageType, caption, excludeIds })
     });
+    const data = await resp.json();
+
+    if (data.error) {
+      if (logEl) logEl.innerHTML = '<div style="color:#f87171">❌ Error: ' + data.error + '</div>';
+    } else {
+      const rows = data.results.map(r =>
+        '<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;">' +
+        (r.ok ? '✅' : '❌') + ' ' + r.name + (r.error ? ' — <span style="color:#f87171">' + r.error + '</span>' : '') +
+        '</div>'
+      ).join('');
+      if (logEl) logEl.innerHTML =
+        '<div style="font-weight:700;color:var(--green);margin-bottom:8px;">✅ ' + data.ok + '/' + data.total + ' page এ post সফল</div>' +
+        '<div style="max-height:200px;overflow-y:auto;">' + rows + '</div>';
+    }
+  } catch(e) {
+    if (logEl) logEl.innerHTML = '<div style="color:#f87171">❌ Network error: ' + e.message + '</div>';
   }
 
-  // Show popup
-  let popup = document.getElementById('fb-post-helper-popup');
-  if (popup) popup.remove();
-  popup = document.createElement('div');
-  popup.id = 'fb-post-helper-popup';
-  popup.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);';
-
-  const excList = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  const excHtml = excList.length
-    ? '<div style="margin-top:8px;padding:8px 10px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:6px;font-size:11px;color:var(--amber);line-height:1.7;">⚠️ এই page গুলো skip করুন:<br><b>' + excList.join(', ') + '</b></div>'
-    : '';
-
-  popup.innerHTML = `
-    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:24px;max-width:400px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,.6);font-family:inherit;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div style="font-size:15px;font-weight:900;color:#fff;">📤 FB Pages এ Post</div>
-        <button onclick="document.getElementById('fb-post-helper-popup').remove()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:0 4px;line-height:1;">×</button>
-      </div>
-      <div style="padding:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:8px;font-size:12px;color:var(--green);margin-bottom:14px;line-height:1.6;">
-        ${file ? '✅ Image download শুরু হয়েছে' : '⚠️ কোনো image select করা হয়নি'}<br>
-        ${caption ? '✅ Caption clipboard এ copy হয়েছে' : '⚠️ Caption খালি'}
-      </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">Meta Business Suite খুলুন → Create Post → সব page select করুন → Image upload → Caption paste করুন</div>
-      <div style="display:flex;gap:8px;margin-bottom:4px;">
-        <button onclick="window.open('https://business.facebook.com/latest/composer/?entry_point=biz_mgr_nav_menu','_blank')" style="flex:1;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🖼️ Image Post</button>
-        <button onclick="window.open('https://business.facebook.com/latest/reels_composer/','_blank')" style="flex:1;padding:11px;background:#e1306c;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🎬 Reel</button>
-      </div>
-      ${excHtml}
-      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">⚙️ Exclude Pages</div>
-        <div id="sa-exc-tags" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;min-height:20px;"></div>
-        <div style="display:flex;gap:6px;">
-          <input id="sa-exc-input" placeholder="Page name..." style="flex:1;padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;font-family:inherit;" onkeydown="if(event.key==='Enter')saAddExclude()">
-          <button onclick="saAddExclude()" style="padding:7px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">+ Add</button>
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(popup);
-  popup.addEventListener('click', e => { if(e.target===popup) popup.remove(); });
-  saRenderExcludes();
+  if (btn) { btn.disabled = false; btn.textContent = '📤 FB Pages এ Post করুন'; }
 };
 
 window.saAddExclude = function() {
