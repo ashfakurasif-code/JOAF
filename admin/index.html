@@ -3377,9 +3377,6 @@ async function drawInstantCard(slideTexts, mood, hook, rawText) {
   // ── LOGO_MID_Y (declared early — used in gap calc below) ──
   const LOGO_MID_Y = Math.max(CONTENT_ZONE_BOT + 170, 720);
 
-  // ── LOGO_MID_Y (declared early — used in gap calc below) ──
-  const LOGO_MID_Y = Math.max(CONTENT_ZONE_BOT + 170, 720);
-
   // ── DECORATIVE GAP FILL (content bottom → logo top) ──
   const gapTop = CONTENT_ZONE_BOT + 12;
   const gapBot = LOGO_MID_Y - 180;
@@ -3433,7 +3430,7 @@ async function drawInstantCard(slideTexts, mood, hook, rawText) {
   ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=3;
   ctx.beginPath(); ctx.arc(W/2,LOGO_MID_Y,logoR,0,Math.PI*2); ctx.stroke();
   if(_logoLoaded&&JOAF_LOGO_IMG.complete&&JOAF_LOGO_IMG.naturalWidth>0){
-    ctx.save(); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=0.94; ctx.drawImage(JOAF_LOGO_IMG,W/2-logoR*0.82,LOGO_MID_Y-logoR*0.82,logoR*1.64,logoR*1.64); ctx.globalAlpha=1; ctx.restore();
+    ctx.globalAlpha=0.94; ctx.drawImage(JOAF_LOGO_IMG,W/2-logoR*0.82,LOGO_MID_Y-logoR*0.82,logoR*1.64,logoR*1.64); ctx.globalAlpha=1;
   } else {
     ctx.font=`900 ${logoR}px Arial,sans-serif`; ctx.fillStyle='#fff';
     ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('⚡',W/2,LOGO_MID_Y); ctx.textBaseline='alphabetic';

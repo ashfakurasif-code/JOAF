@@ -1008,20 +1008,3 @@ addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_s
 
 </body>
 </html>
-
-<script>
-// === FB Image Drag & Drop Fix ===
-window.handleFBImageDrop = function(e) {
-  e.preventDefault();
-  const file = e.dataTransfer.files[0];
-  if (!file || !file.type.startsWith('image/')) {
-    alert("শুধু ছবি ড্র্যাগ করুন (JPG / PNG)");
-    return;
-  }
-  const input = document.getElementById('fb-img-input');
-  const dt = new DataTransfer();
-  dt.items.add(file);
-  input.files = dt.files;
-  fbAnalyzeImage(input);
-};
-</script>
