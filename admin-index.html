@@ -1100,7 +1100,10 @@ JOAF_LOGO_IMG.src = '/logoc7c3.png';
       <div id="an-setup" style="display:none;margin-top:12px" class="card">
         <div class="card-title" style="color:var(--amber);margin-bottom:8px">⚙️ Visitor Tracking সেটআপ করুন</div>
         <code style="display:block;background:var(--bg);padding:12px;border-radius:8px;font-size:10px;white-space:pre-wrap;border:1px solid var(--border);line-height:1.6">&lt;script type="module"&gt;
-
+import{initializeApp,getApps}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getFirestore,addDoc,collection,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const app=getApps().length?getApps()[0]:initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',projectId:'joaf-app-45753'});
+const db=getFirestore(app);
 const ua=navigator.userAgent,dev=/Mobile|Android|iPhone/i.test(ua)?'mobile':'desktop';
 const ref=document.referrer;
 const src=ref.includes('google')?'Google':ref.includes('facebook')?'Facebook':ref.includes('t.co')?'Twitter':ref?'Referral':'Direct';
@@ -1138,7 +1141,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
           <button class="btn btn-ghost" onclick="runMigration()">⬆️ Subscription Migration</button>
           <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
           <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
-          <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">🔥 Firebase Console</a>
+          <a href="https://console.firebase.google.com/project/joaf-app-45753" target="_blank" class="btn btn-ghost">🔥 Firebase Console</a>
           <a href="https://app.netlify.com/projects/joaf" target="_blank" class="btn btn-ghost">🌐 Netlify Dashboard</a>
         </div>
       </div>
@@ -1385,36 +1388,12 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
 <div class="toast" id="toast"></div>
 
 <script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// ── Appwrite config (Firebase migration) ──
-const _AW_EP = 'https://fra.cloud.appwrite.io/v1';
-const _AW_PR = '6a11b6cd000b59f318eb';
-const _AW_DB = 'joaf';
-function _awH(key) {
-  const h = {'Content-Type':'application/json','X-Appwrite-Project':_AW_PR};
-  if(key) h['X-Appwrite-Key'] = key;
-  return h;
-}
-async function _awList(col,queries=[],lim=500){
-  let docs=[],offset=0;
-  while(true){
-    let url=`${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents?limit=100&offset=${offset}`;
-    queries.forEach(q=>url+=`&queries[]=${encodeURIComponent(q)}`);
-    const r=await fetch(url,{headers:_awH()});
-    if(!r.ok)return docs;
-    const d=await r.json();
-    const batch=d.documents||[];
-    docs=docs.concat(batch);
-    if(batch.length<100||docs.length>=lim)break;
-    offset+=100;
-  }
-  return docs;
-}
-async function _awGet(col,id){const r=await fetch(`${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{headers:_awH()});if(!r.ok)return null;return await r.json();}
-async function _awAdd(col,data,id){const body={data,permissions:['read(\"any\")']};if(id)body.documentId=id;const r=await fetch(`${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents`,{method:'POST',headers:_awH(),body:JSON.stringify(body)});return await r.json();}
-async function _awUpdate(col,id,data){const r=await fetch(`${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{method:'PATCH',headers:_awH(),body:JSON.stringify({data})});return await r.json();}
-async function _awDelete(col,id){await fetch(`${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{method:'DELETE',headers:_awH()});}
-
+const FB = { apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk', authDomain:'joaf-app-45753.firebaseapp.com', projectId:'joaf-app-45753', storageBucket:'joaf-app-45753.firebasestorage.app', messagingSenderId:'472362223214', appId:'1:472362223214:web:9186a4f90dc608bae4487f' };
+const app = getApps().length ? getApps()[0] : initializeApp(FB);
+const db  = getFirestore(app);
 
 // ── Auth ────────────────────────────────────────────────
 let ADMIN_KEY = '';
@@ -1522,7 +1501,7 @@ async function initDashboard() {
 
   // ── Health indicators (array-driven) ──
   const HEALTH_ITEMS = [
-    { label: 'Firebase',        check: async () => { const s=await _awList('push_subscriptions'); return {ok:true,val:'Connected'}; } },
+    { label: 'Firebase',        check: async () => { const s=await getDocs(collection(db,'push_subscriptions')); return {ok:true,val:'Connected'}; } },
     { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
     { label: 'Notifications Fn',check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
   ];
@@ -1547,7 +1526,7 @@ async function initDashboard() {
       getDocs(collection(db,'notification_history'))
     ]);
 
-    const activeCount = subSnap.docs.filter(d=>d.active!==false).length;
+    const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
     const donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
 
     // Set KPIs
@@ -1561,27 +1540,27 @@ async function initDashboard() {
     // Today notifications
     const today = new Date(); today.setHours(0,0,0,0);
     let todayNotifs = 0;
-    histSnap.forEach(d=>{const t=d.sentAt?.toDate?.();if(t&&t>=today)todayNotifs++;});
+    histSnap.forEach(d=>{const t=d.data().sentAt?.toDate?.();if(t&&t>=today)todayNotifs++;});
     setEl('n-today', todayNotifs);
     const todaySubEl = document.getElementById('ds-notif-today');
     if(todaySubEl) todaySubEl.textContent = `আজ ${todayNotifs}টি পাঠানো`;
 
     // Recent history
-    const hDocs = histSnap.docs.map(d=>({...d,id:d.$id}))
+    const hDocs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
       .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0))).slice(0,5);
     renderHistory('dash-history', hDocs);
 
     // Blood preview
-    const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d,id:d.$id}));
+    const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
     renderBloodPreview(bDocs);
   } catch(e) { console.log('dashboard error', e); }
 
   // Pageview sparkline (today hourly)
   try {
-    const pvSnap = await _awList('pageviews');
+    const pvSnap = await getDocs(collection(db,'pageviews'));
     const now = new Date(); const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
     const yesterdayStart = new Date(todayStart.getTime()-86400000);
-    const pvDocs = pvSnap.docs.map(d=>({...d, tsMs: d.ts?.toMillis?.()||0}));
+    const pvDocs = pvSnap.docs.map(d=>({...d.data(), tsMs: d.data().ts?.toMillis?.()||0}));
     const todayPv = pvDocs.filter(d=>d.tsMs>=todayStart.getTime()).length;
     const yestPv  = pvDocs.filter(d=>d.tsMs>=yesterdayStart.getTime()&&d.tsMs<todayStart.getTime()).length;
     setEl('ds-today-pv', todayPv);
@@ -1693,10 +1672,10 @@ async function loadNotifPage() {
       getDocs(collection(db,'notification_history')),
       getDocs(collection(db,'push_subscriptions'))
     ]);
-    const docs = histSnap.docs.map(d=>({...d,id:d.$id}))
+    const docs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
       .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0)));
     setEl('n-total', histSnap.size);
-    const activeCount = subSnap.docs.filter(d=>d.active!==false).length;
+    const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
     setEl('n-sub', activeCount);
     const today = new Date(); today.setHours(0,0,0,0);
     const todayCount = docs.filter(d=>{ const t=d.sentAt?.toDate?.(); return t&&t>=today; }).length;
@@ -1725,21 +1704,21 @@ async function loadAlerts() {
   const el = document.getElementById('alert-list');
   el.innerHTML = '<div class="loading">লোড হচ্ছে...</div>';
   try {
-    const snap = await _awList('alerts');
+    const snap = await getDocs(collection(db,'alerts'));
     if (snap.empty) { el.innerHTML='<div class="empty">কোনো সতর্কতা নেই</div>'; ['alert-sel-all','alert-bulk-del'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';}); return; }
     ['alert-sel-all','alert-bulk-del'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='';});
     document.getElementById('alert-bulk-del').style.display='none';
-    el.innerHTML = snap.map(d => {
-      const data = d;
+    el.innerHTML = snap.docs.map(d => {
+      const data = d.data();
       const lvlClass = data.level==='danger'?'badge-red':data.level==='warning'?'badge-amber':'badge-blue';
       const time = data.createdAt?.toDate?.()?.toLocaleString('bn-BD')||'—';
-      return `<div class="act-item" id="alert-row-${d.$id}" style="gap:8px;">
-        <input type="checkbox" class="alert-chk" data-id="${d.$id}" onchange="onAlertCheck()" style="cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
+      return `<div class="act-item" id="alert-row-${d.id}" style="gap:8px;">
+        <input type="checkbox" class="alert-chk" data-id="${d.id}" onchange="onAlertCheck()" style="cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
         <span class="act-icon">🚨</span>
         <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2);font-size:11px">${data.area||''} ${data.area&&data.body?'—':''} ${(data.body||'').substring(0,60)}${(data.body||'').length>60?'...':''}</span></div>
         <span class="badge ${lvlClass}">${data.level||'info'}</span>
-        <button class="btn btn-ghost btn-sm" style="color:var(--blue);border-color:var(--blue-border);background:var(--blue-bg);" onclick='showAlertInfo(${JSON.stringify({id:d.$id,...data,createdAt:time})})'>ℹ️ Info</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteAlert('${d.$id}')">🗑️</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--blue);border-color:var(--blue-border);background:var(--blue-bg);" onclick='showAlertInfo(${JSON.stringify({id:d.id,...data,createdAt:time})})'>ℹ️ Info</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAlert('${d.id}')">🗑️</button>
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML='<div class="empty text-red">Error loading</div>'; }
@@ -1797,7 +1776,7 @@ window.postAlert = async function(withNotif=false) {
   const level = document.getElementById('al-level').value;
   if (!title || !body) return toast('শিরোনাম ও বিবরণ দিন','error');
   try {
-    await _awAdd('alerts', {title,body,type,area,level,active:true,createdAt:serverTimestamp()});
+    await addDoc(collection(db,'alerts'), {title,body,type,area,level,active:true,createdAt:serverTimestamp()});
     toast('✅ সতর্কতা Post হয়েছে!','success');
     document.getElementById('al-title').value='';
     document.getElementById('al-body').value='';
@@ -1809,7 +1788,7 @@ window.postAlert = async function(withNotif=false) {
 
 window.deleteAlert = async function(id) {
   if (!confirm('এই সতর্কতা delete করবেন?')) return;
-  await _awDelete('alerts', id);
+  await deleteDoc(doc(db,'alerts',id));
   toast('Deleted','info'); loadAlerts();
 };
 
@@ -1819,8 +1798,8 @@ async function loadDonors() {
   const tbody = document.getElementById('donor-tbody');
   tbody.innerHTML = '<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await _awList('donors');
-    allDonors = snap.map(d=>({...d,id:d.$id}));
+    const snap = await getDocs(collection(db,'donors'));
+    allDonors = snap.docs.map(d=>({...d.data(),id:d.id}));
     // Stats
     setEl('bl-total', allDonors.length);
     setEl('bl-active', allDonors.filter(d=>d.available!==false).length);
@@ -1836,14 +1815,14 @@ function renderDonors(donors) {
   if (!donors.length) { tbody.innerHTML='<tr><td colspan="7" class="empty">কোনো দাতা নেই</td></tr>'; return; }
   tbody.innerHTML = donors.slice(0,50).map(d => `
     <tr>
-      <td><input type="checkbox" class="donor-chk" data-id="${d.$id}" onchange="onDonorCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
+      <td><input type="checkbox" class="donor-chk" data-id="${d.id}" onchange="onDonorCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
       <td><div style="font-weight:700;font-size:12px">${d.name||d.donorName||'—'}</div></td>
       <td><span class="badge badge-red">${d.blood||d.bloodGroup||'—'}</span></td>
       <td>${d.district||d.area||'—'}</td>
       <td style="font-family:monospace;font-size:11px">${d.phone||d.contact||'—'}</td>
       <td style="font-size:10px;color:var(--text2)">${d.createdAt?.toDate?.()?.toLocaleDateString('bn-BD')||'—'}</td>
       <td><div class="td-actions">
-        <button class="btn btn-danger btn-sm" onclick="deleteDonor('${d.$id}')">🗑️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDonor('${d.id}')">🗑️</button>
       </div></td>
     </tr>`).join('');
 }
@@ -1880,7 +1859,7 @@ window.filterDonors = function() {
 
 window.deleteDonor = async function(id) {
   if (!confirm('এই donor কে delete করবেন?')) return;
-  await _awDelete('donors', id);
+  await deleteDoc(doc(db,'donors',id));
   toast('Deleted','info'); loadDonors();
 };
 
@@ -1903,19 +1882,19 @@ async function loadPress() {
   const el = document.getElementById('press-list');
   el.innerHTML='<div class="loading">লোড হচ্ছে...</div>';
   try {
-    const snap = await _awList('press_releases');
+    const snap = await getDocs(collection(db,'press_releases'));
     if (snap.empty) { el.innerHTML='<div class="empty">কোনো press release নেই</div>'; return; }
     el.innerHTML = `<div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;">
       <input type="checkbox" id="press-chk-all" onchange="togglePressAll(this)" style="cursor:pointer;accent-color:var(--accent)">
       <span style="font-size:11px;color:var(--text2)">সব Select</span>
       <button class="btn btn-ghost btn-sm" id="press-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);margin-left:8px;" onclick="bulkDeletePress()">🗑️ Selected Delete</button>
-    </div>` + snap.map(d => {
-      const data = d;
+    </div>` + snap.docs.map(d => {
+      const data = d.data();
       return `<div class="act-item" style="gap:8px;">
-        <input type="checkbox" class="press-chk" data-id="${d.$id}" onchange="onPressCheck()" style="cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
+        <input type="checkbox" class="press-chk" data-id="${d.id}" onchange="onPressCheck()" style="cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
         <span class="act-icon">📰</span>
         <div class="act-text"><b>${data.title||'—'}</b><br><span style="color:var(--text2);font-size:10px">${data.date||'—'} ${data.summary?'· '+(data.summary.substring(0,50))+'...':''}</span></div>
-        <button class="btn btn-danger btn-sm" onclick="deletePress('${d.$id}')">🗑️</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePress('${d.id}')">🗑️</button>
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML='<div class="empty text-red">Error</div>'; }
@@ -1939,7 +1918,7 @@ window.addPressRelease = async function(withNotif=false) {
   const img     = document.getElementById('pr-img').value.trim();
   if (!title || !summary) return toast('শিরোনাম ও সারসংক্ষেপ দিন','error');
   try {
-    await _awAdd('press_releases', {title,summary,content,date,img,createdAt:serverTimestamp()});
+    await addDoc(collection(db,'press_releases'), {title,summary,content,date,img,createdAt:serverTimestamp()});
     toast('✅ Press Release publish হয়েছে!','success');
     ['pr-title','pr-summary','pr-content','pr-img'].forEach(id => document.getElementById(id).value='');
     if (withNotif) await callSendNotif({type:'news',title:'📢 '+title,body:summary,url:'/news.html'});
@@ -1949,7 +1928,7 @@ window.addPressRelease = async function(withNotif=false) {
 
 window.deletePress = async function(id) {
   if (!confirm('Delete করবেন?')) return;
-  await _awDelete('press_releases', id);
+  await deleteDoc(doc(db,'press_releases',id));
   toast('Deleted','info'); loadPress();
 };
 
@@ -1958,18 +1937,18 @@ async function loadLeaders() {
   const tbody = document.getElementById('leader-tbody');
   tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await _awList('leaders');
+    const snap = await getDocs(collection(db,'leaders'));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
-    tbody.innerHTML = snap.map(d => {
-      const data = d;
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
       return `<tr>
         <td><b>${data.name||'—'}</b></td>
         <td>${data.party||'—'}</td>
         <td style="font-size:11px">${data.role||'—'}</td>
         <td><span style="color:${data.approval>=60?'var(--green)':data.approval>=30?'var(--amber)':'var(--red)'}">${data.approval||0}%</span></td>
         <td>${(data.promises||[]).length} টি</td>
-        <td><input type="checkbox" class="leader-chk" data-id="${d.$id}" onchange="onLeaderCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteLeader('${d.$id}')">🗑️</button></td>
+        <td><input type="checkbox" class="leader-chk" data-id="${d.id}" onchange="onLeaderCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteLeader('${d.id}')">🗑️</button></td>
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="8" class="empty text-red">Error</td></tr>'; }
@@ -1993,7 +1972,7 @@ window.saveLeader = async function() {
   const pText    = document.getElementById('ld-promises').value;
   const promises = pText.split('\n').filter(p=>p.trim()).map(p=>({text:p.trim(),status:'pending'}));
   if (!name) return toast('নাম দিন','error');
-  await _awAdd('leaders', {name,party,role,approval,cat,promises,createdAt:serverTimestamp()});
+  await addDoc(collection(db,'leaders'), {name,party,role,approval,cat,promises,createdAt:serverTimestamp()});
   toast('✅ নেতা যোগ হয়েছে!','success');
   closeModal('leaderModal');
   loadLeaders();
@@ -2001,7 +1980,7 @@ window.saveLeader = async function() {
 
 window.deleteLeader = async function(id) {
   if (!confirm('Delete করবেন?')) return;
-  await _awDelete('leaders', id);
+  await deleteDoc(doc(db,'leaders',id));
   toast('Deleted','info'); loadLeaders();
 };
 
@@ -2158,10 +2137,10 @@ window.migrateLeaders = async function() {
       virals:[{text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশে ব্যাপক আলোচনা।',icon:'📋',date:'জানুয়ারি ২০২৬'}]},
   ];
   try {
-    
+    const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     for (const leader of leaders) {
       const {id, ...data} = leader;
-      await _awUpdate('leaders', id, {...data, createdAt:serverTimestamp()});
+      await setDoc(doc(db,'leaders', id), {...data, createdAt:serverTimestamp()});
     }
     toast('✅ '+leaders.length+'জন নেতার latest data migrate হয়েছে!','success');
     loadLeaders();
@@ -2173,10 +2152,10 @@ async function loadWarriors() {
   const tbody = document.getElementById('warrior-tbody');
   tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await _awList('warriors');
+    const snap = await getDocs(collection(db,'warriors'));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">কোনো যোদ্ধা নেই</td></tr>'; return; }
-    tbody.innerHTML = snap.map(d => {
-      const data = d;
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
       const typeClass = data.type==='shahid'?'badge-red':data.type==='ahat'?'badge-amber':'badge-green';
       const typeLabel = data.type==='shahid'?'🩸 শহীদ':data.type==='ahat'?'🩹 আহত':'✊ সক্রিয়';
       return `<tr>
@@ -2185,8 +2164,8 @@ async function loadWarriors() {
         <td>${data.dist||'—'}</td>
         <td style="font-size:11px">${data.role||'—'}</td>
         <td><span class="badge badge-blue">Active</span></td>
-        <td><input type="checkbox" class="warrior-chk" data-id="${d.$id}" onchange="onWarriorCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteWarrior('${d.$id}')">🗑️</button></td>
+        <td><input type="checkbox" class="warrior-chk" data-id="${d.id}" onchange="onWarriorCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteWarrior('${d.id}')">🗑️</button></td>
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="8" class="empty text-red">Error</td></tr>'; }
@@ -2209,7 +2188,7 @@ window.saveWarrior = async function() {
   const story = document.getElementById('wr-story').value.trim();
   const icon  = document.getElementById('wr-icon').value.trim() || '✊';
   if (!name) return toast('নাম দিন','error');
-  await _awAdd('warriors', {name,dist,role,type,story,icon,approved:true,createdAt:serverTimestamp()});
+  await addDoc(collection(db,'warriors'), {name,dist,role,type,story,icon,approved:true,createdAt:serverTimestamp()});
   toast('✅ যোদ্ধা যোগ হয়েছে!','success');
   closeModal('warriorModal');
   loadWarriors();
@@ -2217,7 +2196,7 @@ window.saveWarrior = async function() {
 
 window.deleteWarrior = async function(id) {
   if (!confirm('Delete করবেন?')) return;
-  await _awDelete('warriors', id);
+  await deleteDoc(doc(db,'warriors',id));
   toast('Deleted','info'); loadWarriors();
 };
 
@@ -2274,16 +2253,16 @@ async function loadMedicines() {
   const tbody = document.getElementById('med-tbody');
   tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await _awList('medicines');
+    const snap = await getDocs(collection(db,'medicines'));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো ওষুধ নেই</td></tr>'; return; }
-    tbody.innerHTML = snap.map(d => {
-      const data = d;
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
       return `<tr>
         <td><b>${data.name||'—'}</b></td>
         <td style="font-size:11px;color:var(--text2)">${data.generic||'—'}</td>
         <td style="color:var(--amber);font-weight:700">৳ ${data.mrp||'—'}</td>
         <td style="font-size:10px;color:var(--text2)">${data.createdAt?.toDate?.()?.toLocaleDateString('bn-BD')||'—'}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteMed('${d.$id}')">Delete</button></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteMed('${d.id}')">Delete</button></td>
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="5" class="empty text-red">Error</td></tr>'; }
@@ -2295,7 +2274,7 @@ window.saveMedicine = async function() {
   const mrp     = parseFloat(document.getElementById('med-mrp').value)||0;
   const company = document.getElementById('med-company').value.trim();
   if (!name) return toast('ওষুধের নাম দিন','error');
-  await _awAdd('medicines', {name,generic,mrp,company,createdAt:serverTimestamp()});
+  await addDoc(collection(db,'medicines'), {name,generic,mrp,company,createdAt:serverTimestamp()});
   toast('✅ ওষুধ যোগ হয়েছে!','success');
   closeModal('medModal');
   loadMedicines();
@@ -2303,7 +2282,7 @@ window.saveMedicine = async function() {
 
 window.deleteMed = async function(id) {
   if (!confirm('Delete করবেন?')) return;
-  await _awDelete('medicines', id);
+  await deleteDoc(doc(db,'medicines',id));
   toast('Deleted','info'); loadMedicines();
 };
 
@@ -2312,16 +2291,16 @@ async function loadMembers() {
   const tbody = document.getElementById('member-tbody');
   tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await _awList('members');
+    const snap = await getDocs(collection(db,'members'));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো member নেই</td></tr>'; return; }
-    tbody.innerHTML = snap.map(d => {
-      const data = d;
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
       return `<tr>
         <td><b>${data.name||'—'}</b></td>
         <td style="font-size:11px">${data.designation||data.desg||'—'}</td>
         <td><span class="badge badge-blue">${data.cat||'—'}</span></td>
         <td><a href="${data.facebook||'#'}" target="_blank" style="color:var(--blue);font-size:11px">Facebook ↗</a></td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteMember('${d.$id}')">Delete</button></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteMember('${d.id}')">Delete</button></td>
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="5" class="empty text-red">Error</td></tr>'; }
@@ -2334,7 +2313,7 @@ window.saveMember = async function() {
   const img  = document.getElementById('mb-img').value.trim();
   const fb   = document.getElementById('mb-fb').value.trim();
   if (!name) return toast('নাম দিন','error');
-  await _awAdd('members', {name,designation:desg,cat,img,facebook:fb||'#',createdAt:serverTimestamp()});
+  await addDoc(collection(db,'members'), {name,designation:desg,cat,img,facebook:fb||'#',createdAt:serverTimestamp()});
   toast('✅ Member যোগ হয়েছে!','success');
   closeModal('memberModal');
   loadMembers();
@@ -2342,7 +2321,7 @@ window.saveMember = async function() {
 
 window.deleteMember = async function(id) {
   if (!confirm('Delete করবেন?')) return;
-  await _awDelete('members', id);
+  await deleteDoc(doc(db,'members',id));
   toast('Deleted','info'); loadMembers();
 };
 
@@ -2351,10 +2330,10 @@ async function loadPolls() {
   const tbody = document.getElementById('poll-tbody');
   tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await _awList('poll_users');
+    const snap = await getDocs(collection(db,'poll_users'));
     setEl('po-voters', snap.size);
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো voter নেই</td></tr>'; return; }
-    const users = snap.map(d=>({...d,id:d.$id}))
+    const users = snap.docs.map(d=>({...d.data(),id:d.id}))
       .sort((a,b)=>(b.streak||0)-(a.streak||0));
     setEl('po-streak', users.filter(u=>(u.streak||0)>0).length);
     setEl('po-rewards', users.filter(u=>u.rewardClaimed).length);
@@ -2377,14 +2356,14 @@ async function loadForum() {
   try {
     const snap = await getDocs(collection(db,'forum_'+room));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="4" class="empty">কোনো message নেই</td></tr>'; return; }
-    tbody.innerHTML = snap.map(d => {
-      const data = d;
+    tbody.innerHTML = snap.docs.map(d => {
+      const data = d.data();
       const time = data.ts?.toDate?.()?.toLocaleString('bn-BD')||'—';
       return `<tr>
         <td style="font-weight:700;font-size:12px">${data.name||'Anonymous'}</td>
         <td style="font-size:12px;max-width:300px">${data.text||'—'}</td>
         <td style="font-size:10px;color:var(--text2)">${time}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteMsg('forum_${room}','${d.$id}')">Delete</button></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteMsg('forum_${room}','${d.id}')">Delete</button></td>
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="4" class="empty text-red">Error loading</td></tr>'; }
@@ -2690,7 +2669,7 @@ function startAnalyticsListener() {
   try {
     anUnsubscribe = onSnapshot(collection(db,'pageviews'), snap => {
       const wasEmpty = anAllDocs.length === 0;
-      anAllDocs = snap.map(d=>({...d, id:d.$id, tsMs: d.ts?.toMillis?.()||0}));
+      anAllDocs = snap.docs.map(d=>({...d.data(), id:d.id, tsMs: d.data().ts?.toMillis?.()||0}));
       if(!wasEmpty) {
         snap.docChanges().forEach(ch => {
           if(ch.type==='added') {
@@ -2746,7 +2725,7 @@ function renderAnalytics(){
     const hourCount     = anAllDocs.filter(d=>d.tsMs>=hourStart.getTime()).length;
     const prevHour      = anAllDocs.filter(d=>d.tsMs>=prevHourStart.getTime()&&d.tsMs<hourStart.getTime()).length;
     const weekCount     = anAllDocs.filter(d=>d.tsMs>=weekStart.getTime()).length;
-    const uniqueToday   = new Set(anAllDocs.filter(d=>d.tsMs>=todayStart.getTime()).map(d=>d.uid||d.$id)).size;
+    const uniqueToday   = new Set(anAllDocs.filter(d=>d.tsMs>=todayStart.getTime()).map(d=>d.uid||d.id)).size;
     const hourDiff      = hourCount-prevHour;
     const yestCount     = anAllDocs.filter(d=>d.tsMs>=todayStart.getTime()-86400000&&d.tsMs<todayStart.getTime()).length;
     const todayDiff     = todayCount-yestCount;
@@ -2792,7 +2771,7 @@ function renderAnalytics(){
       const bStart = new Date(bEnd - cfg.step_ms);
       const bucket = inRange.filter(d=>d.tsMs>=bStart.getTime()&&d.tsMs<bEnd.getTime());
       data.push(bucket.length);
-      dataUniq.push(new Set(bucket.map(d=>d.uid||d.$id)).size);
+      dataUniq.push(new Set(bucket.map(d=>d.uid||d.id)).size);
 
       if(cfg.unit==='min')      labels.push(i%10===0?(cfg.steps-i)+'m':'');
       else if(cfg.unit==='hour') labels.push(bEnd.getHours()+':00');
@@ -2811,7 +2790,7 @@ function renderAnalytics(){
     if(avgEl)  avgEl.textContent  = avg  ? `∅ Avg: ${avg} visit/${cfg.unit}` : '';
 
     const subEl = document.getElementById('an-chart-sub');
-    if(subEl) subEl.textContent = `${inRange.length} visit · unique ${new Set(inRange.map(d=>d.uid||d.$id)).size}`;
+    if(subEl) subEl.textContent = `${inRange.length} visit · unique ${new Set(inRange.map(d=>d.uid||d.id)).size}`;
 
     const GCOL='rgba(255,255,255,0.05)', TCOL='#7878a0';
     const ctx = document.getElementById('an-chart');
