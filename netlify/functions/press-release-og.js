@@ -126,19 +126,15 @@ const img = imgRaw.split('/').map((seg, i) => i < 3 ? seg : encodeURIComponent(s
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, getDocs, collection, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
 (async () => {
   try {
-    const snap = await getDocs(query(collection(_db,'press_releases'), orderBy('date','desc'), limit(5)));
+    const _prDocs = await (await fetch('https://fra.cloud.appwrite.io/v1/databases/joaf/collections/press_releases/documents?limit=5&queries[]=' + encodeURIComponent('orderDesc(\"date\")'), {headers:{'X-Appwrite-Project':'6a11b6cd000b59f318eb'}})).json().then(r=>r.documents||[]);
     const currentId = new URLSearchParams(location.search).get('id');
-    const others = snap.docs.filter(d => d.id !== currentId).slice(0,4);
+    const others = _prDocs.filter(d => d.$id !== currentId).slice(0,4);
     document.getElementById('sidebarPR').innerHTML = others.map(d => {
-      const p = d.data();
+      const p = d;
       const oImg = p.img || '/logoc7c3.png';
-      return \`<a href="/press-releases/view.html?id=\${d.id}" class="sc-pr-item">
+      return \`<a href="/press-releases/view.html?id=\${d.$id}" class="sc-pr-item">
         <img src="\${oImg}" alt="\${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
         <div class="sc-pr-info"><h4>\${p.title||''}</h4><span>\${p.date||''}</span></div>
       </a>\`;
@@ -158,8 +154,8 @@ exports.handler = async (event) => {
   try {
   
     const docSnap = await awGetDoc('press_releases', id);
-    if (!docSnap.exists) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
-    const html = buildHtml(docSnap.data(), id);
+    if (!docSnap) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
+    const html = buildHtml(docSnap, id);
     return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' }, body: html };
   } catch (err) {
     console.error('press-release-og error:', err);
