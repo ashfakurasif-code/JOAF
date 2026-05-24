@@ -1,18 +1,4 @@
-const { initializeApp, getApps, cert } = require('firebase-admin/app');
-const { getFirestore } = require('firebase-admin/firestore');
-
-function getDb() {
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-  }
-  return getFirestore();
-}
+const { awGet } = require('./aw-utils');
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -133,8 +119,8 @@ const img = imgRaw.split('/').map((seg, i) => i < 3 ? seg : encodeURIComponent(s
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, getDocs, collection, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, getDocs, collection, query, orderBy, limit } from '/js/aw-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
 const _db = getFirestore(_fa);
 (async () => {
@@ -163,10 +149,9 @@ exports.handler = async (event) => {
   const id = event.queryStringParameters?.id;
   if (!id) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
   try {
-    const db = getDb();
-    const docSnap = await db.collection('press_releases').doc(id).get();
-    if (!docSnap.exists) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
-    const html = buildHtml(docSnap.data(), id);
+    const docSnap = await awGet('press_releases', id);
+    if (!docSnap) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
+    const html = buildHtml(docSnap.data, id);
     return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' }, body: html };
   } catch (err) {
     console.error('press-release-og error:', err);

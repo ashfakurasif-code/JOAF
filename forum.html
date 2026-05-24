@@ -90,8 +90,6 @@
   </div>
 </div></section>
 <div id="joaf-footer"></div>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="/js/modernizr-2.8.3.min.js"></script>
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
@@ -110,11 +108,15 @@ let activeRoom='general';
 let db=null;
 let unsubscribe=null;
 
-// Firebase init
-try{
-  firebase.initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-  db=firebase.firestore();
-}catch(e){}
+// Appwrite init (Firestore-compat wrapper)
+(async () => {
+  try {
+    const { initializeApp, getApps, getFirestore } = await import('/js/aw-firestore.js');
+    const app = getApps().length ? getApps()[0] : initializeApp({});
+    db = getFirestore(app);
+    loadMessages(activeRoom);
+  } catch (e) {}
+})();
 
 function bn(n){return n.toString().replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
 
@@ -156,12 +158,19 @@ function switchRoom(id,name,icon,count){
   loadMessages(id);
 }
 
-function loadMessages(roomId){
+async function loadMessages(roomId){
   renderMessages(DEMO_MSGS);
   if(!db) return;
   if(unsubscribe) unsubscribe();
   try{
-    unsubscribe=db.collection('forum_'+roomId).orderBy('ts','asc').limit(30).onSnapshot(snap=>{
+    const { collection, query, where, orderBy, limit, onSnapshot } = await import('/js/aw-firestore.js');
+    const q = query(
+      collection(db, 'forum_messages'),
+      where('roomId', '==', roomId),
+      orderBy('ts','asc'),
+      limit(30)
+    );
+    unsubscribe=onSnapshot(q, snap=>{
       if(snap.empty){renderMessages(DEMO_MSGS);return;}
       const msgs=snap.docs.map(d=>{
         const data=d.data();
@@ -183,7 +192,8 @@ function sendMsg(){
   input.value='';
   if(db&&cuId){
     try{
-      db.collection('forum_'+activeRoom).add({name,text,uid:cuId,ts:firebase.firestore.FieldValue.serverTimestamp()});
+      const { addDoc, collection, serverTimestamp } = await import('/js/aw-firestore.js');
+      await addDoc(collection(db, 'forum_messages'), {roomId: activeRoom, name, text, uid: cuId, ts: serverTimestamp()});
       return;
     }catch(e){}
   }
@@ -201,8 +211,8 @@ function sendMsg(){
 loadMessages('general');
 </script><script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;

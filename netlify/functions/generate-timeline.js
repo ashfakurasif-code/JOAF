@@ -1,5 +1,5 @@
 // netlify/functions/generate-timeline.js
-// RSS news থেকে AI দিয়ে timeline events বানায়, Firebase-এ save করে
+// RSS news থেকে AI দিয়ে timeline events বানায়, Appwrite-এ save করে
 
 const GROQ_KEY   = process.env.GROQ_API_KEY;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
@@ -10,10 +10,7 @@ const GROQ_MODELS = [
   'llama-3.3-70b-versatile',                    // 70B — last resort, 100k TPD
 ];
 
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const { awList, awUpsert, qEqual, qLimit } = require('./aw-utils');
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 const BD_DATE_BN = () => {
@@ -24,36 +21,15 @@ const BD_DATE_BN = () => {
 
 const { fetchBDHeadlines } = require('./bd-rss-utils');
 
-// ── Firestore ──
-async function firestoreSet(docId, data) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => ({ stringValue: String(i) })) } };
-    return { nullValue: null };
-  }
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/timeline/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
-  });
-  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
+// ── Appwrite ──
+async function awSet(docId, data) {
+  return awUpsert('timeline', docId, data);
 }
 
 async function todayEventsExist(today) {
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/timeline?key=${FB_CONFIG.apiKey}&pageSize=50`;
-    const r = await fetch(url);
-    if (!r.ok) return false;
-    const data = await r.json();
-    const docs = data.documents || [];
-    return docs.some(doc => {
-      const f = doc.fields || {};
-      return f.isoDate?.stringValue === today;
-    });
+    const docs = await awList('timeline', [qEqual('isoDate', today), qLimit(1)], 1);
+    return docs.length > 0;
   } catch (e) { return false; }
 }
 
@@ -180,7 +156,7 @@ tags থেকে বেছে নাও: govt, economy, politics, social, crisi
     for (const ev of events) {
       try {
         const docId = `${(ev.id || 'event').replace(/[^a-z0-9_]/gi, '_')}_${today}`;
-        await firestoreSet(docId, {
+        await awSet(docId, {
           date:        ev.date || todayBN,
           isoDate:     ev.isoDate || today,
           title:       ev.title || '',

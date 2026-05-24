@@ -1,5 +1,5 @@
 // netlify/functions/discover-leaders.js
-// RSS news পড়ে AI দিয়ে leaders auto-discover করে Firebase update করে
+// RSS news পড়ে AI দিয়ে leaders auto-discover করে Appwrite update করে
 // Primary: Google Gemini (gemini-2.0-flash) — free: 1500 req/day, unlimited tokens
 // Fallback: Groq (active models only — decommissioned গুলো বাদ)
 
@@ -16,67 +16,26 @@ const GROQ_MODELS = [
 // ── Valid leader categories — must match leader-tracker.html ──
 const VALID_CATS = ['সরকার', 'বিরোধী দল', 'যুব রাজনীতি', 'সুশীল সমাজ', 'আওয়ামী লীগ', 'ব্যবসায়ী'];
 
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const { awListAll, awUpsert, awUpdate } = require('./aw-utils');
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
 const { fetchBDHeadlines } = require('./bd-rss-utils');
 
-// ── Firestore REST ──
-async function firestoreGetAll() {
+// ── Appwrite helpers ──
+async function awGetAll() {
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders?key=${FB_CONFIG.apiKey}&pageSize=200`;
-    const r = await fetch(url);
-    if (!r.ok) return [];
-    const data = await r.json();
-    return (data.documents || []).map(doc => {
-      const id = doc.name.split('/').pop();
-      const fields = doc.fields || {};
-      const obj = { id };
-      for (const [k, v] of Object.entries(fields)) {
-        if (v.stringValue !== undefined) obj[k] = v.stringValue;
-        else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-      }
-      return obj;
-    });
+    const docs = await awListAll('leaders');
+    return docs.map(d => ({ id: d.id, ...d.data }));
   } catch (e) { return []; }
 }
 
-async function firestoreSet(docId, data) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: [] } };
-    return { nullValue: null };
-  }
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
-  });
-  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
+async function awSet(docId, data) {
+  return awUpsert('leaders', docId, data);
 }
 
-async function firestorePatchFields(docId, updates) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    return { nullValue: null };
-  }
-  const fields = Object.fromEntries(Object.entries(updates).map(([k, v]) => [k, toField(v)]));
-  const mask = Object.keys(updates).map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}&${mask}`;
-  await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
-  });
+async function awPatchFields(docId, updates) {
+  return awUpdate('leaders', docId, updates);
 }
 
 // ── Shared prompt builder ──
@@ -284,7 +243,7 @@ exports.handler = async (event) => {
   try {
     const [rssResult, existingLeaders] = await Promise.all([
       fetchBDHeadlines({ maxPerSource: 15, totalLimit: 60 }),
-      firestoreGetAll(),
+      awGetAll(),
     ]);
 
     const { items: headlineItems, headlines, filteredCount, sourceCounts } = rssResult;
@@ -335,7 +294,7 @@ exports.handler = async (event) => {
         continue;
       }
       try {
-        await firestoreSet(nl.id, {
+        await awSet(nl.id, {
           name: nl.name, party: nl.party || '', role: nl.role || '',
           cat: nl.cat, icon: nl.icon || '👤',
           active: true, isDeceased: false, viral: false, approval: 50,
@@ -349,7 +308,7 @@ exports.handler = async (event) => {
     for (const u of aiResult.inactive) {
       if (!u.id) continue;
       try {
-        await firestorePatchFields(u.id, {
+        await awPatchFields(u.id, {
           active: false,
           isDeceased: u.isDeceased === true,
           lastDiscovered: today,

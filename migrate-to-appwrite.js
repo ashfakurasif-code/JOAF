@@ -19,7 +19,11 @@ const COLLECTIONS = [
   },
   {
     fs_col: 'leaders', aw_col: 'leaders',
-    fields: { name:'string', party:'string', role:'string', approval:'string', cat:'string', promises:'string', createdAt:'string' }
+    fields: {
+      name:'string', party:'string', role:'string', approval:'integer', cat:'string', promises:'string65535',
+      statements:'string65535', controversies:'string65535', virals:'string65535',
+      viral:'boolean', isDeceased:'boolean', active:'boolean', createdAt:'string'
+    }
   },
   {
     fs_col: 'warriors', aw_col: 'warriors',
@@ -31,7 +35,10 @@ const COLLECTIONS = [
   },
   {
     fs_col: 'alerts', aw_col: 'alerts',
-    fields: { title:'string', body:'string', type:'string', area:'string', level:'string', active:'boolean', createdAt:'string' }
+    fields: {
+      title:'string', description:'string', body:'string', type:'string', location:'string', area:'string',
+      level:'string', reporter:'string', imageUrl:'string', lat:'string', lng:'string', active:'boolean', createdAt:'string'
+    }
   },
   {
     fs_col: 'press_releases', aw_col: 'press_releases',
@@ -43,7 +50,7 @@ const COLLECTIONS = [
   },
   {
     fs_col: 'donors', aw_col: 'donors',
-    fields: { name:'string', phone:'string', blood:'string', district:'string', area:'string', lastDonate:'string', createdAt:'string' }
+    fields: { name:'string', phone:'string', blood:'string', district:'string', area:'string', lastDonate:'string', lat:'string', lng:'string', createdAt:'string' }
   },
   {
     fs_col: 'bajar_override', aw_col: 'bajar_override',
@@ -52,6 +59,42 @@ const COLLECTIONS = [
   {
     fs_col: 'notification_history', aw_col: 'notification_history',
     fields: { type:'string', title:'string', body:'string', url:'string', sent:'string', failed:'string', sentAt:'string' }
+  },
+  {
+    fs_col: 'pageviews', aw_col: 'pageviews',
+    fields: { page:'string', device:'string', source:'string', referrer:'string', ts:'string' }
+  },
+  {
+    fs_col: 'notifications', aw_col: 'notifications',
+    fields: { title:'string', body:'string', url:'string', image:'string', type:'string', tag:'string', createdAt:'string' }
+  },
+  {
+    fs_col: 'leader_votes', aw_col: 'leader_votes',
+    fields: { lid:'string', type:'string', ts:'string' }
+  },
+  {
+    fs_col: 'issue_reacts', aw_col: 'issue_reacts',
+    fields: { iid:'string', emoji:'string', ts:'string' }
+  },
+  {
+    fs_col: 'poll_users', aw_col: 'poll_users',
+    fields: {
+      name:'string', phone:'string', streak:'integer', maxStreak:'integer', lastVote:'string',
+      voteDays:'string65535', totalVotes:'integer', cycles:'integer', claimedCycles:'integer',
+      votes:'string65535', rewardClaimed:'boolean', fbVerified:'boolean', updatedAt:'string'
+    }
+  },
+  {
+    fs_col: 'forum_messages', aw_col: 'forum_messages',
+    fields: { roomId:'string', name:'string', text:'string', uid:'string', ts:'string' }
+  },
+  {
+    fs_col: 'med_cache', aw_col: 'med_cache',
+    fields: { data:'string65535', fetchedAt:'string' }
+  },
+  {
+    fs_col: 'bajar_cache', aw_col: 'bajar_cache',
+    fields: { data:'string65535', fetchedAt:'string' }
   },
 ];
 

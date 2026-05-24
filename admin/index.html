@@ -822,7 +822,7 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div>
               <div style="font-size:12px;font-weight:800;color:#15803d">🔍 Step 1 — নেতা আবিষ্কার (RSS → AI)</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px">আজকের news পড়ে AI নিজেই বুঝবে কারা trending, কারা মারা গেছেন, নতুন কারা এসেছেন — Firebase update হবে।</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">আজকের news পড়ে AI নিজেই বুঝবে কারা trending, কারা মারা গেছেন, নতুন কারা এসেছেন — Appwrite update হবে।</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
               <div id="discover-status" style="font-size:11px;color:var(--text2)"></div>
@@ -836,7 +836,7 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div>
               <div style="font-size:12px;font-weight:800;color:#1d4ed8">📅 Step 2 — Timeline Generate (RSS → AI)</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px">আজকের news থেকে AI timeline events বানাবে — date, title, description, tags সহ Firebase-এ save হবে।</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">আজকের news থেকে AI timeline events বানাবে — date, title, description, tags সহ Appwrite-এ save হবে।</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
               <div id="timeline-status" style="font-size:11px;color:var(--text2)"></div>
@@ -850,7 +850,7 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div>
               <div style="font-size:12px;font-weight:800;color:var(--blue)">🤖 Step 3 — AI Analysis Update</div>
-              <div style="font-size:11px;color:var(--text2);margin-top:2px">Firebase-এর active নেতাদের জন্য Groq AI দিয়ে approval, promises, statements আপডেট করে। Discover-এর পরে চালাও।</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">Appwrite-এর active নেতাদের জন্য Groq AI দিয়ে approval, promises, statements আপডেট করে। Discover-এর পরে চালাও।</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
               <div id="leader-ai-status" style="font-size:11px;color:var(--text2)"></div>
@@ -1101,8 +1101,8 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
       <div id="an-setup" style="display:none;margin-top:12px" class="card">
         <div class="card-title" style="color:var(--amber);margin-bottom:8px">⚙️ Visitor Tracking সেটআপ করুন</div>
         <code style="display:block;background:var(--bg);padding:12px;border-radius:8px;font-size:10px;white-space:pre-wrap;border:1px solid var(--border);line-height:1.6">&lt;script type="module"&gt;
-import{initializeApp,getApps}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import{getFirestore,addDoc,collection,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import{initializeApp,getApps}from'/js/aw-firestore.js';
+import{getFirestore,addDoc,collection,serverTimestamp}from'/js/aw-firestore.js';
 const app=getApps().length?getApps()[0]:initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',projectId:'joaf-app-45753'});
 const db=getFirestore(app);
 const ua=navigator.userAgent,dev=/Mobile|Android|iPhone/i.test(ua)?'mobile':'desktop';
@@ -1142,7 +1142,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
           <button class="btn btn-ghost" onclick="runMigration()">⬆️ Subscription Migration</button>
           <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
           <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
-          <a href="https://console.firebase.google.com/project/joaf-app-45753" target="_blank" class="btn btn-ghost">🔥 Firebase Console</a>
+          <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">🔥 Appwrite Console</a>
           <a href="https://app.netlify.com/projects/joaf" target="_blank" class="btn btn-ghost">🌐 Netlify Dashboard</a>
         </div>
       </div>
@@ -1465,8 +1465,8 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from '/js/aw-firestore.js';
 
 const FB = { apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk', authDomain:'joaf-app-45753.firebaseapp.com', projectId:'joaf-app-45753', storageBucket:'joaf-app-45753.firebasestorage.app', messagingSenderId:'472362223214', appId:'1:472362223214:web:9186a4f90dc608bae4487f' };
 const app = getApps().length ? getApps()[0] : initializeApp(FB);
@@ -1578,7 +1578,7 @@ async function initDashboard() {
 
   // ── Health indicators (array-driven) ──
   const HEALTH_ITEMS = [
-    { label: 'Firebase',        check: async () => { const s=await getDocs(collection(db,'push_subscriptions')); return {ok:true,val:'Connected'}; } },
+    { label: 'Appwrite',        check: async () => { const s=await getDocs(collection(db,'push_subscriptions')); return {ok:true,val:'Connected'}; } },
     { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
     { label: 'Notifications Fn',check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
   ];
@@ -2116,7 +2116,7 @@ window.runGenerateTimeline = async function() {
     if (!data.success) throw new Error(data.error || data.reason || 'Unknown error');
     const msg = data.skipped
       ? `⏭️ Skip — আজকে আগেই ${data.reason}`
-      : `✅ ${data.events || 0}টি timeline event Firebase-এ save হয়েছে`;
+      : `✅ ${data.events || 0}টি timeline event Appwrite-এ save হয়েছে`;
     toast(msg, 'success');
     status.textContent = msg;
     status.style.color = 'var(--green)';
@@ -2214,7 +2214,7 @@ window.migrateLeaders = async function() {
       virals:[{text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশে ব্যাপক আলোচনা।',icon:'📋',date:'জানুয়ারি ২০২৬'}]},
   ];
   try {
-    const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const { setDoc, doc } = await import('/js/aw-firestore.js');
     for (const leader of leaders) {
       const {id, ...data} = leader;
       await setDoc(doc(db,'leaders', id), {...data, createdAt:serverTimestamp()});
@@ -2431,7 +2431,7 @@ async function loadForum() {
   const tbody = document.getElementById('forum-tbody');
   tbody.innerHTML='<tr><td colspan="4" class="loading">লোড হচ্ছে...</td></tr>';
   try {
-    const snap = await getDocs(collection(db,'forum_'+room));
+    const snap = await getDocs(query(collection(db,'forum_messages'), where('roomId','==', room), orderBy('ts','desc')));
     if (snap.empty) { tbody.innerHTML='<tr><td colspan="4" class="empty">কোনো message নেই</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
@@ -2440,15 +2440,15 @@ async function loadForum() {
         <td style="font-weight:700;font-size:12px">${data.name||'Anonymous'}</td>
         <td style="font-size:12px;max-width:300px">${data.text||'—'}</td>
         <td style="font-size:10px;color:var(--text2)">${time}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteMsg('forum_${room}','${d.id}')">Delete</button></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteMsg('${d.id}')">Delete</button></td>
       </tr>`;
     }).join('');
   } catch(e) { tbody.innerHTML='<tr><td colspan="4" class="empty text-red">Error loading</td></tr>'; }
 }
 
-window.deleteMsg = async function(col, id) {
+window.deleteMsg = async function(id) {
   if (!confirm('এই message delete করবেন?')) return;
-  await deleteDoc(doc(db,col,id));
+  await deleteDoc(doc(db,'forum_messages',id));
   toast('Deleted','info'); loadForum();
 };
 

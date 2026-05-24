@@ -1,4 +1,4 @@
-// update-leaders.js — Firebase থেকে active leaders পড়ে AI দিয়ে update করে
+// update-leaders.js — Appwrite থেকে active leaders পড়ে AI দিয়ে update করে
 // Primary: Google Gemini (free: 1500 req/day, gemini-2.0-flash)
 // Fallback: Groq (llama-3.1-8b-instant → llama-3.3-70b-versatile)
 
@@ -12,80 +12,20 @@ const GROQ_MODELS = [
   'llama-3.3-70b-versatile',           // 100k TPD — ভালো quality, last resort
 ];
 
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const { awListAll, awGet, awUpsert } = require('./aw-utils');
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
-// ── Firestore REST API ──
-async function firestoreGetActiveLeaders() {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders?key=${FB_CONFIG.apiKey}&pageSize=200`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('Firestore GET failed: ' + r.status);
-  const data = await r.json();
-  return (data.documents || []).map(doc => {
-    const id = doc.name.split('/').pop();
-    const fields = doc.fields || {};
-    const obj = { id };
-    for (const [k, v] of Object.entries(fields)) {
-      if (v.stringValue !== undefined) obj[k] = v.stringValue;
-      else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
-      else if (v.doubleValue !== undefined) obj[k] = v.doubleValue;
-      else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-      else if (v.arrayValue) obj[k] = (v.arrayValue.values || []).map(i => {
-        if (i.mapValue) {
-          const m = {};
-          for (const [mk, mv] of Object.entries(i.mapValue.fields || {})) {
-            m[mk] = mv.stringValue ?? mv.integerValue ?? mv.booleanValue ?? '';
-          }
-          return m;
-        }
-        return i.stringValue ?? i.integerValue ?? '';
-      });
-    }
-    return obj;
-  }).filter(l => l.active !== false && l.isDeceased !== true);
+// ── Appwrite helpers ──
+async function awGetActiveLeaders() {
+  const docs = await awListAll('leaders');
+  return docs.map(d => ({ id: d.id, ...d.data }))
+    .filter(l => l.active !== false && l.isDeceased !== true);
 }
 
-async function firestoreGetOne(docId) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url);
-  if (!r.ok) return null;
-  const d = await r.json();
-  const fields = d.fields || {};
-  const obj = {};
-  for (const [k, v] of Object.entries(fields)) {
-    if (v.stringValue !== undefined) obj[k] = v.stringValue;
-    else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-  }
-  return obj;
-}
-
-async function firestoreSet(docId, data) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => {
-      if (typeof i === 'object' && i !== null) return { mapValue: { fields: Object.fromEntries(Object.entries(i).map(([k, vv]) => [k, toField(vv)])) } };
-      return toField(i);
-    })}};
-    return { nullValue: null };
-  }
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
-  });
-  if (!r.ok) {
-    const err = await r.text();
-    throw new Error('Firestore PATCH failed: ' + err);
-  }
-  return await r.json();
+async function awGetOne(docId) {
+  const doc = await awGet('leaders', docId);
+  return doc ? doc.data : null;
 }
 
 // ── AI Prompt (shared) ──
@@ -209,8 +149,8 @@ exports.handler = async (event) => {
   let updated = 0;
 
   try {
-    const activeLeaders = await firestoreGetActiveLeaders();
-    console.log(`[update-leaders] ${activeLeaders.length} active leaders found in Firebase`);
+    const activeLeaders = await awGetActiveLeaders();
+    console.log(`[update-leaders] ${activeLeaders.length} active leaders found in Appwrite`);
 
     const body = JSON.parse(event.body || '{}');
     const batchStart = body.batchStart || 0;
@@ -219,7 +159,7 @@ exports.handler = async (event) => {
 
     for (const leader of batch) {
       try {
-        const existing = await firestoreGetOne(leader.id);
+        const existing = await awGetOne(leader.id);
         if (existing?.lastAiUpdate === today) {
           results.push({ id: leader.id, name: leader.name, status: 'skipped' });
           continue;
@@ -232,7 +172,7 @@ exports.handler = async (event) => {
         }
 
         if (aiData.isDeceased === true) {
-          await firestoreSet(leader.id, {
+          await awUpsert('leaders', leader.id, {
             ...leader,
             isDeceased:   true,
             active:        false,
@@ -260,7 +200,7 @@ exports.handler = async (event) => {
           lastAiUpdate:  today,
         };
 
-        await firestoreSet(leader.id, docData);
+        await awUpsert('leaders', leader.id, docData);
         updated++;
         results.push({ id: leader.id, name: leader.name, status: 'updated', approval: aiData.approval });
         await new Promise(r => setTimeout(r, 500));

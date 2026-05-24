@@ -96,8 +96,8 @@
 <script src="/js/components.js?v=6.6"></script>
 
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from '/js/aw-firestore.js';
 
 const FB_CONFIG = {
   apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
@@ -227,7 +227,7 @@ async function fetchFromGroq() {
 async function loadMeds() {
   const cacheKey = todayKey();
 
-  // 1. Try Firebase cache
+  // 1. Try Appwrite cache
   try {
     const snap = await getDoc(doc(db, 'med_cache', cacheKey));
     if (snap.exists()) {
@@ -240,7 +240,7 @@ async function loadMeds() {
       }
     }
   } catch(e) {
-    console.log('Firebase cache miss:', e);
+    console.log('Appwrite cache miss:', e);
   }
 
   // 2. Fetch from Groq
@@ -250,14 +250,14 @@ async function loadMeds() {
     renderTabs();
     window._filterMeds();
 
-    // 3. Save to Firebase
+    // 3. Save to Appwrite
     try {
       await setDoc(doc(db, 'med_cache', cacheKey), {
         data: freshMeds,
         fetchedAt: serverTimestamp()
       });
     } catch(e) {
-      console.log('Firebase save failed:', e);
+      console.log('Appwrite save failed:', e);
     }
 
   } catch(e) {
@@ -276,8 +276,8 @@ loadMeds();
 </script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
