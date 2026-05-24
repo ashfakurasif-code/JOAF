@@ -19,16 +19,21 @@ function toField(v) {
   return { nullValue: null };
 }
 
-async function firestoreSet(collection, docId, data) {
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `${BASE}/${collection}/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
+async function firestoreSet(col, docId, data) {
+  // PATCH (upsert) — Appwrite
+  const awData = {};
+  for (const [k,v] of Object.entries(data)) {
+    awData[k] = (typeof v === 'object' && v !== null) ? JSON.stringify(v) : String(v ?? '');
+  }
+  const patchR = await fetch(`${AW_BASE}/${docId}`, {
+    method:'PATCH', headers:AW_H, body:JSON.stringify({data:awData})
   });
-  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
-  return await r.json();
+  if (patchR.ok) return;
+  // If not found, POST
+  await fetch(AW_BASE, {
+    method:'POST', headers:AW_H,
+    body:JSON.stringify({documentId:docId, data:awData, permissions:['read(\"any\")']})
+  });
 }
 
 exports.handler = async (event) => {
