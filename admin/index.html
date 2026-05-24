@@ -1245,7 +1245,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <div style="margin-bottom:10px;">
               <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">🖼️ Image বেছে নিন</label>
               <div id="sa-drop" onclick="document.getElementById('sa-img-input').click()" style="border:2px dashed var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
-                <input type="file" id="sa-img-input" accept="image/*" style="display:none" onchange="saPreviewImg(this)">
+                <input type="file" id="sa-img-input" accept="image/*,video/*" style="display:none" onchange="saPreviewImg(this)">
                 <div id="sa-img-preview" style="display:none;margin-bottom:6px;"><img id="sa-thumb" style="max-height:80px;border-radius:6px;border:1px solid var(--border)"></div>
                 <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Click করে image select করুন</div>
               </div>
@@ -3766,8 +3766,17 @@ window.saOpenPostHelper = async function() {
     for (const page of pages) {
       try {
         let postRes, postData;
-        if (file) {
-          // Image post via FormData — binary direct to FB
+        if (file && file.type.startsWith('video/')) {
+          // Video post
+          const fd = new FormData();
+          fd.append('source', file);
+          fd.append('description', caption);
+          fd.append('access_token', page.access_token);
+          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/videos`, {
+            method: 'POST', body: fd
+          });
+        } else if (file) {
+          // Image post
           const fd = new FormData();
           fd.append('source', file);
           fd.append('message', caption);
