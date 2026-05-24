@@ -3930,7 +3930,7 @@ window.saOpenPostHelper = async function() {
   if (!caption) { alert('Caption লিখুন'); return; }
 
   const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  const TOKEN = localStorage.getItem('joaf_fb_token') || '';
+  const TOKEN = localStorage.getItem('joaf_fb_token') || 'EAAjL2bBHrGoBRjMgaWEdP0GIfH4dSS550wSlUziWxnBhE1ELq1JbwMmqh7l0so0xWAo3t49G8CIIFwhGu7ybr8fBq1PxK79YUpZBdkfBusWKLOGiNXrSBwKotOaRuyP1PZCJArRcBJxJ2psMUrbsUylWmAytUV4WD3frWYYbiFbVUuJr0JqEGFMNR8ayo8Y9zTzfLpBR95Gy7bJBKLllcleBBZBLK6TZBvYBzGDF7XUiSFvtYyiUzqO052X4w0M6IZCU1lFMK0I1NqQLpLZAknJc1xErJ32rAHkwZDZD';
   if (!TOKEN) {
     const st=document.getElementById('sa-token-status');
     if(st){st.textContent='❌ আগে token save করুন';st.style.color='#f87171';}
