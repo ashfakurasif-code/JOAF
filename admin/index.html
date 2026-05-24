@@ -3207,6 +3207,15 @@ News: ${text}` });
       const downloadCardBtn = document.getElementById('fb-download-card-btn');
       if (downloadCardBtn) downloadCardBtn.style.display = 'inline-block';
       if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ Card ready! ⬇️ Download করুন।</div>';
+      // Auto-fill SA panel
+      const cardCanvas2 = document.getElementById('fb-card-canvas');
+      if (cardCanvas2) {
+        cardCanvas2.toBlob(blob => {
+          if (!blob) return;
+          const cardFile = new File([blob], 'joaf-card-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+          pushToSAPanel(cardFile, URL.createObjectURL(blob), false);
+        }, 'image/jpeg', 0.95);
+      }
     } else {
       // ── VIDEO MODE ─────────────────────────────────────
       if (logEl) logEl.innerHTML = '<div style="color:var(--blue);font-size:11px;font-weight:700">🎬 AI Video তৈরি হচ্ছে... (৫-১৫ মিনিট)</div>';
@@ -3217,6 +3226,11 @@ News: ${text}` });
       document.getElementById('fb-download-btn').style.display = 'inline-block';
       document.getElementById('fb-post-reels-btn').style.display = 'inline-block';
       if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ Video ready!</div>';
+      // Auto-fill SA panel
+      if (reelBlob) {
+        const reelFile = new File([reelBlob], 'joaf-reel-' + Date.now() + '.webm', { type: 'video/webm' });
+        pushToSAPanel(reelFile, URL.createObjectURL(reelBlob), true);
+      }
     }
   } catch(e) {
     if (logEl) logEl.innerHTML = '<div style="color:var(--red);font-size:11px;">❌ ' + e.message + '</div>';
@@ -3848,6 +3862,34 @@ window.fbHelperOpenSuite = function(type) {
   // Show reminder again
   fbHelperRenderExcludes();
 };
+
+
+// ── AUTO-FILL SA PANEL ──────────────────────────────────
+function pushToSAPanel(file, previewSrc, isVideo) {
+  window._saImgFile = file;
+  const preview = document.getElementById('sa-img-preview');
+  const label = document.getElementById('sa-img-label');
+  const thumb = document.getElementById('sa-thumb');
+  if (preview) {
+    preview.innerHTML = '';
+    if (isVideo) {
+      const vid = document.createElement('video');
+      vid.style = 'max-height:80px;border-radius:6px;border:1px solid var(--border)';
+      vid.src = previewSrc; vid.muted = true; vid.controls = false;
+      preview.appendChild(vid);
+    } else {
+      const img = document.createElement('img');
+      img.style = 'max-height:80px;border-radius:6px;border:1px solid var(--border)';
+      img.src = previewSrc;
+      preview.appendChild(img);
+    }
+    preview.style.display = 'block';
+  }
+  if (label) label.textContent = (isVideo ? '🎬 ' : '📸 ') + file.name + ' ✅ auto-filled';
+  // Scroll SA panel into view
+  const saDrop = document.getElementById('sa-drop');
+  if (saDrop) saDrop.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 function fbDownloadReel() {
   if (!reelBlob) return;
