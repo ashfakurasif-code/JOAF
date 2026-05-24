@@ -1618,14 +1618,14 @@ async function initDashboard() {
   try {
     // Parallel load: subscribers + donors + alerts + notifications
     const [subSnap, donorSnap, alertSnap, histSnap] = await Promise.all([
-      getDocs(collection(db,'push_subscriptions')),
-      getDocs(collection(db,'donors')),
-      getDocs(collection(db,'alerts')),
-      getDocs(collection(db,'notification_history'))
+      _awList('push_subscriptions',[],500),
+      _awList('donors',[],500),
+      _awList('alerts',[],500),
+      _awList('notification_history',[],500)
     ]);
 
-    const activeCount = subSnap.docs.filter(d=>d.active!==false).length;
-    const donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
+    const activeCount = subSnap.filter(d=>d.active!==false).length;
+    const donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.length;
 
     // Set KPIs
     setEl('ds-sub', activeCount); setEl('b-notif', activeCount); setEl('n-sub', activeCount); setEl('an-subs', activeCount); setEl('an-kpi-subs', activeCount); anCachedSubs = activeCount;
@@ -1633,7 +1633,7 @@ async function initDashboard() {
     setEl('b-blood', donors); setEl('n-total', notifs); setEl('an-notifs', notifs); setEl('an-kpi-notif', notifs); anCachedNotifs = notifs;
 
     const subSubEl = document.getElementById('ds-sub-sub');
-    if(subSubEl){ subSubEl.textContent = `${subSnap.size-activeCount} inactive`; }
+    if(subSubEl){ subSubEl.textContent = `${subSnap.length-activeCount} inactive`; }
 
     // Today notifications
     const today = new Date(); today.setHours(0,0,0,0);
@@ -1644,8 +1644,8 @@ async function initDashboard() {
     if(todaySubEl) todaySubEl.textContent = `আজ ${todayNotifs}টি পাঠানো`;
 
     // Recent history
-    const hDocs = histSnap.docs.map(d=>({...d,id:d.$id}))
-      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0))).slice(0,5);
+    const hDocs = histSnap.map(d=>({...d,id:d.$id}))
+      .sort((a,b)=>((new Date(b.sentAt||0)-new Date(a.sentAt||0))).slice(0,5);
     renderHistory('dash-history', hDocs);
 
     // Blood preview
@@ -1767,13 +1767,13 @@ async function callSendNotif(payload) {
 async function loadNotifPage() {
   try {
     const [histSnap, subSnap] = await Promise.all([
-      getDocs(collection(db,'notification_history')),
-      getDocs(collection(db,'push_subscriptions'))
+      _awList('notification_history',[],500),
+      _awList('push_subscriptions',[],500)
     ]);
-    const docs = histSnap.docs.map(d=>({...d,id:d.$id}))
-      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0)));
-    setEl('n-total', histSnap.size);
-    const activeCount = subSnap.docs.filter(d=>d.active!==false).length;
+    const docs = histSnap.map(d=>({...d,id:d.$id}))
+      .sort((a,b)=>((new Date(b.sentAt||0)-new Date(a.sentAt||0)));
+    setEl('n-total', histSnap.length);
+    const activeCount = subSnap.filter(d=>d.active!==false).length;
     setEl('n-sub', activeCount);
     const today = new Date(); today.setHours(0,0,0,0);
     const todayCount = docs.filter(d=>{ const t=d.sentAt?.toDate?.(); return t&&t>=today; }).length;
@@ -1803,7 +1803,7 @@ async function loadAlerts() {
   el.innerHTML = '<div class="loading">লোড হচ্ছে...</div>';
   try {
     const snap = await _awList('alerts');
-    if (snap.empty) { el.innerHTML='<div class="empty">কোনো সতর্কতা নেই</div>'; ['alert-sel-all','alert-bulk-del'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';}); return; }
+    if (!snap.length) { el.innerHTML='<div class="empty">কোনো সতর্কতা নেই</div>'; ['alert-sel-all','alert-bulk-del'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';}); return; }
     ['alert-sel-all','alert-bulk-del'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='';});
     document.getElementById('alert-bulk-del').style.display='none';
     el.innerHTML = snap.map(d => {
@@ -1981,7 +1981,7 @@ async function loadPress() {
   el.innerHTML='<div class="loading">লোড হচ্ছে...</div>';
   try {
     const snap = await _awList('press_releases');
-    if (snap.empty) { el.innerHTML='<div class="empty">কোনো press release নেই</div>'; return; }
+    if (!snap.length) { el.innerHTML='<div class="empty">কোনো press release নেই</div>'; return; }
     el.innerHTML = `<div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;">
       <input type="checkbox" id="press-chk-all" onchange="togglePressAll(this)" style="cursor:pointer;accent-color:var(--accent)">
       <span style="font-size:11px;color:var(--text2)">সব Select</span>
@@ -2036,7 +2036,7 @@ async function loadLeaders() {
   tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await _awList('leaders');
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
+    if (!snap.length) { tbody.innerHTML='<tr><td colspan="8" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
     tbody.innerHTML = snap.map(d => {
       const data = d;
       return `<tr>
@@ -2251,7 +2251,7 @@ async function loadWarriors() {
   tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await _awList('warriors');
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">কোনো যোদ্ধা নেই</td></tr>'; return; }
+    if (!snap.length) { tbody.innerHTML='<tr><td colspan="8" class="empty">কোনো যোদ্ধা নেই</td></tr>'; return; }
     tbody.innerHTML = snap.map(d => {
       const data = d;
       const typeClass = data.type==='shahid'?'badge-red':data.type==='ahat'?'badge-amber':'badge-green';
@@ -2352,7 +2352,7 @@ async function loadMedicines() {
   tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await _awList('medicines');
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো ওষুধ নেই</td></tr>'; return; }
+    if (!snap.length) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো ওষুধ নেই</td></tr>'; return; }
     tbody.innerHTML = snap.map(d => {
       const data = d;
       return `<tr>
@@ -2390,7 +2390,7 @@ async function loadMembers() {
   tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await _awList('members');
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো member নেই</td></tr>'; return; }
+    if (!snap.length) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো member নেই</td></tr>'; return; }
     tbody.innerHTML = snap.map(d => {
       const data = d;
       return `<tr>
@@ -2429,8 +2429,8 @@ async function loadPolls() {
   tbody.innerHTML='<tr><td colspan="5" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await _awList('poll_users');
-    setEl('po-voters', snap.size);
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো voter নেই</td></tr>'; return; }
+    setEl('po-voters', snap.length);
+    if (!snap.length) { tbody.innerHTML='<tr><td colspan="5" class="empty">কোনো voter নেই</td></tr>'; return; }
     const users = snap.map(d=>({...d,id:d.$id}))
       .sort((a,b)=>(b.streak||0)-(a.streak||0));
     setEl('po-streak', users.filter(u=>(u.streak||0)>0).length);
@@ -2453,7 +2453,7 @@ async function loadForum() {
   tbody.innerHTML='<tr><td colspan="4" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await getDocs(collection(db,'forum_'+room));
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="4" class="empty">কোনো message নেই</td></tr>'; return; }
+    if (!snap.length) { tbody.innerHTML='<tr><td colspan="4" class="empty">কোনো message নেই</td></tr>'; return; }
     tbody.innerHTML = snap.map(d => {
       const data = d;
       const time = data.ts?.toDate?.()?.toLocaleString('bn-BD')||'—';
