@@ -10,12 +10,10 @@ const GROQ_MODELS = [
   'llama-3.3-70b-versatile',                    // 70B — last resort, 100k TPD
 ];
 
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT  = '6a11b6cd000b59f318eb';
-const AW_KEY      = process.env.APPWRITE_API_KEY;
-const AW_DB       = 'joaf';
-const AW_BASE     = `${AW_ENDPOINT}/databases/${AW_DB}/collections/timeline/documents`;
-const AW_H        = { 'Content-Type':'application/json', 'X-Appwrite-Project':AW_PROJECT, 'X-Appwrite-Key':AW_KEY };
+const FB_CONFIG = {
+  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
+  projectId: 'joaf-app-45753',
+};
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 const BD_DATE_BN = () => {
@@ -26,34 +24,38 @@ const BD_DATE_BN = () => {
 
 const { fetchBDHeadlines } = require('./bd-rss-utils');
 
-// ── Appwrite ──
+// ── Firestore ──
 async function firestoreSet(docId, data) {
-  const awData = {};
-  for (const [k, v] of Object.entries(data)) {
-    if (Array.isArray(v)) awData[k] = JSON.stringify(v);
-    else awData[k] = v !== undefined && v !== null ? String(v) : '';
+  function toField(v) {
+    if (typeof v === 'string')  return { stringValue: v };
+    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
+    if (typeof v === 'boolean') return { booleanValue: v };
+    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => ({ stringValue: String(i) })) } };
+    return { nullValue: null };
   }
-  const patchR = await fetch(`${AW_BASE}/${docId}`, {
-    method: 'PATCH', headers: AW_H, body: JSON.stringify({ data: awData })
+  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
+  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/timeline/${docId}?key=${FB_CONFIG.apiKey}`;
+  const r = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields }),
   });
-  if (patchR.ok) return;
-  await fetch(AW_BASE, {
-    method: 'POST', headers: AW_H,
-    body: JSON.stringify({ documentId: docId, data: awData, permissions: ['read("any")'] })
-  });
+  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
 }
-
 
 async function todayEventsExist(today) {
   try {
-    const query = encodeURIComponent(`equal("isoDate","${today}")`);
-    const r = await fetch(`${AW_BASE}?queries[]=${query}&limit=1`, { headers: AW_H });
+    const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/timeline?key=${FB_CONFIG.apiKey}&pageSize=50`;
+    const r = await fetch(url);
     if (!r.ok) return false;
-    const d = await r.json();
-    return (d.total || 0) > 0;
+    const data = await r.json();
+    const docs = data.documents || [];
+    return docs.some(doc => {
+      const f = doc.fields || {};
+      return f.isoDate?.stringValue === today;
+    });
   } catch (e) { return false; }
 }
-
 
 exports.handler = async (event) => {
   const headers = {
