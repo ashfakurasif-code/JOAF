@@ -11,18 +11,18 @@
   <meta name="description" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF) এর মিডিয়া, প্রেস রিলিজ ও সর্বশেষ সংবাদ।">
   <meta property="og:title" content="সংবাদ ও মিডিয়া — জোয়াফ">
   <meta property="og:description" content="জোয়াফ সম্পর্কিত সকল সংবাদ, প্রতিবেদন ও মিডিয়া কভারেজ।">
-  <meta property="og:image" content="https://julyforum.com/logoc7c3.png">
+  <meta property="og:image" content="https://www.julyforum.com/logoc7c3.png">
   <meta property="og:image:width" content="800">
   <meta property="og:image:height" content="800">
-  <meta property="og:url" content="https://julyforum.com/media-news.html">
+  <meta property="og:url" content="https://www.julyforum.com/media-news.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম">
   <meta property="fb:app_id" content="1114707634145642">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="সংবাদ ও মিডিয়া — জোয়াফ">
   <meta name="twitter:description" content="জোয়াফ সম্পর্কিত সকল সংবাদ, প্রতিবেদন ও মিডিয়া কভারেজ।">
-  <meta name="twitter:image" content="https://julyforum.com/logoc7c3.png">
-  <link rel="canonical" href="https://julyforum.com/media-news.html">
+  <meta name="twitter:image" content="https://www.julyforum.com/logoc7c3.png">
+  <link rel="canonical" href="https://www.julyforum.com/media-news.html">
     <!-- Resource hints for speed -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://code.jquery.com">
@@ -138,7 +138,7 @@ async function renderAllPress() {
       const dateStr = p.date || '';
       const dateDisplay = dateStr ? (typeof BanglaUtil !== 'undefined' ? BanglaUtil.formatDateShort(dateStr) : dateStr) : '';
       const viewUrl = '/press-releases/view.html?id=' + id;
-      const shareUrl = encodeURIComponent('https://julyforum.com' + viewUrl);
+      const shareUrl = encodeURIComponent('https://www.julyforum.com' + viewUrl);
       const shareTitle = encodeURIComponent(p.title || '');
       return `
     <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:${(i%3)*0.1}s">

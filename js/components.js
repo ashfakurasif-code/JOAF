@@ -1370,7 +1370,7 @@ async function joafSendAdminEmail(data) {
       alert_photo: data.photo || 'কোনো ছবি নেই',
       reporter: data.reporter || 'অজ্ঞাত',
       emergency_contact: emergencyEmails[data.type] || '',
-      site_url: 'https://julyforum.com/alert.html'
+      site_url: 'https://www.julyforum.com/alert.html'
     });
   } catch(e) { console.log('Email send failed:', e); }
 }

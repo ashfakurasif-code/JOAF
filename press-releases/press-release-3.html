@@ -15,7 +15,7 @@
   <title id="pr-page-title">প্রেস রিলিজ — জোয়াফ</title>
   <meta name="description" id="pr-meta-desc" content="">
   <meta property="og:title" id="pr-og-title" content="">
-  <meta property="og:image" id="pr-og-img" content="https://julyforum.com/logoc7c3.png">
+  <meta property="og:image" id="pr-og-img" content="https://www.julyforum.com/logoc7c3.png">
   <meta property="og:type" content="article">
   <meta property="fb:app_id" content="1114707634145642">
     <!-- Resource hints for speed -->
@@ -135,7 +135,7 @@
   document.getElementById('pr-page-title').textContent = pr.title + ' — জোয়াফ';
   document.getElementById('pr-meta-desc').content = pr.summary;
   document.getElementById('pr-og-title').content = pr.title;
-  document.getElementById('pr-og-img').content = 'https://julyforum.com' + pr.img;
+  document.getElementById('pr-og-img').content = 'https://www.julyforum.com' + pr.img;
 
   // Hero
   document.getElementById('pr-title').textContent = pr.title;
@@ -198,14 +198,14 @@
 
   // Dynamic canonical
   const canonEl = document.getElementById('pr-canonical');
-  if (canonEl) canonEl.href = 'https://julyforum.com/press-releases/' + slug + '.html';
+  if (canonEl) canonEl.href = 'https://www.julyforum.com/press-releases/' + slug + '.html';
   // Dynamic OG URL
   let ogUrl = document.querySelector('meta[property="og:url"]');
   if (!ogUrl) { ogUrl = document.createElement('meta'); ogUrl.setAttribute('property','og:url'); document.head.appendChild(ogUrl); }
-  ogUrl.content = 'https://julyforum.com/press-releases/' + slug + '.html';
+  ogUrl.content = 'https://www.julyforum.com/press-releases/' + slug + '.html';
 
   // Share buttons
-  const url = encodeURIComponent('https://julyforum.com/press-releases/' + slug + '.html');
+  const url = encodeURIComponent('https://www.julyforum.com/press-releases/' + slug + '.html');
   const title = encodeURIComponent(pr.title);
   document.getElementById('pr-share').innerHTML = `
     <strong style="font-size:14px;align-self:center">শেয়ার করুন:</strong>

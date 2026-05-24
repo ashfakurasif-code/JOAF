@@ -4,7 +4,7 @@
 
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': 'https://julyforum.com',
+    'Access-Control-Allow-Origin': 'https://www.julyforum.com',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
