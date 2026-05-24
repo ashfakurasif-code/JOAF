@@ -1,4 +1,22 @@
 // JOAF Components v9.0
+
+// ── Appwrite config (Firebase migration) ──
+const _AW = { base:'https://fra.cloud.appwrite.io/v1', proj:'6a11b6cd000b59f318eb', db:'joaf' };
+async function _awPost(col,data,docId){
+  const h={'Content-Type':'application/json','X-Appwrite-Project':_AW.proj};
+  const url=`${_AW.base}/databases/${_AW.db}/collections/${col}/documents`;
+  const r=await fetch(url,{method:'POST',headers:h,body:JSON.stringify({documentId:docId||'unique()',data,permissions:['read("any")']})});
+  if(!r.ok){const e=await r.text();throw new Error('AW POST failed: '+r.status+' '+e.slice(0,80));}
+  return await r.json();
+}
+async function _awList(col,queries,limit=5){
+  const h={'X-Appwrite-Project':_AW.proj};
+  let url=`${_AW.base}/databases/${_AW.db}/collections/${col}/documents?limit=${limit}`;
+  if(queries)url+='&'+queries.map(q=>`queries[]=${encodeURIComponent(q)}`).join('&');
+  const r=await fetch(url,{headers:h});
+  if(!r.ok)return[];
+  const d=await r.json();return d.documents||[];
+}
 // ✅ Mute: never pause, just flip .muted — works on all mobile browsers
 // ✅ Header: scroll-aware glass effect
 // ✅ Member cards: mouse-tracking 3D tilt on desktop
@@ -756,12 +774,7 @@ const JOAFComponents = {
         btn.textContent='নিবন্ধন হচ্ছে...'; btn.disabled=true;
         try {
           const {initializeApp,getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-          const {getFirestore,collection,addDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-          const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753',storageBucket:'joaf-app-45753.firebasestorage.app',messagingSenderId:'472362223214',appId:'1:472362223214:web:9186a4f90dc608bae4487f'});
-          const db = getFirestore(fbApp);
-          const lat = document.getElementById('jbr-lat').value;
-          const lng = document.getElementById('jbr-lng').value;
-          await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,lat:lat?parseFloat(lat):null,lng:lng?parseFloat(lng):null,createdAt:serverTimestamp()});
+                    await _awPost('donors',{name,phone,blood,district,area,lastDonate:String(lastDonate||''),lat:lat?String(lat):'',lng:lng?String(lng):'',createdAt:new Date().toISOString()});
           // 🔔 Push notification — same district subscribers কে জানাও
           try {
             const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
@@ -876,17 +889,7 @@ const JOAFComponents = {
           }
 
           const {initializeApp, getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-          const {getFirestore, collection, addDoc, serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-          const fbApp = getApps().length ? getApps()[0] : initializeApp({
-            apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-            authDomain:'joaf-app-45753.firebaseapp.com',
-            projectId:'joaf-app-45753',
-            storageBucket:'joaf-app-45753.firebasestorage.app',
-            messagingSenderId:'472362223214',
-            appId:'1:472362223214:web:9186a4f90dc608bae4487f'
-          });
-          const db = getFirestore(fbApp);
-          await addDoc(collection(db,'alerts'), {title, description:desc, location, reporter, type:_selType, imageUrl, lat:_gps?.lat||null, lng:_gps?.lng||null, createdAt:serverTimestamp()});
+                    await _awPost('alerts',{title,body:desc||'',type:_selType||'info',area:location||'',level:'medium',active:true,createdAt:new Date().toISOString()});
 
           alert('✅ সতর্কতা পাঠানো হয়েছে!');
           document.getElementById('joaf-global-alert-modal').classList.remove('open');
@@ -1328,10 +1331,7 @@ async function joafSendAlertNotification(data) {
   // Also save to Firebase so other users see it on next visit
   try {
     const {getApps, initializeApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const {getFirestore, collection, addDoc, serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-    const db = getFirestore(fbApp);
-    await addDoc(collection(db, 'notifications'), {
+        await _awPost('notification_history',{type:'general',title:String(title||''),body:String(body||''),url:String(url||''),sent:'0',failed:'0',sentAt:new Date().toISOString()});
       ...data,
       createdAt: serverTimestamp()
     });
@@ -1666,14 +1666,8 @@ setTimeout(() => {
 (async function injectLatestPressRelease() {
   try {
     const { getApps, initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const fbApp = getApps().length ? getApps()[0] : initializeApp({
-      apiKey: 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-      authDomain: 'joaf-app-45753.firebaseapp.com',
-      projectId: 'joaf-app-45753'
-    });
-    const db = getFirestore(fbApp);
-    const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
+        const _prDocs = await _awList('press_releases',['orderDesc("$createdAt")'],1);
+    const snap = { docs: _prDocs.map(d=>({data:()=>d})), forEach: (fn)=>_prDocs.forEach(d=>fn({data:()=>d})) };
     if (snap.empty) return;
     const href = '/press-releases/view.html?id=' + snap.docs[0].id;
     const tryUpdate = () => {
