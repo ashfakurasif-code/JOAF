@@ -3221,7 +3221,7 @@ News: ${text}` });
         cardCanvas2.toBlob(blob => {
           if (!blob) return;
           const cardFile = new File([blob], 'joaf-card-' + Date.now() + '.jpg', { type: 'image/jpeg' });
-          pushToSAPanel(cardFile, URL.createObjectURL(blob), false);
+          const _cap = (document.getElementById('fb-caption')?.value||'') + (window._joafTags ? '\n\n' + window._joafTags : ''); pushToSAPanel(cardFile, URL.createObjectURL(blob), false, _cap);
         }, 'image/jpeg', 0.95);
       }
     } else {
@@ -3237,7 +3237,7 @@ News: ${text}` });
       // Auto-fill SA panel
       if (reelBlob) {
         const reelFile = new File([reelBlob], 'joaf-reel-' + Date.now() + '.webm', { type: 'video/webm' });
-        pushToSAPanel(reelFile, URL.createObjectURL(reelBlob), true);
+        const _cap2 = (document.getElementById('fb-caption')?.value||'') + (window._joafTags ? '\n\n' + window._joafTags : ''); pushToSAPanel(reelFile, URL.createObjectURL(reelBlob), true, _cap2);
       }
     }
   } catch(e) {
@@ -3374,6 +3374,9 @@ async function drawInstantCard(slideTexts, mood, hook, rawText) {
     });
   });
 
+  // ── LOGO_MID_Y (declared early — used in gap calc below) ──
+  const LOGO_MID_Y = Math.max(CONTENT_ZONE_BOT + 170, 720);
+
   // ── DECORATIVE GAP FILL (content bottom → logo top) ──
   const gapTop = CONTENT_ZONE_BOT + 12;
   const gapBot = LOGO_MID_Y - 180;
@@ -3401,7 +3404,6 @@ async function drawInstantCard(slideTexts, mood, hook, rawText) {
   }
 
   // ── LOGO ZONE — dynamic, tight below content ──
-  const LOGO_MID_Y = Math.max(CONTENT_ZONE_BOT + 170, 720);
   const maxR = Math.min((H - 120 - LOGO_MID_Y - 10), 200);
   // outer glow rings
   [maxR*2.2,maxR*1.7,maxR*1.2].forEach((r,i)=>{
@@ -4030,7 +4032,7 @@ window.fbHelperOpenSuite = function(type) {
 
 
 // ── AUTO-FILL SA PANEL ──────────────────────────────────
-function pushToSAPanel(file, previewSrc, isVideo) {
+function pushToSAPanel(file, previewSrc, isVideo, caption) {
   // Revoke previous objectURL to free memory
   if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); }
   window._saPreviewUrl = previewSrc;
@@ -4055,6 +4057,7 @@ function pushToSAPanel(file, previewSrc, isVideo) {
   if (label) label.textContent = (isVideo ? '🎬 ' : '📸 ') + file.name + ' ✅';
   const saDrop = document.getElementById('sa-drop');
   if (saDrop) saDrop.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (caption) { const el = document.getElementById('sa-caption'); if (el) el.value = caption; }
 }
 
 function fbDownloadReel() {
