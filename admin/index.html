@@ -3756,6 +3756,10 @@ window.saOpenPostHelper = async function() {
       imageUrl = cldData.secure_url;
     }
 
+
+    const resp = await fetch('/.netlify/functions/fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageUrl, caption, excludeIds })
     });
     const data = await resp.json();
