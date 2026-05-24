@@ -16,62 +16,26 @@ const GROQ_MODELS = [
 // ── Valid leader categories — must match leader-tracker.html ──
 const VALID_CATS = ['সরকার', 'বিরোধী দল', 'যুব রাজনীতি', 'সুশীল সমাজ', 'আওয়ামী লীগ', 'ব্যবসায়ী'];
 
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT  = '6a11b6cd000b59f318eb';
-const AW_KEY      = process.env.APPWRITE_API_KEY;
-const AW_DB       = 'joaf';
-const AW_H        = { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY };
+const { awListAll, awUpsert, awUpdate } = require('./aw-utils');
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
 const { fetchBDHeadlines } = require('./bd-rss-utils');
 
-// ── Appwrite REST ──
-async function firestoreGetAll() {
+// ── Appwrite helpers ──
+async function awGetAll() {
   try {
-    let docs = [], cursor = null;
-    do {
-      const url = `${AW_ENDPOINT}/databases/${AW_DB}/collections/leaders/documents?limit=100${cursor ? '&cursor=' + cursor : ''}`;
-      const r = await fetch(url, { headers: AW_H });
-      if (!r.ok) return docs;
-      const data = await r.json();
-      const batch = data.documents || [];
-      docs = docs.concat(batch.map(d => ({ id: d.$id, ...d })));
-      cursor = batch.length === 100 ? batch[batch.length - 1].$id : null;
-    } while (cursor);
-    return docs;
+    const docs = await awListAll('leaders');
+    return docs.map(d => ({ id: d.id, ...d.data }));
   } catch (e) { return []; }
 }
 
-async function firestoreSet(docId, data) {
-  // upsert: try update first, then create
-  const base = `${AW_ENDPOINT}/databases/${AW_DB}/collections/leaders/documents`;
-  const cleanData = Object.fromEntries(
-    Object.entries(data).filter(([_, v]) => !Array.isArray(v)).map(([k, v]) => [k, v === null ? '' : v])
-  );
-  // try PATCH (update)
-  const upd = await fetch(`${base}/${docId}`, {
-    method: 'PATCH', headers: AW_H,
-    body: JSON.stringify({ data: cleanData })
-  });
-  if (upd.ok) return;
-  // if 404 → create
-  const crt = await fetch(base, {
-    method: 'POST', headers: AW_H,
-    body: JSON.stringify({ documentId: docId, data: cleanData })
-  });
-  if (!crt.ok) throw new Error('Appwrite upsert failed: ' + crt.status);
+async function awSet(docId, data) {
+  return awUpsert('leaders', docId, data);
 }
 
-async function firestorePatchFields(docId, updates) {
-  const cleanData = Object.fromEntries(
-    Object.entries(updates).map(([k, v]) => [k, v === null ? '' : v])
-  );
-  const r = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/leaders/documents/${docId}`, {
-    method: 'PATCH', headers: AW_H,
-    body: JSON.stringify({ data: cleanData })
-  });
-  if (!r.ok) console.warn('Appwrite PATCH failed:', r.status);
+async function awPatchFields(docId, updates) {
+  return awUpdate('leaders', docId, updates);
 }
 
 // ── Shared prompt builder ──
@@ -279,7 +243,7 @@ exports.handler = async (event) => {
   try {
     const [rssResult, existingLeaders] = await Promise.all([
       fetchBDHeadlines({ maxPerSource: 15, totalLimit: 60 }),
-      firestoreGetAll(),
+      awGetAll(),
     ]);
 
     const { items: headlineItems, headlines, filteredCount, sourceCounts } = rssResult;
@@ -330,7 +294,7 @@ exports.handler = async (event) => {
         continue;
       }
       try {
-        await firestoreSet(nl.id, {
+        await awSet(nl.id, {
           name: nl.name, party: nl.party || '', role: nl.role || '',
           cat: nl.cat, icon: nl.icon || '👤',
           active: true, isDeceased: false, viral: false, approval: 50,
@@ -344,7 +308,7 @@ exports.handler = async (event) => {
     for (const u of aiResult.inactive) {
       if (!u.id) continue;
       try {
-        await firestorePatchFields(u.id, {
+        await awPatchFields(u.id, {
           active: false,
           isDeceased: u.isDeceased === true,
           lastDiscovered: today,

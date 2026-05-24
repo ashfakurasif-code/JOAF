@@ -1,8 +1,4 @@
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT  = '6a11b6cd000b59f318eb';
-const AW_KEY      = process.env.APPWRITE_API_KEY;
-const AW_DB       = 'joaf';
-const AW_H        = { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY };
+const { awGet } = require('./aw-utils');
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -122,21 +118,22 @@ const img = imgRaw.split('/').map((seg, i) => i < 3 ? seg : encodeURIComponent(s
 <script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
-<script>
+<script type="module">
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, getDocs, collection, query, orderBy, limit } from '/js/aw-firestore.js';
+const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _db = getFirestore(_fa);
 (async () => {
   try {
+    const snap = await getDocs(query(collection(_db,'press_releases'), orderBy('date','desc'), limit(5)));
     const currentId = new URLSearchParams(location.search).get('id');
-    const r = await fetch('https://fra.cloud.appwrite.io/v1/databases/joaf/collections/press_releases/documents?limit=5&orderType=DESC', {
-      headers: { 'X-Appwrite-Project': '6a11b6cd000b59f318eb' }
-    });
-    if (!r.ok) throw new Error();
-    const data = await r.json();
-    const others = (data.documents || []).filter(d => d.$id !== currentId).slice(0,4);
+    const others = snap.docs.filter(d => d.id !== currentId).slice(0,4);
     document.getElementById('sidebarPR').innerHTML = others.map(d => {
-      const oImg = d.img || '/logoc7c3.png';
-      return \`<a href="/press-releases/view.html?id=\${d.$id}" class="sc-pr-item">
-        <img src="\${oImg}" alt="\${d.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
-        <div class="sc-pr-info"><h4>\${d.title||''}</h4><span>\${d.date||''}</span></div>
+      const p = d.data();
+      const oImg = p.img || '/logoc7c3.png';
+      return \`<a href="/press-releases/view.html?id=\${d.id}" class="sc-pr-item">
+        <img src="\${oImg}" alt="\${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+        <div class="sc-pr-info"><h4>\${p.title||''}</h4><span>\${p.date||''}</span></div>
       </a>\`;
     }).join('');
   } catch(e) { console.warn('Sidebar error', e); }
@@ -152,10 +149,9 @@ exports.handler = async (event) => {
   const id = event.queryStringParameters?.id;
   if (!id) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
   try {
-    const r = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/press_releases/documents/${id}`, { headers: AW_H });
-    if (!r.ok) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
-    const doc = await r.json();
-    const html = buildHtml(doc, id);
+    const docSnap = await awGet('press_releases', id);
+    if (!docSnap) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
+    const html = buildHtml(docSnap.data, id);
     return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' }, body: html };
   } catch (err) {
     console.error('press-release-og error:', err);

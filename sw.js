@@ -9,6 +9,7 @@ const PRECACHE = [
   '/css/joaf.css',
   '/js/data.js',
   '/js/components.js',
+  '/js/aw-firestore.js',
   '/js/main.js',
   '/logoc7c3.png',
   '/offline.html',

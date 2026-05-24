@@ -33,13 +33,13 @@ button:disabled{background:#aaa;cursor:not-allowed;}
 <h2>🩸 Donor Seed Tool — JOAF</h2>
 <div class="stat">মোট donor: <b>589</b> জন</div>
 <div class="stat">Source: alleyesonbd + tawfikaitfoundation + BUP + negative groups</div>
-<button onclick="startSeed()" id="startBtn">▶️ Firebase এ Upload শুরু করুন</button>
+<button onclick="startSeed()" id="startBtn">▶️ Appwrite এ Upload শুরু করুন</button>
 <button onclick="document.getElementById('log').innerHTML=''">🧹 Log Clear</button>
 <div id="log">Upload শুরু করতে বাটন চাপুন...</div>
 
 <script type="module">
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp, getApps } from "/js/aw-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, where } from "/js/aw-firestore.js";
 
 const app = getApps().length ? getApps()[0] : initializeApp({
   apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
@@ -69,7 +69,7 @@ window.startSeed = async () => {
   // Get existing phones
   const snap = await getDocs(collection(db, 'donors'));
   const existingPhones = new Set(snap.docs.map(d => d.data().phone));
-  log(`📊 Firebase এ আগে থেকে ${existingPhones.size} জন donor আছে`);
+  log(`📊 Appwrite এ আগে থেকে ${existingPhones.size} জন donor আছে`);
   
   let added = 0, skipped = 0, errors = 0;
   
@@ -111,8 +111,8 @@ window.startSeed = async () => {
 };
 </script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;

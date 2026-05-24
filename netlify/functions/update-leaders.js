@@ -12,56 +12,20 @@ const GROQ_MODELS = [
   'llama-3.3-70b-versatile',           // 100k TPD — ভালো quality, last resort
 ];
 
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT  = '6a11b6cd000b59f318eb';
-const AW_KEY      = process.env.APPWRITE_API_KEY;
-const AW_DB       = 'joaf';
-const AW_H        = { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY };
+const { awListAll, awGet, awUpsert } = require('./aw-utils');
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
-// ── Appwrite REST API ──
-async function firestoreGetActiveLeaders() {
-  let docs = [], cursor = null;
-  do {
-    const url = `${AW_ENDPOINT}/databases/${AW_DB}/collections/leaders/documents?limit=100${cursor ? '&cursor=' + cursor : ''}`;
-    const r = await fetch(url, { headers: AW_H });
-    if (!r.ok) throw new Error('Appwrite GET failed: ' + r.status);
-    const data = await r.json();
-    const batch = data.documents || [];
-    docs = docs.concat(batch.map(d => ({ id: d.$id, ...d })));
-    cursor = batch.length === 100 ? batch[batch.length - 1].$id : null;
-  } while (cursor);
-  return docs.filter(l => l.active !== false && l.isDeceased !== true);
+// ── Appwrite helpers ──
+async function awGetActiveLeaders() {
+  const docs = await awListAll('leaders');
+  return docs.map(d => ({ id: d.id, ...d.data }))
+    .filter(l => l.active !== false && l.isDeceased !== true);
 }
 
-async function firestoreGetOne(docId) {
-  const r = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/leaders/documents/${docId}`, { headers: AW_H });
-  if (!r.ok) return null;
-  return await r.json();
-}
-
-async function firestoreSet(docId, data) {
-  // arrays → JSON strings (Appwrite string fields), nulls → ''
-  const cleanData = Object.fromEntries(
-    Object.entries(data).map(([k, v]) => [
-      k,
-      Array.isArray(v) ? JSON.stringify(v) : (v === null || v === undefined ? '' : v)
-    ])
-  );
-  const base = `${AW_ENDPOINT}/databases/${AW_DB}/collections/leaders/documents`;
-  const upd = await fetch(`${base}/${docId}`, {
-    method: 'PATCH', headers: AW_H, body: JSON.stringify({ data: cleanData })
-  });
-  if (upd.ok) return await upd.json();
-  const crt = await fetch(base, {
-    method: 'POST', headers: AW_H, body: JSON.stringify({ documentId: docId, data: cleanData })
-  });
-  if (!crt.ok) {
-    const err = await crt.text();
-    throw new Error('Appwrite upsert failed: ' + err);
-  }
-  return await crt.json();
+async function awGetOne(docId) {
+  const doc = await awGet('leaders', docId);
+  return doc ? doc.data : null;
 }
 
 // ── AI Prompt (shared) ──
@@ -185,7 +149,7 @@ exports.handler = async (event) => {
   let updated = 0;
 
   try {
-    const activeLeaders = await firestoreGetActiveLeaders();
+    const activeLeaders = await awGetActiveLeaders();
     console.log(`[update-leaders] ${activeLeaders.length} active leaders found in Appwrite`);
 
     const body = JSON.parse(event.body || '{}');
@@ -195,7 +159,7 @@ exports.handler = async (event) => {
 
     for (const leader of batch) {
       try {
-        const existing = await firestoreGetOne(leader.id);
+        const existing = await awGetOne(leader.id);
         if (existing?.lastAiUpdate === today) {
           results.push({ id: leader.id, name: leader.name, status: 'skipped' });
           continue;
@@ -208,7 +172,7 @@ exports.handler = async (event) => {
         }
 
         if (aiData.isDeceased === true) {
-          await firestoreSet(leader.id, {
+          await awUpsert('leaders', leader.id, {
             ...leader,
             isDeceased:   true,
             active:        false,
@@ -236,7 +200,7 @@ exports.handler = async (event) => {
           lastAiUpdate:  today,
         };
 
-        await firestoreSet(leader.id, docData);
+        await awUpsert('leaders', leader.id, docData);
         updated++;
         results.push({ id: leader.id, name: leader.name, status: 'updated', approval: aiData.approval });
         await new Promise(r => setTimeout(r, 500));

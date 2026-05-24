@@ -755,14 +755,13 @@ const JOAFComponents = {
         const btn = document.getElementById('jbr-submit');
         btn.textContent='নিবন্ধন হচ্ছে...'; btn.disabled=true;
         try {
+          const {initializeApp,getApps} = await import('/js/aw-firestore.js');
+          const {getFirestore,collection,addDoc,serverTimestamp} = await import('/js/aw-firestore.js');
+          const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753',storageBucket:'joaf-app-45753.firebasestorage.app',messagingSenderId:'472362223214',appId:'1:472362223214:web:9186a4f90dc608bae4487f'});
+          const db = getFirestore(fbApp);
           const lat = document.getElementById('jbr-lat').value;
           const lng = document.getElementById('jbr-lng').value;
-          const _awDonorRes = await fetch('https://fra.cloud.appwrite.io/v1/databases/joaf/collections/donors/documents', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': '6a11b6cd000b59f318eb' },
-            body: JSON.stringify({ documentId: 'unique()', data: {name,phone,blood,district,area:area||'',lastDonate:lastDonate||'',lat:lat?parseFloat(lat):null,lng:lng?parseFloat(lng):null,createdAt:new Date().toISOString()} })
-          });
-          if (!_awDonorRes.ok) throw new Error('Appwrite error: ' + _awDonorRes.status);
+          await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,lat:lat?parseFloat(lat):null,lng:lng?parseFloat(lng):null,createdAt:serverTimestamp()});
           // 🔔 Push notification — same district subscribers কে জানাও
           try {
             const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
@@ -876,12 +875,18 @@ const JOAFComponents = {
             imageUrl = d.secure_url;
           }
 
-          const _awAlertRes = await fetch('https://fra.cloud.appwrite.io/v1/databases/joaf/collections/alerts/documents', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': '6a11b6cd000b59f318eb' },
-            body: JSON.stringify({ documentId: 'unique()', data: {title, description:desc, location, reporter:reporter||'', type:_selType||'other', imageUrl:imageUrl||'', lat:_gps?.lat||null, lng:_gps?.lng||null, active:true, level:'medium', area:location, createdAt:new Date().toISOString()} })
+          const {initializeApp, getApps} = await import('/js/aw-firestore.js');
+          const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/aw-firestore.js');
+          const fbApp = getApps().length ? getApps()[0] : initializeApp({
+            apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
+            authDomain:'joaf-app-45753.firebaseapp.com',
+            projectId:'joaf-app-45753',
+            storageBucket:'joaf-app-45753.firebasestorage.app',
+            messagingSenderId:'472362223214',
+            appId:'1:472362223214:web:9186a4f90dc608bae4487f'
           });
-          if (!_awAlertRes.ok) throw new Error('Appwrite error: ' + _awAlertRes.status);
+          const db = getFirestore(fbApp);
+          await addDoc(collection(db,'alerts'), {title, description:desc, location, reporter, type:_selType, imageUrl, lat:_gps?.lat||null, lng:_gps?.lng||null, createdAt:serverTimestamp()});
 
           alert('✅ সতর্কতা পাঠানো হয়েছে!');
           document.getElementById('joaf-global-alert-modal').classList.remove('open');
@@ -1322,10 +1327,13 @@ async function joafSendAlertNotification(data) {
 
   // Also save to Appwrite so other users see it on next visit
   try {
-    await fetch('https://fra.cloud.appwrite.io/v1/databases/joaf/collections/notification_history/documents', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': '6a11b6cd000b59f318eb' },
-      body: JSON.stringify({ documentId: 'unique()', data: { type:data.type||'', title:data.title||'', body:data.body||'', url:data.url||'', sent:'0', failed:'0', sentAt:new Date().toISOString() } })
+    const {getApps, initializeApp} = await import('/js/aw-firestore.js');
+    const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/aw-firestore.js');
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+    const db = getFirestore(fbApp);
+    await addDoc(collection(db, 'notifications'), {
+      ...data,
+      createdAt: serverTimestamp()
     });
   } catch(e) {}
 }
@@ -1657,13 +1665,17 @@ setTimeout(() => {
 // ── Dynamic latest press release in ticker ──────────────────
 (async function injectLatestPressRelease() {
   try {
-    const _awPRRes = await fetch('https://fra.cloud.appwrite.io/v1/databases/joaf/collections/press_releases/documents?orderType=DESC&limit=1', {
-      headers: { 'X-Appwrite-Project': '6a11b6cd000b59f318eb' }
+    const { getApps, initializeApp } = await import('/js/aw-firestore.js');
+    const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('/js/aw-firestore.js');
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({
+      apiKey: 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
+      authDomain: 'joaf-app-45753.firebaseapp.com',
+      projectId: 'joaf-app-45753'
     });
-    if (!_awPRRes.ok) return;
-    const _awPRData = await _awPRRes.json();
-    if (!_awPRData.documents?.length) return;
-    const href = '/press-releases/view.html?id=' + _awPRData.documents[0].$id;
+    const db = getFirestore(fbApp);
+    const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
+    if (snap.empty) return;
+    const href = '/press-releases/view.html?id=' + snap.docs[0].id;
     const tryUpdate = () => {
       const links = [...document.querySelectorAll('#joafTickerTrack .ticker-item a')]
         .filter(a => a.textContent.includes('নতুন প্রেস রিলিজ'));

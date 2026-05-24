@@ -71,5 +71,20 @@ Netlify auto-deploy হবে।
 
 ---
 
+## 🔐 Netlify Environment Variables
+
+Netlify dashboard → Site settings → Environment variables এ নিচেরগুলো সেট করুন:
+
+- `APPWRITE_API_KEY` — Appwrite server API key (functions এর জন্য)
+- `ADMIN_SECRET_KEY` — Admin panel + protected functions access
+- `VAPID_PUBLIC_KEY` — Web push public key
+- `VAPID_PRIVATE_KEY` — Web push private key
+- `GEMINI_API_KEY` — AI functions (discover/update/timeline) এর জন্য (optional if Groq আছে)
+- `GROQ_API_KEY` — AI functions এর fallback (optional if Gemini আছে)
+
+> Appwrite Project/Database ID code এর ভিতরে আছে। Collection permissions public create/read দরকার (client writes)।
+
+---
+
 ## 📱 Mobile দেখতে সমস্যা?
 সব CSS `css/joaf.css` এ। `@media(max-width:767px)` section দেখুন।

@@ -111,8 +111,8 @@
 <script src="/js/components.js?v=6.6"></script>
 
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from '/js/aw-firestore.js';
 
 const FB_CONFIG = {
   apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
@@ -325,7 +325,7 @@ async function fetchFromGroq() {
 async function loadPrices() {
   const cacheKey = todayKey();
 
-  // 1. Try Firebase cache first
+  // 1. Try Appwrite cache first
   try {
     const snap = await getDoc(doc(db, 'bajar_cache', cacheKey));
     if (snap.exists()) {
@@ -341,7 +341,7 @@ async function loadPrices() {
       }
     }
   } catch(e) {
-    console.log('Firebase cache miss:', e);
+    console.log('Appwrite cache miss:', e);
   }
 
   // 2. Fetch from Groq
@@ -354,14 +354,14 @@ async function loadPrices() {
     document.getElementById('bajarUpdated').textContent =
       `আজ ${todayBangla()} — AI আপডেট ✓`;
 
-    // 3. Save to Firebase cache
+    // 3. Save to Appwrite cache
     try {
       await setDoc(doc(db, 'bajar_cache', cacheKey), {
         data: freshData,
         fetchedAt: serverTimestamp()
       });
     } catch(e) {
-      console.log('Firebase save failed:', e);
+      console.log('Appwrite save failed:', e);
     }
 
   } catch(e) {
@@ -388,8 +388,8 @@ loadPrices();
 </script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;

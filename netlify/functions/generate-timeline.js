@@ -10,11 +10,7 @@ const GROQ_MODELS = [
   'llama-3.3-70b-versatile',                    // 70B — last resort, 100k TPD
 ];
 
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT  = '6a11b6cd000b59f318eb';
-const AW_KEY      = process.env.APPWRITE_API_KEY;
-const AW_DB       = 'joaf';
-const AW_H        = { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY };
+const { awList, awUpsert, qEqual, qLimit } = require('./aw-utils');
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 const BD_DATE_BN = () => {
@@ -26,29 +22,14 @@ const BD_DATE_BN = () => {
 const { fetchBDHeadlines } = require('./bd-rss-utils');
 
 // ── Appwrite ──
-async function firestoreSet(docId, data) {
-  const cleanData = Object.fromEntries(
-    Object.entries(data).map(([k, v]) => [k, Array.isArray(v) ? v.map(String) : (v === null ? '' : v)])
-  );
-  // Note: timeline collection stores tags as string array — Appwrite supports string[] natively
-  const base = `${AW_ENDPOINT}/databases/${AW_DB}/collections/timeline/documents`;
-  const upd = await fetch(`${base}/${docId}`, {
-    method: 'PATCH', headers: AW_H, body: JSON.stringify({ data: cleanData })
-  });
-  if (upd.ok) return;
-  const crt = await fetch(base, {
-    method: 'POST', headers: AW_H, body: JSON.stringify({ documentId: docId, data: cleanData })
-  });
-  if (!crt.ok) throw new Error('Appwrite upsert failed: ' + crt.status);
+async function awSet(docId, data) {
+  return awUpsert('timeline', docId, data);
 }
 
 async function todayEventsExist(today) {
   try {
-    const url = `${AW_ENDPOINT}/databases/${AW_DB}/collections/timeline/documents?limit=1&queries[]=${encodeURIComponent(JSON.stringify(['equal("isoDate","' + today + '"']))}`;
-    const r = await fetch(url, { headers: AW_H });
-    if (!r.ok) return false;
-    const data = await r.json();
-    return (data.total || 0) > 0;
+    const docs = await awList('timeline', [qEqual('isoDate', today), qLimit(1)], 1);
+    return docs.length > 0;
   } catch (e) { return false; }
 }
 
@@ -175,7 +156,7 @@ tags থেকে বেছে নাও: govt, economy, politics, social, crisi
     for (const ev of events) {
       try {
         const docId = `${(ev.id || 'event').replace(/[^a-z0-9_]/gi, '_')}_${today}`;
-        await firestoreSet(docId, {
+        await awSet(docId, {
           date:        ev.date || todayBN,
           isoDate:     ev.isoDate || today,
           title:       ev.title || '',
