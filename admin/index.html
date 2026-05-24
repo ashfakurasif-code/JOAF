@@ -3737,9 +3737,7 @@ window.saOpenPostHelper = async function() {
   if (!caption) { alert('Caption লিখুন'); return; }
 
   const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  const TOKEN = localStorage.getItem('joaf_fb_token') || '';
-
-  if (!TOKEN) { alert('FB Token নেই — Settings এ FB Token সেট করুন'); return; }
+  const TOKEN = localStorage.getItem('joaf_fb_token') || 'EAAjL2bBHrGoBRuXHFp60A9ZBPmHe5xxUQJVZBJfqGTY0ty6MVLZAlc8BmKcapOWhD1UTQ0Galj28MZCv3hVyWKlAZBTIveFqdx5XP3Ybqvj3Yvo0ZBlzdGskRfeeJ2vZB0sEhqmMuIwvIzi1rtgcephV6Ytt2vUFL3zEZCxkHKfaoikJBSBi7SdMx2XGdsnFj3Bwve2N9SI2tgiEy3WRDUBo5DWZBkrn6FaEbmTNjnE77gtJLg8cJ4sAYIvig4dOkp2NsrQtXIkdiatimmQOO9Ii8cNOV';
 
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting হচ্ছে...'; }
   const logEl = document.getElementById('sa-post-log');
