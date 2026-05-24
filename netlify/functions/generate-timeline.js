@@ -1,5 +1,5 @@
 // netlify/functions/generate-timeline.js
-// RSS news থেকে AI দিয়ে timeline events বানায়, Firebase-এ save করে
+// RSS news থেকে AI দিয়ে timeline events বানায়, Appwrite-এ save করে
 
 const GROQ_KEY   = process.env.GROQ_API_KEY;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
@@ -10,10 +10,11 @@ const GROQ_MODELS = [
   'llama-3.3-70b-versatile',                    // 70B — last resort, 100k TPD
 ];
 
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const AW_PROJECT  = '6a11b6cd000b59f318eb';
+const AW_KEY      = process.env.APPWRITE_API_KEY;
+const AW_DB       = 'joaf';
+const AW_H        = { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY };
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 const BD_DATE_BN = () => {
@@ -24,36 +25,30 @@ const BD_DATE_BN = () => {
 
 const { fetchBDHeadlines } = require('./bd-rss-utils');
 
-// ── Firestore ──
+// ── Appwrite ──
 async function firestoreSet(docId, data) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => ({ stringValue: String(i) })) } };
-    return { nullValue: null };
-  }
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/timeline/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
+  const cleanData = Object.fromEntries(
+    Object.entries(data).map(([k, v]) => [k, Array.isArray(v) ? v.map(String) : (v === null ? '' : v)])
+  );
+  // Note: timeline collection stores tags as string array — Appwrite supports string[] natively
+  const base = `${AW_ENDPOINT}/databases/${AW_DB}/collections/timeline/documents`;
+  const upd = await fetch(`${base}/${docId}`, {
+    method: 'PATCH', headers: AW_H, body: JSON.stringify({ data: cleanData })
   });
-  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
+  if (upd.ok) return;
+  const crt = await fetch(base, {
+    method: 'POST', headers: AW_H, body: JSON.stringify({ documentId: docId, data: cleanData })
+  });
+  if (!crt.ok) throw new Error('Appwrite upsert failed: ' + crt.status);
 }
 
 async function todayEventsExist(today) {
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/timeline?key=${FB_CONFIG.apiKey}&pageSize=50`;
-    const r = await fetch(url);
+    const url = `${AW_ENDPOINT}/databases/${AW_DB}/collections/timeline/documents?limit=1&queries[]=${encodeURIComponent(JSON.stringify(['equal("isoDate","' + today + '"']))}`;
+    const r = await fetch(url, { headers: AW_H });
     if (!r.ok) return false;
     const data = await r.json();
-    const docs = data.documents || [];
-    return docs.some(doc => {
-      const f = doc.fields || {};
-      return f.isoDate?.stringValue === today;
-    });
+    return (data.total || 0) > 0;
   } catch (e) { return false; }
 }
 
