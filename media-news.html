@@ -108,17 +108,22 @@ window.addEventListener('load', () => {
 });
 </script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, getDocs, addDoc, collection, orderBy, query, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
+async function _awReadPressReleases(limit=4) {
+  const r = await fetch(
+    'https://fra.cloud.appwrite.io/v1/databases/joaf/collections/press_releases/documents?limit='+limit+'&queries[]='+encodeURIComponent('orderDesc(\"date\")'),
+    {headers:{'X-Appwrite-Project':'6a11b6cd000b59f318eb'}}
+  );
+  if(!r.ok) return [];
+  const d = await r.json();
+  return d.documents || [];
+}
 
 // ── Pageview tracking ──────────────────────────────────────────────
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;
 const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
-addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+/* pageviews removed */
 
 // ── Press Releases from Firestore ─────────────────────────────────
 async function renderAllPress() {
@@ -126,13 +131,13 @@ async function renderAllPress() {
   if (!grid) return;
   grid.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-danger" role="status"></div></div>';
   try {
-    const snap = await getDocs(query(collection(_db,'press_releases'), orderBy('date','desc')));
+    const _docs = await _awReadPressReleases(50);
+    const snap = { docs: _docs };
     if (snap.empty) {
       grid.innerHTML = '<div class="col-12 text-center py-4 text-muted">কোনো press release নেই।</div>';
       return;
     }
-    grid.innerHTML = snap.docs.map((doc, i) => {
-      const p = doc.data();
+    grid.innerHTML = snap.map((doc, i) => { const p = doc;
       const id = doc.id;
       const img = p.img || '/img/press-release.jpg';
       const dateStr = p.date || '';

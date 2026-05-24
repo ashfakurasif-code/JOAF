@@ -12,81 +12,62 @@ const GROQ_MODELS = [
   'llama-3.3-70b-versatile',           // 100k TPD — ভালো quality, last resort
 ];
 
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const AW_PROJECT  = '6a11b6cd000b59f318eb';
+const AW_KEY      = process.env.APPWRITE_API_KEY;
+const AW_DB       = 'joaf';
+const AW_LEADERS  = 'leaders';
+const AW_BASE     = `${AW_ENDPOINT}/databases/${AW_DB}/collections/${AW_LEADERS}/documents`;
+const AW_H        = { 'Content-Type':'application/json', 'X-Appwrite-Project':AW_PROJECT, 'X-Appwrite-Key':AW_KEY };
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
-// ── Firestore REST API ──
 async function firestoreGetActiveLeaders() {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders?key=${FB_CONFIG.apiKey}&pageSize=200`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('Firestore GET failed: ' + r.status);
-  const data = await r.json();
-  return (data.documents || []).map(doc => {
-    const id = doc.name.split('/').pop();
-    const fields = doc.fields || {};
-    const obj = { id };
-    for (const [k, v] of Object.entries(fields)) {
-      if (v.stringValue !== undefined) obj[k] = v.stringValue;
-      else if (v.integerValue !== undefined) obj[k] = parseInt(v.integerValue);
-      else if (v.doubleValue !== undefined) obj[k] = v.doubleValue;
-      else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-      else if (v.arrayValue) obj[k] = (v.arrayValue.values || []).map(i => {
-        if (i.mapValue) {
-          const m = {};
-          for (const [mk, mv] of Object.entries(i.mapValue.fields || {})) {
-            m[mk] = mv.stringValue ?? mv.integerValue ?? mv.booleanValue ?? '';
-          }
-          return m;
-        }
-        return i.stringValue ?? i.integerValue ?? '';
-      });
-    }
-    return obj;
-  }).filter(l => l.active !== false && l.isDeceased !== true);
+  let docs = [], offset = 0;
+  while (true) {
+    const r = await fetch(`${AW_BASE}?limit=100&offset=${offset}`, { headers: AW_H });
+    if (!r.ok) throw new Error('Appwrite list failed: ' + r.status);
+    const d = await r.json();
+    const batch = d.documents || [];
+    docs = docs.concat(batch.map(doc => ({ id: doc.$id, ...doc })));
+    if (batch.length < 100) break;
+    offset += 100;
+  }
+  return docs;
 }
+
 
 async function firestoreGetOne(docId) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url);
+  const r = await fetch(`${AW_BASE}/${docId}`, { headers: AW_H });
+  if (r.status === 404) return null;
   if (!r.ok) return null;
-  const d = await r.json();
-  const fields = d.fields || {};
-  const obj = {};
-  for (const [k, v] of Object.entries(fields)) {
-    if (v.stringValue !== undefined) obj[k] = v.stringValue;
-    else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-  }
-  return obj;
+  const doc = await r.json();
+  return doc;
 }
 
+
 async function firestoreSet(docId, data) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: v.map(i => {
-      if (typeof i === 'object' && i !== null) return { mapValue: { fields: Object.fromEntries(Object.entries(i).map(([k, vv]) => [k, toField(vv)])) } };
-      return toField(i);
-    })}};
-    return { nullValue: null };
+  // Stringify arrays/objects for Appwrite string fields
+  const awData = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (Array.isArray(v) || (typeof v === 'object' && v !== null)) awData[k] = JSON.stringify(v);
+    else awData[k] = v !== undefined && v !== null ? String(v) : '';
   }
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
+  // Try PATCH first, then POST
+  const patchR = await fetch(`${AW_BASE}/${docId}`, {
+    method: 'PATCH', headers: AW_H,
+    body: JSON.stringify({ data: awData })
   });
-  if (!r.ok) {
-    const err = await r.text();
-    throw new Error('Firestore PATCH failed: ' + err);
-  }
-  return await r.json();
+  if (patchR.ok) return await patchR.json();
+  // If 404, create new
+  const postR = await fetch(AW_BASE, {
+    method: 'POST', headers: AW_H,
+    body: JSON.stringify({ documentId: docId, data: awData, permissions: ['read("any")'] })
+  });
+  if (!postR.ok) throw new Error('Appwrite upsert failed: ' + postR.status);
+  return await postR.json();
 }
+
 
 // ── AI Prompt (shared) ──
 function buildPrompt(leader, today) {

@@ -889,14 +889,11 @@ function initFilter() {
   const grid = document.getElementById('press-grid');
   if (!grid) return;
   try {
-    const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-    const { getFirestore, getDocs, query, orderBy, limit, collection } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const _fa2 = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-    const _db2 = getFirestore(_fa2);
-    const snap = await getDocs(query(collection(_db2,'press_releases'), orderBy('date','desc'), limit(4)));
+    
+    const _prDocs = await _awReadPressReleases(4);
+    const snap = { docs: _prDocs };
     if (!snap.empty) {
-      grid.innerHTML = snap.docs.map((doc, i) => {
-        const p = doc.data();
+      grid.innerHTML = snap.map((doc, i) => { const p = doc;
         const viewUrl = '/press-releases/view.html?id=' + doc.id;
         const shortSummary = (p.summary||'').length > 58 ? (p.summary||'').substring(0,55).replace(/[\s,।]+$/,'')+'...' : (p.summary||'');
         const dateDisplay = p.date ? (typeof BanglaUtil!=='undefined' ? BanglaUtil.formatDateShort(p.date) : p.date) : '';
@@ -994,15 +991,12 @@ setTimeout(function(){
 },800);
 </script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
+
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;
 const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
-addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+/* pageviews removed */
 </script>
 
 

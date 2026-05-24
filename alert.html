@@ -206,19 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-
-const app = initializeApp({
-  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
-  authDomain: "joaf-app-45753.firebaseapp.com",
-  projectId: "joaf-app-45753",
-  storageBucket: "joaf-app-45753.firebasestorage.app",
-  messagingSenderId: "472362223214",
-  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
-});
-const db = getFirestore(app);
+const _AW='https://fra.cloud.appwrite.io/v1',_AW_P='6a11b6cd000b59f318eb',_AW_DB='joaf';
+async function _awList(col,qs=[],lim=200){let docs=[],off=0;while(true){let u=`${_AW}/databases/${_AW_DB}/collections/${col}/documents?limit=100&offset=${off}`;qs.forEach(q=>u+=`&queries[]=${encodeURIComponent(q)}`);const r=await fetch(u,{headers:{'X-Appwrite-Project':_AW_P}});if(!r.ok)return docs;const d=await r.json();const b=d.documents||[];docs=docs.concat(b);if(b.length<100||docs.length>=lim)break;off+=100;}return docs;}
+async function _awAdd(col,data){return(await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents`,{method:'POST',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({documentId:'unique()',data,permissions:['read("any")','write("any")','update("any")','delete("any")','create("any")','documents("any")','read("any")','write("any")']})}).then(r=>r.json()));}
+async function _awGet(col,id){const r=await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{headers:{'X-Appwrite-Project':_AW_P}});if(!r.ok)return null;return r.json();}
+async function _awSet(col,id,data){const p=await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({data})});if(p.ok)return;await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents`,{method:'POST',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({documentId:id,data,permissions:['read("any")']})});}
 
 
 const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',accident:'🚗',other:'📢'};
@@ -230,9 +222,8 @@ let gpsData = null;
 let photoFile = null;
 
 // Real-time listener
-const q = query(collection(db, 'alerts'), orderBy('createdAt', 'desc'));
-onSnapshot(q, snap => {
-  window._alerts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+async function _pollAlerts() { const snap = await _awList('alerts',['orderDesc("createdAt")']).then(d=>({docs:d})); {
+  window._alerts = snap.map(d => ({ id: d.$id, ...d }));
   renderAlerts();
   document.getElementById('joaf-preloader').style.display = 'none';
 });
@@ -355,12 +346,11 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
       imageUrl = data.secure_url;
     }
 
-    await addDoc(collection(db, 'alerts'), {
+    await _awAdd('alerts', {
       title, description, location, reporter,
       type: selectedType, imageUrl,
       lat: gpsData?.lat || null,
-      lng: gpsData?.lng || null,
-      createdAt: serverTimestamp()
+      lng: gpsData?.lng || null, createdAt: new Date().toISOString()
     });
 
     alert('✅ সতর্কতা পাঠানো হয়েছে! সবাই দেখতে পাবে।');
@@ -388,15 +378,11 @@ setTimeout(() => { document.getElementById('joaf-preloader').style.display = 'no
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
 </script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;
 const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
-addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+/* pageviews removed */
 </script>
 <div id="joaf-share-bar" style="position:fixed;bottom:16px;right:16px;z-index:8888;display:flex;flex-direction:column;gap:8px;"><a href="https://wa.me/?text=জরুরি%20সতর্কতা%20—%20JOAF%20Alert%20https%3A%2F%2Fwww.julyforum.com%2Falert.html" target="_blank" style="width:44px;height:44px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">💬</a><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.julyforum.com%2Falert.html" target="_blank" style="width:44px;height:44px;background:#1877F2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">👍</a><button onclick="navigator.clipboard.writeText('https://www.julyforum.com/alert.html').then(()=>{this.textContent='✅';setTimeout(()=>this.textContent='🔗',2000)})" style="width:44px;height:44px;background:#0f172a;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)">🔗</button></div>
 </body>
