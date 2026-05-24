@@ -1158,10 +1158,18 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <!-- Image Upload -->
             <div style="margin-bottom:10px;">
               <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🖼️ Image Upload করুন (optional)</label>
-              <div id="img-upload-zone" style="border:2px dashed var(--border2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:.15s;position:relative;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
-                <input type="file" id="fb-img-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="fbAnalyzeImage(this)">
-                <div id="img-upload-preview" style="display:none;margin-bottom:5px"><img id="img-preview-thumb" style="max-height:70px;border-radius:6px;border:1px solid var(--border)"></div>
-                <div id="img-upload-label" style="font-size:11px;color:var(--text2)">📸 Click বা drag<br><span style="font-size:10px;color:var(--text3)">AI analyze করে text বানাবে</span></div>
+              <div id="img-upload-zone" style="border:2px dashed var(--border2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:.15s;position:relative;"
+                onmouseover="this.style.borderColor='var(--accent)'"
+                onmouseout="this.style.borderColor='var(--border2)'"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                ondragleave="this.style.borderColor='var(--border2)'"
+                ondrop="fbHandleDrop(event)">
+                <input type="file" id="fb-img-input" accept="image/*" multiple
+                  style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"
+                  onchange="fbBatchQueue(this.files)">
+                <div id="img-upload-preview" style="display:none;margin-bottom:5px"><img id="img-preview-thumb" style="max-height:60px;border-radius:6px;border:1px solid var(--border)"></div>
+                <div id="img-upload-label" style="font-size:11px;color:var(--text2)">📸 Click বা drag — <b>একসাথে অনেক image</b><br><span style="font-size:10px;color:var(--text3)">প্রতিটার জন্য আলাদা AI card + caption তৈরি হবে</span></div>
+                <div id="img-batch-count" style="display:none;margin-top:5px;font-size:11px;font-weight:700;color:var(--accent);"></div>
                 <div id="img-analyze-status" style="font-size:11px;color:var(--amber);margin-top:4px;display:none">⏳ Analyze হচ্ছে...</div>
               </div>
             </div>
@@ -1189,7 +1197,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <!-- Action Buttons -->
             <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-              <button onclick="fbGenerateReel()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন</button>
+              <button onclick="fbBatchGenerate()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন <span id="fb-gen-label" style="font-size:10px;font-weight:400;opacity:.8;"></span></buttonutton>
             </div>
             <div id="fb-mode-notice" style="margin-top:7px;padding:7px 10px;border-radius:6px;font-size:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber);">
               🖼️ <b>Card mode:</b> ৩-৫ সেকেন্ডে JPG ready — সাথে caption ও hashtags
@@ -3131,6 +3139,163 @@ async function fbAnalyzeImage(input) {
   reader.readAsDataURL(file);
 }
 
+// ══════════════════════════════════════════════════════════
+// BATCH IMAGE GENERATOR — multi-image → per-image AI card
+// ══════════════════════════════════════════════════════════
+window._fbBatchFiles = [];  // queued image files for batch generate
+
+window.fbHandleDrop = function(e) {
+  e.preventDefault();
+  document.getElementById('img-upload-zone').style.borderColor = 'var(--border2)';
+  const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+  if (files.length) window.fbBatchQueue(files);
+};
+
+window.fbBatchQueue = function(fileList) {
+  const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  if (!files.length) return;
+  window._fbBatchFiles = files;
+  // Show first image preview
+  const preview = document.getElementById('img-upload-preview');
+  const thumb   = document.getElementById('img-preview-thumb');
+  if (preview && thumb) {
+    thumb.src = URL.createObjectURL(files[0]);
+    preview.style.display = 'block';
+  }
+  const lbl = document.getElementById('img-upload-label');
+  if (lbl) lbl.textContent = `✅ ${files.length}টা image বাছাই হয়েছে`;
+  const cnt = document.getElementById('img-batch-count');
+  if (cnt) { cnt.textContent = `🖼️ ${files.length}টা image ready — Generate দাবান পর সবগুলার জন্য AI card তৈরি হবে`; cnt.style.display = 'block'; }
+  const genLbl = document.getElementById('fb-gen-label');
+  if (genLbl) genLbl.textContent = files.length > 1 ? `(${files.length}টা image)` : '';
+};
+
+// Core: generate AI caption + card for ONE image file, returns {caption, tags, cardBlob}
+async function fbGenerateOneCard(imgFile, text, toneDesc) {
+  const base64 = imgFile ? await new Promise(res => {
+    const rd = new FileReader();
+    rd.onload = e => res(e.target.result.split(',')[1]);
+    rd.onerror = () => res('');
+    rd.readAsDataURL(imgFile);
+  }) : '';
+
+  const model = imgFile ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
+  const content = [];
+  if (imgFile && base64) content.push({ type:'image_url', image_url:{ url:'data:'+(imgFile.type||'image/jpeg')+';base64,'+base64 } });
+  content.push({ type:'text', text:`তুমি বাংলাদেশের সেরা Facebook viral content strategist।
+Tone: ${toneDesc}
+
+RULES:
+- hook = প্রথম ৩ সেকেন্ড scroll stopper, max ৮ শব্দ, question বা shocking statement
+- caption = hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ
+- slides = plain বাংলা text, max ১০ শব্দ প্রতি slide, কোনো hashtag/emoji নেই
+- mood = urgent/sad/positive/angry/neutral থেকে একটা
+
+শুধু raw JSON (no extra text):
+{"mood":"urgent","hook":"max ৮ শব্দের scroll stopper","caption":"full viral caption with emoji + CTA + hashtags","tags":"#tag1 #tag2 #JOAF #বাংলাদেশ","slides":[{"text":"hook slide text"},{"text":"main info"},{"text":"conclusion + CTA"}]}
+
+News: ${text}` });
+
+  const aiRes = await fetch('/.netlify/functions/groq-proxy', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ model, max_tokens:2000, messages:[{ role:'user', content }] })
+  });
+  const aiData = await aiRes.json();
+  const raw = aiData.choices?.[0]?.message?.content || '{}';
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('AI JSON বের করা যায়নি');
+  const parsed = JSON.parse(jsonMatch[0]);
+
+  // Render card to canvas → blob
+  const mood = parsed.mood || 'urgent';
+  const panels = (parsed.slides||[]).slice(0,3).map((s,i) => {
+    const t2 = typeof s==='string'?s:(s.text||'');
+    return { type:i===0?'quote':i===1?'info':'alert', title:'', content:t2 };
+  });
+  if (!panels.length) panels.push({ type:'info', title:'', content:text.substring(0,120) });
+
+  await drawInstantCard(panels, mood, parsed.hook||'', text, imgFile);
+  const canvas = document.getElementById('fb-card-canvas');
+  const cardBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
+
+  return { parsed, cardBlob, mood };
+}
+
+// Main: batch generate for all queued images
+window.fbBatchGenerate = async function() {
+  const text = (document.getElementById('fb-news-input')?.value||'').trim();
+  if (!text) { alert('নিউজ text লিখুন'); return; }
+
+  const files = window._fbBatchFiles.length ? window._fbBatchFiles : null;
+  const btn   = document.getElementById('fb-gen-btn');
+  const logEl = document.getElementById('fb-post-log');
+  const toneMap = { urgent:'সাড়া জাগানো breaking news', emotional:'হৃদয়স্পর্শী', informative:'তথ্যবহুল', motivational:'অনুপ্রেরণামূলক', alert:'সতর্কতামূলক' };
+  const toneDesc = toneMap[window._fbCurrentTone] || toneMap.urgent;
+
+  if (btn) { btn.disabled=true; }
+  if (logEl) { logEl.style.display='block'; }
+
+  // If no images queued — single generate (legacy mode)
+  if (!files) {
+    if (btn) btn.textContent = '⏳ তৈরি হচ্ছে...';
+    if (logEl) logEl.innerHTML = '<div style="color:var(--blue);font-size:11px;font-weight:700">🤖 AI caption তৈরি হচ্ছে...</div>';
+    try {
+      const imgInput = document.getElementById('fb-img-input');
+      const singleFile = imgInput?.files?.[0] || null;
+      const { parsed, cardBlob, mood } = await fbGenerateOneCard(singleFile, text, toneDesc);
+      // Update caption panel
+      const ta = document.getElementById('fb-caption'); if(ta) ta.value = parsed.caption||text;
+      window._joafTags = parsed.tags||'';
+      const tagsEl = document.getElementById('fb-tags-display'); if(tagsEl) tagsEl.value = parsed.tags||'';
+      const hookEl = document.getElementById('fb-hook-line'); if(hookEl) hookEl.textContent = parsed.hook||'';
+      const capCard = document.getElementById('fb-caption-card'); if(capCard) capCard.style.display='block';
+      const timeEl = document.getElementById('fb-best-time'); if(timeEl) timeEl.textContent='🔥 রাত ৮-১০টা (Peak) · সকাল ৭-৯টা (High) · দুপুর ১-২টা (Medium)';
+      const previewDiv=document.getElementById('fb-preview'); if(previewDiv) previewDiv.style.display='block';
+      const previewEmpty=document.getElementById('fb-preview-empty'); if(previewEmpty) previewEmpty.style.display='none';
+      const dlBtn=document.getElementById('fb-download-card-btn'); if(dlBtn) dlBtn.style.display='inline-block';
+      if (cardBlob) {
+        const cardFile = new File([cardBlob],'joaf-card-'+Date.now()+'.jpg',{type:'image/jpeg'});
+        const cap = (parsed.caption||text) + (parsed.tags ? '
+
+'+parsed.tags : '');
+        pushToSAPanel(cardFile, URL.createObjectURL(cardBlob), false, cap);
+      }
+      if (logEl) logEl.innerHTML='<div style="color:var(--green);font-size:11px;font-weight:700">✅ Card ready! Queue এ যোগ হয়েছে</div>';
+    } catch(e) {
+      if(logEl) logEl.innerHTML=`<div style="color:#f87171">❌ ${e.message}</div>`;
+    } finally {
+      if(btn){btn.disabled=false;btn.textContent='🚀 Generate করুন';}
+    }
+    return;
+  }
+
+  // BATCH MODE — iterate each image
+  if (logEl) logEl.innerHTML=`<div style="color:var(--blue);font-size:11px;font-weight:700">🤖 ${files.length}টা imageর জন্য AI card তৈরি হচ্ছে...</div>`;
+  let done=0, errors=0;
+  for (const imgFile of files) {
+    done++;
+    if(btn) btn.textContent=`⏳ ${done}/${files.length} তৈরি...`;
+    if(logEl) logEl.innerHTML=`<div style="color:var(--amber);font-size:11px;">🤖 [${done}/${files.length}] <b>${imgFile.name}</b> প্রসেস হচ্ছে...</div>`;
+    try {
+      const { parsed, cardBlob } = await fbGenerateOneCard(imgFile, text, toneDesc);
+      if (cardBlob) {
+        const cardFile = new File([cardBlob],'joaf-card-'+Date.now()+'.jpg',{type:'image/jpeg'});
+        const cap = (parsed.caption||text) + (parsed.tags ? '
+
+'+parsed.tags : '');
+        pushToSAPanel(cardFile, URL.createObjectURL(cardBlob), false, cap);
+      }
+    } catch(e) { errors++; console.error('Batch error for '+imgFile.name, e); }
+    // Stagger: avoid Groq rate limit
+    if (done < files.length) await new Promise(r=>setTimeout(r,800));
+  }
+  const okN = done - errors;
+  if(logEl) logEl.innerHTML=`<div style="color:var(--green);font-size:11px;font-weight:700">✅ ${okN}/${done} card তৈরি হয়েছে — Queue দেখুন</div>`;
+  if(btn){btn.disabled=false;btn.textContent=`🚀 Generate করুন`;}
+  window._fbBatchFiles=[];
+  const cnt=document.getElementById('img-batch-count'); if(cnt) cnt.style.display='none';
+};
+
 async function fbGenerateReel() {
   const text = document.getElementById('fb-news-input').value.trim();
   const imgInput = document.getElementById('fb-img-input');
@@ -3236,6 +3401,13 @@ News: ${text}` });
       return { type: i === 0 ? 'quote' : i === 1 ? 'info' : 'alert', title: '', content: t2 };
     });
     if (!panels.length) panels.push({ type: 'info', title: '', content: text.substring(0, 120) });
+
+    // Build panels from slides
+    const panels = (parsed.slides||[]).slice(0,3).map((s,i) => {
+      const t2 = typeof s==='string'?s:(s.text||'');
+      return { type:i===0?'quote':i===1?'info':'alert', title:'', content:t2 };
+    });
+    if (!panels.length) panels.push({ type:'info', title:'', content:text.substring(0,120) });
 
     if (_fbCurrentMode === 'card') {
       // ── INSTANT CARD MODE ──────────────────────────────
