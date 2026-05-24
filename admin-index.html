@@ -2241,9 +2241,9 @@ async function loadBajar() {
   const el = document.getElementById('bajar-current');
   try {
     const today = new Date().toISOString().slice(0,10);
-    const snap = await getDoc(doc(db,'bajar_override','latest'));
-    if (snap.exists()) {
-      const data = snap.data();
+    const snap = await _awGet('bajar_override','latest');
+    if (snap) {
+      const data = snap;
       el.innerHTML = Object.entries(data).filter(([k])=>k!=='updatedAt').map(([k,v]) =>
         `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
           <span>${k}</span><span style="color:var(--amber);font-weight:700">৳ ${v}</span>
@@ -2684,28 +2684,7 @@ window.setFeedFilter = function(filter, el) {
   document.head.appendChild(s);
 })();
 
-// ── Listener ───────────────────────────────────────────────────────────
-function startAnalyticsListener() {
-  if(anUnsubscribe) return;
-  try {
-    anUnsubscribe = onSnapshot(collection(db,'pageviews'), snap => {
-      const wasEmpty = anAllDocs.length === 0;
-      anAllDocs = snap.map(d=>({...d, id:d.$id, tsMs: d.ts?.toMillis?.()||0}));
-      if(!wasEmpty) {
-        snap.docChanges().forEach(ch => {
-          if(ch.type==='added') {
-            anLiveCount++;
-            const badge = document.getElementById('an-live-badge');
-            if(badge){badge.textContent='+'+anLiveCount;badge.style.display='';}
-            const newBadge = document.getElementById('an-feed-new');
-            if(newBadge){newBadge.style.display='';setTimeout(()=>newBadge.style.display='none',3000);}
-          }
-        });
-      }
-      if(document.getElementById('page-analytics')?.classList.contains('active')) renderAnalytics();
-    });
-  } catch(e){console.warn('Analytics listener:',e);}
-}
+// Analytics listener removed (pageviews collection not in Appwrite)
 
 function stopAnalyticsListener(){
   if(anUnsubscribe){anUnsubscribe();anUnsubscribe=null;}
