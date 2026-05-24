@@ -1,29 +1,4 @@
 // JOAF Components v9.0
-
-// ── Appwrite helpers ─────────────────────────────────
-const _AW_EP  = 'https://fra.cloud.appwrite.io/v1';
-const _AW_PID = '6a11b6cd000b59f318eb';
-const _AW_DB  = 'joaf';
-function _awH() { return {'Content-Type':'application/json','X-Appwrite-Project':_AW_PID}; }
-async function _awPost(col, data) {
-  try {
-    const r = await fetch(`${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents`, {
-      method:'POST', headers:_awH(),
-      body: JSON.stringify({documentId:'unique()', data, permissions:['read("any")']})
-    });
-    return r.ok ? await r.json() : null;
-  } catch(e) { console.warn('_awPost failed:', e); return null; }
-}
-async function _awList(col, qs=[], lim=5) {
-  try {
-    let url = `${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents?limit=${lim}`;
-    qs.forEach(q => url += `&queries[]=${encodeURIComponent(q)}`);
-    const r = await fetch(url, {headers:{'X-Appwrite-Project':_AW_PID}});
-    return r.ok ? ((await r.json()).documents || []) : [];
-  } catch(e) { return []; }
-}
-// ─────────────────────────────────────────────────────
-
 // ✅ Mute: never pause, just flip .muted — works on all mobile browsers
 // ✅ Header: scroll-aware glass effect
 // ✅ Member cards: mouse-tracking 3D tilt on desktop
@@ -761,7 +736,13 @@ const JOAFComponents = {
         const btn = document.getElementById('jbr-submit');
         btn.textContent='নিবন্ধন হচ্ছে...'; btn.disabled=true;
         try {
-          await _awPost('donors',{name,phone,blood,district,area,lastDonate:String(lastDonate||''),lat:lat?String(lat):'',lng:lng?String(lng):'',createdAt:new Date().toISOString()});
+          const {initializeApp,getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+          const {getFirestore,collection,addDoc,serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+          const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753',storageBucket:'joaf-app-45753.firebasestorage.app',messagingSenderId:'472362223214',appId:'1:472362223214:web:9186a4f90dc608bae4487f'});
+          const db = getFirestore(fbApp);
+          const lat = document.getElementById('jbr-lat').value;
+          const lng = document.getElementById('jbr-lng').value;
+          await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,lat:lat?parseFloat(lat):null,lng:lng?parseFloat(lng):null,createdAt:serverTimestamp()});
           // 🔔 Push notification — same district subscribers কে জানাও
           try {
             const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
@@ -875,7 +856,18 @@ const JOAFComponents = {
             imageUrl = d.secure_url;
           }
 
-          await _awPost('alerts',{title,body:desc||'',type:_selType||'info',area:location||'',level:'medium',active:String(true),createdAt:new Date().toISOString()});
+          const {initializeApp, getApps} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+          const {getFirestore, collection, addDoc, serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+          const fbApp = getApps().length ? getApps()[0] : initializeApp({
+            apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
+            authDomain:'joaf-app-45753.firebaseapp.com',
+            projectId:'joaf-app-45753',
+            storageBucket:'joaf-app-45753.firebasestorage.app',
+            messagingSenderId:'472362223214',
+            appId:'1:472362223214:web:9186a4f90dc608bae4487f'
+          });
+          const db = getFirestore(fbApp);
+          await addDoc(collection(db,'alerts'), {title, description:desc, location, reporter, type:_selType, imageUrl, lat:_gps?.lat||null, lng:_gps?.lng||null, createdAt:serverTimestamp()});
 
           alert('✅ সতর্কতা পাঠানো হয়েছে!');
           document.getElementById('joaf-global-alert-modal').classList.remove('open');
@@ -1316,7 +1308,15 @@ async function joafSendAlertNotification(data) {
 
   // Also save to Firebase so other users see it on next visit
   try {
-    await _awPost('notification_history',{type:String(data.type||'general'),title:String(data.title||''),body:String(data.body||''),url:String(data.url||''),sent:'0',failed:'0',sentAt:new Date().toISOString()}).catch(()=>{});
+    const {getApps, initializeApp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const {getFirestore, collection, addDoc, serverTimestamp} = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+    const db = getFirestore(fbApp);
+    await addDoc(collection(db, 'notifications'), {
+      ...data,
+      createdAt: serverTimestamp()
+    });
+  } catch(e) {}
 }
 
 // ── Admin Email via EmailJS ──────────────────────────
@@ -1643,27 +1643,20 @@ setTimeout(() => {
 
 
 
-
-// ── Appwrite helpers (press_releases read) ──
-const _AW_BASE = 'https://fra.cloud.appwrite.io/v1/databases/joaf/collections';
-const _AW_PROJ = '6a11b6cd000b59f318eb';
-async function _awList(col, qs=[], lim=5) {
-  try {
-    let url = `${_AW_BASE}/${col}/documents?limit=${lim}`;
-    qs.forEach(q => url += `&queries[]=${encodeURIComponent(q)}`);
-    const r = await fetch(url, {headers:{'X-Appwrite-Project':_AW_PROJ}});
-    if (!r.ok) return [];
-    return (await r.json()).documents || [];
-  } catch(e) { return []; }
-}
-
 // ── Dynamic latest press release in ticker ──────────────────
 (async function injectLatestPressRelease() {
   try {
-    const _prDocs = await _awList('press_releases',['orderDesc("$createdAt")'],1);
-    const snap = { empty: _prDocs.length===0, docs: _prDocs.map(d=>({id:d.$id,data:()=>d})) };
-    
-    const href = '/press-releases/view.html?id=' + snap[0].$id;
+    const { getApps, initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({
+      apiKey: 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
+      authDomain: 'joaf-app-45753.firebaseapp.com',
+      projectId: 'joaf-app-45753'
+    });
+    const db = getFirestore(fbApp);
+    const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
+    if (snap.empty) return;
+    const href = '/press-releases/view.html?id=' + snap.docs[0].id;
     const tryUpdate = () => {
       const links = [...document.querySelectorAll('#joafTickerTrack .ticker-item a')]
         .filter(a => a.textContent.includes('নতুন প্রেস রিলিজ'));

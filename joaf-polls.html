@@ -1175,18 +1175,17 @@ window.addEventListener('load', async () => {
 });
 </script>
 <script type="module">
-const _AW='https://fra.cloud.appwrite.io/v1',_AW_P='6a11b6cd000b59f318eb',_AW_DB='joaf';
-async function _awList(col,qs=[],lim=200){let docs=[],off=0;while(true){let u=`${_AW}/databases/${_AW_DB}/collections/${col}/documents?limit=100&offset=${off}`;qs.forEach(q=>u+=`&queries[]=${encodeURIComponent(q)}`);const r=await fetch(u,{headers:{'X-Appwrite-Project':_AW_P}});if(!r.ok)return docs;const d=await r.json();const b=d.documents||[];docs=docs.concat(b);if(b.length<100||docs.length>=lim)break;off+=100;}return docs;}
-async function _awAdd(col,data){return(await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents`,{method:'POST',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({documentId:'unique()',data,permissions:['read("any")','write("any")','update("any")','delete("any")','create("any")','documents("any")','read("any")','write("any")']})}).then(r=>r.json()));}
-async function _awGet(col,id){const r=await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{headers:{'X-Appwrite-Project':_AW_P}});if(!r.ok)return null;return r.json();}
-async function _awSet(col,id,data){const p=await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({data})});if(p.ok)return;await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents`,{method:'POST',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({documentId:id,data,permissions:['read("any")']})});}
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, addDoc, setDoc, getDoc, doc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _db = getFirestore(_fa);
 
 // ── Pageview tracking ──
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;
 const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
-/* pageviews removed */
+addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 
 // ── votes object cleanup — শুধু শেষ ৭ দিন রাখো ──
 function pruneOldVotes(u) {
@@ -1206,7 +1205,7 @@ function pruneOldVotes(u) {
 window._syncPollUser = function(u) {
   if (!u || !u.id || u.isGuest) return;
   const clean = pruneOldVotes({...u});
-  _awSet('poll_users', u.id, {
+  setDoc(doc(_db, 'poll_users', u.id), {
     name:         clean.name        || '',
     phone:        clean.phone       || '',
     streak:       clean.streak      || 0,
@@ -1219,7 +1218,7 @@ window._syncPollUser = function(u) {
     votes:        clean.votes       || {},
     rewardClaimed:clean.rewardClaimed||false,
     fbVerified:   clean.fbVerified  ||false,
-    updatedAt:    new Date().toISOString()
+    updatedAt:    serverTimestamp()
   }, {merge: true}).catch(()=>{});
   // Also prune in localStorage
   LS.set(clean.id, clean);
@@ -1229,9 +1228,9 @@ window._syncPollUser = function(u) {
 window._restorePollUser = async function(uid) {
   if (!uid || uid.startsWith('guest_')) return null;
   try {
-    const snap = await _awGet('poll_users', uid);
-    if (!!!snap) return null;
-    const data = snap;
+    const snap = await getDoc(doc(_db, 'poll_users', uid));
+    if (!snap.exists()) return null;
+    const data = snap.data();
     // Only restore if Firestore has more progress than localStorage
     const local = LS.get(uid);
     const fsStreak = data.streak || 0;

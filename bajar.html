@@ -111,7 +111,22 @@
 <script src="/js/components.js?v=6.6"></script>
 
 <script type="module">
-// bajar_cache → localStorage
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const FB_CONFIG = {
+  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
+  authDomain: "joaf-app-45753.firebaseapp.com",
+  projectId: "joaf-app-45753",
+  storageBucket: "joaf-app-45753.firebasestorage.app",
+  messagingSenderId: "472362223214",
+  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
+};
+
+const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
+
+const fbApp = getApps().length ? getApps()[0] : initializeApp(FB_CONFIG);
+const db = getFirestore(fbApp);
 
 // Bangla number converter
 function bn(n) {
@@ -312,7 +327,7 @@ async function loadPrices() {
 
   // 1. Try Firebase cache first
   try {
-    const _bc = JSON.parse(localStorage.getItem('bc_'+cacheKey)||'null'); const snap = {exists:()=>!!_bc&&(Date.now()-(_bc._ts||0)<3600000), data:()=>_bc};
+    const snap = await getDoc(doc(db, 'bajar_cache', cacheKey));
     if (snap.exists()) {
       const cached = snap.data();
       if (cached.data && typeof cached.data === 'object') {
@@ -341,10 +356,10 @@ async function loadPrices() {
 
     // 3. Save to Firebase cache
     try {
-      localStorage.setItem('bc_'+cacheKey, JSON.stringify({
+      await setDoc(doc(db, 'bajar_cache', cacheKey), {
         data: freshData,
-        fetchedAt: new Date().toISOString()
-      , _ts:Date.now()}));
+        fetchedAt: serverTimestamp()
+      });
     } catch(e) {
       console.log('Firebase save failed:', e);
     }
@@ -373,11 +388,15 @@ loadPrices();
 </script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;
 const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
-/* pageviews removed */
+addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 </script>
 <div id="joaf-share-bar" style="position:fixed;bottom:16px;right:16px;z-index:8888;display:flex;flex-direction:column;gap:8px;"><a href="https://wa.me/?text=বাজার%20দর%20—%20JOAF%20Bajar%20https%3A%2F%2Fwww.julyforum.com%2Fbajar.html" target="_blank" style="width:44px;height:44px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">💬</a><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.julyforum.com%2Fbajar.html" target="_blank" style="width:44px;height:44px;background:#1877F2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">👍</a><button onclick="navigator.clipboard.writeText('https://www.julyforum.com/bajar.html').then(()=>{this.textContent='✅';setTimeout(()=>this.textContent='🔗',2000)})" style="width:44px;height:44px;background:#0f172a;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)">🔗</button></div>
 </body>
