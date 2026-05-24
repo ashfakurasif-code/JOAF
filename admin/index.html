@@ -1166,7 +1166,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
                 ondrop="fbHandleDrop(event)">
                 <input type="file" id="fb-img-input" accept="image/*" multiple
                   style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"
-                  onchange="fbBatchQueue(this.files)">
+                  onchange="fbBatchQueue(this.files);this.value=''">
                 <div id="img-upload-preview" style="display:none;margin-bottom:5px"><img id="img-preview-thumb" style="max-height:60px;border-radius:6px;border:1px solid var(--border)"></div>
                 <div id="img-upload-label" style="font-size:11px;color:var(--text2)">📸 Click বা drag — <b>একসাথে অনেক image</b><br><span style="font-size:10px;color:var(--text3)">প্রতিটার জন্য আলাদা AI card + caption তৈরি হবে</span></div>
                 <div id="img-batch-count" style="display:none;margin-top:5px;font-size:11px;font-weight:700;color:var(--accent);"></div>
@@ -3154,13 +3154,15 @@ window.fbHandleDrop = function(e) {
 window.fbBatchQueue = function(fileList) {
   const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
   if (!files.length) return;
-  window._fbBatchFiles = files;
-  // Show first image preview
+  window._fbBatchFiles = (window._fbBatchFiles || []).concat(files);
+  // Multi-thumb preview strip
   const preview = document.getElementById('img-upload-preview');
-  const thumb   = document.getElementById('img-preview-thumb');
-  if (preview && thumb) {
-    thumb.src = URL.createObjectURL(files[0]);
-    preview.style.display = 'block';
+  if (preview) {
+    const allFiles = window._fbBatchFiles;
+    preview.innerHTML = allFiles.map(f => '<img src="' + URL.createObjectURL(f) + '" title="' + f.name + '" style="max-height:60px;max-width:72px;border-radius:5px;border:1px solid var(--border);object-fit:cover;margin:2px;">').join('');
+    preview.style.display = 'flex';
+    preview.style.flexWrap = 'wrap';
+    preview.style.gap = '4px';
   }
   const lbl = document.getElementById('img-upload-label');
   if (lbl) lbl.textContent = `✅ ${files.length}টা image বাছাই হয়েছে`;
