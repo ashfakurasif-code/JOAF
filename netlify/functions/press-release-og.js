@@ -1,18 +1,14 @@
-// Appwrite REST — press_releases
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT  = '6a11b6cd000b59f318eb';
-const AW_KEY      = process.env.APPWRITE_API_KEY;
-const AW_DB       = 'joaf';
-const AW_H        = { 'Content-Type':'application/json', 'X-Appwrite-Project':AW_PROJECT, 'X-Appwrite-Key':AW_KEY };
+const AW_EP  = 'https://fra.cloud.appwrite.io/v1';
+const AW_P   = '6a11b6cd000b59f318eb';
+const AW_KEY = process.env.APPWRITE_API_KEY;
+const AW_DB  = 'joaf';
+const AW_H   = { 'Content-Type':'application/json', 'X-Appwrite-Project':AW_P, 'X-Appwrite-Key':AW_KEY };
 
-async function awGetDoc(col, docId) {
-  const r = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/${col}/documents/${docId}`, {headers:AW_H});
+async function awGetDoc(col, id) {
+  const r = await fetch(`${AW_EP}/databases/${AW_DB}/collections/${col}/documents/${id}`, {headers:AW_H});
   if (!r.ok) return null;
   return await r.json();
 }
-
-function escapeHtml(str) {
-  if (!str) return '';
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
