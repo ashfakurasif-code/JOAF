@@ -1,17 +1,14 @@
-const { initializeApp, getApps, cert } = require('firebase-admin/app');
-const { getFirestore } = require('firebase-admin/firestore');
+// Appwrite REST — press_releases
+const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const AW_PROJECT  = '6a11b6cd000b59f318eb';
+const AW_KEY      = process.env.APPWRITE_API_KEY;
+const AW_DB       = 'joaf';
+const AW_H        = { 'Content-Type':'application/json', 'X-Appwrite-Project':AW_PROJECT, 'X-Appwrite-Key':AW_KEY };
 
-function getDb() {
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-  }
-  return getFirestore();
+async function awGetDoc(col, docId) {
+  const r = await fetch(`${AW_ENDPOINT}/databases/${AW_DB}/collections/${col}/documents/${docId}`, {headers:AW_H});
+  if (!r.ok) return null;
+  return await r.json();
 }
 
 function escapeHtml(str) {
@@ -163,8 +160,8 @@ exports.handler = async (event) => {
   const id = event.queryStringParameters?.id;
   if (!id) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
   try {
-    const db = getDb();
-    const docSnap = await db.collection('press_releases').doc(id).get();
+  
+    const docSnap = await awGetDoc('press_releases', id);
     if (!docSnap.exists) return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
     const html = buildHtml(docSnap.data(), id);
     return { statusCode: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' }, body: html };
