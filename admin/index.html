@@ -3384,9 +3384,35 @@ async function drawInstantCard(slideTexts, mood, hook, rawText) {
     });
   });
 
-  // ── LOGO ZONE (fixed: 650 → 960) ──
-  const LOGO_MID_Y = 800;
-  const maxR = 148;
+  // ── DECORATIVE GAP FILL (content bottom → logo top) ──
+  const gapTop = CONTENT_ZONE_BOT + 12;
+  const gapBot = LOGO_MID_Y - 180;
+  if (gapBot > gapTop + 20) {
+    // horizontal scan lines
+    ctx.save();
+    for(let gy = gapTop; gy < gapBot; gy += 18) {
+      const alpha = 0.03 + 0.04 * Math.sin((gy - gapTop) / (gapBot - gapTop) * Math.PI);
+      ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+      ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(40, gy); ctx.lineTo(W-40, gy); ctx.stroke();
+    }
+    // center diamond accent
+    const dmY = (gapTop + gapBot) / 2;
+    const dmS = 18;
+    ctx.fillStyle = c.accent + '66';
+    ctx.beginPath(); ctx.moveTo(W/2, dmY-dmS); ctx.lineTo(W/2+dmS, dmY); ctx.lineTo(W/2, dmY+dmS); ctx.lineTo(W/2-dmS, dmY); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = c.accent + 'aa'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(W/2, dmY-dmS); ctx.lineTo(W/2+dmS, dmY); ctx.lineTo(W/2, dmY+dmS); ctx.lineTo(W/2-dmS, dmY); ctx.closePath(); ctx.stroke();
+    // side lines from diamond
+    ctx.strokeStyle = c.accent + '33'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(W/2+dmS+10, dmY); ctx.lineTo(W/2+180, dmY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W/2-dmS-10, dmY); ctx.lineTo(W/2-180, dmY); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── LOGO ZONE — dynamic, tight below content ──
+  const LOGO_MID_Y = Math.max(CONTENT_ZONE_BOT + 170, 720);
+  const maxR = Math.min((H - 120 - LOGO_MID_Y - 10), 200);
   // outer glow rings
   [maxR*2.2,maxR*1.7,maxR*1.2].forEach((r,i)=>{
     const rg=ctx.createRadialGradient(W/2,LOGO_MID_Y,r*0.1,W/2,LOGO_MID_Y,r);
@@ -3405,7 +3431,7 @@ async function drawInstantCard(slideTexts, mood, hook, rawText) {
     ctx.beginPath(); ctx.arc(W/2+Math.cos(a)*maxR*1.8,LOGO_MID_Y+Math.sin(a)*maxR*1.8,4.5,0,Math.PI*2); ctx.fill();
   }
   // logo circle
-  const logoR=92;
+  const logoR=Math.min(maxR*0.72, 130);
   const lgG=ctx.createRadialGradient(W/2,LOGO_MID_Y,0,W/2,LOGO_MID_Y,logoR);
   lgG.addColorStop(0,c.accent+'ff'); lgG.addColorStop(0.7,c.accent+'cc'); lgG.addColorStop(1,c.accent+'88');
   ctx.fillStyle=lgG; ctx.beginPath(); ctx.arc(W/2,LOGO_MID_Y,logoR,0,Math.PI*2); ctx.fill();
