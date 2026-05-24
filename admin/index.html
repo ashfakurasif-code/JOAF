@@ -4023,16 +4023,28 @@ window.fbHelperRemoveExclude = function(i) {
 window.saPreviewImg = function(input) {
   const file = input.files[0];
   if (!file) return;
-  const blob = file.slice(0, file.size, file.type);
-  blob._name = file.name;
-  blob._type = file.type;
+  // Keep original File — slice() loses MIME type on many devices
   if (window._saPreviewUrl) URL.revokeObjectURL(window._saPreviewUrl);
-  const url = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(file);
   window._saPreviewUrl = url;
-  window._saImgFile = blob;
-  document.getElementById('sa-thumb').src = url;
-  document.getElementById('sa-img-preview').style.display = 'block';
-  document.getElementById('sa-img-label').textContent = '✅ ' + file.name;
+  window._saImgFile = file;
+  const isVid = file.type.startsWith('video/');
+  const preview = document.getElementById('sa-img-preview');
+  if (preview) {
+    if (isVid) {
+      preview.innerHTML = '<video controls muted style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></video>';
+      preview.querySelector('video').src = url;
+    } else {
+      document.getElementById('sa-thumb').src = url;
+      preview.innerHTML = '';
+      const img = document.createElement('img');
+      img.style = 'max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;';
+      img.src = url;
+      preview.appendChild(img);
+    }
+    preview.style.display = 'block';
+  }
+  document.getElementById('sa-img-label').textContent = (isVid ? '🎬 ' : '📸 ') + file.name;
   input.value = '';
 };
 
@@ -4083,9 +4095,12 @@ window.saOpenPostHelper = async function() {
       try {
         let postRes, postData;
         if (file && file.type.startsWith('video/')) {
-          // Video post
+          // Video post — explicit Blob + filename required by FB Graph API
           const fd = new FormData();
-          fd.append('source', file);
+          const vMime = file.type || 'video/webm';
+          const vName = file.name || ('joaf-video-' + Date.now() + '.webm');
+          const vBlob = new Blob([file], { type: vMime });
+          fd.append('source', vBlob, vName);
           fd.append('description', caption);
           fd.append('access_token', page.access_token);
           postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/videos`, {
@@ -4192,7 +4207,10 @@ window.fbHelperOpenSuite = function(type) {
 function pushToSAPanel(file, previewSrc, isVideo, caption) {
   // Revoke previous objectURL to free memory
   if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); }
-  const blob = file.slice(0, file.size, file.type);
+  // Preserve MIME type — slice() drops it on Safari/Firefox; use File directly or re-wrap
+  const blob = (file instanceof File)
+    ? file
+    : new Blob([file], { type: file.type || (isVideo ? 'video/webm' : 'image/jpeg') });
   window._saPreviewUrl = previewSrc;
   window._saImgFile = blob;
   const preview = document.getElementById('sa-img-preview');

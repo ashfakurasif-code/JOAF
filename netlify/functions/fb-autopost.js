@@ -9,7 +9,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { imageUrl, caption, excludeIds } = body;
+  const { imageUrl, videoUrl, caption, excludeIds } = body;
   if (!caption) return { statusCode: 400, body: JSON.stringify({ error: 'caption required' }) };
 
   const excluded = Array.isArray(excludeIds) ? excludeIds.map(x => String(x).trim()) : [];
@@ -30,7 +30,13 @@ exports.handler = async (event) => {
   const results = await Promise.all(pages.map(async (page) => {
     try {
       let postRes, postData;
-      if (imageUrl) {
+      if (videoUrl) {
+        postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/videos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_url: videoUrl, description: caption, access_token: page.access_token })
+        });
+      } else if (imageUrl) {
         postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/photos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
