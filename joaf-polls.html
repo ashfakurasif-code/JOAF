@@ -1048,7 +1048,7 @@ function shareMyStreak() {
     const text = `🔥 JOAF-এ আমার ${s} দিনের Streak চলছে!
 🏆 র‌্যাংক: #${rank} | 🔄 ${cyc} চক্র সম্পন্ন
 
-তুমিও ভোট দাও → julyforum.com/joaf-polls.html`;
+তুমিও ভোট দাও → www.julyforum.com/joaf-polls.html`;
     if (navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'streak.png',{type:'image/png'})]})) {
       try {
         await navigator.share({ files:[new File([blob],'streak.png',{type:'image/png'})], title:'আমার JOAF Streak', text });
