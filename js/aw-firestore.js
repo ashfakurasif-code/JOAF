@@ -141,9 +141,21 @@ function safeDocId(id) {
 
 async function getSdk() {
   if (!_sdkPromise) {
-    _sdkPromise = import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm').then(({ Client, Databases, Query, ID }) => {
+    _sdkPromise = import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm').then(async ({ Client, Databases, Account, Query, ID }) => {
       const client = new Client();
       client.setEndpoint(AW_ENDPOINT).setProject(AW_PROJECT);
+      // Create anonymous session so read("any") works from browser
+      try {
+        const account = new Account(client);
+        await account.get();
+      } catch(e) {
+        if (e.code === 401) {
+          try {
+            const account = new Account(client);
+            await account.createAnonymousSession();
+          } catch(e2) { /* already has session or not needed */ }
+        }
+      }
       const db = new Databases(client);
       return { client, db, Query, ID };
     });
