@@ -365,10 +365,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:var(--
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
+const _AW='https://fra.cloud.appwrite.io/v1',_AW_P='6a11b6cd000b59f318eb',_AW_DB='joaf';
+async function _awList(col,qs=[],lim=200){let docs=[],off=0;while(true){let u=`${_AW}/databases/${_AW_DB}/collections/${col}/documents?limit=100&offset=${off}`;qs.forEach(q=>u+=`&queries[]=${encodeURIComponent(q)}`);const r=await fetch(u,{headers:{'X-Appwrite-Project':_AW_P}});if(!r.ok)return docs;const d=await r.json();const b=d.documents||[];docs=docs.concat(b);if(b.length<100||docs.length>=lim)break;off+=100;}return docs;}
+async function _awAdd(col,data){return(await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents`,{method:'POST',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({documentId:'unique()',data,permissions:['read("any")','write("any")','update("any")','delete("any")','create("any")','documents("any")','read("any")','write("any")']})}).then(r=>r.json()));}
+async function _awGet(col,id){const r=await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{headers:{'X-Appwrite-Project':_AW_P}});if(!r.ok)return null;return r.json();}
+async function _awSet(col,id,data){const p=await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({data})});if(p.ok)return;await fetch(`${_AW}/databases/${_AW_DB}/collections/${col}/documents`,{method:'POST',headers:{'Content-Type':'application/json','X-Appwrite-Project':_AW_P},body:JSON.stringify({documentId:id,data,permissions:['read("any")']})});}
 const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/iPad/i.test(_ua)?'tablet':'desktop',_ref=document.referrer,_src=_ref.includes('google')?'Google':_ref.includes('facebook')?'Facebook':_ref?'Referral':'Direct';
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 
@@ -1258,8 +1259,7 @@ window.closeModal = function(e) {
 const VOTE_CACHE = {};
 async function loadVotes() {
   try {
-    const { getDocs, collection: col } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const snap = await getDocs(col(_db, 'leader_votes'));
+    const snap = await _awList('leader_votes');
     snap.forEach(doc => {
       const d = doc.data();
       if (!VOTE_CACHE[d.lid]) VOTE_CACHE[d.lid] = {up:0, down:0};
@@ -1279,16 +1279,14 @@ window.voteLeader = async function(lid, type, btn) {
   document.querySelectorAll('[data-lid="' + lid + '"].vote-count-up').forEach(el => el.textContent = VOTE_CACHE[lid].up);
   document.querySelectorAll('[data-lid="' + lid + '"].vote-count-down').forEach(el => el.textContent = VOTE_CACHE[lid].down);
   try {
-    const { addDoc, collection: col, serverTimestamp: sts } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    await addDoc(col(_db, 'leader_votes'), {lid, type, ts: sts()});
+    await _awAdd('leader_votes', {lid, type, ts: new Date().toISOString()});
   } catch(e) { console.warn('Vote save failed:', e); }
 };
 const REACT_EMOJIS = ['🔥','😡','😢','👏'];
 const REACT_CACHE = {};
 async function loadReacts() {
   try {
-    const { getDocs, collection: col } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const snap = await getDocs(col(_db, 'issue_reacts'));
+    const snap = await _awList('issue_reacts');
     snap.forEach(doc => {
       const d = doc.data();
       if (!REACT_CACHE[d.iid]) REACT_CACHE[d.iid] = {};
@@ -1305,8 +1303,7 @@ window.reactIssue = async function(iid, emoji, btn) {
   const row = btn.closest('.ic-reacts');
   if (row) { row.querySelectorAll('.react-btn').forEach(b => b.classList.remove('reacted')); btn.classList.add('reacted'); const cn=btn.querySelector('.rc-n'); if(cn) cn.textContent=REACT_CACHE[iid][emoji]||''; }
   try {
-    const { addDoc, collection: col, serverTimestamp: sts } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    await addDoc(col(_db, 'issue_reacts'), {iid, emoji, ts: sts()});
+    await _awAdd('issue_reacts', {iid, emoji, ts: new Date().toISOString()});
   } catch(e) { console.warn('React save failed:', e); }
 };
 loadLeaders();

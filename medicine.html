@@ -96,22 +96,7 @@
 <script src="/js/components.js?v=6.6"></script>
 
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-const FB_CONFIG = {
-  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
-  authDomain: "joaf-app-45753.firebaseapp.com",
-  projectId: "joaf-app-45753",
-  storageBucket: "joaf-app-45753.firebasestorage.app",
-  messagingSenderId: "472362223214",
-  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
-};
-
-const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
-
-const fbApp = getApps().length ? getApps()[0] : initializeApp(FB_CONFIG);
-const db = getFirestore(fbApp);
+// med_cache → localStorage
 
 function bn(n) { return String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]); }
 
@@ -229,7 +214,7 @@ async function loadMeds() {
 
   // 1. Try Firebase cache
   try {
-    const snap = await getDoc(doc(db, 'med_cache', cacheKey));
+    const _mc = JSON.parse(localStorage.getItem('mc_'+cacheKey)||'null'); const snap = {exists:()=>!!_mc&&(Date.now()-(_mc._ts||0)<86400000), data:()=>_mc};
     if (snap.exists()) {
       const cached = snap.data();
       if (cached.data && Array.isArray(cached.data) && cached.data.length >= 5) {
@@ -252,10 +237,10 @@ async function loadMeds() {
 
     // 3. Save to Firebase
     try {
-      await setDoc(doc(db, 'med_cache', cacheKey), {
+      localStorage.setItem('mc_'+cacheKey, JSON.stringify({
         data: freshMeds,
         fetchedAt: serverTimestamp()
-      });
+      , _ts:Date.now()}));
     } catch(e) {
       console.log('Firebase save failed:', e);
     }
@@ -276,10 +261,6 @@ loadMeds();
 </script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;

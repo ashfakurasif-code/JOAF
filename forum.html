@@ -90,8 +90,7 @@
   </div>
 </div></section>
 <div id="joaf-footer"></div>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
 <script src="/js/modernizr-2.8.3.min.js"></script>
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
@@ -112,7 +111,7 @@ let unsubscribe=null;
 
 // Firebase init
 try{
-  firebase.initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+  
   db=firebase.firestore();
 }catch(e){}
 
@@ -161,7 +160,7 @@ function loadMessages(roomId){
   if(!db) return;
   if(unsubscribe) unsubscribe();
   try{
-    unsubscribe=db.collection('forum_'+roomId).orderBy('ts','asc').limit(30).onSnapshot(snap=>{
+    async function _loadChat(){const snap=await _awList('forum_'+roomId,['orderAsc("ts")'],30); {const _docs=snap;
       if(snap.empty){renderMessages(DEMO_MSGS);return;}
       const msgs=snap.docs.map(d=>{
         const data=d.data();
@@ -183,7 +182,7 @@ function sendMsg(){
   input.value='';
   if(db&&cuId){
     try{
-      db.collection('forum_'+activeRoom).add({name,text,uid:cuId,ts:firebase.firestore.FieldValue.serverTimestamp()});
+      _awAdd('forum_'+activeRoom, {name,text,uid:cuId,ts:new Date().toISOString()});
       return;
     }catch(e){}
   }
@@ -201,10 +200,6 @@ function sendMsg(){
 loadMessages('general');
 </script><script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;
