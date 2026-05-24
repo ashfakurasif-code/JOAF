@@ -16,10 +16,12 @@ const GROQ_MODELS = [
 // ── Valid leader categories — must match leader-tracker.html ──
 const VALID_CATS = ['সরকার', 'বিরোধী দল', 'যুব রাজনীতি', 'সুশীল সমাজ', 'আওয়ামী লীগ', 'ব্যবসায়ী'];
 
-const FB_CONFIG = {
-  apiKey:    'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-  projectId: 'joaf-app-45753',
-};
+const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const AW_PROJECT  = '6a11b6cd000b59f318eb';
+const AW_KEY      = process.env.APPWRITE_API_KEY;
+const AW_DB       = 'joaf';
+const AW_BASE     = `${AW_ENDPOINT}/databases/${AW_DB}/collections/leaders/documents`;
+const AW_H        = { 'Content-Type':'application/json', 'X-Appwrite-Project':AW_PROJECT, 'X-Appwrite-Key':AW_KEY };
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
@@ -28,56 +30,48 @@ const { fetchBDHeadlines } = require('./bd-rss-utils');
 // ── Firestore REST ──
 async function firestoreGetAll() {
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders?key=${FB_CONFIG.apiKey}&pageSize=200`;
-    const r = await fetch(url);
-    if (!r.ok) return [];
-    const data = await r.json();
-    return (data.documents || []).map(doc => {
-      const id = doc.name.split('/').pop();
-      const fields = doc.fields || {};
-      const obj = { id };
-      for (const [k, v] of Object.entries(fields)) {
-        if (v.stringValue !== undefined) obj[k] = v.stringValue;
-        else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-      }
-      return obj;
-    });
+    let docs = [], offset = 0;
+    while (true) {
+      const r = await fetch(`${AW_BASE}?limit=100&offset=${offset}`, { headers: AW_H });
+      if (!r.ok) return [];
+      const d = await r.json();
+      const batch = d.documents || [];
+      docs = docs.concat(batch.map(doc => ({ id: doc.$id, ...doc })));
+      if (batch.length < 100) break;
+      offset += 100;
+    }
+    return docs;
   } catch (e) { return []; }
 }
 
+
 async function firestoreSet(docId, data) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'number')  return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (Array.isArray(v)) return { arrayValue: { values: [] } };
-    return { nullValue: null };
+  const awData = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (Array.isArray(v) || (typeof v === 'object' && v !== null)) awData[k] = JSON.stringify(v);
+    else awData[k] = v !== undefined && v !== null ? String(v) : '';
   }
-  const fields = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toField(v)]));
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}`;
-  const r = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
+  const patchR = await fetch(`${AW_BASE}/${docId}`, {
+    method: 'PATCH', headers: AW_H, body: JSON.stringify({ data: awData })
   });
-  if (!r.ok) throw new Error('Firestore PATCH failed: ' + r.status);
+  if (patchR.ok) return;
+  await fetch(AW_BASE, {
+    method: 'POST', headers: AW_H,
+    body: JSON.stringify({ documentId: docId, data: awData, permissions: ['read("any")'] })
+  });
 }
 
+
 async function firestorePatchFields(docId, updates) {
-  function toField(v) {
-    if (typeof v === 'string')  return { stringValue: v };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    return { nullValue: null };
+  const awData = {};
+  for (const [k, v] of Object.entries(updates)) {
+    awData[k] = v !== undefined && v !== null ? String(v) : '';
   }
-  const fields = Object.fromEntries(Object.entries(updates).map(([k, v]) => [k, toField(v)]));
-  const mask = Object.keys(updates).map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join('&');
-  const url = `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents/leaders/${docId}?key=${FB_CONFIG.apiKey}&${mask}`;
-  await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fields }),
+  await fetch(`${AW_BASE}/${docId}`, {
+    method: 'PATCH', headers: AW_H, body: JSON.stringify({ data: awData })
   });
 }
+
 
 // ── Shared prompt builder ──
 function buildDiscoverPrompt(headlines, existingLeaders, today) {
