@@ -3180,7 +3180,17 @@ News: ${text}` });
     const raw = aiData.choices?.[0]?.message?.content || '{}';
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('AI JSON বের করা যায়নি');
-    const parsed = JSON.parse(jsonMatch[0]);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch(parseErr) {
+      // sanitize smart quotes and control chars then retry
+      const sanitized = jsonMatch[0]
+        .replace(/“|”/g, '"')
+        .replace(/‘|’/g, "'")
+        .replace(/[ -]/g, ' ');
+      parsed = JSON.parse(sanitized);
+    }
 
     // UI update — caption, hook, tags, time
     document.getElementById('fb-caption').value = parsed.caption || text;
