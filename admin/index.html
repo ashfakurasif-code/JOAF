@@ -1252,6 +1252,14 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">✍️ Caption</label>
             <textarea id="sa-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;margin-bottom:10px;" placeholder="Caption লিখুন..."></textarea>
+            <div style="margin-bottom:10px;">
+              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🔑 FB User Token <span style="font-weight:400;font-size:10px;">(Graph API Explorer থেকে নিন)</span></label>
+              <div style="display:flex;gap:6px;">
+                <input id="sa-fb-token-input" type="password" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:monospace;" placeholder="EAAj... token paste করুন" oninput="document.getElementById('sa-token-status').textContent=''">
+                <button onclick="saveFbToken()" style="padding:7px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">💾 Save</button>
+              </div>
+              <div id="sa-token-status" style="font-size:10px;margin-top:3px;color:var(--text2);"></div>
+            </div>
             <button onclick="saOpenPostHelper()" style="width:100%;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">📤 FB Pages এ Post করুন</button>
             <div id="sa-post-log" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
           </div>
@@ -3498,28 +3506,30 @@ async function drawInstantCard(slideTexts, mood, hook, rawText) {
 
   ctx.fillStyle = botGlow; ctx.fillRect(0, H-400, W, 400);
 
-  // ── www.julyforum.com watermark ──
-
+  // ── WATERMARK BAR — branded ──
   ctx.save();
-
-  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, H-80, W, 80);
-
-  ctx.font = "bold 32px 'Noto Sans Bengali',Arial,sans-serif";
-
-  ctx.fillStyle = c.accent; ctx.textAlign = 'center';
-
-  ctx.shadowColor = c.accent; ctx.shadowBlur = 12;
-
-  ctx.fillText('www.julyforum.com', W/2, H - 32);
-
-  ctx.shadowBlur = 0;
-
+  const wmGrad = ctx.createLinearGradient(0,H-120,0,H);
+  wmGrad.addColorStop(0,'rgba(0,0,0,0)'); wmGrad.addColorStop(0.3,'rgba(0,0,0,0.85)'); wmGrad.addColorStop(1,'rgba(0,0,0,0.95)');
+  ctx.fillStyle=wmGrad; ctx.fillRect(0,H-120,W,120);
+  const lcx=80,lcy=H-58,lr=36;
+  ctx.fillStyle=c.accent+'dd';
+  ctx.beginPath(); ctx.arc(lcx,lcy,lr,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(lcx,lcy,lr,0,Math.PI*2); ctx.stroke();
+  ctx.font="900 26px Arial,sans-serif"; ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('⚡',lcx,lcy); ctx.textBaseline='alphabetic';
+  ctx.font="900 38px 'Noto Sans Bengali',Arial,sans-serif"; ctx.fillStyle='#fff'; ctx.textAlign='left';
+  ctx.shadowColor=c.accent; ctx.shadowBlur=10;
+  ctx.fillText('JOAF',130,H-52); ctx.shadowBlur=0;
+  ctx.font="500 26px 'Noto Sans Bengali',Arial,sans-serif"; ctx.fillStyle=c.sec+'cc';
+  ctx.fillText('julyforum.com',130,H-22);
+  const _today=new Date();
+  const _bdD=['রবি','সোম','মঙ্গল','বুধ','বৃহ','শুক্র','শনি'];
+  const _bdM=['জানু','ফেব্রু','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টে','অক্টো','নভে','ডিসে'];
+  ctx.font="600 22px 'Noto Sans Bengali',Arial,sans-serif"; ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.textAlign='right';
+  ctx.fillText(_bdD[_today.getDay()]+', '+_today.getDate()+' '+_bdM[_today.getMonth()]+' '+_today.getFullYear(),W-48,H-40);
   ctx.restore();
-
-  // ── BOTTOM BAR ──
-
-  ctx.fillStyle = barGrad; ctx.fillRect(0, H - 8, W, 8);
-
+  ctx.fillStyle=barGrad; ctx.fillRect(0,H-6,W,6);
 }
 
 // ── Status Logger ──────────────────────────────────────────────
@@ -3615,10 +3625,22 @@ async function renderVideoWithAudio(slides, mood, rawText, logEl) {
     ctx2d.fillStyle=vig; ctx2d.fillRect(0,0,W,H);
   }
   function drawWatermark() {
-    if (logoImg) { ctx2d.globalAlpha=0.55; ctx2d.drawImage(logoImg,W-90,H-90,72,72); ctx2d.globalAlpha=1; }
-    ctx2d.fillStyle='rgba(0,0,0,0.45)'; ctx2d.fillRect(0,H-52,W,52);
-    ctx2d.font='bold 28px Arial'; ctx2d.fillStyle=accent; ctx2d.textAlign='center';
-    ctx2d.fillText('julyforum.com',W/2,H-18);
+    const wmG=ctx2d.createLinearGradient(0,H-110,0,H);
+    wmG.addColorStop(0,'rgba(0,0,0,0)'); wmG.addColorStop(0.4,'rgba(0,0,0,0.87)'); wmG.addColorStop(1,'rgba(0,0,0,0.96)');
+    ctx2d.fillStyle=wmG; ctx2d.fillRect(0,H-110,W,110);
+    ctx2d.fillStyle=accent+'cc';
+    ctx2d.beginPath(); ctx2d.arc(80,H-55,33,0,Math.PI*2); ctx2d.fill();
+    ctx2d.strokeStyle='rgba(255,255,255,0.2)'; ctx2d.lineWidth=2;
+    ctx2d.beginPath(); ctx2d.arc(80,H-55,33,0,Math.PI*2); ctx2d.stroke();
+    ctx2d.font="900 24px Arial"; ctx2d.fillStyle='#fff'; ctx2d.textAlign='center'; ctx2d.textBaseline='middle';
+    ctx2d.fillText('⚡',80,H-55); ctx2d.textBaseline='alphabetic';
+    ctx2d.font="900 36px 'Noto Sans Bengali',Arial,sans-serif"; ctx2d.fillStyle='#fff'; ctx2d.textAlign='left';
+    ctx2d.fillText('JOAF',128,H-52);
+    ctx2d.font="500 22px 'Noto Sans Bengali',Arial,sans-serif"; ctx2d.fillStyle='rgba(255,255,255,0.5)';
+    ctx2d.fillText('julyforum.com',128,H-20);
+    const _d=new Date(); const _m=['জানু','ফেব্রু','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টে','অক্টো','নভে','ডিসে'];
+    ctx2d.font="600 19px 'Noto Sans Bengali',Arial,sans-serif"; ctx2d.fillStyle='rgba(255,255,255,0.4)'; ctx2d.textAlign='right';
+    ctx2d.fillText(_d.getDate()+' '+_m[_d.getMonth()]+' '+_d.getFullYear(),W-44,H-38);
   }
   function drawProgress(prog) {
     ctx2d.fillStyle='rgba(255,255,255,0.15)'; ctx2d.beginPath(); ctx2d.roundRect(40,H-70,W-80,6,3); ctx2d.fill();
@@ -3908,7 +3930,14 @@ window.saOpenPostHelper = async function() {
   if (!caption) { alert('Caption লিখুন'); return; }
 
   const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  const TOKEN = localStorage.getItem('joaf_fb_token') || 'EAAjL2bBHrGoBRuXHFp60A9ZBPmHe5xxUQJVZBJfqGTY0ty6MVLZAlc8BmKcapOWhD1UTQ0Galj28MZCv3hVyWKlAZBTIveFqdx5XP3Ybqvj3Yvo0ZBlzdGskRfeeJ2vZB0sEhqmMuIwvIzi1rtgcephV6Ytt2vUFL3zEZCxkHKfaoikJBSBi7SdMx2XGdsnFj3Bwve2N9SI2tgiEy3WRDUBo5DWZBkrn6FaEbmTNjnE77gtJLg8cJ4sAYIvig4dOkp2NsrQtXIkdiatimmQOO9Ii8cNOV';
+  const TOKEN = localStorage.getItem('joaf_fb_token') || '';
+  if (!TOKEN) {
+    const st=document.getElementById('sa-token-status');
+    if(st){st.textContent='❌ আগে token save করুন';st.style.color='#f87171';}
+    if(logEl){logEl.style.display='block';logEl.innerHTML='<div style="color:#f87171">❌ Token নেই — উপরে save করুন</div>';}
+    if(btn){btn.disabled=false;btn.textContent='📤 FB Pages এ Post করুন';}
+    return;
+  }
 
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting হচ্ছে...'; }
   const logEl = document.getElementById('sa-post-log');
@@ -3989,6 +4018,25 @@ window.saOpenPostHelper = async function() {
   if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); window._saPreviewUrl = null; }
   window._saImgFile = null;
 };
+
+window.saveFbToken = function() {
+  const inp = document.getElementById('sa-fb-token-input');
+  const val = (inp ? inp.value : '').trim();
+  if (!val || !val.startsWith('EAAj')) {
+    const st = document.getElementById('sa-token-status');
+    if(st){st.textContent='❌ Valid token লাগবে (EAAj দিয়ে শুরু)';st.style.color='#f87171';}
+    return;
+  }
+  localStorage.setItem('joaf_fb_token', val);
+  const st = document.getElementById('sa-token-status');
+  if(st){st.textContent='✅ Token save হয়েছে!';st.style.color='#34d399';}
+  inp.value = '';
+};
+(function(){
+  const t=localStorage.getItem('joaf_fb_token');
+  const st=document.getElementById('sa-token-status');
+  if(t&&st){st.textContent='✅ Saved ('+t.slice(0,12)+'...)';st.style.color='#34d399';}
+})();
 
 window.saAddExclude = function() {
   const inp = document.getElementById('sa-exc-input');
