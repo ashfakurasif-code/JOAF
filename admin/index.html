@@ -1246,7 +1246,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
               <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">📎 Image / Video বেছে নিন</label>
               <div id="sa-drop" onclick="document.getElementById('sa-img-input').click()" style="border:2px dashed var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
                 <input type="file" id="sa-img-input" accept="image/*,video/*" style="display:none" onchange="saPreviewImg(this)">
-                <div id="sa-img-preview" style="display:none;margin-bottom:6px;"><img id="sa-thumb" style="max-height:80px;border-radius:6px;border:1px solid var(--border)"></div>
+                <div id="sa-img-preview" style="display:none;margin-bottom:8px;text-align:center;"><img id="sa-thumb" style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></div>
                 <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image বা 🎬 Video select করুন</div>
               </div>
             </div>
@@ -3828,6 +3828,9 @@ window.saOpenPostHelper = async function() {
   }
 
   if (btn) { btn.disabled = false; btn.textContent = '📤 FB Pages এ Post করুন'; }
+  // Free memory — revoke objectURL, clear file ref
+  if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); window._saPreviewUrl = null; }
+  window._saImgFile = null;
 };
 
 window.saAddExclude = function() {
@@ -3866,27 +3869,28 @@ window.fbHelperOpenSuite = function(type) {
 
 // ── AUTO-FILL SA PANEL ──────────────────────────────────
 function pushToSAPanel(file, previewSrc, isVideo) {
+  // Revoke previous objectURL to free memory
+  if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); }
+  window._saPreviewUrl = previewSrc;
   window._saImgFile = file;
   const preview = document.getElementById('sa-img-preview');
   const label = document.getElementById('sa-img-label');
-  const thumb = document.getElementById('sa-thumb');
   if (preview) {
     preview.innerHTML = '';
     if (isVideo) {
       const vid = document.createElement('video');
-      vid.style = 'max-height:80px;border-radius:6px;border:1px solid var(--border)';
-      vid.src = previewSrc; vid.muted = true; vid.controls = false;
+      vid.style = 'max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;';
+      vid.src = previewSrc; vid.muted = true; vid.controls = true;
       preview.appendChild(vid);
     } else {
       const img = document.createElement('img');
-      img.style = 'max-height:80px;border-radius:6px;border:1px solid var(--border)';
+      img.style = 'max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;';
       img.src = previewSrc;
       preview.appendChild(img);
     }
     preview.style.display = 'block';
   }
-  if (label) label.textContent = (isVideo ? '🎬 ' : '📸 ') + file.name + ' ✅ auto-filled';
-  // Scroll SA panel into view
+  if (label) label.textContent = (isVideo ? '🎬 ' : '📸 ') + file.name + ' ✅';
   const saDrop = document.getElementById('sa-drop');
   if (saDrop) saDrop.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
