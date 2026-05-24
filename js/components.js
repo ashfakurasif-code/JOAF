@@ -1,4 +1,29 @@
 // JOAF Components v9.0
+
+// ── Appwrite helpers ─────────────────────────────────
+const _AW_EP  = 'https://fra.cloud.appwrite.io/v1';
+const _AW_PID = '6a11b6cd000b59f318eb';
+const _AW_DB  = 'joaf';
+function _awH() { return {'Content-Type':'application/json','X-Appwrite-Project':_AW_PID}; }
+async function _awPost(col, data) {
+  try {
+    const r = await fetch(`${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents`, {
+      method:'POST', headers:_awH(),
+      body: JSON.stringify({documentId:'unique()', data, permissions:['read("any")']})
+    });
+    return r.ok ? await r.json() : null;
+  } catch(e) { console.warn('_awPost failed:', e); return null; }
+}
+async function _awList(col, qs=[], lim=5) {
+  try {
+    let url = `${_AW_EP}/databases/${_AW_DB}/collections/${col}/documents?limit=${lim}`;
+    qs.forEach(q => url += `&queries[]=${encodeURIComponent(q)}`);
+    const r = await fetch(url, {headers:{'X-Appwrite-Project':_AW_PID}});
+    return r.ok ? ((await r.json()).documents || []) : [];
+  } catch(e) { return []; }
+}
+// ─────────────────────────────────────────────────────
+
 // ✅ Mute: never pause, just flip .muted — works on all mobile browsers
 // ✅ Header: scroll-aware glass effect
 // ✅ Member cards: mouse-tracking 3D tilt on desktop

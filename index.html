@@ -885,6 +885,17 @@ function initFilter() {
 })();
 
 // ── Press releases (latest 4 from Firestore) ──────────────
+async function _awReadPressReleases(limit=4) {
+  try {
+    const r = await fetch(
+      'https://fra.cloud.appwrite.io/v1/databases/joaf/collections/press_releases/documents?limit='+limit+'&queries[]='+encodeURIComponent('orderDesc("date")'),
+      {headers:{'X-Appwrite-Project':'6a11b6cd000b59f318eb'}}
+    );
+    if (!r.ok) return [];
+    return (await r.json()).documents || [];
+  } catch(e) { return []; }
+}
+
 (async function() {
   const grid = document.getElementById('press-grid');
   if (!grid) return;

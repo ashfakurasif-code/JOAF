@@ -222,11 +222,11 @@ let gpsData = null;
 let photoFile = null;
 
 // Real-time listener
-async function _pollAlerts() { const snap = await _awList('alerts',['orderDesc("createdAt")']).then(d=>({docs:d})); {
+async function _pollAlerts() {
   window._alerts = snap.map(d => ({ id: d.$id, ...d }));
   renderAlerts();
   document.getElementById('joaf-preloader').style.display = 'none';
-});
+}
 
 function timeAgo(ts) {
   if (!ts) return '';

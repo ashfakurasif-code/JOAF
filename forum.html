@@ -160,12 +160,14 @@ function loadMessages(roomId){
   if(!db) return;
   if(unsubscribe) unsubscribe();
   try{
-    async function _loadChat(){const snap=await _awList('forum_'+roomId,['orderAsc("ts")'],30); {const _docs=snap;
-      if(snap.empty){renderMessages(DEMO_MSGS);return;}
+    async function _loadChat(){
+      const _docs = await _awList('forum_'+roomId,['orderAsc("ts")'],30);
+      if(!_docs.length){renderMessages(DEMO_MSGS);return;}
+      const cu=localStorage.getItem('cu');
+      const msgs=_docs.map(d=>({name:d.name,text:d.text,time:'এইমাত্র',own:d.uid===cu}));
       const msgs=snap.map(d => {
         const data = d;
         const cu=localStorage.getItem('cu');
-        return {name:data.name,text:data.text,time:'এইমাত্র',own:data.uid===cu};
       });
       renderMessages(msgs);
     });
