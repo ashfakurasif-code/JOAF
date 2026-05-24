@@ -3455,7 +3455,16 @@ async function renderVideoWithAudio(slides, mood, rawText, logEl) {
       const audioKey=isHook?'hook':isOutro?'outro':slideIdx;
       if(audioKey!==lastAudioSlide){lastAudioSlide=audioKey;playSlideAudioToDestination(audioCtx2,audioDest,mood,isHook?0:slideIdx+1,slideTexts.length+2,isHook?3.2:isOutro?2.2:4.2);}
       const bgFrame=frames.length>0?frames[(isHook?0:isOutro?frames.length-1:slideIdx)%frames.length]:null;
-      drawBg(bgFrame,isHook?0.45:0.58);
+      if(!bgFrame){
+        const fallbacks=[['#0a0014','#080818'],['#001a0a','#081408'],['#0a0800','#181008'],['#000a1a','#081018'],['#1a000a','#180808']];
+        const [c1,c2]=fallbacks[(isHook?0:isOutro?4:slideIdx)%fallbacks.length];
+        const fg=ctx2d.createLinearGradient(0,0,0,H);fg.addColorStop(0,c1);fg.addColorStop(1,c2);
+        ctx2d.fillStyle=fg;ctx2d.fillRect(0,0,W,H);
+        ctx2d.fillStyle='rgba(0,0,0,'+(isHook?0.45:0.58)+')';ctx2d.fillRect(0,0,W,H);
+        const vig2=ctx2d.createRadialGradient(W/2,H/2,H*0.15,W/2,H/2,H*0.75);
+        vig2.addColorStop(0,'transparent');vig2.addColorStop(1,'rgba(0,0,0,0.6)');
+        ctx2d.fillStyle=vig2;ctx2d.fillRect(0,0,W,H);
+      } else { drawBg(bgFrame,isHook?0.45:0.58); }
       const prog=frameNum/TOTAL_FRAMES;
       if(isHook){
         ctx2d.fillStyle=accent;ctx2d.fillRect(0,0,W,12);
