@@ -3152,7 +3152,7 @@ window.fbSelectAllImages = function(selectAll) {
 };
 
 // ── Render interactive thumbnail strip ───────────────────────
-function fbRenderThumbStrip() {
+window.fbRenderThumbStrip = function() {
   const files = window._fbFiles || [];
   const selected = window._fbSelected || [];
   const strip = document.getElementById('img-thumb-strip');
@@ -3193,7 +3193,7 @@ function fbRenderThumbStrip() {
 
 // ── Analyze a single File object ─────────────────────────────
 // ── Render per-image editable text boxes
-function fbRenderImageTextBoxes() {
+window.fbRenderImageTextBoxes = function() {
   const container = document.getElementById('fb-image-texts-container');
   if (!container) return;
   const files = window._fbFiles || [];
@@ -3215,7 +3215,7 @@ function fbRenderImageTextBoxes() {
 }
 
 // ── Sync per-image text boxes into window._fbImageTexts
-function fbSyncImageTexts() {
+window.fbSyncImageTexts = function() {
   const files = window._fbFiles || [];
   if (files.length <= 1) {
     const box = document.getElementById('fb-news-input');
@@ -3228,7 +3228,7 @@ function fbSyncImageTexts() {
   });
 }
 
-async function fbAnalyzeOneFile(file) {
+window.fbAnalyzeOneFile = async function(file) {
   return new Promise(function(resolve) {
     const preview = document.getElementById('img-upload-preview');
     const thumb   = document.getElementById('img-preview-thumb');
@@ -3304,7 +3304,7 @@ window.fbAnalyzeImage = async function(input) {
   })();
 }
 
-async function fbGenerateReel() {
+window.fbGenerateReel = async function() {
   const text = document.getElementById('fb-news-input').value.trim();
   const imgInput = document.getElementById('fb-img-input');
   const imgFile = (window._fbFiles && window._fbFiles.length) ? window._fbFiles[0] : (imgInput?.files?.[0] || null);
@@ -4791,7 +4791,7 @@ window.batchPostSelected = async function() {
 };
 
 // ══════════════════════════════════════════════════════════════
-function fbDownloadReel() {
+window.fbDownloadReel = function() {
   if (!reelBlob) return;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(reelBlob); a.download = 'joaf-reel.webm'; a.click();
