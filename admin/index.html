@@ -3063,12 +3063,17 @@ window.fbDownloadCard = function() {
 };
 
 async function fbAnalyzeImage(input) {
-  const file = input.files[0];
-  if (!file) return;
+  const allFiles = Array.from(input.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+  if (!allFiles.length) return;
+  window._fbFiles = allFiles;
+  input.value = '';
+  const file = allFiles[0];
   const preview = document.getElementById('img-upload-preview');
   const thumb = document.getElementById('img-preview-thumb');
   const label = document.getElementById('img-upload-label');
   const status = document.getElementById('img-analyze-status');
+  const cnt = document.getElementById('img-batch-count');
+  if (cnt) { cnt.textContent = allFiles.length > 1 ? allFiles.length + 'টা file selected' : ''; cnt.style.display = allFiles.length > 1 ? 'block' : 'none'; }
   const reader = new FileReader();
   reader.onload = async function(e) {
     thumb.src = e.target.result;
@@ -3112,7 +3117,7 @@ async function fbAnalyzeImage(input) {
 async function fbGenerateReel() {
   const text = document.getElementById('fb-news-input').value.trim();
   const imgInput = document.getElementById('fb-img-input');
-  const imgFile = imgInput?.files?.[0];
+  const imgFile = (window._fbFiles && window._fbFiles.length) ? window._fbFiles[0] : (imgInput?.files?.[0] || null);
   if (!text && !imgFile) return alert('News text লিখুন অথবা Image upload করুন');
   if (!text) return alert('News text লিখুন');
 
