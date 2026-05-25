@@ -3140,7 +3140,7 @@ async function fbAnalyzeImage(input) {
 // ══════════════════════════════════════════════════════════
 // BATCH IMAGE GENERATOR — multi-image → per-image AI card
 // ══════════════════════════════════════════════════════════
-window._fbBatchFiles = [];  // queued image files for batch generate
+window._fbBatchFiles = []; // v2-fixed  // queued image files for batch generate
 
 window.fbHandleDrop = function(e) {
   e.preventDefault();
