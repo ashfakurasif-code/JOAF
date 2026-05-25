@@ -1158,18 +1158,10 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <!-- Image Upload -->
             <div style="margin-bottom:10px;">
               <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🖼️ Image Upload করুন (optional)</label>
-              <div id="img-upload-zone" style="border:2px dashed var(--border2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:.15s;position:relative;"
-                onmouseover="this.style.borderColor='var(--accent)'"
-                onmouseout="this.style.borderColor='var(--border2)'"
-                ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
-                ondragleave="this.style.borderColor='var(--border2)'"
-                ondrop="fbHandleDrop(event)">
-                <input type="file" id="fb-img-input" accept="image/*" multiple
-                  style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"
-                  onchange="fbBatchQueue(this.files)">
-                <div id="img-upload-preview" style="display:none;margin-bottom:5px"><img id="img-preview-thumb" style="max-height:60px;border-radius:6px;border:1px solid var(--border)"></div>
-                <div id="img-upload-label" style="font-size:11px;color:var(--text2)">📸 Click বা drag — <b>একসাথে অনেক image</b><br><span style="font-size:10px;color:var(--text3)">প্রতিটার জন্য আলাদা AI card + caption তৈরি হবে</span></div>
-                <div id="img-batch-count" style="display:none;margin-top:5px;font-size:11px;font-weight:700;color:var(--accent);"></div>
+              <div id="img-upload-zone" style="border:2px dashed var(--border2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:.15s;position:relative;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+                <input type="file" id="fb-img-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="fbAnalyzeImage(this)">
+                <div id="img-upload-preview" style="display:none;margin-bottom:5px"><img id="img-preview-thumb" style="max-height:70px;border-radius:6px;border:1px solid var(--border)"></div>
+                <div id="img-upload-label" style="font-size:11px;color:var(--text2)">📸 Click বা drag<br><span style="font-size:10px;color:var(--text3)">AI analyze করে text বানাবে</span></div>
                 <div id="img-analyze-status" style="font-size:11px;color:var(--amber);margin-top:4px;display:none">⏳ Analyze হচ্ছে...</div>
               </div>
             </div>
@@ -1197,7 +1189,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <!-- Action Buttons -->
             <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-              <button onclick="fbBatchGenerate()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন <span id="fb-gen-label" style="font-size:10px;font-weight:400;opacity:.8;"></span></buttonutton>
+              <button onclick="fbGenerateReel()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন</button>
             </div>
             <div id="fb-mode-notice" style="margin-top:7px;padding:7px 10px;border-radius:6px;font-size:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber);">
               🖼️ <b>Card mode:</b> ৩-৫ সেকেন্ডে JPG ready — সাথে caption ও hashtags
@@ -1245,33 +1237,21 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <div id="fb-post-log" style="margin-top:10px;font-size:11px;max-height:180px;overflow-y:auto;"></div>
           </div>
-          <!-- STANDALONE FB POST CARD — Batch Queue v2 -->
+          <!-- STANDALONE FB POST CARD -->
           <div class="card" style="margin:0;">
             <div class="card-header" style="padding-bottom:8px;">
-              <div class="card-title" style="font-size:13px;">📤 সরাসরি FB Pages এ Post <span id="sa-queue-count" style="font-size:10px;background:var(--accent);color:#fff;border-radius:20px;padding:1px 7px;margin-left:6px;display:none;">0</span></div>
+              <div class="card-title" style="font-size:13px;">📤 সরাসরি FB Pages এ Post</div>
             </div>
             <div style="margin-bottom:10px;">
-              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">📎 Image / Video <span style="font-weight:400;font-size:10px;color:var(--text3);">(একসাথে ১৫+ file)</span></label>
-              <div id="sa-drop"
-                style="border:2px dashed var(--border2);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:.15s;position:relative;"
-                onmouseover="this.style.borderColor='var(--accent)'"
-                onmouseout="this.style.borderColor='var(--border2)'"
-                ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--red-bg)'"
-                ondragleave="this.style.borderColor='var(--border2)';this.style.background=''"
-                ondrop="saBatchDrop(event);this.style.borderColor='var(--border2)';this.style.background=''">
-                <input type="file" id="sa-img-input" accept="image/*,video/*" multiple
-                  style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"
-                  onchange="saBatchAdd(this.files)">
-                <div style="font-size:22px;margin-bottom:4px;">📁</div>
-                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">Drag &amp; Drop বা Click — Image / Video</div>
+              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">📎 Image / Video বেছে নিন</label>
+              <div id="sa-drop" onclick="document.getElementById('sa-img-input').click()" style="border:2px dashed var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+                <input type="file" id="sa-img-input" accept="image/*,video/*" style="display:none" onchange="saPreviewImg(this)">
+                <div id="sa-img-preview" style="display:none;margin-bottom:8px;text-align:center;"><img id="sa-thumb" style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></div>
+                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image বা 🎬 Video select করুন</div>
               </div>
-              <div id="sa-img-preview" style="display:none;"><img id="sa-thumb" style="display:none;"></div>
             </div>
-            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">✍️ Default Caption <span style="font-weight:400;font-size:10px;">(queue তে আলাদা edit করা যাবে)</span></label>
-            <div style="position:relative;margin-bottom:10px;">
-              <textarea id="sa-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;padding-right:96px;" placeholder="Caption লিখুন..."></textarea>
-              <button onclick="saSpellCheck()" id="sa-spell-btn" style="position:absolute;top:6px;right:6px;padding:4px 8px;background:var(--bg4);border:1px solid var(--border2);border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text2);">🔤 বানান</button>
-            </div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">✍️ Caption</label>
+            <textarea id="sa-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;margin-bottom:10px;" placeholder="Caption লিখুন..."></textarea>
             <div style="margin-bottom:10px;">
               <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🔑 FB User Token <span style="font-weight:400;font-size:10px;">(Graph API Explorer থেকে নিন)</span></label>
               <div style="display:flex;gap:6px;">
@@ -1280,17 +1260,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
               </div>
               <div id="sa-token-status" style="font-size:10px;margin-top:3px;color:var(--text2);"></div>
             </div>
-            <div id="sa-queue-wrap" style="display:none;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                <span style="font-size:11px;font-weight:700;color:var(--text2);">📋 Post Queue</span>
-                <button onclick="saClearQueue()" style="font-size:10px;padding:3px 8px;background:var(--red-bg);border:1px solid #f87171;border-radius:5px;color:#f87171;cursor:pointer;font-family:inherit;font-weight:700;">🗑 Clear All</button>
-              </div>
-              <div id="sa-queue-list" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
-            </div>
-            <div style="display:flex;gap:6px;">
-              <button onclick="saOpenPostHelper()" id="sa-single-post-btn" style="flex:1;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📤 Post করুন</button>
-              <button onclick="saPublishAll()" id="sa-publish-all-btn" style="display:none;flex:2;padding:11px;background:linear-gradient(135deg,#1877f2,#7c3aed);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Publish All (<span id="sa-publish-count">0</span>)</button>
-            </div>
+            <button onclick="saOpenPostHelper()" style="width:100%;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">📤 FB Pages এ Post করুন</button>
             <div id="sa-post-log" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
           </div>
         </div>
@@ -3139,163 +3109,6 @@ async function fbAnalyzeImage(input) {
   reader.readAsDataURL(file);
 }
 
-// ══════════════════════════════════════════════════════════
-// BATCH IMAGE GENERATOR — multi-image → per-image AI card
-// ══════════════════════════════════════════════════════════
-window._fbBatchFiles = [];  // queued image files for batch generate
-
-window.fbHandleDrop = function(e) {
-  e.preventDefault();
-  document.getElementById('img-upload-zone').style.borderColor = 'var(--border2)';
-  const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
-  if (files.length) window.fbBatchQueue(files);
-};
-
-window.fbBatchQueue = function(fileList) {
-  const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
-  if (!files.length) return;
-  window._fbBatchFiles = files;
-  // Show first image preview
-  const preview = document.getElementById('img-upload-preview');
-  const thumb   = document.getElementById('img-preview-thumb');
-  if (preview && thumb) {
-    thumb.src = URL.createObjectURL(files[0]);
-    preview.style.display = 'block';
-  }
-  const lbl = document.getElementById('img-upload-label');
-  if (lbl) lbl.textContent = `✅ ${files.length}টা image বাছাই হয়েছে`;
-  const cnt = document.getElementById('img-batch-count');
-  if (cnt) { cnt.textContent = `🖼️ ${files.length}টা image ready — Generate দাবান পর সবগুলার জন্য AI card তৈরি হবে`; cnt.style.display = 'block'; }
-  const genLbl = document.getElementById('fb-gen-label');
-  if (genLbl) genLbl.textContent = files.length > 1 ? `(${files.length}টা image)` : '';
-};
-
-// Core: generate AI caption + card for ONE image file, returns {caption, tags, cardBlob}
-async function fbGenerateOneCard(imgFile, text, toneDesc) {
-  const base64 = imgFile ? await new Promise(res => {
-    const rd = new FileReader();
-    rd.onload = e => res(e.target.result.split(',')[1]);
-    rd.onerror = () => res('');
-    rd.readAsDataURL(imgFile);
-  }) : '';
-
-  const model = imgFile ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
-  const content = [];
-  if (imgFile && base64) content.push({ type:'image_url', image_url:{ url:'data:'+(imgFile.type||'image/jpeg')+';base64,'+base64 } });
-  content.push({ type:'text', text:`তুমি বাংলাদেশের সেরা Facebook viral content strategist।
-Tone: ${toneDesc}
-
-RULES:
-- hook = প্রথম ৩ সেকেন্ড scroll stopper, max ৮ শব্দ, question বা shocking statement
-- caption = hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ
-- slides = plain বাংলা text, max ১০ শব্দ প্রতি slide, কোনো hashtag/emoji নেই
-- mood = urgent/sad/positive/angry/neutral থেকে একটা
-
-শুধু raw JSON (no extra text):
-{"mood":"urgent","hook":"max ৮ শব্দের scroll stopper","caption":"full viral caption with emoji + CTA + hashtags","tags":"#tag1 #tag2 #JOAF #বাংলাদেশ","slides":[{"text":"hook slide text"},{"text":"main info"},{"text":"conclusion + CTA"}]}
-
-News: ${text}` });
-
-  const aiRes = await fetch('/.netlify/functions/groq-proxy', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ model, max_tokens:2000, messages:[{ role:'user', content }] })
-  });
-  const aiData = await aiRes.json();
-  const raw = aiData.choices?.[0]?.message?.content || '{}';
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('AI JSON বের করা যায়নি');
-  const parsed = JSON.parse(jsonMatch[0]);
-
-  // Render card to canvas → blob
-  const mood = parsed.mood || 'urgent';
-  const panels = (parsed.slides||[]).slice(0,3).map((s,i) => {
-    const t2 = typeof s==='string'?s:(s.text||'');
-    return { type:i===0?'quote':i===1?'info':'alert', title:'', content:t2 };
-  });
-  if (!panels.length) panels.push({ type:'info', title:'', content:text.substring(0,120) });
-
-  await drawInstantCard(panels, mood, parsed.hook||'', text, imgFile);
-  const canvas = document.getElementById('fb-card-canvas');
-  const cardBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
-
-  return { parsed, cardBlob, mood };
-}
-
-// Main: batch generate for all queued images
-window.fbBatchGenerate = async function() {
-  const text = (document.getElementById('fb-news-input')?.value||'').trim();
-  if (!text) { alert('নিউজ text লিখুন'); return; }
-
-  const files = window._fbBatchFiles.length ? window._fbBatchFiles : null;
-  const btn   = document.getElementById('fb-gen-btn');
-  const logEl = document.getElementById('fb-post-log');
-  const toneMap = { urgent:'সাড়া জাগানো breaking news', emotional:'হৃদয়স্পর্শী', informative:'তথ্যবহুল', motivational:'অনুপ্রেরণামূলক', alert:'সতর্কতামূলক' };
-  const toneDesc = toneMap[window._fbCurrentTone] || toneMap.urgent;
-
-  if (btn) { btn.disabled=true; }
-  if (logEl) { logEl.style.display='block'; }
-
-  // If no images queued — single generate (legacy mode)
-  if (!files) {
-    if (btn) btn.textContent = '⏳ তৈরি হচ্ছে...';
-    if (logEl) logEl.innerHTML = '<div style="color:var(--blue);font-size:11px;font-weight:700">🤖 AI caption তৈরি হচ্ছে...</div>';
-    try {
-      const imgInput = document.getElementById('fb-img-input');
-      const singleFile = imgInput?.files?.[0] || null;
-      const { parsed, cardBlob, mood } = await fbGenerateOneCard(singleFile, text, toneDesc);
-      // Update caption panel
-      const ta = document.getElementById('fb-caption'); if(ta) ta.value = parsed.caption||text;
-      window._joafTags = parsed.tags||'';
-      const tagsEl = document.getElementById('fb-tags-display'); if(tagsEl) tagsEl.value = parsed.tags||'';
-      const hookEl = document.getElementById('fb-hook-line'); if(hookEl) hookEl.textContent = parsed.hook||'';
-      const capCard = document.getElementById('fb-caption-card'); if(capCard) capCard.style.display='block';
-      const timeEl = document.getElementById('fb-best-time'); if(timeEl) timeEl.textContent='🔥 রাত ৮-১০টা (Peak) · সকাল ৭-৯টা (High) · দুপুর ১-২টা (Medium)';
-      const previewDiv=document.getElementById('fb-preview'); if(previewDiv) previewDiv.style.display='block';
-      const previewEmpty=document.getElementById('fb-preview-empty'); if(previewEmpty) previewEmpty.style.display='none';
-      const dlBtn=document.getElementById('fb-download-card-btn'); if(dlBtn) dlBtn.style.display='inline-block';
-      if (cardBlob) {
-        const cardFile = new File([cardBlob],'joaf-card-'+Date.now()+'.jpg',{type:'image/jpeg'});
-        const cap = (parsed.caption||text) + (parsed.tags ? '
-
-'+parsed.tags : '');
-        pushToSAPanel(cardFile, URL.createObjectURL(cardBlob), false, cap);
-      }
-      if (logEl) logEl.innerHTML='<div style="color:var(--green);font-size:11px;font-weight:700">✅ Card ready! Queue এ যোগ হয়েছে</div>';
-    } catch(e) {
-      if(logEl) logEl.innerHTML=`<div style="color:#f87171">❌ ${e.message}</div>`;
-    } finally {
-      if(btn){btn.disabled=false;btn.textContent='🚀 Generate করুন';}
-    }
-    return;
-  }
-
-  // BATCH MODE — iterate each image
-  if (logEl) logEl.innerHTML=`<div style="color:var(--blue);font-size:11px;font-weight:700">🤖 ${files.length}টা imageর জন্য AI card তৈরি হচ্ছে...</div>`;
-  let done=0, errors=0;
-  for (const imgFile of files) {
-    done++;
-    if(btn) btn.textContent=`⏳ ${done}/${files.length} তৈরি...`;
-    if(logEl) logEl.innerHTML=`<div style="color:var(--amber);font-size:11px;">🤖 [${done}/${files.length}] <b>${imgFile.name}</b> প্রসেস হচ্ছে...</div>`;
-    try {
-      const { parsed, cardBlob } = await fbGenerateOneCard(imgFile, text, toneDesc);
-      if (cardBlob) {
-        const cardFile = new File([cardBlob],'joaf-card-'+Date.now()+'.jpg',{type:'image/jpeg'});
-        const cap = (parsed.caption||text) + (parsed.tags ? '
-
-'+parsed.tags : '');
-        pushToSAPanel(cardFile, URL.createObjectURL(cardBlob), false, cap);
-      }
-    } catch(e) { errors++; console.error('Batch error for '+imgFile.name, e); }
-    // Stagger: avoid Groq rate limit
-    if (done < files.length) await new Promise(r=>setTimeout(r,800));
-  }
-  const okN = done - errors;
-  if(logEl) logEl.innerHTML=`<div style="color:var(--green);font-size:11px;font-weight:700">✅ ${okN}/${done} card তৈরি হয়েছে — Queue দেখুন</div>`;
-  if(btn){btn.disabled=false;btn.textContent=`🚀 Generate করুন`;}
-  window._fbBatchFiles=[];
-  const cnt=document.getElementById('img-batch-count'); if(cnt) cnt.style.display='none';
-};
-
 async function fbGenerateReel() {
   const text = document.getElementById('fb-news-input').value.trim();
   const imgInput = document.getElementById('fb-img-input');
@@ -3394,20 +3207,6 @@ News: ${text}` });
     const previewDiv = document.getElementById('fb-preview');
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewDiv) previewDiv.style.display = 'block';
-
-    // Build panels from slides for drawInstantCard
-    const panels = (parsed.slides || []).slice(0, 3).map((s, i) => {
-      const t2 = typeof s === 'string' ? s : (s.text || '');
-      return { type: i === 0 ? 'quote' : i === 1 ? 'info' : 'alert', title: '', content: t2 };
-    });
-    if (!panels.length) panels.push({ type: 'info', title: '', content: text.substring(0, 120) });
-
-    // Build panels from slides
-    const panels = (parsed.slides||[]).slice(0,3).map((s,i) => {
-      const t2 = typeof s==='string'?s:(s.text||'');
-      return { type:i===0?'quote':i===1?'info':'alert', title:'', content:t2 };
-    });
-    if (!panels.length) panels.push({ type:'info', title:'', content:text.substring(0,120) });
 
     if (_fbCurrentMode === 'card') {
       // ── INSTANT CARD MODE ──────────────────────────────
@@ -4222,256 +4021,135 @@ window.fbHelperRemoveExclude = function(i) {
 };
 
 window.saPreviewImg = function(input) {
-  // Redirect: multi-file input now handled by saBatchAdd
-  if (input.files && input.files.length) window.saBatchAdd(input.files);
+  const file = input.files[0];
+  if (!file) return;
+  // Keep original File — slice() loses MIME type on many devices
+  if (window._saPreviewUrl) URL.revokeObjectURL(window._saPreviewUrl);
+  const url = URL.createObjectURL(file);
+  window._saPreviewUrl = url;
+  window._saImgFile = file;
+  const isVid = file.type.startsWith('video/');
+  const preview = document.getElementById('sa-img-preview');
+  if (preview) {
+    if (isVid) {
+      preview.innerHTML = '<video controls muted style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></video>';
+      preview.querySelector('video').src = url;
+    } else {
+      document.getElementById('sa-thumb').src = url;
+      preview.innerHTML = '';
+      const img = document.createElement('img');
+      img.style = 'max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;';
+      img.src = url;
+      preview.appendChild(img);
+    }
+    preview.style.display = 'block';
+  }
+  document.getElementById('sa-img-label').textContent = (isVid ? '🎬 ' : '📸 ') + file.name;
   input.value = '';
 };
 
-// ══════════════════════════════════════════════════════════
-// BATCH QUEUE ENGINE + NLP BENGALI SPELLCHECK
-// ══════════════════════════════════════════════════════════
-window._saQueue   = [];
-window._saQueueSeq = 0;
-
-// ── NLP: Bengali spellcheck via Groq ──────────────────────
-window.saSpellCheck = async function(textOverride) {
-  const ta   = document.getElementById('sa-caption');
-  const text = (textOverride !== undefined ? textOverride : (ta ? ta.value : '')).trim();
-  if (!text) return text || '';
-  const btn = document.getElementById('sa-spell-btn');
-  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
-  try {
-    const res = await fetch('/.netlify/functions/groq-proxy', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile', max_tokens: 800,
-        messages: [{ role: 'user', content: `তুমি একজন বাংলা ভাষা বিশেষজ্ঞ। নিচের বাংলা টেক্সটের বানান সংশোধন করো।
-নিয়ম:
-- শুধু বানান ঠিক করো, অর্থ বা structure পরিবর্তন করো না
-- ইংরেজি শব্দ, hashtag, emoji অপরিবর্তিত রাখো
-- শুধু corrected text return করো, কোনো explanation নয়
-- যদি কোনো ভুল না থাকে, হুবহু একই text return করো
-
-Text: ${text}` }]
-      })
-    });
-    const d = await res.json();
-    const corrected = (d.choices?.[0]?.message?.content || text).trim();
-    if (textOverride === undefined && ta) {
-      ta.value = corrected;
-      if (typeof toast === 'function') toast(corrected !== text ? '✅ বানান সংশোধন হয়েছে' : '✅ বানান ঠিক আছে', 'success');
-    }
-    return corrected;
-  } catch(e) { console.warn('Spellcheck failed:', e); return text; }
-  finally { if (btn) { btn.textContent = '🔤 বানান'; btn.disabled = false; } }
-};
-
-// ── Queue: render ──────────────────────────────────────────
-function saRenderQueue() {
-  const list    = document.getElementById('sa-queue-list');
-  const wrap    = document.getElementById('sa-queue-wrap');
-  const cnt     = document.getElementById('sa-queue-count');
-  const pubBtn  = document.getElementById('sa-publish-all-btn');
-  const pubCnt  = document.getElementById('sa-publish-count');
-  const sinBtn  = document.getElementById('sa-single-post-btn');
-  if (!list) return;
-  const q = window._saQueue;
-  if (wrap)   wrap.style.display   = q.length ? 'block' : 'none';
-  if (cnt)  { cnt.textContent = q.length; cnt.style.display = q.length ? '' : 'none'; }
-  const pendN = q.filter(x => x.status === 'pending').length;
-  if (pubBtn) pubBtn.style.display = q.length ? '' : 'none';
-  if (pubCnt) pubCnt.textContent   = pendN;
-  if (sinBtn) sinBtn.style.display = q.length ? 'none' : '';
-  const SC = { pending:'var(--amber)', posting:'#60a5fa', done:'var(--green)', error:'#f87171' };
-  const SI = { pending:'⏳', posting:'📡', done:'✅', error:'❌' };
-  list.innerHTML = q.map((item) => {
-    const thumb = item.isVideo
-      ? `<div style="width:52px;height:52px;flex-shrink:0;background:#111;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;">🎬</div>`
-      : `<img src="${item.previewUrl}" style="width:52px;height:52px;flex-shrink:0;object-fit:cover;border-radius:6px;">`;
-    const sc = SC[item.status]||'var(--text2)', si = SI[item.status]||'⏳';
-    return `<div id="sa-qi-${item.id}" style="display:flex;gap:8px;align-items:flex-start;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;">
-      ${thumb}
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.file.name||'file'}</div>
-        <textarea id="sa-qi-cap-${item.id}" rows="2" style="width:100%;font-size:11px;border:1px solid var(--border);border-radius:5px;padding:4px 6px;background:var(--bg4);color:var(--text);resize:none;font-family:inherit;">${item.caption}</textarea>
-        <div style="display:flex;gap:4px;margin-top:4px;align-items:center;">
-          <span style="font-size:10px;color:${sc};font-weight:700;">${si} ${item.status}</span>
-          ${item.status==='pending'?`<button onclick="saQueueSpell(${item.id})" style="font-size:9px;padding:2px 6px;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;cursor:pointer;font-family:inherit;color:var(--text2);">🔤</button>`:''}
-          ${item.status==='pending'?`<button onclick="saQueuePost(${item.id})" style="font-size:9px;padding:2px 6px;background:#1877f2;border:none;border-radius:4px;color:#fff;cursor:pointer;font-family:inherit;">📤</button>`:''}
-          ${item.status!=='posting'?`<button onclick="saQueueRemove(${item.id})" style="font-size:9px;padding:2px 6px;background:var(--red-bg);border:1px solid #f87171;border-radius:4px;color:#f87171;cursor:pointer;font-family:inherit;margin-left:auto;">🗑</button>`:''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── Queue: add files ───────────────────────────────────────
-window.saBatchAdd = function(files) {
-  const defCap = (document.getElementById('sa-caption')?.value || '').trim();
-  Array.from(files).forEach(file => {
-    const id  = ++window._saQueueSeq;
-    const url = URL.createObjectURL(file);
-    window._saQueue.push({ id, file, previewUrl:url, isVideo:file.type.startsWith('video/'), caption:defCap, status:'pending' });
-  });
-  const lbl = document.getElementById('sa-img-label');
-  if (lbl) lbl.textContent = `✅ ${window._saQueue.length}টা file queue এ আছে`;
-  saRenderQueue();
-};
-window.saBatchDrop = function(e) {
-  e.preventDefault();
-  if (e.dataTransfer?.files?.length) window.saBatchAdd(e.dataTransfer.files);
-};
-
-// ── Queue: remove / clear ──────────────────────────────────
-window.saQueueRemove = function(id) {
-  const item = window._saQueue.find(x => x.id===id);
-  if (item) URL.revokeObjectURL(item.previewUrl);
-  window._saQueue = window._saQueue.filter(x => x.id!==id);
-  saRenderQueue();
-};
-window.saClearQueue = function() {
-  window._saQueue.forEach(x => URL.revokeObjectURL(x.previewUrl));
-  window._saQueue = [];
-  const lbl = document.getElementById('sa-img-label');
-  if (lbl) lbl.textContent = 'Drag & Drop বা Click — Image / Video';
-  saRenderQueue();
-};
-
-// ── Queue: per-item spellcheck ─────────────────────────────
-window.saQueueSpell = async function(id) {
-  const item = window._saQueue.find(x => x.id===id);
-  if (!item) return;
-  const ta = document.getElementById('sa-qi-cap-'+id);
-  const corrected = await window.saSpellCheck(ta ? ta.value.trim() : item.caption);
-  item.caption = corrected;
-  if (ta) ta.value = corrected;
-};
-
-// ── Core: post one item to all pages ──────────────────────
-async function saPostOneItem(file, caption, logEl, pages) {
-  const results = [];
-  let n = 0;
-  for (const page of pages) {
-    n++;
-    if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">⏳ ${n}/${pages.length} — <b>${page.name}</b>...</div>`;
-    try {
-      let postRes, postData;
-      if (file && file.type.startsWith('video/')) {
-        const fd = new FormData();
-        const vBlob = new Blob([file], { type: file.type||'video/webm' });
-        fd.append('source', vBlob, file.name||('joaf-video-'+Date.now()+'.webm'));
-        fd.append('description', caption);
-        fd.append('access_token', page.access_token);
-        postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/videos`, { method:'POST', body:fd });
-      } else if (file) {
-        const fd = new FormData();
-        fd.append('source', file);
-        fd.append('message', caption);
-        fd.append('access_token', page.access_token);
-        postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/photos`, { method:'POST', body:fd });
-      } else {
-        postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ message:caption, access_token:page.access_token })
-        });
-      }
-      postData = await postRes.json();
-      if (postData.error) results.push({ name:page.name, ok:false, error:postData.error.message });
-      else results.push({ name:page.name, ok:true });
-    } catch(e) { results.push({ name:page.name, ok:false, error:e.message }); }
-  }
-  return results;
-}
-
-// ── Shared: fetch + filter pages ─────────────────────────
-async function saFetchPages() {
-  const TOKEN = localStorage.getItem('joaf_fb_token')||'EAAjL2bBHrGoBRjMgaWEdP0GIfH4dSS550wSlUziWxnBhE1ELq1JbwMmqh7l0so0xWAo3t49G8CIIFwhGu7ybr8fBq1PxK79YUpZBdkfBusWKLOGiNXrSBwKotOaRuyP1PZCJArRcBJxJ2psMUrbsUylWmAytUV4WD3frWYYbiFbVUuJr0JqEGFMNR8ayo8Y9zTzfLpBR95Gy7bJBKLllcleBBZBLK6TZBvYBzGDF7XUiSFvtYyiUzqO052X4w0M6IZCU1lFMK0I1NqQLpLZAknJc1xErJ32rAHkwZDZD';
-  if (!TOKEN) throw new Error('টোকেন নেই — উপরে Save করুন');
-  const excl = JSON.parse(localStorage.getItem('joaf_fb_exclude')||'[]');
-  let pages=[], url=`https://graph.facebook.com/v19.0/me/accounts?limit=50&access_token=${TOKEN}`;
-  while(url){ const r=await fetch(url); const d=await r.json(); if(d.error) throw new Error(d.error.message); pages=pages.concat(d.data||[]); url=d.paging?.next||null; }
-  pages = pages.filter(p => !excl.includes(p.id) && !excl.includes(p.name.trim()));
-  if (!pages.length) throw new Error('কোনো page পাওয়া যায়নি');
-  return pages;
-}
-
-// ── Single-item post from queue ───────────────────────────
-window.saQueuePost = async function(id) {
-  const item = window._saQueue.find(x => x.id===id);
-  if (!item || item.status==='posting') return;
-  const ta = document.getElementById('sa-qi-cap-'+id);
-  if (ta) item.caption = ta.value.trim();
-  const logEl = document.getElementById('sa-post-log');
-  if (logEl) logEl.style.display = 'block';
-  item.status = 'posting'; saRenderQueue();
-  try {
-    item.caption = await window.saSpellCheck(item.caption);
-    const pages   = await saFetchPages();
-    const results = await saPostOneItem(item.file, item.caption, logEl, pages);
-    item.status   = results.filter(r=>r.ok).length > 0 ? 'done' : 'error';
-    if (logEl) { const ok=results.filter(r=>r.ok).length; logEl.innerHTML=`<div style="color:var(--green);font-weight:700;">✅ ${item.file.name||'file'}: ${ok}/${results.length} page সফল</div>`; }
-  } catch(e) { item.status='error'; if(logEl) logEl.innerHTML=`<div style="color:#f87171">❌ ${e.message}</div>`; }
-  saRenderQueue();
-};
-
-// ── Publish All pending ───────────────────────────────────
-window.saPublishAll = async function() {
-  const pending = window._saQueue.filter(x => x.status==='pending');
-  if (!pending.length) { if(typeof toast==='function') toast('পেন্ডিং পোস্ট নেই','error'); return; }
-  const pubBtn = document.getElementById('sa-publish-all-btn');
-  if (pubBtn) { pubBtn.disabled=true; pubBtn.textContent='⏳ Publishing...'; }
-  const logEl = document.getElementById('sa-post-log');
-  if (logEl) { logEl.style.display='block'; logEl.innerHTML='<div style="color:var(--amber)">⏳ Pages fetch করছি...</div>'; }
-  try {
-    const pages = await saFetchPages();
-    let done = 0;
-    for (const item of pending) {
-      const ta = document.getElementById('sa-qi-cap-'+item.id);
-      if (ta) item.caption = ta.value.trim();
-      item.status = 'posting'; saRenderQueue();
-      if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">📡 [${++done}/${pending.length}] ${item.file.name||'file'} post হচ্ছে...</div>`;
-      try {
-        item.caption = await window.saSpellCheck(item.caption);
-        const res = await saPostOneItem(item.file, item.caption, null, pages);
-        item.status = res.filter(r=>r.ok).length > 0 ? 'done' : 'error';
-      } catch(e) { item.status='error'; }
-      saRenderQueue();
-      if (done < pending.length) await new Promise(r => setTimeout(r, 1200));
-    }
-    const okN = window._saQueue.filter(x=>x.status==='done').length;
-    if (logEl) logEl.innerHTML=`<div style="color:var(--green);font-weight:700;">✅ Batch complete — ${okN}/${pending.length} posts সফল</div>`;
-    if (typeof toast==='function') toast(`✅ ${okN}/${pending.length} published!`,'success');
-  } catch(e) {
-    if (logEl) logEl.innerHTML=`<div style="color:#f87171">❌ ${e.message}</div>`;
-  } finally {
-    if (pubBtn) { pubBtn.disabled=false; saRenderQueue(); pubBtn.textContent=`🚀 Publish All (<span id="sa-publish-count">${window._saQueue.filter(x=>x.status==='pending').length}</span>)`; }
-  }
-};
-
-// ── saOpenPostHelper: single-file fallback / queue redirect ─
 window.saOpenPostHelper = async function() {
-  if (window._saQueue.length > 0) { window.saPublishAll(); return; }
-  const caption = (document.getElementById('sa-caption').value||'').trim();
-  const file    = window._saImgFile;
-  const btn     = document.getElementById('sa-single-post-btn');
-  if (!caption && !file) { alert('ক্যাপশন লিখুন অথবা file select করুন'); return; }
-  if (btn) { btn.disabled=true; btn.textContent='⏳ Posting...'; }
+  const caption = (document.getElementById('sa-caption').value || '').trim();
+  const file = window._saImgFile;
+  const btn = document.querySelector('[onclick="saOpenPostHelper()"]');
+  if (!caption) { alert('Caption লিখুন'); return; }
+
+  const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  const TOKEN = localStorage.getItem('joaf_fb_token') || 'EAAjL2bBHrGoBRjMgaWEdP0GIfH4dSS550wSlUziWxnBhE1ELq1JbwMmqh7l0so0xWAo3t49G8CIIFwhGu7ybr8fBq1PxK79YUpZBdkfBusWKLOGiNXrSBwKotOaRuyP1PZCJArRcBJxJ2psMUrbsUylWmAytUV4WD3frWYYbiFbVUuJr0JqEGFMNR8ayo8Y9zTzfLpBR95Gy7bJBKLllcleBBZBLK6TZBvYBzGDF7XUiSFvtYyiUzqO052X4w0M6IZCU1lFMK0I1NqQLpLZAknJc1xErJ32rAHkwZDZD';
+  if (!TOKEN) {
+    const st=document.getElementById('sa-token-status');
+    if(st){st.textContent='❌ আগে token save করুন';st.style.color='#f87171';}
+    if(logEl){logEl.style.display='block';logEl.innerHTML='<div style="color:#f87171">❌ Token নেই — উপরে save করুন</div>';}
+    if(btn){btn.disabled=false;btn.textContent='📤 FB Pages এ Post করুন';}
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting হচ্ছে...'; }
   const logEl = document.getElementById('sa-post-log');
-  if (logEl) { logEl.style.display='block'; logEl.innerHTML='<div style="color:var(--amber)">⏳ Spellcheck চলছে...</div>'; }
+  if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ Pages fetch করছি...</div>'; }
+
   try {
-    const corrected = await window.saSpellCheck(caption);
-    if (logEl) logEl.innerHTML='<div style="color:var(--amber)">⏳ Pages fetch করছি...</div>';
-    const pages = await saFetchPages();
-    if (logEl) logEl.innerHTML=`<div style="color:var(--amber)">⏳ ${pages.length}টা page এ post হচ্ছে...</div>`;
-    const results = await saPostOneItem(file, corrected||caption, logEl, pages);
-    const ok = results.filter(r=>r.ok).length;
-    const rows = results.map(r=>`<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;">${r.ok?'✅':'❌'} ${r.name}${r.error?' — <span style="color:#f87171">'+r.error+'</span>':''}</div>`).join('');
-    if (logEl) logEl.innerHTML=`<div style="font-weight:700;color:var(--green);margin-bottom:8px;">✅ ${ok}/${results.length} page এ post সফল</div><div style="max-height:200px;overflow-y:auto;">${rows}</div>`;
-  } catch(e) { if(logEl) logEl.innerHTML=`<div style="color:#f87171">❌ ${e.message}</div>`; }
-  if (btn) { btn.disabled=false; btn.textContent='📤 Post করুন'; }
-  if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); window._saPreviewUrl=null; }
+    // 1. Fetch all pages from FB directly
+    let pages = [];
+    let url = `https://graph.facebook.com/v19.0/me/accounts?limit=50&access_token=${TOKEN}`;
+    while (url) {
+      const r = await fetch(url);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      pages = pages.concat(d.data || []);
+      url = d.paging?.next || null;
+    }
+
+    // 2. Filter excluded
+    pages = pages.filter(p => !excludeIds.includes(p.id) && !excludeIds.includes(p.name.trim()));
+    if (!pages.length) throw new Error('কোনো page পাওয়া যায়নি');
+
+    if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">⏳ ${pages.length}টা page এ post হচ্ছে...</div>`;
+
+    // 3. Post to each page
+    const results = [];
+    let doneCount = 0;
+    for (const page of pages) {
+      doneCount++;
+      if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">⏳ ${doneCount}/${pages.length} — <b>${page.name}</b> এ post হচ্ছে... (বাকি ${pages.length - doneCount})</div>`;
+      try {
+        let postRes, postData;
+        if (file && file.type.startsWith('video/')) {
+          // Video post — explicit Blob + filename required by FB Graph API
+          const fd = new FormData();
+          const vMime = file.type || 'video/webm';
+          const vName = file.name || ('joaf-video-' + Date.now() + '.webm');
+          const vBlob = new Blob([file], { type: vMime });
+          fd.append('source', vBlob, vName);
+          fd.append('description', caption);
+          fd.append('access_token', page.access_token);
+          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/videos`, {
+            method: 'POST', body: fd
+          });
+        } else if (file) {
+          // Image post — single step: source + message directly to /photos
+          const fdPhoto = new FormData();
+          fdPhoto.append('source', file);
+          fdPhoto.append('message', caption);
+          fdPhoto.append('access_token', page.access_token);
+          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/photos`, {
+            method: 'POST', body: fdPhoto
+          });
+        } else {
+          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: caption, access_token: page.access_token })
+          });
+        }
+        postData = await postRes.json();
+        if (postData.error) results.push({ name: page.name, ok: false, error: postData.error.message });
+        else results.push({ name: page.name, ok: true });
+      } catch(e) {
+        results.push({ name: page.name, ok: false, error: e.message });
+      }
+    }
+
+    const ok = results.filter(r => r.ok).length;
+    const rows = results.map(r =>
+      `<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;">` +
+      (r.ok ? '✅' : '❌') + ' ' + r.name + (r.error ? ` — <span style="color:#f87171">${r.error}</span>` : '') +
+      `</div>`
+    ).join('');
+    if (logEl) logEl.innerHTML =
+      `<div style="font-weight:700;color:var(--green);margin-bottom:8px;">✅ ${ok}/${results.length} page এ post সফল</div>` +
+      `<div style="max-height:200px;overflow-y:auto;">${rows}</div>`;
+
+  } catch(e) {
+    if (logEl) logEl.innerHTML = `<div style="color:#f87171">❌ Error: ${e.message}</div>`;
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '📤 FB Pages এ Post করুন'; }
+  // Free memory — revoke objectURL, clear file ref
+  if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); window._saPreviewUrl = null; }
   window._saImgFile = null;
 };
+
 window.saveFbToken = function() {
   const inp = document.getElementById('sa-fb-token-input');
   const val = (inp ? inp.value : '').trim();
@@ -4527,12 +4205,12 @@ window.fbHelperOpenSuite = function(type) {
 
 // ── AUTO-FILL SA PANEL ──────────────────────────────────
 function pushToSAPanel(file, previewSrc, isVideo, caption) {
-  // Route AI-generated cards/reels into batch queue
-  const blob = (file instanceof File) ? file : new Blob([file], { type: file.type||(isVideo?'video/webm':'image/jpeg') });
-  const id = ++window._saQueueSeq;
-  window._saQueue.push({ id, file:blob, previewUrl:previewSrc, isVideo:!!isVideo, caption:caption||'', status:'pending' });
-  saRenderQueue();
-  // Legacy refs for any code still reading _saImgFile
+  // Revoke previous objectURL to free memory
+  if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); }
+  // Preserve MIME type — slice() drops it on Safari/Firefox; use File directly or re-wrap
+  const blob = (file instanceof File)
+    ? file
+    : new Blob([file], { type: file.type || (isVideo ? 'video/webm' : 'image/jpeg') });
   window._saPreviewUrl = previewSrc;
   window._saImgFile = blob;
   const preview = document.getElementById('sa-img-preview');
