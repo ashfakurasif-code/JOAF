@@ -3278,9 +3278,7 @@ window.fbBatchGenerate = async function() {
       const { parsed, cardBlob } = await fbGenerateOneCard(imgFile, text, toneDesc);
       if (cardBlob) {
         const cardFile = new File([cardBlob],'joaf-card-'+Date.now()+'.jpg',{type:'image/jpeg'});
-        const cap = (parsed.caption||text) + (parsed.tags ? '
-
-'+parsed.tags : '');
+        const cap = (parsed.caption||text) + (parsed.tags ? '\n\n'+parsed.tags : '');
         pushToSAPanel(cardFile, URL.createObjectURL(cardBlob), false, cap);
       }
     } catch(e) { errors++; console.error('Batch error for '+imgFile.name, e); }
