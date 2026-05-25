@@ -489,65 +489,44 @@ body  { overflow-x:hidden; }
   window.joafDelay = (ms) =>
     new Promise(resolve => setTimeout(resolve, ms));
 
-  // Safe fetch wrapper
+  // ══════════════════════════════════════════════════════════════
+// 🛡️ JOAF SAFE AI PATCH (STABLE INTERCEPTOR)
+// ══════════════════════════════════════════════════════════════
+(function() {
   const originalFetch = window.fetch;
+  window.__AI_COOLDOWN = false;
 
-  let lastCall = 0;
-
-  window.__AI_COOLDOWN = 0;
-
-window.fetch = async function(...args){
-
-  if (
-    Date.now() <
-    window.__AI_COOLDOWN
-  ) {
-
-    throw new Error(
-      "AI cooldown active"
-    );
-  }
-
-
-    const now = Date.now();
-
-    // throttle rapid bursts
-    if(now - lastCall < 1500){
-      await joafDelay(1500);
-    }
-
-    lastCall = Date.now();
-
-    try{
-
-      const res = await originalFetch(...args);
-
-      // soft retry on 429
-      if(res.status === 429){
-
-        console.warn("429 LIMIT HIT");
-
-window.__AI_COOLDOWN =
-  Date.now() + 60000;
-
-throw new Error(
-  "429 cooldown active"
-);
-
-        await joafDelay(5000);
-
-        return originalFetch(...args);
+  window.fetch = async function(...args) {
+    const url = args[0];
+    if (typeof url === 'string' && url.includes('groq-proxy')) {
+      if (window.__AI_COOLDOWN) {
+        log('<span style="color:var(--amber)">⏳ Local Cooldown একটিভ। দয়া করে একটু অপেক্ষা করুন...</span>');
+        throw new Error('AI gateway is cooling down locally.');
       }
-
-      return res;
-
-    }catch(err){
-
-      console.error("JOAF Fetch Error", err);
-      throw err;
+      
+      try {
+        const res = await originalFetch(...args);
+        
+        // যদি রেট লিমিট (429) এরর আসে
+        if (res.status === 429) {
+          log('<span style="color:var(--red)">⚠️ Rate limit (429) হিট করেছে! ৫ সেকেন্ড অপেক্ষা করছি...</span>');
+          await joafDelay(5000); // ৫ সেকেন্ড অপেক্ষা করবে
+          return originalFetch(...args); // আবার চেষ্টা করবে
+        }
+        
+        return res;
+      } catch (err) {
+        // যদি সার্ভার পুরোপুরি ব্লক করে, তাহলে ৬০ সেকেন্ডের জন্য লোকাল কুলডাউন অন হবে
+        if (err.message && err.message.includes('429')) {
+          window.__AI_COOLDOWN = true;
+          setTimeout(() => { window.__AI_COOLDOWN = false; }, 60000);
+        }
+        throw err;
+      }
     }
+    return originalFetch(...args);
   };
-
+})();
 })();
 </script>
 \n</head>
