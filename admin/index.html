@@ -3255,9 +3255,7 @@ window.fbBatchGenerate = async function() {
       const dlBtn=document.getElementById('fb-download-card-btn'); if(dlBtn) dlBtn.style.display='inline-block';
       if (cardBlob) {
         const cardFile = new File([cardBlob],'joaf-card-'+Date.now()+'.jpg',{type:'image/jpeg'});
-        const cap = (parsed.caption||text) + (parsed.tags ? '
-
-'+parsed.tags : '');
+        const cap = (parsed.caption||text) + (parsed.tags ? '\n\n'+parsed.tags : '');
         pushToSAPanel(cardFile, URL.createObjectURL(cardBlob), false, cap);
       }
       if (logEl) logEl.innerHTML='<div style="color:var(--green);font-size:11px;font-weight:700">✅ Card ready! Queue এ যোগ হয়েছে</div>';
