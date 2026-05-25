@@ -3183,46 +3183,40 @@ function fbRenderThumbStrip() {
 
 // ── Analyze a single File object ─────────────────────────────
 async function fbAnalyzeOneFile(file) {
-  const preview = document.getElementById('img-upload-preview');
-  const thumb = document.getElementById('img-preview-thumb');
-  const label = document.getElementById('img-upload-label');
-  const status = document.getElementById('img-analyze-status');
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    thumb.src = e.target.result;
-    preview.style.display = 'block';
-    label.style.display = 'none';
-    status.style.display = 'block';
-    status.textContent = 'Image analyze হচ্ছে...';
-    status.style.color = 'var(--amber)';
-    try {
-      const base64 = e.target.result.split(',')[1];
-      const mimeType = file.type || 'image/jpeg';
-      const res = await fetch('/.netlify/functions/groq-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: [
-            { type: 'image_url', image_url: { url: 'data:' + mimeType + ';base64,' + base64 } },
-            { type: 'text', text: 'এই image টি analyze করো। বাংলাদেশী সংবাদ বা ঘটনার ছবি হতে পারে। Image থেকে বাংলায় ৩-৫ বাক্যে news summary লেখো। কোনো hashtag বা formatting ছাড়া।' }
-          ]}]
-        })
-      });
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content;
-      if (text) {
-        document.getElementById('fb-news-input').value = text.trim();
-        status.textContent = '✅ Analyze সম্পন্ন';
-        status.style.color = 'var(--green)';
-      } else throw new Error('AI response নেই');
-    } catch(err) {
-      status.textContent = '❌ ' + err.message;
-      status.style.color = 'var(--red)';
-    }
-  };
-  reader.readAsDataURL(file);
+  return new Promise(function(resolve) {
+    const preview = document.getElementById('img-upload-preview');
+    const thumb   = document.getElementById('img-preview-thumb');
+    const label   = document.getElementById('img-upload-label');
+    const status  = document.getElementById('img-analyze-status');
+    const reader  = new FileReader();
+    reader.onload = async function(e) {
+      thumb.src = e.target.result;
+      if (preview) preview.style.display = 'block';
+      if (label)   label.style.display   = 'none';
+      try {
+        const base64   = e.target.result.split(',')[1];
+        const mimeType = file.type || 'image/jpeg';
+        const res = await fetch('/.netlify/functions/groq-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+            max_tokens: 1000,
+            messages: [{ role: 'user', content: [
+              { type: 'image_url', image_url: { url: 'data:' + mimeType + ';base64,' + base64 } },
+              { type: 'text', text: 'এই image টি analyze করো। বাংলাদেশী সংবাদ বা ঘটনার ছবি হতে পারে। Image থেকে বাংলায় ৩-৫ বাক্যে news summary লেখো। কোনো hashtag বা formatting ছাড়া।' }
+            ]}]
+          })
+        });
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content;
+        resolve(text ? text.trim() : '');
+      } catch(err) {
+        resolve('');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 async function fbAnalyzeImage(input) {
@@ -3236,7 +3230,27 @@ async function fbAnalyzeImage(input) {
   window._fbSelected = merged.map((_, i) => i);  // all selected by default
   input.value = '';
   fbRenderThumbStrip();
-  fbAnalyzeOneFile(allFiles[0]);
+  // Analyze ALL uploaded images sequentially → join into news box
+  (async function() {
+    const status = document.getElementById('img-analyze-status');
+    const results = [];
+    for (let i = 0; i < merged.length; i++) {
+      if (status) {
+        status.style.display  = 'block';
+        status.style.color    = 'var(--amber)';
+        status.textContent    = '⏳ Analyzing ' + (i+1) + '/' + merged.length + '...';
+      }
+      const t = await fbAnalyzeOneFile(merged[i]);
+      if (t) results.push(t);
+    }
+    document.getElementById('fb-news-input').value = results.join('
+
+');
+    if (status) {
+      status.style.color    = 'var(--green)';
+      status.textContent    = '✅ ' + results.length + 'টা image analyze সম্পন্ন';
+    }
+  })();
 }
 
 async function fbGenerateReel() {
