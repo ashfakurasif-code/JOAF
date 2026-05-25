@@ -1257,13 +1257,30 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <div id="fb-post-log" style="margin-top:10px;font-size:11px;max-height:180px;overflow-y:auto;"></div>
           </div>
           <!-- BATCH CARDS RESULT STRIP -->
-          <div class="card" id="fb-batch-results-card" style="margin:0;display:none;">
-            <div class="card-header" style="padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
-              <div class="card-title" style="font-size:13px;">🗂️ Batch Cards</div>
-              <button onclick="fbDownloadAllCards()" style="padding:4px 10px;background:#25d366;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ সব Download</button>
-            </div>
-            <div id="fb-batch-strip" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-          </div>
+          <!-- ── BATCH PUBLISH QUEUE ─────────────────────────────────
+     _fbBatchQueue  = [{blob, name, caption, selected}]
+     Rendered by  renderBatchQueue()
+     Post logic   in  batchPostSelected() / batchPostSingle(idx)
+──────────────────────────────────────────────────────────── -->
+<div class="card" id="fb-batch-results-card" style="margin:0;display:none;">
+  <div class="card-header" style="padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+    <div class="card-title" style="font-size:13px;">🗂️ Batch Publish Queue</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;">
+      <!-- select helpers -->
+      <button onclick="batchSelectAll(true)"  style="padding:3px 9px;border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">✅ সব Select</button>
+      <button onclick="batchSelectAll(false)" style="padding:3px 9px;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">❌ Deselect</button>
+      <!-- bulk actions -->
+      <button onclick="fbDownloadAllCards()" style="padding:3px 9px;border-radius:12px;border:none;background:#25d366;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ সব Download</button>
+      <button onclick="batchPostSelected()" id="batch-post-all-btn" style="padding:3px 9px;border-radius:12px;border:none;background:#1877f2;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Selected post করুন</button>
+    </div>
+  </div>
+  <!-- queue status — updated by renderBatchQueue() -->
+  <div id="batch-queue-status" style="font-size:10px;color:var(--text2);margin-bottom:8px;"></div>
+  <!-- card rows injected here by renderBatchQueue() -->
+  <div id="fb-batch-strip" style="display:flex;flex-direction:column;gap:10px;"></div>
+  <!-- bulk post log -->
+  <div id="batch-post-log" style="display:none;margin-top:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;max-height:260px;overflow-y:auto;"></div>
+</div>
           <!-- STANDALONE FB POST CARD -->
           <div class="card" style="margin:0;">
             <div class="card-header" style="padding-bottom:8px;">
@@ -3341,6 +3358,7 @@ News: ${text}` });
       if (batchCard) batchCard.style.display = 'none';
       if (batchStrip) batchStrip.innerHTML = '';
       window._fbBatchBlobs = [];
+      window._fbBatchQueue = [];  // reset queue on each new generate run
 
       for (let bi = 0; bi < batchFiles.length; bi++) {
         const bFile = batchFiles[bi];
@@ -3357,56 +3375,20 @@ News: ${text}` });
         if (cardCanvas2) {
           const blob = await new Promise(res => cardCanvas2.toBlob(res, 'image/jpeg', 0.95));
           if (blob) {
-            window._fbBatchBlobs.push({ blob, name: 'joaf-card-' + Date.now() + '-' + (bi+1) + '.jpg' });
-            // Add to batch strip
-            if (batchStrip) {
-              const thumbUrl = URL.createObjectURL(blob);
-              const item = document.createElement('div');
-              item.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
-              const tImg = document.createElement('img');
-              tImg.src = thumbUrl;
-              tImg.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:7px;border:1px solid var(--border);cursor:pointer;';
-              tImg.title = 'Click to download';
-              tImg.onclick = (function(b, n) { return function() {
-                const a = document.createElement('a'); a.download = n;
-                a.href = URL.createObjectURL(b); a.click();
-              }; })(blob, window._fbBatchBlobs[window._fbBatchBlobs.length-1].name);
-              const dlBtn = document.createElement('button');
-              dlBtn.textContent = '⬇️';
-              dlBtn.style.cssText = 'padding:2px 8px;border-radius:6px;border:none;background:#25d366;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
-              dlBtn.onclick = tImg.onclick;
-              // Preview in main canvas on click
-              const prevBtn = document.createElement('button');
-              prevBtn.textContent = '👁️';
-              prevBtn.style.cssText = 'padding:2px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
-              prevBtn.title = 'Preview';
-              prevBtn.onclick = (function(b) { return function() {
-                const img = new Image(); img.onload = function() {
-                  const c = document.getElementById('fb-card-canvas');
-                  const ctx2 = c.getContext('2d');
-                  c.width = img.width; c.height = img.height;
-                  ctx2.drawImage(img, 0, 0);
-                };
-                img.src = URL.createObjectURL(b);
-              }; })(blob);
-              const btnRow = document.createElement('div');
-              btnRow.style.cssText = 'display:flex;gap:3px;';
-              btnRow.appendChild(prevBtn); btnRow.appendChild(dlBtn);
-              item.appendChild(tImg); item.appendChild(btnRow);
-              batchStrip.appendChild(item);
-            }
-            // First card → auto-fill SA panel
-            if (bi === 0) {
-              const capText = (document.getElementById('fb-caption')?.value||'') + (window._joafTags ? '\n\n' + window._joafTags : '');
-              const cardFile = new File([blob], 'joaf-card-' + Date.now() + '.jpg', { type: 'image/jpeg' });
-              pushToSAPanel(cardFile, URL.createObjectURL(blob), false, capText);
-            }
+            // ── Push into unified batch queue (replaces old strip + SA push) ──
+            const capText = (document.getElementById('fb-caption')?.value||'') + (window._joafTags ? '\n\n' + window._joafTags : '');
+            const qName = 'joaf-card-' + Date.now() + '-' + (bi+1) + '.jpg';
+            window._fbBatchBlobs.push({ blob, name: qName });  // keep for fbDownloadAllCards
+            // _fbBatchQueue drives the publish UI — each item: {blob,name,caption,selected,isVideo}
+            if (!window._fbBatchQueue) window._fbBatchQueue = [];
+            window._fbBatchQueue.push({ blob, name: qName, caption: capText, selected: true, isVideo: false });
+            renderBatchQueue();  // re-render after every card so user sees progress
           }
         }
       }
 
-      // Show batch strip if >1
-      if (batchCard && window._fbBatchBlobs.length > 1) batchCard.style.display = 'block';
+      // Show queue card for any count (single card still needs its own post btn)
+      if (batchCard && window._fbBatchBlobs.length >= 1) batchCard.style.display = 'block';
       const downloadCardBtn = document.getElementById('fb-download-card-btn');
       if (downloadCardBtn) downloadCardBtn.style.display = 'inline-block';
       if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ ' + window._fbBatchBlobs.length + 'টা Card ready!</div>';
@@ -4422,6 +4404,180 @@ function pushToSAPanel(file, previewSrc, isVideo, caption) {
   if (caption) { const el = document.getElementById('sa-caption'); if (el) el.value = caption; }
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// BATCH PUBLISH SYSTEM
+// ══════════════════════════════════════════════════════════════
+
+window.renderBatchQueue = function() {
+  const queue  = window._fbBatchQueue || [];
+  const strip  = document.getElementById('fb-batch-strip');
+  const status = document.getElementById('batch-queue-status');
+  if (!strip) return;
+  const selCount = queue.filter(q => q.selected).length;
+  if (status) status.textContent = queue.length + 'টা card — ' + selCount + 'টা selected';
+  strip.innerHTML = '';
+  queue.forEach(function(item, idx) {
+    const thumbUrl = URL.createObjectURL(item.blob);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--bg3);border:1px solid ' + (item.selected ? 'var(--accent)' : 'var(--border)') + ';border-radius:10px;transition:.15s;';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.checked = item.selected; chk.title = 'Select/Deselect';
+    chk.style.cssText = 'margin-top:4px;width:16px;height:16px;cursor:pointer;flex-shrink:0;accent-color:var(--accent);';
+    chk.onchange = function() { window._fbBatchQueue[idx].selected = chk.checked; renderBatchQueue(); };
+    const thumb = document.createElement('img');
+    thumb.src = thumbUrl;
+    thumb.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:7px;border:1px solid var(--border);flex-shrink:0;cursor:pointer;';
+    thumb.onclick = (function(b) { return function() {
+      const img2 = new Image(); img2.onload = function() {
+        const c = document.getElementById('fb-card-canvas'); if (!c) return;
+        const ctx2 = c.getContext('2d'); c.width = img2.width; c.height = img2.height; ctx2.drawImage(img2, 0, 0);
+      }; img2.src = URL.createObjectURL(b);
+    }; })(item.blob);
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;';
+    const badge = document.createElement('div');
+    badge.textContent = 'Card ' + (idx+1) + ' — ' + item.name;
+    badge.style.cssText = 'font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    const ta = document.createElement('textarea');
+    ta.value = item.caption; ta.rows = 3;
+    ta.placeholder = 'Caption (এই card-এর জন্য আলাদা লিখতে পারো)';
+    ta.style.cssText = 'width:100%;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg2);color:var(--text);resize:vertical;font-family:inherit;box-sizing:border-box;';
+    ta.oninput = function() { window._fbBatchQueue[idx].caption = ta.value; };
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;';
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '👁️ Preview';
+    prevBtn.style.cssText = 'padding:3px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
+    prevBtn.onclick = thumb.onclick;
+    const dlBtn = document.createElement('button');
+    dlBtn.textContent = '⬇️ Download';
+    dlBtn.style.cssText = 'padding:3px 8px;border-radius:6px;border:none;background:#25d366;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
+    dlBtn.onclick = (function(b, n) { return function() {
+      const a = document.createElement('a'); a.download = n; a.href = URL.createObjectURL(b); a.click();
+    }; })(item.blob, item.name);
+    const soloBtn = document.createElement('button');
+    soloBtn.textContent = '📤 এটা post করুন';
+    soloBtn.dataset.idx = idx;
+    soloBtn.style.cssText = 'padding:3px 9px;border-radius:6px;border:none;background:#1877f2;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
+    soloBtn.onclick = (function(i) { return function() { batchPostSingle(i); }; })(idx);
+    const soloLog = document.createElement('div');
+    soloLog.id = 'batch-solo-log-' + idx;
+    soloLog.style.cssText = 'display:none;font-size:10px;margin-top:4px;padding:6px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:120px;overflow-y:auto;';
+    btnRow.appendChild(prevBtn); btnRow.appendChild(dlBtn); btnRow.appendChild(soloBtn);
+    col.appendChild(badge); col.appendChild(ta); col.appendChild(btnRow); col.appendChild(soloLog);
+    row.appendChild(chk); row.appendChild(thumb); row.appendChild(col);
+    strip.appendChild(row);
+  });
+};
+
+window.batchSelectAll = function(val) {
+  (window._fbBatchQueue || []).forEach(function(item) { item.selected = val; });
+  renderBatchQueue();
+};
+
+// Shared: fetch + filter pages once
+window._fbGetPages = async function() {
+  const TOKEN = localStorage.getItem('joaf_fb_token');
+  if (!TOKEN) throw new Error('Token নেই — SA panel-এ save করুন');
+  const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  let pages = [], url = 'https://graph.facebook.com/v19.0/me/accounts?limit=50&access_token=' + TOKEN;
+  while (url) {
+    const r = await fetch(url); const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    pages = pages.concat(d.data || []); url = d.paging?.next || null;
+  }
+  pages = pages.filter(function(p) { return !excludeIds.includes(p.id) && !excludeIds.includes(p.name.trim()); });
+  if (!pages.length) throw new Error('কোনো page পাওয়া যায়নি (সব exclude?)');
+  return pages;
+};
+
+// Shared: post one file+caption to one page (image/video/text auto-detect)
+window._fbPostOneFileToPage = async function(file, caption, page) {
+  let postRes;
+  if (file && file.type && file.type.startsWith('video/')) {
+    const fd = new FormData();
+    fd.append('source', new Blob([file], { type: file.type }), file.name || 'joaf-video.webm');
+    fd.append('description', caption); fd.append('access_token', page.access_token);
+    postRes = await fetch('https://graph.facebook.com/v19.0/' + page.id + '/videos', { method: 'POST', body: fd });
+  } else if (file) {
+    const fd = new FormData();
+    fd.append('source', file); fd.append('message', caption); fd.append('access_token', page.access_token);
+    postRes = await fetch('https://graph.facebook.com/v19.0/' + page.id + '/photos', { method: 'POST', body: fd });
+  } else {
+    postRes = await fetch('https://graph.facebook.com/v19.0/' + page.id + '/feed', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: caption, access_token: page.access_token })
+    });
+  }
+  const d = await postRes.json();
+  if (d.error) throw new Error(d.error.message);
+  return d;
+};
+
+// Post single card (by idx) → all pages, log in per-card solo log
+window.batchPostSingle = async function(idx) {
+  const queue = window._fbBatchQueue || []; const item = queue[idx]; if (!item) return;
+  const soloLog = document.getElementById('batch-solo-log-' + idx);
+  const soloBtn = document.querySelector('[data-idx="' + idx + '"]');
+  const showLog = function(html) { if (soloLog) { soloLog.style.display = 'block'; soloLog.innerHTML = html; } };
+  if (soloBtn) { soloBtn.disabled = true; soloBtn.textContent = '⏳ posting...'; }
+  showLog('<span style="color:var(--amber)">⏳ Pages fetch করছি...</span>');
+  try {
+    const pages = await _fbGetPages();
+    showLog('<span style="color:var(--amber)">⏳ ' + pages.length + 'টা page এ post হচ্ছে...</span>');
+    const cardFile = new File([item.blob], item.name, { type: 'image/jpeg' });
+    const results = [];
+    for (let pi = 0; pi < pages.length; pi++) {
+      const page = pages[pi];
+      showLog('<span style="color:var(--amber)">⏳ ' + (pi+1) + '/' + pages.length + ' — <b>' + page.name + '</b></span>');
+      try { await _fbPostOneFileToPage(cardFile, item.caption, page); results.push({ name: page.name, ok: true }); }
+      catch(e) { results.push({ name: page.name, ok: false, err: e.message }); }
+    }
+    const okCount = results.filter(function(r){ return r.ok; }).length;
+    const rows = results.map(function(r) {
+      return '<div style="padding:2px 0;border-bottom:1px solid var(--border);">'
+        + (r.ok ? '✅' : '❌') + ' ' + r.name
+        + (r.err ? ' — <span style="color:#f87171">' + r.err + '</span>' : '') + '</div>';
+    }).join('');
+    showLog('<div style="font-weight:700;color:var(--green);margin-bottom:4px;">✅ ' + okCount + '/' + results.length + ' page সফল</div>' + rows);
+  } catch(e) { showLog('<span style="color:#f87171">❌ ' + e.message + '</span>'); }
+  if (soloBtn) { soloBtn.disabled = false; soloBtn.textContent = '📤 এটা post করুন'; }
+};
+
+// Post all selected cards → all pages, consolidated log
+window.batchPostSelected = async function() {
+  const queue = window._fbBatchQueue || [];
+  const selected = queue.reduce(function(acc, item, idx) { if (item.selected) acc.push(idx); return acc; }, []);
+  const bulkBtn = document.getElementById('batch-post-all-btn');
+  const bulkLog = document.getElementById('batch-post-log');
+  if (!selected.length) { alert('কোনো card select করা নেই'); return; }
+  const log = function(html) { if (bulkLog) { bulkLog.style.display = 'block'; bulkLog.innerHTML = html; } };
+  if (bulkBtn) { bulkBtn.disabled = true; bulkBtn.textContent = '⏳ posting...'; }
+  log('<span style="color:var(--amber)">⏳ Pages fetch করছি...</span>');
+  try {
+    const pages = await _fbGetPages();
+    const totalCards = selected.length, totalPages = pages.length;
+    let cardsDone = 0, overallOk = 0, overallFail = 0;
+    for (const idx of selected) {
+      const item = queue[idx]; cardsDone++;
+      log('<span style="color:var(--amber)">📤 Card ' + cardsDone + '/' + totalCards + ' — ' + item.name + '<br>⏳ ' + totalPages + 'টা page এ post হচ্ছে...</span>');
+      const cardFile = new File([item.blob], item.name, { type: 'image/jpeg' });
+      for (let pi = 0; pi < pages.length; pi++) {
+        const page = pages[pi];
+        log('<span style="color:var(--amber)">📤 Card ' + cardsDone + '/' + totalCards + ' → <b>' + page.name + '</b> (' + (pi+1) + '/' + totalPages + ')</span>');
+        try { await _fbPostOneFileToPage(cardFile, item.caption, page); overallOk++; }
+        catch(e) { overallFail++; }
+      }
+    }
+    log('<div style="font-weight:700;color:var(--green);margin-bottom:6px;">✅ Done — ' + totalCards + ' card × ' + totalPages + ' pages<br>'
+      + overallOk + ' সফল &nbsp;|&nbsp; '
+      + (overallFail ? '<span style="color:#f87171">' + overallFail + ' failed</span>' : '0 failed') + '</div>');
+  } catch(e) { log('<span style="color:#f87171">❌ ' + e.message + '</span>'); }
+  if (bulkBtn) { bulkBtn.disabled = false; bulkBtn.textContent = '📤 Selected post করুন'; }
+};
+
+// ══════════════════════════════════════════════════════════════
 function fbDownloadReel() {
   if (!reelBlob) return;
   const a = document.createElement('a');
