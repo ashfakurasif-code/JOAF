@@ -3384,10 +3384,22 @@ window.fbAnalyseAll = async function() {
 };
 
 window.fbGenerateReel = async function() {
-  const text = document.getElementById('fb-news-input').value.trim();
+  // Multi-image mode: fb-news-input doesn't exist — read from first per-image textbox or _fbImageTexts
+  const files = window._fbFiles || [];
+  let text = '';
+  if (files.length > 1) {
+    fbSyncImageTexts();
+    text = (window._fbImageTexts && window._fbImageTexts[0]) ? window._fbImageTexts[0].trim() : '';
+    // fallback: try fb-img-text-0
+    if (!text) { const b0 = document.getElementById('fb-img-text-0'); text = b0 ? b0.value.trim() : ''; }
+  } else {
+    const newsEl = document.getElementById('fb-news-input');
+    text = newsEl ? newsEl.value.trim() : '';
+  }
   const imgInput = document.getElementById('fb-img-input');
-  const imgFile = (window._fbFiles && window._fbFiles.length) ? window._fbFiles[0] : (imgInput?.files?.[0] || null);
+  const imgFile = (files.length) ? files[0] : (imgInput?.files?.[0] || null);
   if (!text && !imgFile) return alert('News text লিখুন অথবা Image upload করুন');
+  if (!text && imgFile) return alert('আগে Image Analyse করুন অথবা News text লিখুন');
   if (!text) return alert('News text লিখুন');
 
   const btn = document.getElementById('fb-gen-btn');
