@@ -1269,7 +1269,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <!-- Action Buttons -->
             <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-              <button onclick="fbGenerateReel()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন</button>
+              <button onclick="fbGenerateAll()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন</button>
             </div>
             <div id="fb-mode-notice" style="margin-top:7px;padding:7px 10px;border-radius:6px;font-size:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber);">
               🖼️ <b>Card mode:</b> ৩-৫ সেকেন্ডে JPG ready — সাথে caption ও hashtags
@@ -3258,14 +3258,17 @@ window.fbRenderImageTextBoxes = function() {
   container.innerHTML = files.map(function(file, idx) {
     const url = URL.createObjectURL(file);
     const stored = (window._fbImageTexts && window._fbImageTexts[idx]) ? window._fbImageTexts[idx] : '';
+    const alreadyDone = stored.length > 0;
     return '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">'
       + '<img src="' + url + '" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display=\'none\'">'
       + '<div style="flex:1;">'
-      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">'
-      + '<label style="font-size:10px;color:var(--text3);font-weight:700;flex:1;">Image ' + (idx+1) + ' — ' + file.name.substring(0,24) + '</label>'
-      + '<button id="fb-analyse-btn-' + idx + '" onclick="fbAnalyseSingle(' + idx + ')" style="padding:2px 8px;border-radius:10px;border:1px solid var(--blue-border);background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🔍 Analyse</button>'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">'
+      + '<label style="font-size:10px;color:var(--text3);font-weight:700;flex:1;min-width:0;">Image ' + (idx+1) + ' — ' + file.name.substring(0,20) + '</label>'
+      + '<button id="fb-analyse-btn-' + idx + '" onclick="fbAnalyseSingle(' + idx + ')" data-done="' + (alreadyDone ? 'yes' : '') + '" style="padding:2px 8px;border-radius:10px;border:1px solid var(--blue-border);background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">' + (alreadyDone ? '✅ Done' : '🔍 Analyse') + '</button>'
+      + '<button id="fb-gen-single-btn-' + idx + '" onclick="fbGenerateSingle(' + idx + ')" style="padding:2px 8px;border-radius:10px;border:1px solid var(--amber-border);background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:' + (alreadyDone ? 'inline-block' : 'none') + ';">⚡ Generate</button>'
       + '</div>'
       + '<textarea id="fb-img-text-' + idx + '" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;" placeholder="এই image-এর news লিখুন...">' + stored + '</textarea>'
+      + '<div id="fb-gen-single-log-' + idx + '" style="display:none;font-size:10px;margin-top:3px;padding:5px 8px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);"></div>'
       + '</div>'
       + '</div>';
   }).join('')
@@ -3289,7 +3292,6 @@ window.fbSyncImageTexts = function() {
 }
 
 window.fbAnalyzeOneFile = async function(file) {
-  // Read file as base64 once
   const base64 = await new Promise(function(resolve) {
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -3305,22 +3307,18 @@ window.fbAnalyzeOneFile = async function(file) {
     reader.readAsDataURL(file);
   });
   if (!base64) return '';
-
   const mimeType = file.type || 'image/jpeg';
-  const MAX_RETRIES = 3;
-  const RETRY_DELAYS = [5000, 10000, 15000]; // 5s, 10s, 15s
-
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+  const RETRY_DELAYS = [5000, 10000, 15000];
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const status = document.getElementById('img-analyze-status');
       if (attempt > 0 && status) {
         status.style.color = 'var(--amber)';
-        status.textContent = '⏳ Rate limit — ' + (RETRY_DELAYS[attempt-1]/1000) + 's পর retry ' + attempt + '/' + (MAX_RETRIES-1) + '...';
+        status.textContent = '⏳ Rate limit — ' + (RETRY_DELAYS[attempt-1]/1000) + 's পর retry ' + attempt + '/2...';
         await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt-1]));
       }
       const res = await fetch('/.netlify/functions/groq-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'meta-llama/llama-4-scout-17b-16e-instruct',
           max_tokens: 500,
@@ -3332,13 +3330,13 @@ window.fbAnalyzeOneFile = async function(file) {
       });
       const data = await res.json();
       if (res.status === 429 || data.error?.code === 'rate_limit_exceeded') {
-        if (attempt < MAX_RETRIES - 1) continue; // retry
+        if (attempt < 2) continue;
         return '__RATE_LIMITED__';
       }
       const text = data.choices?.[0]?.message?.content;
       return text ? text.trim() : '';
     } catch(err) {
-      if (attempt === MAX_RETRIES - 1) return '';
+      if (attempt === 2) return '';
     }
   }
   return '';
@@ -3384,31 +3382,163 @@ window.fbAnalyseSingle = async function(idx) {
     window._fbImageTexts[idx] = t || '';
     if (box) box.value = t || '';
     if (btn) { btn.textContent = '✅ Done'; btn.disabled = false; btn.dataset.done = 'yes'; }
-    if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ Image ' + (idx+1) + ' সম্পন্ন'; }
+    const genBtn = document.getElementById('fb-gen-single-btn-' + idx);
+    if (genBtn) genBtn.style.display = 'inline-block';
+    if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ Image ' + (idx+1) + ' সম্পন্ন — ⚡ Generate চাপুন'; }
   }
   window.__groqAnalyseBusy = false;
 };
 
-// Analyse all images sequentially with gap
+// Analyse all sequentially, 3s gap, skip already-done
 window.fbAnalyseAll = async function() {
   if (window.__groqAnalyseBusy) { alert('একটা analyse চলছে, শেষ হলে আবার চাপুন'); return; }
   const files = window._fbFiles || [];
   if (!files.length) return;
   const status = document.getElementById('img-analyze-status');
-  let doneCount = 0;
   for (let i = 0; i < files.length; i++) {
     const btn = document.getElementById('fb-analyse-btn-' + i);
-    if (btn && btn.dataset.done === 'yes') { doneCount++; continue; } // already done, skip
+    if (btn && btn.dataset.done === 'yes') continue; // already done
     await fbAnalyseSingle(i);
-    doneCount++;
     if (i < files.length - 1) {
       if (status) { status.style.color = 'var(--amber)'; status.textContent = '⏳ ' + (i+2) + '/' + files.length + ' এর জন্য ৩ সেকেন্ড অপেক্ষা...'; }
       await new Promise(r => setTimeout(r, 3000));
     }
   }
-  if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ সব ' + files.length + 'টা image analyse সম্পন্ন'; }
+  if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ সব ' + files.length + 'টা analyse সম্পন্ন'; }
 };
 
+// ── Generate a single card/video for one image index ─────────
+window.fbGenerateSingle = async function(idx) {
+  const files = window._fbFiles || [];
+  const file = files[idx] || null;
+  const textBox = (files.length <= 1) ? document.getElementById('fb-news-input') : document.getElementById('fb-img-text-' + idx);
+  const text = textBox ? textBox.value.trim() : ((window._fbImageTexts && window._fbImageTexts[idx]) || '');
+  if (!text) return alert('Image ' + (idx+1) + ' এর জন্য আগে Analyse করুন বা text লিখুন');
+
+  const btn = document.getElementById('fb-gen-single-btn-' + idx);
+  const logEl = document.getElementById('fb-gen-single-log-' + idx);
+  const globalLog = document.getElementById('fb-post-log');
+  const showLog = function(html, color) {
+    if (logEl) { logEl.style.display = 'block'; logEl.style.color = color || 'var(--blue)'; logEl.innerHTML = html; }
+    if (globalLog) globalLog.innerHTML = '<div style="color:' + (color||'var(--blue)') + ';font-size:11px;font-weight:700">' + html + '</div>';
+  };
+  if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
+  showLog('🤖 AI caption তৈরি হচ্ছে...');
+
+  const tonePromptMap = {
+    urgent:'urgent, shocking, breaking news tone — মানুষ scroll থামাবেই',
+    emotional:'emotional, heartfelt, touching — মানুষের হৃদয় স্পর্শ করবে',
+    informative:'informative, factual, clear — তথ্যবহুল এবং বিশ্বাসযোগ্য',
+    motivational:'motivational, inspiring, call to action — মানুষকে অনুপ্রাণিত করবে',
+    alert:'urgent alert, warning tone — সতর্ক করতে হবে',
+  };
+  const toneDesc = tonePromptMap[_fbCurrentTone] || tonePromptMap.urgent;
+
+  try {
+    let imgBase64 = '';
+    if (file) {
+      imgBase64 = await new Promise(function(res) {
+        const rd = new FileReader();
+        rd.onload = e => res(e.target.result.split(',')[1]);
+        rd.onerror = () => res('');
+        rd.readAsDataURL(file);
+      });
+    }
+    const content = [];
+    if (file && imgBase64) content.push({ type: 'image_url', image_url: { url: 'data:' + (file.type||'image/jpeg') + ';base64,' + imgBase64 } });
+    content.push({ type: 'text', text: 'তুমি বাংলাদেশের সেরা Facebook viral content strategist।\nTone: ' + toneDesc + '\n\nRULES:\n- hook = প্রথম ৩ সেকেন্ড scroll stopper, max ৮ শব্দ\n- caption = hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ\n- slides = plain বাংলা text, max ১০ শব্দ প্রতি slide\n- mood = urgent/sad/positive/angry/neutral\n\nশুধু raw JSON:\n{"mood":"urgent","hook":"...","caption":"...","tags":"#tag1 #JOAF #বাংলাদেশ","slides":[{"text":"..."},{"text":"..."},{"text":"..."}]}\n\nNews: ' + text });
+
+    const aiRes = await fetch('/.netlify/functions/groq-proxy', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: file ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile', max_tokens: 1000, messages: [{ role: 'user', content }] })
+    });
+    const aiData = await aiRes.json();
+    if (aiRes.status === 429 || aiData.error?.code === 'rate_limit_exceeded') throw new Error('Rate limit — কিছুক্ষণ পর আবার চেষ্টা করুন');
+    const raw = aiData.choices?.[0]?.message?.content || '{}';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI JSON parse error');
+    const parsed = JSON.parse(jsonMatch[0]);
+    const mood = parsed.mood || 'urgent';
+    const slideTexts = (parsed.slides || []).map(s => (typeof s === 'string' ? s : s.text || '').replace(/#[\u0980-\u09FF\w]+/g,'').trim()).filter(Boolean);
+    if (!slideTexts.length) slideTexts.push(text.substring(0,100));
+
+    // Update global caption panel
+    const capEl = document.getElementById('fb-caption'); if (capEl) capEl.value = parsed.caption || text;
+    const tagsEl = document.getElementById('fb-tags-display'); if (tagsEl) tagsEl.value = parsed.tags || '';
+    const hookEl = document.getElementById('fb-hook-line'); if (hookEl) hookEl.textContent = parsed.hook || '';
+    const capCard = document.getElementById('fb-caption-card'); if (capCard) capCard.style.display = 'block';
+    window._fbHook = parsed.hook || ''; window._joafTags = parsed.tags || '';
+    const previewEmpty = document.getElementById('fb-preview-empty'); if (previewEmpty) previewEmpty.style.display = 'none';
+    const previewDiv = document.getElementById('fb-preview'); if (previewDiv) previewDiv.style.display = 'block';
+
+    if (_fbCurrentMode === 'card') {
+      const panels = slideTexts.slice(0,3).map(t2 => ({ type:'text', title:'', content:t2 }));
+      window._fbCurrentBatchFile = file;
+      window._fbImgBase64 = imgBase64;
+      const blob = await drawInstantCard(panels, mood, parsed.hook || '', text);
+      if (blob) {
+        if (!window._fbBatchBlobs) window._fbBatchBlobs = [];
+        if (!window._fbBatchQueue) window._fbBatchQueue = [];
+        const capText = (parsed.caption || '') + (parsed.tags ? '\n\n' + parsed.tags : '');
+        const qName = 'joaf-card-img' + (idx+1) + '-' + Date.now() + '.jpg';
+        window._fbBatchBlobs.push({ blob, name: qName });
+        window._fbBatchQueue.push({ blob, name: qName, caption: capText, selected: true, isVideo: false });
+        renderBatchQueue();
+        const batchCard = document.getElementById('fb-batch-results-card'); if (batchCard) batchCard.style.display = 'block';
+        const dlBtn = document.getElementById('fb-download-card-btn'); if (dlBtn) dlBtn.style.display = 'inline-block';
+        showLog('✅ Card ' + (idx+1) + ' ready!', 'var(--green)');
+      }
+    } else {
+      showLog('🎬 Video তৈরি হচ্ছে... (৫-১৫ মিনিট)', 'var(--blue)');
+      window._fbCurrentBatchFile = file; window._fbImgBase64 = imgBase64;
+      const vBlob = await renderVideoWithAudio(slideTexts.map(t2 => ({text:t2})), mood, text, logEl);
+      if (vBlob) {
+        if (!window._fbBatchBlobs) window._fbBatchBlobs = [];
+        if (!window._fbBatchQueue) window._fbBatchQueue = [];
+        const capText = (parsed.caption || '') + (parsed.tags ? '\n\n' + parsed.tags : '');
+        const vName = 'joaf-reel-img' + (idx+1) + '-' + Date.now() + '.webm';
+        window._fbBatchBlobs.push({ blob: vBlob, name: vName });
+        window._fbBatchQueue.push({ blob: vBlob, name: vName, caption: capText, selected: true, isVideo: true });
+        renderBatchQueue();
+        const batchCard2 = document.getElementById('fb-batch-results-card'); if (batchCard2) batchCard2.style.display = 'block';
+        showLog('✅ Video ' + (idx+1) + ' ready!', 'var(--green)');
+      }
+    }
+  } catch(e) {
+    showLog('❌ ' + e.message, 'var(--red)');
+  }
+  if (btn) { btn.textContent = '⚡ Generate'; btn.disabled = false; }
+};
+
+// ── Generate ALL selected images sequentially ─────────────────
+window.fbGenerateAll = async function() {
+  const files = window._fbFiles || [];
+  const btn = document.getElementById('fb-gen-btn');
+
+  // Single image or no image → original simple flow
+  if (files.length <= 1) {
+    return fbGenerateReel();
+  }
+
+  // Multi-image: sequential generate per image
+  if (btn) { btn.textContent = '⏳ সব generate হচ্ছে...'; btn.disabled = true; }
+  const globalLog = document.getElementById('fb-post-log');
+  window._fbBatchBlobs = []; window._fbBatchQueue = [];
+  const batchCard = document.getElementById('fb-batch-results-card'); if (batchCard) batchCard.style.display = 'none';
+  const batchStrip = document.getElementById('fb-batch-strip'); if (batchStrip) batchStrip.innerHTML = '';
+
+  const selected = (window._fbSelected && window._fbSelected.length) ? window._fbSelected : files.map((_,i) => i);
+  for (let si = 0; si < selected.length; si++) {
+    const idx = selected[si];
+    if (globalLog) globalLog.innerHTML = '<div style="color:var(--amber);font-size:11px;font-weight:700">⏳ ' + (si+1) + '/' + selected.length + ' — Image ' + (idx+1) + ' generate হচ্ছে...</div>';
+    await fbGenerateSingle(idx);
+    if (si < selected.length - 1) await new Promise(r => setTimeout(r, 2500));
+  }
+  if (btn) { btn.textContent = '🚀 Generate করুন'; btn.disabled = false; }
+  if (globalLog) globalLog.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ সব ' + selected.length + 'টা generate সম্পন্ন</div>';
+};
+
+// ── Original single-mode generate (single image / no image) ──
 window.fbGenerateReel = async function() {
   // Multi-image mode: fb-news-input doesn't exist — read from _fbImageTexts
   const files = window._fbFiles || [];
