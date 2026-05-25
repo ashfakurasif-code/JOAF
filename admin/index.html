@@ -494,7 +494,20 @@ body  { overflow-x:hidden; }
 
   let lastCall = 0;
 
-  window.fetch = async function(...args){
+  window.__AI_COOLDOWN = 0;
+
+window.fetch = async function(...args){
+
+  if (
+    Date.now() <
+    window.__AI_COOLDOWN
+  ) {
+
+    throw new Error(
+      "AI cooldown active"
+    );
+  }
+
 
     const now = Date.now();
 
@@ -512,7 +525,14 @@ body  { overflow-x:hidden; }
       // soft retry on 429
       if(res.status === 429){
 
-        console.warn("429 hit. Cooling down...");
+        console.warn("429 LIMIT HIT");
+
+window.__AI_COOLDOWN =
+  Date.now() + 60000;
+
+throw new Error(
+  "429 cooldown active"
+);
 
         await joafDelay(5000);
 
