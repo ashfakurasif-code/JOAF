@@ -1163,6 +1163,8 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
                 <div id="img-upload-preview" style="display:none;margin-bottom:5px"><img id="img-preview-thumb" style="max-height:70px;border-radius:6px;border:1px solid var(--border)"></div>
                 <div id="img-upload-label" style="font-size:11px;color:var(--text2)">📸 Click বা drag<br><span style="font-size:10px;color:var(--text3)">AI analyze করে text বানাবে</span></div>
                 <div id="img-analyze-status" style="font-size:11px;color:var(--amber);margin-top:4px;display:none">⏳ Analyze হচ্ছে...</div>
+                <div id="img-batch-count" style="display:none;font-size:10px;color:var(--accent);margin-top:3px;font-weight:700"></div>
+                <div id="img-thumb-strip" style="display:none;flex-wrap:wrap;gap:4px;margin-top:6px;justify-content:center;"></div>
               </div>
             </div>
             <!-- News Text -->
@@ -3074,6 +3076,20 @@ async function fbAnalyzeImage(input) {
   const status = document.getElementById('img-analyze-status');
   const cnt = document.getElementById('img-batch-count');
   if (cnt) { cnt.textContent = allFiles.length > 1 ? allFiles.length + 'টা file selected' : ''; cnt.style.display = allFiles.length > 1 ? 'block' : 'none'; }
+  const strip = document.getElementById('img-thumb-strip');
+  if (strip) {
+    strip.innerHTML = '';
+    if (allFiles.length > 1) {
+      strip.style.display = 'flex';
+      allFiles.forEach(function(f) {
+        const url = URL.createObjectURL(f);
+        const img = document.createElement('img');
+        img.src = url; img.style.cssText = 'height:40px;width:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);';
+        img.onload = function() { URL.revokeObjectURL(url); };
+        strip.appendChild(img);
+      });
+    } else { strip.style.display = 'none'; }
+  }
   const reader = new FileReader();
   reader.onload = async function(e) {
     thumb.src = e.target.result;
@@ -3215,6 +3231,7 @@ News: ${text}` });
 
     if (_fbCurrentMode === 'card') {
       // ── INSTANT CARD MODE ──────────────────────────────
+      const panels = slideTexts.slice(0, 3).map(function(t) { return { type: 'text', title: '', content: t }; });
       if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">🖼️ Card তৈরি হচ্ছে...</div>';
       await drawInstantCard(panels, mood, parsed.hook || '', text);
       const downloadCardBtn = document.getElementById('fb-download-card-btn');
