@@ -3289,40 +3289,59 @@ window.fbSyncImageTexts = function() {
 }
 
 window.fbAnalyzeOneFile = async function(file) {
-  return new Promise(function(resolve) {
-    const preview = document.getElementById('img-upload-preview');
-    const thumb   = document.getElementById('img-preview-thumb');
-    const label   = document.getElementById('img-upload-label');
-    const status  = document.getElementById('img-analyze-status');
-    const reader  = new FileReader();
-    reader.onload = async function(e) {
-      thumb.src = e.target.result;
+  // Read file as base64 once
+  const base64 = await new Promise(function(resolve) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('img-upload-preview');
+      const thumb   = document.getElementById('img-preview-thumb');
+      const label   = document.getElementById('img-upload-label');
+      if (thumb) thumb.src = e.target.result;
       if (preview) preview.style.display = 'block';
-      if (label)   label.style.display   = 'none';
-      try {
-        const base64   = e.target.result.split(',')[1];
-        const mimeType = file.type || 'image/jpeg';
-        const res = await fetch('/.netlify/functions/groq-proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-            max_tokens: 1000,
-            messages: [{ role: 'user', content: [
-              { type: 'image_url', image_url: { url: 'data:' + mimeType + ';base64,' + base64 } },
-              { type: 'text', text: 'এই image টি analyze করো। বাংলাদেশী সংবাদ বা ঘটনার ছবি হতে পারে। Image থেকে বাংলায় ৩-৫ বাক্যে news summary লেখো। কোনো hashtag বা formatting ছাড়া।' }
-            ]}]
-          })
-        });
-        const data = await res.json();
-        const text = data.choices?.[0]?.message?.content;
-        resolve(text ? text.trim() : '');
-      } catch(err) {
-        resolve('');
-      }
+      if (label) label.style.display = 'none';
+      resolve(e.target.result.split(',')[1]);
     };
+    reader.onerror = function() { resolve(''); };
     reader.readAsDataURL(file);
   });
+  if (!base64) return '';
+
+  const mimeType = file.type || 'image/jpeg';
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS = [5000, 10000, 15000]; // 5s, 10s, 15s
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const status = document.getElementById('img-analyze-status');
+      if (attempt > 0 && status) {
+        status.style.color = 'var(--amber)';
+        status.textContent = '⏳ Rate limit — ' + (RETRY_DELAYS[attempt-1]/1000) + 's পর retry ' + attempt + '/' + (MAX_RETRIES-1) + '...';
+        await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt-1]));
+      }
+      const res = await fetch('/.netlify/functions/groq-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          max_tokens: 500,
+          messages: [{ role: 'user', content: [
+            { type: 'image_url', image_url: { url: 'data:' + mimeType + ';base64,' + base64 } },
+            { type: 'text', text: 'এই image থেকে বাংলায় ২-৩ বাক্যে news summary লেখো। কোনো hashtag বা formatting ছাড়া।' }
+          ]}]
+        })
+      });
+      const data = await res.json();
+      if (res.status === 429 || data.error?.code === 'rate_limit_exceeded') {
+        if (attempt < MAX_RETRIES - 1) continue; // retry
+        return '__RATE_LIMITED__';
+      }
+      const text = data.choices?.[0]?.message?.content;
+      return text ? text.trim() : '';
+    } catch(err) {
+      if (attempt === MAX_RETRIES - 1) return '';
+    }
+  }
+  return '';
 }
 
 window.fbAnalyzeImage = async function(input) {
@@ -3353,53 +3372,59 @@ window.fbAnalyseSingle = async function(idx) {
   const btn = document.getElementById('fb-analyse-btn-' + idx);
   const box = (files.length <= 1) ? document.getElementById('fb-news-input') : document.getElementById('fb-img-text-' + idx);
   const status = document.getElementById('img-analyze-status');
-  if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
+  if (btn) { btn.textContent = '⏳...'; btn.disabled = true; btn.dataset.done = ''; }
   if (status) { status.style.display = 'block'; status.style.color = 'var(--amber)'; status.textContent = '⏳ Image ' + (idx+1) + ' analyse হচ্ছে...'; }
   const t = await fbAnalyzeOneFile(file);
   if (!window._fbImageTexts) window._fbImageTexts = [];
-  window._fbImageTexts[idx] = t || '';
-  if (box) box.value = t || '';
-  if (btn) { btn.textContent = '✅ Done'; btn.disabled = false; btn.style.borderColor = 'var(--green-border)'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green)'; }
-  if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ Image ' + (idx+1) + ' সম্পন্ন'; }
+  if (t === '__RATE_LIMITED__') {
+    window._fbImageTexts[idx] = '';
+    if (btn) { btn.textContent = '⚠️ Retry'; btn.disabled = false; btn.dataset.done = ''; }
+    if (status) { status.style.color = 'var(--red)'; status.textContent = '❌ Image ' + (idx+1) + ' — rate limit, পরে retry করুন'; }
+  } else {
+    window._fbImageTexts[idx] = t || '';
+    if (box) box.value = t || '';
+    if (btn) { btn.textContent = '✅ Done'; btn.disabled = false; btn.dataset.done = 'yes'; }
+    if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ Image ' + (idx+1) + ' সম্পন্ন'; }
+  }
   window.__groqAnalyseBusy = false;
 };
 
-// Analyse all images sequentially with 2s gap
+// Analyse all images sequentially with gap
 window.fbAnalyseAll = async function() {
   if (window.__groqAnalyseBusy) { alert('একটা analyse চলছে, শেষ হলে আবার চাপুন'); return; }
   const files = window._fbFiles || [];
   if (!files.length) return;
   const status = document.getElementById('img-analyze-status');
+  let doneCount = 0;
   for (let i = 0; i < files.length; i++) {
-    if (window.__groqAnalyseBusy) { await new Promise(r => setTimeout(r, 2500)); i--; continue; }
     const btn = document.getElementById('fb-analyse-btn-' + i);
-    if (btn && btn.style.color === 'var(--green)') continue; // already done, skip
+    if (btn && btn.dataset.done === 'yes') { doneCount++; continue; } // already done, skip
     await fbAnalyseSingle(i);
+    doneCount++;
     if (i < files.length - 1) {
-      if (status) { status.style.color = 'var(--amber)'; status.textContent = '⏳ ' + (i+2) + '/' + files.length + ' এর জন্য অপেক্ষা করছি...'; }
-      await new Promise(r => setTimeout(r, 2000));
+      if (status) { status.style.color = 'var(--amber)'; status.textContent = '⏳ ' + (i+2) + '/' + files.length + ' এর জন্য ৩ সেকেন্ড অপেক্ষা...'; }
+      await new Promise(r => setTimeout(r, 3000));
     }
   }
   if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ সব ' + files.length + 'টা image analyse সম্পন্ন'; }
 };
 
 window.fbGenerateReel = async function() {
-  // Multi-image mode: fb-news-input doesn't exist — read from first per-image textbox or _fbImageTexts
+  // Multi-image mode: fb-news-input doesn't exist — read from _fbImageTexts
   const files = window._fbFiles || [];
   let text = '';
   if (files.length > 1) {
     fbSyncImageTexts();
     text = (window._fbImageTexts && window._fbImageTexts[0]) ? window._fbImageTexts[0].trim() : '';
-    // fallback: try fb-img-text-0
     if (!text) { const b0 = document.getElementById('fb-img-text-0'); text = b0 ? b0.value.trim() : ''; }
   } else {
     const newsEl = document.getElementById('fb-news-input');
     text = newsEl ? newsEl.value.trim() : '';
   }
   const imgInput = document.getElementById('fb-img-input');
-  const imgFile = (files.length) ? files[0] : (imgInput?.files?.[0] || null);
+  const imgFile = files.length ? files[0] : (imgInput?.files?.[0] || null);
   if (!text && !imgFile) return alert('News text লিখুন অথবা Image upload করুন');
-  if (!text && imgFile) return alert('আগে Image Analyse করুন অথবা News text লিখুন');
+  if (!text && imgFile) return alert('আগে Image Analyse করুন অথবা text box এ news লিখুন');
   if (!text) return alert('News text লিখুন');
 
   const btn = document.getElementById('fb-gen-btn');
