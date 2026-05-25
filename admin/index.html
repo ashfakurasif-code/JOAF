@@ -478,7 +478,59 @@ tr:hover td{background:rgba(255,255,255,.02);}
 body  { overflow-x:hidden; }
 
 </style>
-</head>
+
+<script id="joaf-safe-ai-patch">
+(function(){
+
+  // Prevent duplicate AI execution
+  window.__JOAF_AI_BUSY = false;
+
+  // Delay helper
+  window.joafDelay = (ms) =>
+    new Promise(resolve => setTimeout(resolve, ms));
+
+  // Safe fetch wrapper
+  const originalFetch = window.fetch;
+
+  let lastCall = 0;
+
+  window.fetch = async function(...args){
+
+    const now = Date.now();
+
+    // throttle rapid bursts
+    if(now - lastCall < 1500){
+      await joafDelay(1500);
+    }
+
+    lastCall = Date.now();
+
+    try{
+
+      const res = await originalFetch(...args);
+
+      // soft retry on 429
+      if(res.status === 429){
+
+        console.warn("429 hit. Cooling down...");
+
+        await joafDelay(5000);
+
+        return originalFetch(...args);
+      }
+
+      return res;
+
+    }catch(err){
+
+      console.error("JOAF Fetch Error", err);
+      throw err;
+    }
+  };
+
+})();
+</script>
+\n</head>
 <body>
 <script>
 function seededRand(seed) {
@@ -1172,7 +1224,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
                    ondragleave="this.style.borderColor='var(--border2)'"
                    ondrop="event.preventDefault();fbHandleDrop(event)">
                 <input type="file" id="fb-img-input" accept="image/*,video/*" multiple
-                       style="position:absolute;left:0;top:0;opacity:0;cursor:pointer;width:100%;height:44px;"
+                       style="position:absolute;left:0;top:0;opacity:0;cursor:pointer;width:100%;height:100%; inset:0;"
                        onchange="fbAnalyzeImage(this)">
                 <div id="img-upload-preview" style="display:none;margin-bottom:5px">
                   <img id="img-preview-thumb" style="max-height:70px;border-radius:6px;border:1px solid var(--border)">
@@ -3212,7 +3264,7 @@ window.fbRenderImageTextBoxes = function() {
     const url = URL.createObjectURL(file);
     const stored = (window._fbImageTexts && window._fbImageTexts[idx]) ? window._fbImageTexts[idx] : '';
     return '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">'
-      + '<img src="' + url + '" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display=&#39;none&#39;">'
+      + '<img src="' + url + '" style="width:44px;height:100%; inset:0;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display=&#39;none&#39;">'
       + '<div style="flex:1;">'
       + '<label style="font-size:10px;color:var(--text3);font-weight:700;display:block;margin-bottom:3px;">Image ' + (idx+1) + ' — ' + file.name.substring(0,24) + '</label>'
       + '<textarea id="fb-img-text-' + idx + '" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;" placeholder="এই image-এর news লিখুন...">' + stored + '</textarea>'
