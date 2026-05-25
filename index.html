@@ -1051,5 +1051,29 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('JOAF Generate Button Patched ✅');
 });
 </script>
+\n
+<script>
+window.__groqBusy = false;
+
+async function safeGroqGenerate(fn) {
+
+  if (window.__groqBusy) {
+    console.warn('Blocked duplicate request');
+    return;
+  }
+
+  window.__groqBusy = true;
+
+  try {
+    return await fn();
+  } finally {
+
+    setTimeout(() => {
+      window.__groqBusy = false;
+    }, 4000);
+
+  }
+}
+</script>
 \n</body>
 </html>

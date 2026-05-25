@@ -3189,18 +3189,13 @@ window.fbHandleDrop = function(event) {
   const merged = [...existing];
   files.forEach(f => { if (!merged.find(e => e.name === f.name && e.size === f.size)) merged.push(f); });
   window._fbFiles = merged;
-  window._fbSelected = merged.map((_, i) => i);  // all selected by default
+  window._fbSelected = merged.map((_, i) => i);
+  if (!window._fbImageTexts) window._fbImageTexts = [];
+  while (window._fbImageTexts.length < merged.length) window._fbImageTexts.push('');
   fbRenderThumbStrip();
-  window._fbImageTexts = merged.map(() => '');
   fbRenderImageTextBoxes();
-  fbAnalyzeOneFile(merged[0]).then(t => {
-    window._fbImageTexts[0] = t || '';
-    if (merged.length <= 1) {
-      const box = document.getElementById('fb-news-input'); if (box) box.value = t || '';
-    } else {
-      const box = document.getElementById('fb-img-text-0'); if (box) box.value = t || '';
-    }
-  });
+  const status = document.getElementById('img-analyze-status');
+  if (status) { status.style.display = 'block'; status.style.color = 'var(--text2)'; status.textContent = '📸 ' + merged.length + 'টা image ready — Analyse বাটন চাপুন'; }
 };
 
 // ── Select-all / deselect ─────────────────────────────────────
@@ -3264,13 +3259,19 @@ window.fbRenderImageTextBoxes = function() {
     const url = URL.createObjectURL(file);
     const stored = (window._fbImageTexts && window._fbImageTexts[idx]) ? window._fbImageTexts[idx] : '';
     return '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">'
-      + '<img src="' + url + '" style="width:44px;height:100%; inset:0;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display=&#39;none&#39;">'
+      + '<img src="' + url + '" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display=\'none\'">'
       + '<div style="flex:1;">'
-      + '<label style="font-size:10px;color:var(--text3);font-weight:700;display:block;margin-bottom:3px;">Image ' + (idx+1) + ' — ' + file.name.substring(0,24) + '</label>'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">'
+      + '<label style="font-size:10px;color:var(--text3);font-weight:700;flex:1;">Image ' + (idx+1) + ' — ' + file.name.substring(0,24) + '</label>'
+      + '<button id="fb-analyse-btn-' + idx + '" onclick="fbAnalyseSingle(' + idx + ')" style="padding:2px 8px;border-radius:10px;border:1px solid var(--blue-border);background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">🔍 Analyse</button>'
+      + '</div>'
       + '<textarea id="fb-img-text-' + idx + '" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;" placeholder="এই image-এর news লিখুন...">' + stored + '</textarea>'
       + '</div>'
       + '</div>';
-  }).join('');
+  }).join('')
+  + '<div style="margin-top:6px;display:flex;gap:6px;">'
+  + '<button onclick="fbAnalyseAll()" style="flex:1;padding:6px 12px;border-radius:8px;border:1px solid var(--purple-border);background:var(--purple-bg);color:var(--purple);font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">🔍 সব Analyse করুন (queue)</button>'
+  + '</div>';
 }
 
 // ── Sync per-image text boxes into window._fbImageTexts
@@ -3327,41 +3328,60 @@ window.fbAnalyzeOneFile = async function(file) {
 window.fbAnalyzeImage = async function(input) {
   const allFiles = Array.from(input.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
   if (!allFiles.length) return;
-  // Merge with existing files
   const existing = window._fbFiles || [];
   const merged = [...existing];
   allFiles.forEach(f => { if (!merged.find(e => e.name === f.name && e.size === f.size)) merged.push(f); });
   window._fbFiles = merged;
-  window._fbSelected = merged.map((_, i) => i);  // all selected by default
+  window._fbSelected = merged.map((_, i) => i);
   input.value = '';
+  if (!window._fbImageTexts) window._fbImageTexts = [];
+  while (window._fbImageTexts.length < merged.length) window._fbImageTexts.push('');
   fbRenderThumbStrip();
-  // Analyze ALL uploaded images sequentially → per-image text boxes
-  (async function() {
-    const status = document.getElementById('img-analyze-status');
-    window._fbImageTexts = merged.map(() => '');
-    fbRenderImageTextBoxes();
-    for (let i = 0; i < merged.length; i++) {
-      if (status) {
-        status.style.display  = 'block';
-        status.style.color    = 'var(--amber)';
-        status.textContent    = '⏳ Analyzing ' + (i+1) + '/' + merged.length + '...';
-      }
-      const t = await fbAnalyzeOneFile(merged[i]);
-      window._fbImageTexts[i] = t || '';
-      if (merged.length <= 1) {
-        const box = document.getElementById('fb-news-input');
-        if (box) box.value = t || '';
-      } else {
-        const box = document.getElementById('fb-img-text-' + i);
-        if (box) box.value = t || '';
-      }
+  fbRenderImageTextBoxes();
+  // NO auto-analyse — user clicks per image or "সব Analyse করুন"
+  const status = document.getElementById('img-analyze-status');
+  if (status) { status.style.display = 'block'; status.style.color = 'var(--text2)'; status.textContent = '📸 ' + merged.length + 'টা image ready — Analyse বাটন চাপুন'; }
+};
+
+// Analyse a single image by index (manual trigger)
+window.fbAnalyseSingle = async function(idx) {
+  if (window.__groqAnalyseBusy) return;
+  window.__groqAnalyseBusy = true;
+  const files = window._fbFiles || [];
+  const file = files[idx];
+  if (!file) { window.__groqAnalyseBusy = false; return; }
+  const btn = document.getElementById('fb-analyse-btn-' + idx);
+  const box = (files.length <= 1) ? document.getElementById('fb-news-input') : document.getElementById('fb-img-text-' + idx);
+  const status = document.getElementById('img-analyze-status');
+  if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
+  if (status) { status.style.display = 'block'; status.style.color = 'var(--amber)'; status.textContent = '⏳ Image ' + (idx+1) + ' analyse হচ্ছে...'; }
+  const t = await fbAnalyzeOneFile(file);
+  if (!window._fbImageTexts) window._fbImageTexts = [];
+  window._fbImageTexts[idx] = t || '';
+  if (box) box.value = t || '';
+  if (btn) { btn.textContent = '✅ Done'; btn.disabled = false; btn.style.borderColor = 'var(--green-border)'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green)'; }
+  if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ Image ' + (idx+1) + ' সম্পন্ন'; }
+  window.__groqAnalyseBusy = false;
+};
+
+// Analyse all images sequentially with 2s gap
+window.fbAnalyseAll = async function() {
+  if (window.__groqAnalyseBusy) { alert('একটা analyse চলছে, শেষ হলে আবার চাপুন'); return; }
+  const files = window._fbFiles || [];
+  if (!files.length) return;
+  const status = document.getElementById('img-analyze-status');
+  for (let i = 0; i < files.length; i++) {
+    if (window.__groqAnalyseBusy) { await new Promise(r => setTimeout(r, 2500)); i--; continue; }
+    const btn = document.getElementById('fb-analyse-btn-' + i);
+    if (btn && btn.style.color === 'var(--green)') continue; // already done, skip
+    await fbAnalyseSingle(i);
+    if (i < files.length - 1) {
+      if (status) { status.style.color = 'var(--amber)'; status.textContent = '⏳ ' + (i+2) + '/' + files.length + ' এর জন্য অপেক্ষা করছি...'; }
+      await new Promise(r => setTimeout(r, 2000));
     }
-    if (status) {
-      status.style.color    = 'var(--green)';
-      status.textContent    = '✅ ' + merged.length + 'টা image analyze সম্পন্ন';
-    }
-  })();
-}
+  }
+  if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ সব ' + files.length + 'টা image analyse সম্পন্ন'; }
+};
 
 window.fbGenerateReel = async function() {
   const text = document.getElementById('fb-news-input').value.trim();
