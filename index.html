@@ -1006,5 +1006,50 @@ addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_s
 </script>
 
 
-</body>
+
+<script id="joaf-generate-fix">
+document.addEventListener('DOMContentLoaded', () => {
+
+  const btn = document.getElementById('fb-gen-btn');
+
+  if (!btn) {
+    console.error('fb-gen-btn not found');
+    return;
+  }
+
+  // remove broken inline handler dependency
+  btn.removeAttribute('onclick');
+
+  btn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (btn.dataset.busy === '1') return;
+
+    btn.dataset.busy = '1';
+
+    try {
+
+      if (typeof window.fbGenerateReel !== 'function') {
+        throw new Error('fbGenerateReel function missing');
+      }
+
+      await window.fbGenerateReel();
+
+    } catch(err) {
+
+      console.error('Generate failed:', err);
+      alert('Generate error: ' + err.message);
+
+    } finally {
+
+      btn.dataset.busy = '0';
+
+    }
+  });
+
+  console.log('JOAF Generate Button Patched ✅');
+});
+</script>
+\n</body>
 </html>
