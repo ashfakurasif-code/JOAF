@@ -3243,9 +3243,7 @@ async function fbAnalyzeImage(input) {
       const t = await fbAnalyzeOneFile(merged[i]);
       if (t) results.push(t);
     }
-    document.getElementById('fb-news-input').value = results.join('
-
-');
+    document.getElementById('fb-news-input').value = results.join('\n\n');
     if (status) {
       status.style.color    = 'var(--green)';
       status.textContent    = '✅ ' + results.length + 'টা image analyze সম্পন্ন';
