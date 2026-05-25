@@ -3362,21 +3362,64 @@ News: ${text}` });
 
       for (let bi = 0; bi < batchFiles.length; bi++) {
         const bFile = batchFiles[bi];
-        if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">🖼️ Card ' + (bi+1) + '/' + batchFiles.length + ' তৈরি হচ্ছে...</div>';
+        if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">🤖 Card ' + (bi+1) + '/' + batchFiles.length + ' — AI caption তৈরি হচ্ছে...</div>';
 
-        // Override _fbFiles[0] so drawInstantCard uses this image
-        if (bFile) window._fbCurrentBatchFile = bFile;
-        else window._fbCurrentBatchFile = null;
+        // ── Per-card AI call: each image gets its own caption/hook/slides ──
+        // This ensures batch cards are NOT identical — each reflects its own image.
+        let cardParsed = parsed;  // fallback to first-card parsed if AI fails
+        if (bFile) {
+          try {
+            const cardBase64 = await new Promise(function(res) {
+              const rd = new FileReader();
+              rd.onload = e => res(e.target.result.split(',')[1]);
+              rd.onerror = () => res('');
+              rd.readAsDataURL(bFile);
+            });
+            const cardAiRes = await fetch('/.netlify/functions/groq-proxy', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                max_tokens: 2000,
+                messages: [{ role: 'user', content: [
+                  { type: 'image_url', image_url: { url: 'data:' + (bFile.type||'image/jpeg') + ';base64,' + cardBase64 } },
+                  { type: 'text', text: `তুমি বাংলাদেশের সেরা Facebook viral content strategist।\nTone: ${toneDesc}\n\nRULES:\n- hook = প্রথম ৩ সেকেন্ড scroll stopper, max ৮ শব্দ, question বা shocking statement\n- caption = hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ\n- slides = plain বাংলা text, max ১০ শব্দ প্রতি slide, কোনো hashtag/emoji নেই\n- mood = urgent/sad/positive/angry/neutral থেকে একটা\n\nশুধু raw JSON (no extra text):\n{"mood":"urgent","hook":"max ৮ শব্দের scroll stopper","caption":"full viral caption with emoji + CTA + hashtags","tags":"#tag1 #tag2 #JOAF #বাংলাদেশ","slides":[{"text":"hook slide text"},{"text":"main info"},{"text":"conclusion + CTA"}]}\n\nNews: ${text}` }
+                ]}]
+              })
+            });
+            const cardAiData = await cardAiRes.json();
+            const cardRaw = cardAiData.choices?.[0]?.message?.content || '{}';
+            const cardMatch = cardRaw.match(/\{[\s\S]*\}/);
+            if (cardMatch) cardParsed = JSON.parse(cardMatch[0]);
+          } catch(aiErr) {
+            // Non-fatal: fall back to first-card parsed
+            console.warn('Card ' + (bi+1) + ' AI failed, using fallback:', aiErr.message);
+          }
+        }
 
-        await drawInstantCard(panels, mood, parsed.hook || '', text);
+        // Build per-card slides from cardParsed
+        const cardSlideTexts = ((cardParsed.slides || []).map(s => {
+          const t2 = typeof s === 'string' ? s : (s.text || '');
+          return t2.replace(/#[\u0980-\u09FF\w]+/g, '').replace(/Tags?:\s*.*/gi, '').trim();
+        }).filter(Boolean));
+        if (!cardSlideTexts.length) cardSlideTexts.push(text.substring(0, 100));
+        const cardPanels = cardSlideTexts.slice(0, 3).map(function(t) { return { type: 'text', title: '', content: t }; });
+        const cardMood  = cardParsed.mood || 'urgent';
+        const cardHook  = cardParsed.hook || '';
+
+        // Override so drawInstantCard uses this image
+        window._fbCurrentBatchFile = bFile || null;
+
+        await drawInstantCard(cardPanels, cardMood, cardHook, text);
 
         // Capture this card as blob
         const cardCanvas2 = document.getElementById('fb-card-canvas');
         if (cardCanvas2) {
           const blob = await new Promise(res => cardCanvas2.toBlob(res, 'image/jpeg', 0.95));
           if (blob) {
-            // ── Push into unified batch queue (replaces old strip + SA push) ──
-            const capText = (document.getElementById('fb-caption')?.value||'') + (window._joafTags ? '\n\n' + window._joafTags : '');
+            // ── Push into unified batch queue — use per-card caption ──
+            const capText = (cardParsed.caption || document.getElementById('fb-caption')?.value||'')
+              + (cardParsed.tags ? '\n\n' + cardParsed.tags : (window._joafTags ? '\n\n' + window._joafTags : ''));
             const qName = 'joaf-card-' + Date.now() + '-' + (bi+1) + '.jpg';
             window._fbBatchBlobs.push({ blob, name: qName });  // keep for fbDownloadAllCards
             // _fbBatchQueue drives the publish UI — each item: {blob,name,caption,selected,isVideo}
