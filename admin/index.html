@@ -3400,13 +3400,6 @@ News: ${text}` });
 
     // Build panels from slides
     const panels = (parsed.slides||[]).slice(0,3).map((s,i) => {
-      const t2 = typeof s==='string'?s:(s.text||'');
-      return { type:i===0?'quote':i===1?'info':'alert', title:'', content:t2 };
-    });
-    if (!panels.length) panels.push({ type:'info', title:'', content:text.substring(0,120) });
-
-    if (_fbCurrentMode === 'card') {
-      // ── INSTANT CARD MODE ──────────────────────────────
       if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">🖼️ Card তৈরি হচ্ছে...</div>';
       await drawInstantCard(panels, mood, parsed.hook || '', text);
       const downloadCardBtn = document.getElementById('fb-download-card-btn');
