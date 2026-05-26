@@ -1357,28 +1357,28 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">✍️ Caption</label>
             <textarea id="sa-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;margin-bottom:10px;" placeholder="Caption লিখুন..."></textarea>
-            <div style="margin-bottom:10px;">
-              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🔑 FB User Token <span style="font-weight:400;font-size:10px;">(Graph API Explorer থেকে নিন)</span></label>
-              <div style="display:flex;gap:6px;">
-                <input id="sa-fb-token-input" type="password" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:monospace;" placeholder="EAAj... token paste করুন" oninput="document.getElementById('sa-token-status').textContent=''">
-                <button onclick="saveFbToken()" style="padding:7px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">💾 Save</button>
+            <!-- Token is stored in Netlify env var FB_USER_TOKEN — not needed here -->
+            <div id="sa-token-status" style="display:none;"></div>
+            <!-- Schedule + Carousel section -->
+            <div style="border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--bg3);margin-bottom:10px;">
+              <div style="font-size:11px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:.3px;">⚙️ Advanced Options</div>
+
+              <!-- Schedule row -->
+              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">⏰ Schedule করুন <span style="font-weight:400;font-size:10px;">(খালি রাখলে এখনই post হবে)</span></label>
+              <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;">
+                <input type="datetime-local" id="fb-schedule-time" style="flex:1;font-size:11px;border:1px solid var(--border2);border-radius:7px;padding:7px 10px;background:var(--bg4);color:var(--text);font-family:inherit;">
+                <button onclick="document.getElementById('fb-schedule-time').value=''" style="padding:7px 10px;background:var(--bg4);border:1px solid var(--border2);border-radius:7px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;" title="Clear">✕</button>
               </div>
-              <div id="sa-token-status" style="font-size:10px;margin-top:3px;color:var(--text2);"></div>
+
+              <!-- Carousel row -->
+              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🎠 Carousel <span style="font-weight:400;font-size:10px;">(একটা URL per line, min 2 হলে carousel হবে)</span></label>
+              <textarea id="fb-carousel-urls" rows="3" placeholder="https://cdn.example.com/img1.jpg&#10;https://cdn.example.com/img2.jpg&#10;https://cdn.example.com/img3.jpg" style="width:100%;font-size:11px;border:1px solid var(--border2);border-radius:7px;padding:7px 10px;background:var(--bg4);color:var(--text);resize:vertical;font-family:monospace;line-height:1.6;box-sizing:border-box;"></textarea>
             </div>
-            <!-- Schedule control -->
-            <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
-              <label style="font-size:10px;color:var(--text2);white-space:nowrap;">⏰ Schedule:</label>
-              <input type="datetime-local" id="fb-schedule-time" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;background:var(--bg3);color:var(--text);font-family:inherit;">
-              <button onclick="document.getElementById('fb-schedule-time').value=''" style="padding:5px 8px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;font-size:10px;color:var(--text2);cursor:pointer;font-family:inherit;">✕</button>
-            </div>
-            <!-- Carousel multi-image -->
-            <div style="margin-bottom:6px;">
-              <label style="font-size:10px;color:var(--text2);">🎠 Carousel URLs (একটা per line, min 2):</label>
-              <textarea id="fb-carousel-urls" rows="3" placeholder="https://cdn.../img1.jpg&#10;https://cdn.../img2.jpg" style="width:100%;font-size:10px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg3);color:var(--text);margin-top:3px;resize:vertical;font-family:monospace;"></textarea>
-            </div>
-            <div style="display:flex;gap:6px;">
-              <button onclick="saOpenPostHelper()" style="flex:2;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📤 Post এখনই</button>
-              <button onclick="fbQueueFromUI()" style="flex:1;padding:11px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📅 Queue এ রাখো</button>
+
+            <!-- Action buttons -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button onclick="saOpenPostHelper()" style="padding:12px;background:#1877f2;border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;">📤 এখনই Post</button>
+              <button onclick="fbQueueFromUI()" style="padding:12px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;">📅 Queue এ রাখো</button>
             </div>
             <div id="sa-post-log" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
           </div>
