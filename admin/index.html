@@ -1348,10 +1348,17 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <!-- ── Step 1: Media ── -->
             <div style="padding:14px 16px 0;">
               <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">① Media</div>
-              <div id="sa-drop" onclick="document.getElementById('sa-img-input').click()" style="border:2px dashed var(--border2);border-radius:9px;padding:10px 12px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg3);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+              <div id="sa-drop"
+                onclick="document.getElementById('sa-img-input').click()"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--bg4)'"
+                ondragleave="this.style.borderColor='var(--border2)';this.style.background='var(--bg3)'"
+                ondrop="event.preventDefault();this.style.borderColor='var(--border2)';this.style.background='var(--bg3)';const f=event.dataTransfer.files[0];if(f){const dt=new DataTransfer();dt.items.add(f);document.getElementById('sa-img-input').files=dt.files;saPreviewImg(document.getElementById('sa-img-input'));}"
+                style="border:2px dashed var(--border2);border-radius:9px;padding:10px 12px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg3);"
+                onmouseover="this.style.borderColor='var(--accent)'"
+                onmouseout="this.style.borderColor='var(--border2)'">
                 <input type="file" id="sa-img-input" accept="image/*,video/*" style="display:none" onchange="saPreviewImg(this)">
-                <div id="sa-img-preview" style="display:none;margin-bottom:6px;"><img id="sa-thumb" style="max-width:100%;max-height:180px;border-radius:7px;border:1px solid var(--border);object-fit:contain;"></div>
-                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image &nbsp;/&nbsp; 🎬 Video</div>
+                <div id="sa-img-preview" style="display:none;margin-bottom:6px;"></div>
+                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image &nbsp;/&nbsp; 🎬 Video — Click বা Drag করুন</div>
               </div>
             </div>
 
@@ -4673,133 +4680,96 @@ window.fbHelperRemoveExclude = function(i) {
 window.saPreviewImg = function(input) {
   const file = input.files[0];
   if (!file) return;
-  // Keep original File — slice() loses MIME type on many devices
   if (window._saPreviewUrl) URL.revokeObjectURL(window._saPreviewUrl);
   const url = URL.createObjectURL(file);
   window._saPreviewUrl = url;
   window._saImgFile = file;
   const isVid = file.type.startsWith('video/');
   const preview = document.getElementById('sa-img-preview');
+  const label   = document.getElementById('sa-img-label');
   if (preview) {
     if (isVid) {
-      preview.innerHTML = '<video controls muted style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></video>';
+      preview.innerHTML = '<video controls muted playsinline style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border);object-fit:contain;display:block;margin:0 auto;"></video>';
       preview.querySelector('video').src = url;
     } else {
-      document.getElementById('sa-thumb').src = url;
-      preview.innerHTML = '';
-      const img = document.createElement('img');
-      img.style = 'max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;';
-      img.src = url;
-      preview.appendChild(img);
+      preview.innerHTML = '<img style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border);object-fit:contain;display:block;margin:0 auto;">';
+      preview.querySelector('img').src = url;
     }
     preview.style.display = 'block';
   }
-  document.getElementById('sa-img-label').textContent = (isVid ? '🎬 ' : '📸 ') + file.name;
+  if (label) label.textContent = (isVid ? '🎬 ' : '📸 ') + file.name + ' ✓';
   input.value = '';
 };
 
 window.saOpenPostHelper = async function() {
   const caption = (document.getElementById('sa-caption').value || '').trim();
-  const file = window._saImgFile;
-  const btn = document.querySelector('[onclick="saOpenPostHelper()"]');
+  const file    = window._saImgFile || null;
+  const btn     = document.querySelector('[onclick="saOpenPostHelper()"]');
+  const logEl   = document.getElementById('sa-post-log');
+
   if (!caption) { alert('Caption লিখুন'); return; }
-
-  const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  const TOKEN = localStorage.getItem('joaf_fb_token') || 'EAAjL2bBHrGoBRjMgaWEdP0GIfH4dSS550wSlUziWxnBhE1ELq1JbwMmqh7l0so0xWAo3t49G8CIIFwhGu7ybr8fBq1PxK79YUpZBdkfBusWKLOGiNXrSBwKotOaRuyP1PZCJArRcBJxJ2psMUrbsUylWmAytUV4WD3frWYYbiFbVUuJr0JqEGFMNR8ayo8Y9zTzfLpBR95Gy7bJBKLllcleBBZBLK6TZBvYBzGDF7XUiSFvtYyiUzqO052X4w0M6IZCU1lFMK0I1NqQLpLZAknJc1xErJ32rAHkwZDZD';
-  if (!TOKEN) {
-    const st=document.getElementById('sa-token-status');
-    if(st){st.textContent='❌ আগে token save করুন';st.style.color='#f87171';}
-    if(logEl){logEl.style.display='block';logEl.innerHTML='<div style="color:#f87171">❌ Token নেই — উপরে save করুন</div>';}
-    if(btn){btn.disabled=false;btn.textContent='📤 FB Pages এ Post করুন';}
-    return;
-  }
-
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting হচ্ছে...'; }
-  const logEl = document.getElementById('sa-post-log');
-  if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ Pages fetch করছি...</div>'; }
+  if (btn)   { btn.disabled = true; btn.textContent = '⏳ Posting...'; }
+  if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ Posting শুরু হচ্ছে...</div>'; }
 
   try {
-    // 1. Fetch all pages from FB directly
-    let pages = [];
-    let url = `https://graph.facebook.com/v19.0/me/accounts?limit=50&access_token=${TOKEN}`;
-    while (url) {
-      const r = await fetch(url);
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      pages = pages.concat(d.data || []);
-      url = d.paging?.next || null;
+    // Upload file to Appwrite Storage first to get a public URL
+    let imageUrl = null, videoUrl = null;
+
+    if (file) {
+      if (logEl) logEl.innerHTML = '<div style="color:var(--amber)">⏳ File upload হচ্ছে...</div>';
+      const { Client, Storage, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
+      const client  = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('6a11b6cd000b59f318eb');
+      const storage = new Storage(client);
+      const uploaded = await storage.createFile('fb_media', ID.unique(), file);
+      const fileUrl  = `https://fra.cloud.appwrite.io/v1/storage/buckets/fb_media/files/${uploaded.$id}/view?project=6a11b6cd000b59f318eb`;
+      if (file.type.startsWith('video/')) { videoUrl = fileUrl; }
+      else { imageUrl = fileUrl; }
+      if (logEl) logEl.innerHTML = '<div style="color:var(--amber)">⏳ Pages এ post হচ্ছে...</div>';
     }
 
-    // 2. Filter excluded
-    pages = pages.filter(p => !excludeIds.includes(p.id) && !excludeIds.includes(p.name.trim()));
-    if (!pages.length) throw new Error('কোনো page পাওয়া যায়নি');
+    const carouselRaw  = document.getElementById('fb-carousel-urls')?.value || '';
+    const carouselUrls = carouselRaw.split('\n').map(s => s.trim()).filter(Boolean);
+    const scheduledAt  = document.getElementById('fb-schedule-time')?.value || '';
+    const excludeIds   = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
 
-    if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">⏳ ${pages.length}টা page এ post হচ্ছে...</div>`;
-
-    // 3. Post to each page
-    const results = [];
-    let doneCount = 0;
-    for (const page of pages) {
-      doneCount++;
-      if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">⏳ ${doneCount}/${pages.length} — <b>${page.name}</b> এ post হচ্ছে... (বাকি ${pages.length - doneCount})</div>`;
-      try {
-        let postRes, postData;
-        if (file && file.type.startsWith('video/')) {
-          // Video post — explicit Blob + filename required by FB Graph API
-          const fd = new FormData();
-          const vMime = file.type || 'video/webm';
-          const vName = file.name || ('joaf-video-' + Date.now() + '.webm');
-          const vBlob = new Blob([file], { type: vMime });
-          fd.append('source', vBlob, vName);
-          fd.append('description', caption);
-          fd.append('access_token', page.access_token);
-          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/videos`, {
-            method: 'POST', body: fd
-          });
-        } else if (file) {
-          // Image post — single step: source + message directly to /photos
-          const fdPhoto = new FormData();
-          fdPhoto.append('source', file);
-          fdPhoto.append('message', caption);
-          fdPhoto.append('access_token', page.access_token);
-          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/photos`, {
-            method: 'POST', body: fdPhoto
-          });
-        } else {
-          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: caption, access_token: page.access_token })
-          });
-        }
-        postData = await postRes.json();
-        if (postData.error) results.push({ name: page.name, ok: false, error: postData.error.message });
-        else results.push({ name: page.name, ok: true });
-      } catch(e) {
-        results.push({ name: page.name, ok: false, error: e.message });
-      }
+    let payload, action;
+    if (carouselUrls.length >= 2) {
+      action  = 'carousel';
+      payload = { action, caption, imageUrls: carouselUrls, excludeIds };
+    } else {
+      action  = 'post';
+      payload = { action, caption, imageUrl, videoUrl, excludeIds };
+      if (scheduledAt) payload.scheduled_at = scheduledAt;
     }
 
-    const ok = results.filter(r => r.ok).length;
-    const rows = results.map(r =>
+    const res  = await fetch('/.netlify/functions/fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    const rows = (data.results || []).map(r =>
       `<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;">` +
-      (r.ok ? '✅' : '❌') + ' ' + r.name + (r.error ? ` — <span style="color:#f87171">${r.error}</span>` : '') +
+      (r.ok ? '✅' : '❌') + ' ' + r.name +
+      (r.error ? ` — <span style="color:#f87171">${r.error}</span>` : '') +
       `</div>`
     ).join('');
+
     if (logEl) logEl.innerHTML =
-      `<div style="font-weight:700;color:var(--green);margin-bottom:8px;">✅ ${ok}/${results.length} page এ post সফল</div>` +
-      `<div style="max-height:200px;overflow-y:auto;">${rows}</div>`;
+      `<div style="font-weight:700;color:var(--green);margin-bottom:6px;">✅ ${data.ok}/${data.total} page এ post সফল</div>` +
+      `<div style="max-height:180px;overflow-y:auto;">${rows}</div>`;
 
   } catch(e) {
     if (logEl) logEl.innerHTML = `<div style="color:#f87171">❌ Error: ${e.message}</div>`;
   }
 
-  if (btn) { btn.disabled = false; btn.textContent = '📤 FB Pages এ Post করুন'; }
-  // Free memory — revoke objectURL, clear file ref
+  if (btn) { btn.disabled = false; btn.textContent = '📤 এখনই Post'; }
   if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); window._saPreviewUrl = null; }
   window._saImgFile = null;
-};
-
+}
 window.saveFbToken = function() {
   const inp = document.getElementById('sa-fb-token-input');
   const val = (inp ? inp.value : '').trim();
