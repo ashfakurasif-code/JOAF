@@ -4810,7 +4810,7 @@ window.saveFbToken = function() {
   const t=localStorage.getItem('joaf_fb_token');
   const st=document.getElementById('sa-token-status');
   if(t&&st){st.textContent='✅ Saved ('+t.slice(0,12)+'...)';st.style.color='#34d399';}
-  setTimeout(fbCheckTokenExpiry, 2000);
+  setTimeout(function(){ if(typeof fbCheckTokenExpiry==="function") fbCheckTokenExpiry(); }, 3000);
 })();
 
 // ── Feature 6: Token expiry check ─────────────────────────────
