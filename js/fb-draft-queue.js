@@ -125,3 +125,78 @@ window.fbDraftStartAutoSave = function() {
   setInterval(fbDraftSave, 30000);
   console.log('[FB Draft] auto-save started (30s interval)');
 };
+
+// ── Feature 10: Upload to Appwrite Storage with progress ──────
+window.uploadToAppwriteStorage = async function(file, onProgress) {
+  const { Client, Storage, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
+  const client  = new Client().setEndpoint(AW_ENDPOINT).setProject(AW_PROJECT);
+  const storage = new Storage(client);
+
+  // Show progress in sa-upload-progress if it exists
+  const progEl = document.getElementById('sa-upload-progress');
+  const progBar = document.getElementById('sa-upload-bar');
+  const progTxt = document.getElementById('sa-upload-txt');
+
+  if (progEl) progEl.style.display = 'block';
+  if (progTxt) progTxt.textContent = '⏳ Upload শুরু হচ্ছে...';
+
+  try {
+    // Use XHR for progress tracking
+    const uploaded = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      const fileId = 'unique()';
+      formData.append('fileId', fileId);
+      formData.append('file', file);
+
+      xhr.upload.onprogress = (e) => {
+        if (!e.lengthComputable) return;
+        const pct = Math.round((e.loaded / e.total) * 100);
+        if (progBar) progBar.style.width = pct + '%';
+        if (progTxt) progTxt.textContent = `⏳ ${pct}% upload হচ্ছে...`;
+        if (typeof onProgress === 'function') onProgress(pct);
+      };
+
+      xhr.onload = async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const resp = JSON.parse(xhr.responseText);
+          resolve(resp);
+        } else {
+          reject(new Error('Upload failed: ' + xhr.status));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+
+      xhr.open('POST', `${AW_ENDPOINT}/storage/buckets/fb_media/files`);
+      xhr.setRequestHeader('X-Appwrite-Project', AW_PROJECT);
+      xhr.send(formData);
+    });
+
+    const fileUrl = `${AW_ENDPOINT}/storage/buckets/fb_media/files/${uploaded.$id}/view?project=${AW_PROJECT}`;
+    if (progTxt) progTxt.textContent = '✅ Upload সম্পন্ন';
+    if (progBar) progBar.style.width = '100%';
+    setTimeout(() => { if (progEl) progEl.style.display = 'none'; }, 2000);
+    return fileUrl;
+
+  } catch(e) {
+    if (progTxt) { progTxt.textContent = '❌ Upload failed: ' + e.message; progTxt.style.color = '#f87171'; }
+    setTimeout(() => { if (progEl) progEl.style.display = 'none'; }, 3000);
+    throw e;
+  }
+};
+
+// ── Feature 8: Per-page caption store ─────────────────────────
+// Stores { pageId: customCaption } for one post session
+window._fbPerPageCaptions = {};
+
+window.fbSetPerPageCaption = function(pageId, caption) {
+  window._fbPerPageCaptions[pageId] = caption;
+};
+
+window.fbGetCaption = function(pageId, defaultCaption) {
+  return window._fbPerPageCaptions[pageId] || defaultCaption;
+};
+
+window.fbClearPerPageCaptions = function() {
+  window._fbPerPageCaptions = {};
+};

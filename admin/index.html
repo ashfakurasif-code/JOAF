@@ -1360,6 +1360,13 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
                 <div id="sa-img-preview" style="display:none;margin-bottom:6px;"></div>
                 <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image &nbsp;/&nbsp; 🎬 Video — Click বা Drag করুন</div>
               </div>
+              <!-- Feature 10: upload progress -->
+              <div id="sa-upload-progress" style="display:none;margin-top:8px;">
+                <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+                  <div id="sa-upload-bar" style="width:0%;height:100%;background:var(--accent);transition:width .2s;border-radius:4px;"></div>
+                </div>
+                <div id="sa-upload-txt" style="font-size:10px;color:var(--text2);margin-top:4px;text-align:center;"></div>
+              </div>
             </div>
 
             <div style="height:1px;background:var(--border);margin:14px 0;"></div>
@@ -4762,6 +4769,21 @@ window.saOpenPostHelper = async function() {
       `<div style="font-weight:700;color:var(--green);margin-bottom:6px;">✅ ${data.ok}/${data.total} page এ post সফল</div>` +
       `<div style="max-height:180px;overflow-y:auto;">${rows}</div>`;
 
+    // ── Feature 9: Post-publish tracking ──────────────────────
+    try {
+      const { Client, Databases, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
+      const _c = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('6a11b6cd000b59f318eb');
+      const _db = new Databases(_c);
+      await _db.createDocument('joaf', 'fb_post_log', ID.unique(), {
+        caption:    caption.substring(0, 500),
+        media_type: videoUrl ? 'video' : imageUrl ? 'image' : 'text',
+        posted_at:  new Date().toISOString(),
+        pages_ok:   String(data.ok),
+        pages_fail: String(data.fail || 0),
+        summary:    JSON.stringify((data.results || []).map(r => ({ name: r.name, ok: r.ok, post_id: r.postId || '' }))),
+      });
+    } catch(logErr) { /* log silently — don't block UX */ }
+
   } catch(e) {
     if (logEl) logEl.innerHTML = `<div style="color:#f87171">❌ Error: ${e.message}</div>`;
   }
@@ -4782,12 +4804,40 @@ window.saveFbToken = function() {
   const st = document.getElementById('sa-token-status');
   if(st){st.textContent='✅ Token save হয়েছে!';st.style.color='#34d399';}
   inp.value = '';
+  setTimeout(fbCheckTokenExpiry, 500);
 };
 (function(){
   const t=localStorage.getItem('joaf_fb_token');
   const st=document.getElementById('sa-token-status');
   if(t&&st){st.textContent='✅ Saved ('+t.slice(0,12)+'...)';st.style.color='#34d399';}
+  setTimeout(fbCheckTokenExpiry, 2000);
 })();
+
+// ── Feature 6: Token expiry check ─────────────────────────────
+window.fbCheckTokenExpiry = async function() {
+  try {
+    const res  = await fetch('/.netlify/functions/fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'check-token' }),
+    });
+    const data = await res.json();
+    if (!data.expires_at) return;
+    const expiresAt = new Date(data.expires_at * 1000);
+    const daysLeft  = Math.ceil((expiresAt - Date.now()) / 86400000);
+    const badge     = document.getElementById('sa-token-saved-badge');
+    const tokenBox  = document.getElementById('sa-token-box');
+    if (daysLeft <= 0) {
+      if (badge) { badge.textContent = '⚠️ Expired!'; badge.style.color = '#f87171'; }
+      if (tokenBox) tokenBox.style.display = 'block';
+    } else if (daysLeft <= 7) {
+      if (badge) { badge.textContent = '⚠️ ' + daysLeft + ' দিন বাকি'; badge.style.color = '#fbbf24'; }
+      if (tokenBox) tokenBox.style.display = 'block';
+    } else {
+      if (badge) { badge.textContent = '✓ ' + daysLeft + ' দিন বাকি'; badge.style.color = 'var(--green)'; }
+    }
+  } catch(e) { /* silent fail — Netlify may not have token yet */ }
+};
 
 window.saAddExclude = function() {
   const inp = document.getElementById('sa-exc-input');

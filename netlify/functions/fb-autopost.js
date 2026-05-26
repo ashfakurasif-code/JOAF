@@ -125,7 +125,29 @@ exports.handler = async (event) => {
     }
   }
 
-  return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown action. Use: post | carousel | get-pages' }) };
+  // ── Action: check-token ────────────────────────────────────
+  if (action === 'check-token') {
+    try {
+      const res  = await fetch(`${BASE}/debug_token?input_token=${TOKEN}&access_token=${TOKEN}`);
+      const data = await res.json();
+      if (data.error) return { statusCode: 200, headers, body: JSON.stringify({ error: data.error.message }) };
+      return { statusCode: 200, headers, body: JSON.stringify({
+        expires_at:   data.data?.expires_at || null,
+        is_valid:     data.data?.is_valid    || false,
+        scopes:       data.data?.scopes      || [],
+      })};
+    } catch(e) {
+      return { statusCode: 200, headers, body: JSON.stringify({ error: e.message }) };
+    }
+  }
+
+  // ── Action: post-log (Feature 9) ────────────────────────────
+  if (action === 'post-log') {
+    // Just return ok — logging is handled in Appwrite from client
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+  }
+
+  return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown action. Use: post | carousel | get-pages | check-token' }) };
 };
 
 // ── Helpers ────────────────────────────────────────────────
