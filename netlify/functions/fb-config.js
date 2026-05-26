@@ -14,15 +14,23 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // App ID is public information (used for OAuth flow)
-    // Should be configured as an environment variable
-    const fbAppId = process.env.FB_APP_ID || '821514351035673';
+    // App ID must be configured as an environment variable
+    // Do not fall back to hardcoded values
+    const fbAppId = process.env.FB_APP_ID;
+    
+    if (!fbAppId) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Facebook configuration not available' })
+      };
+    }
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600'
+        'Cache-Control': 'public, max-age=3600',
+        'X-Content-Type-Options': 'nosniff'
       },
       body: JSON.stringify({
         appId: fbAppId,
@@ -37,3 +45,4 @@ exports.handler = async (event, context) => {
     };
   }
 };
+

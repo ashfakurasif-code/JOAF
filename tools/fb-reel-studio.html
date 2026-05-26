@@ -837,6 +837,13 @@ async function exportReelVideo(){
 }
 
 // ── Facebook Publishing ──
+// SECURITY NOTE: This implementation uses implicit OAuth flow with token storage in localStorage.
+// This is suitable for demonstration purposes but for production, consider:
+// 1. Implementing authorization code flow with PKCE
+// 2. Using httpOnly cookies on the backend
+// 3. Adding server-side token refresh and validation
+// For now, localStorage is used with XSS warnings in comments as a temporary measure.
+
 let fbAccessToken = null;
 let fbPages = [];
 let currentReelData = null;
@@ -847,12 +854,13 @@ let pageTokenMap = {}; // Map pageId to pageToken (not stored in DOM)
 async function loadFbConfig() {
   try {
     const res = await fetch('/.netlify/functions/fb-config');
+    if (!res.ok) throw new Error('Config service unavailable');
     const config = await res.json();
     fbAppId = config.appId;
   } catch (err) {
     console.error('Failed to load FB config:', err);
-    // Fallback to environment variable if available
-    fbAppId = window.FB_APP_ID;
+    // Do not fall back to hardcoded values - fail gracefully
+    fbAppId = null;
   }
 }
 
@@ -896,7 +904,10 @@ function showConnectFB() {
     connectBtn.className = 'publish-btn fb-connect-btn';
     connectBtn.style.background = '#1877F2';
     connectBtn.innerHTML = '🔷 Facebook Account সংযোগ করুন';
-    connectBtn.onclick = () => window.open(url, 'fbconnect', 'width=500,height=600');
+    connectBtn.onclick = () => {
+      // Open with security restrictions (noopener prevents opener access, noreferrer prevents referer)
+      window.open(url, 'fbconnect', 'width=500,height=600,noopener,noreferrer');
+    };
     btnContainer.querySelector('.publish-section div:nth-child(2)').appendChild(connectBtn);
   }
 }
@@ -968,12 +979,8 @@ function updatePageSelect() {
   });
   select.innerHTML = html;
   
-  // Store first page as default
-  if (fbPages.length > 0) {
-    localStorage.setItem('selectedPageId', fbPages[0].id);
-    localStorage.setItem('selectedPageName', fbPages[0].name);
-    select.value = fbPages[0].id;
-  }
+  // Do NOT auto-select - require explicit user selection
+  // to prevent accidental posts to wrong page
 }
 
 // Reconnect Facebook
@@ -1046,11 +1053,14 @@ async function publishToFacebook() {
     const data = await response.json();
     
     if (data.error) {
-      const errCode = data.error.code || data.error.type;
-      if (errCode === 190 || errCode === 104 || errCode === 'INVALID_PARAMETER') {
+      const errCode = data.error.code; // numeric code like 190, 104
+      const errType = data.error.type; // string type like 'INVALID_PARAMETER'
+      
+      // Check for token-related errors
+      if (errCode === 190 || errCode === 104 || errType === 'INVALID_PARAMETER' || errType === 'OAuthException') {
         throw new Error('Invalid or expired Facebook token. Please reconnect.');
       }
-      throw new Error(data.error.message || `Facebook API error (${errCode})`);
+      throw new Error(data.error.message || `Facebook API error (${errCode || errType})`);
     }
     
     status.className = 'publish-status show success';
