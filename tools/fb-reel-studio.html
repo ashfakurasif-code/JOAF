@@ -140,6 +140,21 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 /* ── Version badge ── */
 .ver-badge{font-size:9px;padding:2px 7px;background:rgba(201,162,39,.15);color:var(--gold);border-radius:10px;border:1px solid rgba(201,162,39,.3);margin-left:auto;}
 
+/* ── Publish section ── */
+.publish-section{background:linear-gradient(135deg,rgba(144,22,31,.1),rgba(201,162,39,.05));border:1px solid rgba(144,22,31,.3);border-radius:12px;padding:16px;margin-bottom:18px;}
+.publish-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.publish-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--gold);}
+.publish-btn{background:linear-gradient(135deg,var(--brand),#c0392b);color:#fff;padding:10px 18px;font-size:13px;font-weight:800;border:none;border-radius:8px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px;}
+.publish-btn:hover{opacity:.9;transform:translateY(-1px);}
+.publish-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.page-select{width:100%;padding:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;margin-bottom:10px;outline:none;}
+.page-select:focus{border-color:var(--gold);}
+.publish-status{font-size:11px;color:var(--text2);margin-top:8px;padding:8px;background:var(--bg3);border-radius:6px;display:none;}
+.publish-status.show{display:block;}
+.publish-status.success{background:rgba(52,211,153,.1);color:var(--green);border-left:3px solid var(--green);}
+.publish-status.error{background:rgba(240,82,82,.1);color:var(--red);border-left:3px solid var(--red);}
+.publish-status.loading{background:rgba(251,191,36,.1);color:var(--amber);border-left:3px solid var(--amber);}
+
 /* ── Toast ── */
 .toast{position:fixed;bottom:16px;right:16px;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:700;z-index:9999;transform:translateY(60px);opacity:0;transition:.25s;pointer-events:none;}
 .toast.show{transform:none;opacity:1;}
@@ -497,6 +512,7 @@ async function generate() {
 
 // ── Render Output ──
 function renderOutput(r, meta) {
+  currentReelData = {r, meta}; // Store for publishing
   const score = r.viral_score || 70;
   const scoreColor = score >= 80 ? 'var(--green)' : score >= 65 ? 'var(--amber)' : 'var(--red)';
   
@@ -659,6 +675,26 @@ function renderOutput(r, meta) {
       </div>
     </div>
 
+    <!-- Publish Section -->
+    <div class="publish-section">
+      <div class="publish-header">
+        <div class="publish-label">📤 Facebook এ Post করুন</div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">আপনার Facebook Page নির্বাচন করুন এবং সরাসরি post করুন:</div>
+      <select class="page-select" id="fbPageSelect">
+        <option value="">Loading your Facebook pages...</option>
+      </select>
+      <div style="display:flex;gap:8px;">
+        <button class="publish-btn" onclick="publishToFacebook()" id="publishBtn">
+          📤 এখনই Post করুন
+        </button>
+        <button class="publish-btn" style="background:var(--bg4);color:var(--text2);border:1px solid var(--border2);" onclick="reconnectFB()">
+          🔄 FB সংযোগ নতুন করুন
+        </button>
+      </div>
+      <div class="publish-status" id="publishStatus"></div>
+    </div>
+
     <!-- Regenerate -->
     <div style="text-align:center;padding:16px 0 8px;">
       <button class="btn btn-gen" onclick="generate()" style="margin:auto;">🔄 আবার Generate করুন</button>
@@ -799,6 +835,264 @@ async function exportReelVideo(){
   }
   requestAnimationFrame(frame);
 }
-</script>
-</body>
-</html>
+
+// ── Facebook Publishing ──
+// SECURITY NOTE: This implementation uses implicit OAuth flow with token storage in localStorage.
+// WARNING: localStorage is vulnerable to XSS attacks. This implementation is suitable for
+// demonstration purposes only. For production, consider:
+// 1. Implementing authorization code flow with PKCE via backend proxy
+// 2. Using httpOnly cookies (not accessible to JavaScript)
+// 3. Adding server-side token refresh, validation, and rotation
+// 4. Implementing Content Security Policy (CSP) to prevent XSS
+// TODO: Move token handling to secure backend proxy with httpOnly cookies
+
+let fbAccessToken = null;
+let fbPages = [];
+let currentReelData = null;
+let fbAppId = null;
+let pageTokenMap = {}; // Map pageId to pageToken (not stored in DOM)
+
+// Load Facebook App ID from backend config
+async function loadFbConfig() {
+  try {
+    const res = await fetch('/.netlify/functions/fb-config');
+    if (!res.ok) throw new Error('Config service unavailable');
+    const config = await res.json();
+    fbAppId = config.appId;
+  } catch (err) {
+    console.error('Failed to load FB config:', err);
+    // Do not fall back to hardcoded values - fail gracefully
+    fbAppId = null;
+  }
+}
+
+// Initialize Facebook SDK and get pages
+async function initFacebook() {
+  await loadFbConfig();
+  
+  // Check if we have a stored token from OAuth callback
+  const stored = localStorage.getItem('fbAccessToken');
+  if (stored) {
+    fbAccessToken = stored;
+    await getFacebookPages();
+  } else {
+    showConnectFB();
+  }
+}
+
+// Show Facebook connect dialog
+function showConnectFB() {
+  if (!fbAppId) {
+    const status = document.getElementById('publishStatus');
+    status.className = 'publish-status show error';
+    status.innerHTML = '❌ Facebook configuration not available. Please contact admin.';
+    return;
+  }
+  
+  const redirectUri = `${window.location.origin}${window.location.pathname}`;
+  const scope = 'pages_manage_posts,pages_read_engagement'; // Minimal permissions needed
+  const url = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${fbAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=token`;
+  
+  const pageSelect = document.getElementById('fbPageSelect');
+  if (pageSelect) {
+    pageSelect.innerHTML = '<option value="">🔐 Facebook এ সংযোগ করুন</option>';
+    pageSelect.disabled = false;
+  }
+  
+  // Store URL for the button
+  const btnContainer = document.querySelector('.publish-section');
+  if (btnContainer && !btnContainer.querySelector('.fb-connect-btn')) {
+    const connectBtn = document.createElement('button');
+    connectBtn.className = 'publish-btn fb-connect-btn';
+    connectBtn.style.background = '#1877F2';
+    connectBtn.innerHTML = '🔷 Facebook Account সংযোগ করুন';
+    connectBtn.onclick = () => {
+      // Open with security restriction (noopener prevents opener access)
+      window.open(url, 'fbconnect', 'width=500,height=600,noopener');
+    };
+    // Append to the button container div within publish-section
+    const buttonDiv = btnContainer.querySelector('div:nth-child(3)');
+    if (buttonDiv) {
+      buttonDiv.appendChild(connectBtn);
+    }
+  }
+}
+
+// Handle OAuth token from redirect
+function handleFacebookToken() {
+  const hash = window.location.hash;
+  if (hash.includes('access_token=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    fbAccessToken = params.get('access_token');
+    if (fbAccessToken) {
+      // WARNING: Storing in localStorage is XSS-vulnerable. This should be:
+      // 1. Proxied through a secure backend with httpOnly cookies, or
+      // 2. Stored in a memory variable only (lost on page refresh)
+      localStorage.setItem('fbAccessToken', fbAccessToken);
+      window.location.hash = '';
+      getFacebookPages();
+      toast('✅ Facebook সংযোগ সফল!', 'ok');
+    }
+  }
+}
+
+// Get user's Facebook pages
+async function getFacebookPages() {
+  if (!fbAccessToken) { 
+    showConnectFB(); 
+    return; 
+  }
+  
+  try {
+    // Note: Facebook Graph API v22 requires access_token as URL parameter or Authorization header
+    // Using URL parameter for compatibility; in production, use backend proxy with httpOnly cookies
+    const res = await fetch(`https://graph.facebook.com/v22.0/me/accounts?access_token=${encodeURIComponent(fbAccessToken)}`);
+    const data = await res.json();
+    
+    if (data.error) {
+      const errorCode = data.error.code;
+      if (errorCode === 190 || errorCode === 104) { // Invalid token errors
+        localStorage.removeItem('fbAccessToken');
+        fbAccessToken = null;
+        pageTokenMap = {};
+        showConnectFB();
+        toast('❌ Facebook token expire হয়েছে। আবার সংযোগ করুন।', 'er');
+      }
+      return;
+    }
+    
+    fbPages = data.data || [];
+    // Store tokens in memory map, not in DOM
+    fbPages.forEach(page => {
+      pageTokenMap[page.id] = page.access_token;
+    });
+    updatePageSelect();
+  } catch (err) {
+    console.error('Failed to fetch pages:', err);
+    toast('Facebook pages load করতে ব্যর্থ', 'er');
+  }
+}
+
+// Update page select dropdown (tokens not stored in values)
+function updatePageSelect() {
+  const select = document.getElementById('fbPageSelect');
+  if (!select) return;
+  
+  if (fbPages.length === 0) {
+    select.innerHTML = '<option value="">কোনো Page পাওয়া যায়নি</option>';
+    return;
+  }
+  
+  let html = '<option value="">আপনার Page বেছে নিন...</option>';
+  fbPages.forEach(page => {
+    html += `<option value="${page.id}">${page.name}</option>`;
+  });
+  select.innerHTML = html;
+  
+  // Do NOT auto-select - require explicit user selection
+  // to prevent accidental posts to wrong page
+}
+
+// Reconnect Facebook
+function reconnectFB() {
+  localStorage.removeItem('fbAccessToken');
+  fbAccessToken = null;
+  fbPages = [];
+  pageTokenMap = {};
+  showConnectFB();
+  toast('FB সংযোগ রিসেট হয়েছে', 'ok');
+}
+
+// Publish to Facebook
+async function publishToFacebook() {
+  if (!currentReelData) {
+    toast('প্রথমে একটি reel generate করুন', 'er');
+    return;
+  }
+  
+  const pageSelect = document.getElementById('fbPageSelect');
+  const pageId = pageSelect?.value;
+  
+  if (!pageId) {
+    toast('প্রথমে একটি Facebook Page নির্বাচন করুন', 'er');
+    pageSelect?.focus();
+    return;
+  }
+  
+  const pageToken = pageTokenMap[pageId];
+  if (!pageToken) {
+    toast('Page token not found. Please reconnect Facebook.', 'er');
+    reconnectFB();
+    return;
+  }
+  
+  const status = document.getElementById('publishStatus');
+  status.className = 'publish-status show loading';
+  status.innerHTML = '⏳ Facebook এ post হচ্ছে...';
+  
+  const publishBtn = document.getElementById('publishBtn');
+  publishBtn.disabled = true;
+  
+  try {
+    const {r, meta} = currentReelData;
+    
+    // Prepare caption with all hashtags
+    const allHashtags = [
+      ...(r.hashtags?.tier1_trending || []),
+      ...(r.hashtags?.tier2_niche || []),
+      ...(r.hashtags?.tier3_brand || [])
+    ].join(' ');
+    
+    const caption = (r.caption?.main || '') + '\n\n' + allHashtags + 
+                   (r.caption?.first_comment ? '\n\n---\n' + r.caption.first_comment : '');
+    
+    // Post to Facebook with access token in body
+    // (Facebook Graph API v22 requires access_token in body or Authorization header)
+    const response = await fetch(`https://graph.facebook.com/v22.0/${pageId}/feed`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        message: caption,
+        access_token: pageToken
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      const errCode = data.error.code; // numeric code like 190, 104
+      
+      // Facebook API error codes: 190=invalid token, 104=access token expired, etc
+      if (errCode === 190 || errCode === 104 || errCode === 2) {
+        throw new Error('Invalid or expired Facebook token. Please reconnect.');
+      }
+      throw new Error(data.error.message || `Facebook API error (code: ${errCode || 'unknown'})`);
+    }
+    
+    status.className = 'publish-status show success';
+    const postUrl = `https://facebook.com/${data.id}`;
+    status.innerHTML = `✅ Post সফলভাবে প্রকাশিত! <a href="${postUrl}" target="_blank" style="color:inherit;text-decoration:underline;">দেখুন</a>`;
+    
+    toast('✅ Facebook এ post হয়েছে!', 'ok');
+    publishBtn.disabled = false;
+    
+  } catch (err) {
+    console.error('Publish error:', err);
+    status.className = 'publish-status show error';
+    status.innerHTML = `❌ Error: ${err.message}<br><small>Facebook API তে সমস্যা। আবার চেষ্টা করুন।</small>`;
+    publishBtn.disabled = false;
+    
+    // Reset connection on token error
+    if (err.message.toLowerCase().includes('token') || err.message.toLowerCase().includes('unauthorized')) {
+      setTimeout(() => reconnectFB(), 2000);
+    }
+  }
+}
+
+// Initialize on load
+window.addEventListener('load', () => {
+  handleFacebookToken();
+  initFacebook();
+});
