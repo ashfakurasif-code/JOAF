@@ -57,22 +57,6 @@
 .login-notice{background:linear-gradient(135deg,#faf5ff,#ede9fe);border-radius:14px;padding:14px;margin-bottom:14px;border:1.5px solid #c4b5fd;text-align:center;}
 .login-notice p{font-size:13px;color:#5b21b6;margin-bottom:10px;}
 .login-btn{padding:10px 24px;background:linear-gradient(135deg,#3b0764,#7c3aed);color:#fff;border:none;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-
-.topbar,.top-actions,.action-buttons,.header-actions{
-position:relative !important;
-z-index:99999 !important;
-pointer-events:auto !important;
-}
-.topbar *,.top-actions *,.action-buttons *{
-pointer-events:auto !important;
-}
-.video-export-panel{
-pointer-events:none !important;
-}
-.video-export-panel button{
-pointer-events:auto !important;
-}
-
 </style>
 <div class="forum-hero"><div class="container">
   <h1>💬 আলোচনা ফোরাম</h1>
@@ -239,19 +223,3 @@ addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_s
 </script>
 <div id="joaf-share-bar" style="position:fixed;bottom:16px;right:16px;z-index:8888;display:flex;flex-direction:column;gap:8px;"><a href="https://wa.me/?text=JOAF%20ফোরাম%20—%20নাগরিক%20আলোচনা%20https%3A%2F%2Fwww.julyforum.com%2Fforum.html" target="_blank" style="width:44px;height:44px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">💬</a><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.julyforum.com%2Fforum.html" target="_blank" style="width:44px;height:44px;background:#1877F2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">👍</a><button onclick="navigator.clipboard.writeText('https://www.julyforum.com/forum.html').then(()=>{this.textContent='✅';setTimeout(()=>this.textContent='🔗',2000)})" style="width:44px;height:44px;background:#0f172a;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)">🔗</button></div>
 </body></html>
-
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
-  ids.forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){
-      b.disabled=false;
-      b.style.pointerEvents='auto';
-      b.style.opacity='1';
-      b.style.zIndex='99999';
-    }
-  });
-});
-</script>

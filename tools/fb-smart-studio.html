@@ -207,22 +207,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .empty-state{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text3);}
 .empty-icon{font-size:40px;opacity:.4;}
 .empty-text{font-size:12px;}
-
-.topbar,.top-actions,.action-buttons,.header-actions{
-position:relative !important;
-z-index:99999 !important;
-pointer-events:auto !important;
-}
-.topbar *,.top-actions *,.action-buttons *{
-pointer-events:auto !important;
-}
-.video-export-panel{
-pointer-events:none !important;
-}
-.video-export-panel button{
-pointer-events:auto !important;
-}
-
 </style>
 </head>
 <body>
@@ -598,7 +582,7 @@ function updateQueueUI(){
   document.getElementById('batchPostBtn').disabled=n===0||isPosting;
   document.getElementById('qmPostBtn').disabled=n===0||isPosting;
   const sel=queue.filter(q=>q.selected&&q.status==='ready').length;
-  document.getElementById('postSelectedBtn').disabled=false;
+  document.getElementById('postSelectedBtn').disabled=sel===0||isPosting;
   renderQueueList();
   renderQueueManager();
   updateProgress();
@@ -1289,19 +1273,3 @@ function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 </script>
 </body>
 </html>
-
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
-  ids.forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){
-      b.disabled=false;
-      b.style.pointerEvents='auto';
-      b.style.opacity='1';
-      b.style.zIndex='99999';
-    }
-  });
-});
-</script>

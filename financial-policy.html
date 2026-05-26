@@ -65,23 +65,7 @@
     .flow-content{background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06);flex:1;}
     .flow-title{font-weight:800;font-size:14px;color:#111827;}
     .flow-desc{font-size:13px;color:#6b7280;margin-top:4px;line-height:1.5;}
-  
-.topbar,.top-actions,.action-buttons,.header-actions{
-position:relative !important;
-z-index:99999 !important;
-pointer-events:auto !important;
-}
-.topbar *,.top-actions *,.action-buttons *{
-pointer-events:auto !important;
-}
-.video-export-panel{
-pointer-events:none !important;
-}
-.video-export-panel button{
-pointer-events:auto !important;
-}
-
-</style>
+  </style>
 </head>
 <body data-page="financial_policy">
 
@@ -369,19 +353,3 @@ addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_s
 </script>
 </body>
 </html>
-
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
-  ids.forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){
-      b.disabled=false;
-      b.style.pointerEvents='auto';
-      b.style.opacity='1';
-      b.style.zIndex='99999';
-    }
-  });
-});
-</script>

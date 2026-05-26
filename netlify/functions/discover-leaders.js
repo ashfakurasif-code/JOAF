@@ -343,19 +343,3 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: e.message }) };
   }
 };
-
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
-  ids.forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){
-      b.disabled=false;
-      b.style.pointerEvents='auto';
-      b.style.opacity='1';
-      b.style.zIndex='99999';
-    }
-  });
-});
-</script>

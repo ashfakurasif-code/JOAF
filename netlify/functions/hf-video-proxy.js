@@ -45,19 +45,3 @@ exports.handler = async (event) => {
   }
   return { statusCode: 503, body: JSON.stringify({ error: 'সব model busy — ৫ মিনিট পর চেষ্টা করুন। Detail: ' + lastErr.substring(0,200) }) };
 };
-
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
-  ids.forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){
-      b.disabled=false;
-      b.style.pointerEvents='auto';
-      b.style.opacity='1';
-      b.style.zIndex='99999';
-    }
-  });
-});
-</script>

@@ -26,22 +26,6 @@
   h1 { font-size: 22px; margin-bottom: 10px; color: #c9a227; }
   p { font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 20px; }
   button { background: #90161f; color: #fff; border: none; padding: 12px 30px; border-radius: 50px; font-size: 15px; font-family: inherit; cursor: pointer; }
-
-.topbar,.top-actions,.action-buttons,.header-actions{
-position:relative !important;
-z-index:99999 !important;
-pointer-events:auto !important;
-}
-.topbar *,.top-actions *,.action-buttons *{
-pointer-events:auto !important;
-}
-.video-export-panel{
-pointer-events:none !important;
-}
-.video-export-panel button{
-pointer-events:auto !important;
-}
-
 </style>
 <link rel="stylesheet" href="https://fonts.maateen.me/bensen-handwriting/font.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap">
@@ -53,19 +37,3 @@ pointer-events:auto !important;
   <button onclick="location.reload()">আবার চেষ্টা করুন</button>
 </body>
 </html>
-
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
-  ids.forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){
-      b.disabled=false;
-      b.style.pointerEvents='auto';
-      b.style.opacity='1';
-      b.style.zIndex='99999';
-    }
-  });
-});
-</script>

@@ -340,19 +340,3 @@ const BanglaUtil = {
     return `${period} ${this.toNum(dh)}:${this.toNum(m<10?'0'+m:m)}:${this.toNum(s<10?'0'+s:s)}`;
   }
 };
-
-
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
-  ids.forEach(id=>{
-    const b=document.getElementById(id);
-    if(b){
-      b.disabled=false;
-      b.style.pointerEvents='auto';
-      b.style.opacity='1';
-      b.style.zIndex='99999';
-    }
-  });
-});
-</script>
