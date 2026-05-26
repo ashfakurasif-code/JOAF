@@ -3584,6 +3584,16 @@ window.fbGenerateAll = async function() {
   }
   if (btn) { btn.textContent = '🚀 Generate করুন'; btn.disabled = false; }
   if (globalLog) globalLog.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ সব ' + selected.length + 'টা generate সম্পন্ন</div>';
+  // Fix: after all cards done, reload card 0 into main canvas (last card overwrote it)
+  var q0 = window._fbBatchQueue && window._fbBatchQueue[0];
+  if (q0 && q0.blob && !q0.isVideo) {
+    var img0 = new Image();
+    img0.onload = function() {
+      var c = document.getElementById('fb-card-canvas'); if (!c) return;
+      var ctx0 = c.getContext('2d'); c.width = img0.width; c.height = img0.height; ctx0.drawImage(img0, 0, 0);
+    };
+    img0.src = URL.createObjectURL(q0.blob);
+  }
 };
 
 // ── Original single-mode generate (single image / no image) ──
