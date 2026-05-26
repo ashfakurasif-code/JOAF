@@ -3569,7 +3569,7 @@ window.fbGenerateAll = async function() {
   // Multi-image: sequential generate per image
   if (btn) { btn.textContent = '⏳ সব generate হচ্ছে...'; btn.disabled = true; }
   const globalLog = document.getElementById('fb-post-log');
-  window._fbBatchBlobs = []; window._fbBatchQueue = [];
+  window._fbBatchBlobs = []; window._fbBatchQueue = []; window._fbBatchRunning = true;
   const batchCard = document.getElementById('fb-batch-results-card'); if (batchCard) batchCard.style.display = 'none';
   const batchStrip = document.getElementById('fb-batch-strip'); if (batchStrip) batchStrip.innerHTML = '';
   const prevStrip = document.getElementById('fb-preview-strip'); if (prevStrip) { prevStrip.innerHTML = ''; prevStrip.style.display = 'none'; }
@@ -3582,7 +3582,7 @@ window.fbGenerateAll = async function() {
     await fbGenerateSingle(idx);
     if (si < selected.length - 1) await new Promise(r => setTimeout(r, 2500));
   }
-  if (btn) { btn.textContent = '🚀 Generate করুন'; btn.disabled = false; }
+  window._fbBatchRunning = false; if (btn) { btn.textContent = '🚀 Generate করুন'; btn.disabled = false; }
   if (globalLog) globalLog.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ সব ' + selected.length + 'টা generate সম্পন্ন</div>';
   // Fix 1: reload card 0 into main canvas (last card overwrote it)
   var q0 = window._fbBatchQueue && window._fbBatchQueue[0];
@@ -3722,7 +3722,7 @@ News: ${text}` });
       if (batchCard) batchCard.style.display = 'none';
       if (batchStrip) batchStrip.innerHTML = '';
       window._fbBatchBlobs = [];
-      window._fbBatchQueue = [];  // reset queue on each new generate run
+      if (!window._fbBatchRunning) window._fbBatchQueue = [];  // reset only on standalone call
 
       for (let bi = 0; bi < batchFiles.length; bi++) {
         const bFile = batchFiles[bi];
