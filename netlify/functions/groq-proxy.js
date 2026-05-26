@@ -128,8 +128,8 @@ exports.handler = async (event) => {
       // Pick free vision or text model
       // Try vision-capable free models
       const orModel = hasImage
-        ? 'meta-llama/llama-4-scout:free'
-        : 'meta-llama/llama-4-scout:free';
+        ? 'meta-llama/llama-4-scout-17b-16e-instruct:free'
+        : 'meta-llama/llama-4-scout-17b-16e-instruct:free';
 
       const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
