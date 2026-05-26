@@ -78,7 +78,7 @@ exports.handler = async (event) => {
         });
       }
 
-      const geminiModel = 'gemini-2.0-flash';
+      const geminiModel = 'gemini-2.0-flash-lite';
       const geminiUrl   = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_KEY}`;
 
       const gRes = await fetch(geminiUrl, {
@@ -126,6 +126,7 @@ exports.handler = async (event) => {
     try {
 
       // Pick free vision or text model
+      // Try vision-capable free models
       const orModel = hasImage
         ? 'meta-llama/llama-4-scout:free'
         : 'meta-llama/llama-4-scout:free';
