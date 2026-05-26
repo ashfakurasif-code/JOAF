@@ -3584,7 +3584,7 @@ window.fbGenerateAll = async function() {
   }
   if (btn) { btn.textContent = '🚀 Generate করুন'; btn.disabled = false; }
   if (globalLog) globalLog.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ সব ' + selected.length + 'টা generate সম্পন্ন</div>';
-  // Fix: after all cards done, reload card 0 into main canvas (last card overwrote it)
+  // Fix 1: reload card 0 into main canvas (last card overwrote it)
   var q0 = window._fbBatchQueue && window._fbBatchQueue[0];
   if (q0 && q0.blob && !q0.isVideo) {
     var img0 = new Image();
@@ -3594,6 +3594,8 @@ window.fbGenerateAll = async function() {
     };
     img0.src = URL.createObjectURL(q0.blob);
   }
+  // Fix 2: now queue has all cards — sync strip so all thumbnails show
+  if (typeof fbSyncPreviewStrip === 'function') fbSyncPreviewStrip();
 };
 
 // ── Original single-mode generate (single image / no image) ──
