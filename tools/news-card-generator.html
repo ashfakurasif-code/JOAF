@@ -290,6 +290,16 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .empty-state{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text3);}
 .empty-icon{font-size:40px;opacity:.4;}
 .empty-text{font-size:12px;}
+
+.top-actions,.hdr-actions,.queue-actions{
+  position:relative !important;
+  z-index:9999 !important;
+}
+
+button{
+  pointer-events:auto !important;
+}
+
 </style>
 </head>
 <body>
@@ -746,10 +756,18 @@ function updateQueueUI(){
   const n=queue.length;
   document.getElementById('qCount').textContent=n;
   document.getElementById('qStats').textContent=n+' টি item';
-  document.getElementById('batchPostBtn').disabled=n===0||isPosting;
-  document.getElementById('qmPostBtn').disabled=n===0||isPosting;
-  const sel=queue.filter(q=>q.selected&&q.status==='ready').length;
-  document.getElementById('postSelectedBtn').disabled=sel===0||isPosting;
+
+  // Ready OR done items can be posted/re-posted
+  const readyItems=queue.filter(q=>
+    q.selected && (q.status==='ready' || q.status==='done')
+  );
+
+  const disablePosting=readyItems.length===0 || isPosting;
+
+  document.getElementById('batchPostBtn').disabled=disablePosting;
+  document.getElementById('qmPostBtn').disabled=disablePosting;
+  document.getElementById('postSelectedBtn').disabled=disablePosting;
+
   renderQueueList();
   renderQueueManager();
   updateProgress();
