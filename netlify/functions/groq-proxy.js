@@ -173,13 +173,31 @@ exports.handler = async (event) => {
   }
 
   try {
+    // Groq uses its own model IDs — never pass the client's model field.
+    // Also strip image_url parts: Groq text models don't support vision.
+    const groqMessages = (body.messages || []).map(m => {
+      if (!Array.isArray(m.content)) return m;
+      const textOnly = m.content
+        .filter(p => p.type === 'text')
+        .map(p => p.text)
+        .join('\n');
+      return { role: m.role, content: textOnly };
+    });
+
+    const groqBody = {
+      model:       'llama-3.3-70b-versatile',
+      max_tokens:  body.max_tokens  || 1000,
+      temperature: body.temperature || 0.7,
+      messages:    groqMessages
+    };
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type':  'application/json',
         'Authorization': 'Bearer ' + GROQ_KEY
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(groqBody)
     });
 
     const data = await response.json();
