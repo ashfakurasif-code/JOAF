@@ -645,11 +645,159 @@ function renderOutput(r, meta) {
       </div>
     </div>
 
+    <!-- Video Export -->
+    <div class="out-section">
+      <div class="out-header"><div class="out-label">🎬 Animated News Video</div></div>
+      <div class="out-card" style="text-align:center;">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Browser-এ animated reel তৈরি হবে — সম্পূর্ণ free</div>
+        <canvas id="reelCanvas" width="540" height="960" style="max-width:180px;border-radius:10px;display:block;margin:0 auto 10px;background:#07080d;"></canvas>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-gen" onclick="previewReelVideo()" style="font-size:11px;padding:7px 14px;">▶ Preview</button>
+          <button class="btn" onclick="exportReelVideo()" id="expBtn" style="font-size:11px;padding:7px 14px;background:#065f46;color:#34d399;border:1px solid rgba(52,211,153,.2);">⬇ WebM Download</button>
+        </div>
+        <div id="vidStatus" style="font-size:10px;color:var(--text3);margin-top:7px;"></div>
+      </div>
+    </div>
+
     <!-- Regenerate -->
     <div style="text-align:center;padding:16px 0 8px;">
       <button class="btn btn-gen" onclick="generate()" style="margin:auto;">🔄 আবার Generate করুন</button>
     </div>
   `;
+  setTimeout(()=>initReelCanvas(r, meta), 100);
+}
+
+// ── Reel Video Engine ──
+let reelData=null, reelAnim=null;
+
+function initReelCanvas(r, meta){
+  reelData={r,meta};
+  const cv=document.getElementById('reelCanvas');
+  if(!cv) return;
+  drawReelFrame(cv, r, 0, meta.duration*1000);
+}
+
+function drawReelFrame(cv, r, elapsed, total){
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  const prog=Math.min(elapsed/total,1);
+  ctx.clearRect(0,0,W,H);
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#07080d'); bg.addColorStop(1,'#0d0e18');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  // accent
+  ctx.fillStyle='#90161f'; ctx.fillRect(0,0,4,H);
+  // progress bar
+  ctx.fillStyle='rgba(255,255,255,.1)'; ctx.fillRect(0,0,W,5);
+  ctx.fillStyle='#f05252'; ctx.fillRect(0,0,W*prog,5);
+  // slide-in
+  const hook=r.hook?.text||'';
+  const slide=elapsed<600?(elapsed/600):1;
+  ctx.save();
+  ctx.globalAlpha=slide;
+  ctx.translate(0,(1-slide)*25);
+  // badge
+  ctx.fillStyle='#f05252';
+  rrv(ctx,40,80,200,38,6); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold 16px sans-serif';
+  ctx.fillText('🔴 BREAKING NEWS',52,106);
+  // hook
+  ctx.fillStyle='#fff'; ctx.font='bold 24px sans-serif';
+  wrapTxt(ctx,hook,40,160,W-80,32);
+  // segments
+  const segs=[
+    {label:'HOOK',text:r.script?.hook_segment||'',color:'#f05252',delay:0},
+    {label:'BODY',text:r.script?.body_segment||'',color:'#60a5fa',delay:0.3},
+    {label:'CTA', text:r.script?.cta_segment||'', color:'#34d399',delay:0.6},
+  ];
+  let yy=330;
+  segs.forEach(seg=>{
+    const sp=Math.max(0,Math.min(1,(prog-seg.delay)/0.35));
+    ctx.globalAlpha=slide*sp;
+    ctx.fillStyle=seg.color; ctx.font='bold 12px sans-serif';
+    ctx.fillText('['+seg.label+']',40,yy);
+    ctx.fillStyle='rgba(255,255,255,.85)'; ctx.font='13px sans-serif';
+    const lines=wrapTxt(ctx,seg.text,40,yy+18,W-80,18,true);
+    yy+=40+lines*18;
+  });
+  ctx.restore();
+  // footer
+  ctx.fillStyle='#90161f'; ctx.fillRect(0,H-64,W,64);
+  ctx.fillStyle='#fff'; ctx.font='bold 15px sans-serif';
+  ctx.fillText('JOAF • দেশ আগে, দল পরে',40,H-34);
+  ctx.fillStyle='rgba(255,255,255,.6)'; ctx.font='12px sans-serif';
+  ctx.fillText('www.julyforum.com',40,H-14);
+}
+
+function rrv(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+function wrapTxt(ctx,text,x,y,maxW,lh,countOnly=false){
+  if(!text) return countOnly?0:undefined;
+  const words=text.split(' ');let line='';let count=0;
+  for(const w of words){
+    const t=line?line+' '+w:w;
+    if(ctx.measureText(t).width>maxW&&line){if(!countOnly)ctx.fillText(line,x,y+count*lh);line=w;count++;}
+    else line=t;
+  }
+  if(line&&!countOnly)ctx.fillText(line,x,y+count*lh);
+  return countOnly?count+1:undefined;
+}
+
+function previewReelVideo(){
+  if(!reelData){document.getElementById('vidStatus').textContent='আগে Generate করুন';return;}
+  const cv=document.getElementById('reelCanvas');
+  const {r,meta}=reelData;
+  const dur=meta.duration*1000;
+  let start=null; cancelAnimationFrame(reelAnim);
+  document.getElementById('vidStatus').textContent='▶ Preview চলছে...';
+  function frame(ts){
+    if(!start)start=ts;
+    const el=ts-start;
+    drawReelFrame(cv,r,el,dur);
+    if(el<dur)reelAnim=requestAnimationFrame(frame);
+    else document.getElementById('vidStatus').textContent='✅ Preview শেষ';
+  }
+  requestAnimationFrame(frame);
+}
+
+async function exportReelVideo(){
+  if(!reelData){document.getElementById('vidStatus').textContent='আগে Generate করুন';return;}
+  const cv=document.getElementById('reelCanvas');
+  const {r,meta}=reelData;
+  const dur=meta.duration*1000;
+  if(!cv.captureStream){document.getElementById('vidStatus').textContent='❌ Chrome/Edge ব্যবহার করুন';return;}
+  document.getElementById('expBtn').disabled=true;
+  document.getElementById('vidStatus').textContent='⏳ '+meta.duration+'s ভিডিও তৈরি হচ্ছে...';
+  const stream=cv.captureStream(30);
+  const chunks=[];
+  const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
+  const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:2500000});
+  rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+  rec.onstop=()=>{
+    const blob=new Blob(chunks,{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='JOAF_reel_'+Date.now()+'.webm';a.click();
+    URL.revokeObjectURL(url);
+    document.getElementById('vidStatus').textContent='✅ Download শুরু!';
+    document.getElementById('expBtn').disabled=false;
+  };
+  rec.start();
+  let start=null;
+  function frame(ts){
+    if(!start)start=ts;
+    const el=ts-start;
+    drawReelFrame(cv,r,el,dur);
+    if(el<dur)requestAnimationFrame(frame);
+    else rec.stop();
+  }
+  requestAnimationFrame(frame);
 }
 </script>
 </body>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>JOAF Smart Studio — Batch FB Post</title>
-<script src="https://js.puter.com/v2/"></script>
+<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;900&family=Noto+Sans+Bengali:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -439,16 +439,11 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
       </div>
     </div>
     <div class="scard">
-      <div class="scard-h">🤖 AI Settings (Puter.js — Free &amp; Unlimited)</div>
+      <div class="scard-h">🤖 AI Stack (সম্পূর্ণ Free)</div>
       <div style="font-size:11px;color:var(--green);padding:8px 10px;background:rgba(52,211,153,.06);border-radius:7px;border:1px solid rgba(52,211,153,.15);">
-        ✅ Puter.js ব্যবহার করছি — কোনো API key লাগবে না! User এর নিজের account থেকে cost বহন হয়। সম্পূর্ণ Free &amp; Unlimited।
-      </div>
-      <div class="sf" style="margin-top:10px;"><span class="sfl">OCR Model</span>
-        <select class="sfi" id="ocrModel" onchange="saveSetting('ocrModel',this.value)">
-          <option value="mistral-ocr">Mistral OCR (Best for text)</option>
-          <option value="gpt-4o">GPT-4o Vision</option>
-          <option value="claude-sonnet-4-5">Claude Sonnet (Vision)</option>
-        </select>
+        ✅ OCR: Tesseract.js (browser-এ চলে, ফ্রি)<br>
+        ✅ AI: Gemini Flash → OpenRouter → Groq (সব free tier)<br>
+        ✅ কোনো paid service নেই
       </div>
     </div>
     <div class="scard">
@@ -747,23 +742,37 @@ async function processItem(idx){
   }
 }
 
+// ── OCR: Tesseract.js (100% free, browser-side) ──
 async function runOCR(item){
-  const model=cfg.ocrModel||'mistral-ocr';
-  if(model==='mistral-ocr'){
-    // Puter.js img2txt
-    const result=await puter.ai.img2txt(item.imgSrc,{service:'mistral',model:'mistral-ocr-latest'});
-    return typeof result==='string'?result:result?.text||'';
-  } else {
-    // Vision model via puter.ai.chat
-    const result=await puter.ai.chat(
-      [{role:'user',content:[
-        {type:'image_url',image_url:{url:item.imgSrc}},
-        {type:'text',text:'Extract all text from this image. Return only the extracted text, no explanation.'}
-      ]}],
-      {model}
-    );
-    return result?.message?.content||result?.toString()||'';
+  // First try Tesseract (free, local)
+  try{
+    const result=await Tesseract.recognize(item.imgSrc,'eng+ben',{logger:()=>{}});
+    const conf=result.data.confidence;
+    const text=result.data.text.trim();
+    if(conf>55&&text.length>10) return text;
+    // Low confidence → try vision AI via groq-proxy
+    return await runVisionOCR(item);
+  }catch(e){
+    console.warn('[OCR] Tesseract failed, trying vision:',e.message);
+    return await runVisionOCR(item);
   }
+}
+
+// Vision fallback via groq-proxy (Gemini Flash free tier)
+async function runVisionOCR(item){
+  const b64=item.imgSrc.includes(',')? item.imgSrc : item.imgSrc;
+  const resp=await fetch('/.netlify/functions/groq-proxy',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      messages:[{role:'user',content:[
+        {type:'image_url',image_url:{url:b64}},
+        {type:'text',text:'Extract all visible text from this image exactly. Return only the extracted text, no explanation.'}
+      ]}],
+      max_tokens:800
+    })
+  });
+  const d=await resp.json();
+  return d.choices?.[0]?.message?.content||'';
 }
 
 async function runAIAnalysis(item, text){
@@ -777,9 +786,12 @@ ${text.substring(0,1500)}
 {"headline":"মূল headline বাংলায় সর্বোচ্চ ৮০ অক্ষর","sub":"sub-headline বা খালি string","category":"breaking|exclusive|update|analysis|alert|positive","source":"চ্যানেল/সূত্র নাম শুধু text","location":"স্থান বা খালি string","style":0,"overlay":55}
 style = 0-5 (preset index); overlay = 0-95`;
 
-  const model=document.getElementById('aiModel')?.value||'claude-sonnet-4-5';
-  const resp=await puter.ai.chat(prompt,{model,temperature:0.3});
-  const txt=resp?.message?.content||resp?.toString()||'{}';
+  const resp=await fetch('/.netlify/functions/groq-proxy',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:400,temperature:0.3})
+  });
+  const d=await resp.json();
+  const txt=d.choices?.[0]?.message?.content||'{}';
   const m=txt.match(/\{[\s\S]*\}/);
   if(!m) return {};
   try{
@@ -807,9 +819,12 @@ Caption টি হবে:
 
 শুধু caption text দাও, কোনো explanation নয়।`;
 
-  const model=document.getElementById('aiModel')?.value||'claude-sonnet-4-5';
-  const resp=await puter.ai.chat(prompt,{model,temperature:0.7});
-  return resp?.message?.content||resp?.toString()||'';
+  const resp=await fetch('/.netlify/functions/groq-proxy',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:500,temperature:0.7})
+  });
+  const d=await resp.json();
+  return d.choices?.[0]?.message?.content||'';
 }
 
 // ═══════════════════════════════════════════════
