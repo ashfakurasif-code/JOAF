@@ -325,7 +325,23 @@
     .qa-btn{font-size:13px;padding:12px 14px;}
   }
   /* Nav controlled by JS + components.js — no conflict CSS here */
-  </style>
+  
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
 </head>
 <body data-page="home" style="overflow-x:hidden">
 
@@ -1077,3 +1093,19 @@ async function safeGroqGenerate(fn) {
 </script>
 \n</body>
 </html>
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
+  ids.forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){
+      b.disabled=false;
+      b.style.pointerEvents='auto';
+      b.style.opacity='1';
+      b.style.zIndex='99999';
+    }
+  });
+});
+</script>

@@ -577,7 +577,23 @@ const JOAFComponents = {
       .joaf-gps-btn{width:100%;padding:10px;background:#f3f4f6;border:2px solid #e5e7eb;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
       .joaf-gps-btn.got{background:#dcfce7;border-color:#10b981;color:#065f46;}
       .joaf-submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
-      </style>
+      
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
 
       <button id="joaf-alert-fab">🚨 সতর্কতা দিন</button>
 
@@ -645,7 +661,23 @@ const JOAFComponents = {
       .jbr-fg input,.jbr-fg select{width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;}
       .jbr-fg input:focus,.jbr-fg select:focus{border-color:#075e55;}
       .jbr-submit{width:100%;padding:13px;background:linear-gradient(135deg,#075e55,#0a7a6e);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:8px;}
-      </style>
+      
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
       <button id="joaf-blood-fab">🩸 নিবন্ধন করুন</button>
       <div id="joaf-blood-reg-modal">
         <div class="jbr-inner">
@@ -940,7 +972,23 @@ const JOAFComponents = {
         #joaf-pwa-box .jp-sub{font-size:12px;color:#6b7280;margin-bottom:0;}
         #joaf-pwa-box .jp-bullets{margin:12px 0 16px;}
         #joaf-pwa-box .jp-install{width:100%;padding:14px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer;}
-        </style>
+        
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
         <div id="joaf-pwa-overlay">
           <div id="joaf-pwa-box">
             <button class="jp-close" id="joaf-pwa-close">✕</button>
@@ -1424,7 +1472,23 @@ function joafShowEmergencyPopup(district, alertType) {
     <style>
     #joaf-emergency-popup{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999999;display:flex;align-items:flex-end;}
     .jep-inner{background:#f9fafb;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto;}
-    </style>
+    
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
     <div class="jep-inner">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h3 style="margin:0;font-size:16px;font-weight:900;color:#90161f">🚨 জরুরি সেবার নম্বর</h3>
@@ -1532,7 +1596,23 @@ function _joafShowIOSPrompt() {
     #joaf-ios-wrap .ii-box{background:#fff;border-radius:24px;padding:24px 18px 20px;width:100%;max-width:380px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.4);max-height:88vh;overflow-y:auto;}
     #joaf-ios-wrap .ii-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:#f3f4f6;border:none;font-size:15px;cursor:pointer;color:#6b7280;}
     #joaf-ios-wrap .ii-btn{width:100%;padding:13px;background:linear-gradient(135deg,#90161f,#c0392b);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;margin-top:12px;}
-    </style>
+    
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
     <div class="ii-box">
       <button class="ii-close" id="ii-close">✕</button>
       <div style="text-align:center;margin-bottom:14px;">
@@ -1669,3 +1749,19 @@ setTimeout(() => {
     tryUpdate();
   } catch(e) { console.warn('Ticker press release fetch failed:', e); }
 })();
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
+  ids.forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){
+      b.disabled=false;
+      b.style.pointerEvents='auto';
+      b.style.opacity='1';
+      b.style.zIndex='99999';
+    }
+  });
+});
+</script>

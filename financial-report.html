@@ -69,7 +69,23 @@
     .tl-amount{font-weight:900;color:#c9a227;margin-top:6px;font-size:15px;}
     .transparency-box{background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid #bbf7d0;border-radius:16px;padding:24px;text-align:center;}
     .section-title-fr{font-size:1.3rem;font-weight:900;color:#111827;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
-  </style>
+  
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
 </head>
 <body data-page="financial_report">
 
@@ -424,3 +440,19 @@ addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_s
 </script>
 </body>
 </html>
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
+  ids.forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){
+      b.disabled=false;
+      b.style.pointerEvents='auto';
+      b.style.opacity='1';
+      b.style.zIndex='99999';
+    }
+  });
+});
+</script>

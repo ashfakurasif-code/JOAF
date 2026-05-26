@@ -63,7 +63,23 @@ const img = imgRaw.split('/').map((seg, i) => i < 3 ? seg : encodeURIComponent(s
     .sc-pr-item img{width:56px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;}
     .sc-pr-info h4{font-size:13px;font-weight:700;margin:0 0 3px;color:var(--brand);}
     .sc-pr-info span{font-size:11px;color:#9ca3af;}
-  </style>
+  
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
 </head>
 <body data-page="media">
 <div id="joaf-preloader">
@@ -158,3 +174,19 @@ exports.handler = async (event) => {
     return { statusCode: 302, headers: { Location: '/media-news.html' }, body: '' };
   }
 };
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
+  ids.forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){
+      b.disabled=false;
+      b.style.pointerEvents='auto';
+      b.style.opacity='1';
+      b.style.zIndex='99999';
+    }
+  });
+});
+</script>

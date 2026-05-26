@@ -477,6 +477,22 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .main { overflow-x:hidden; }
 body  { overflow-x:hidden; }
 
+
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
 </style>
 
 <script id="joaf-safe-ai-patch">
@@ -1425,7 +1441,23 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
       .fb-tone-btn{padding:5px 11px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text2);transition:.12s;}
       .fb-tone-btn:hover,.fb-tone-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
       #page-fbpost{overflow:hidden;}
-      </style>
+      
+.topbar,.top-actions,.action-buttons,.header-actions{
+position:relative !important;
+z-index:99999 !important;
+pointer-events:auto !important;
+}
+.topbar *,.top-actions *,.action-buttons *{
+pointer-events:auto !important;
+}
+.video-export-panel{
+pointer-events:none !important;
+}
+.video-export-panel button{
+pointer-events:auto !important;
+}
+
+</style>
     </div>
   </div><!-- /main -->
 </div><!-- /app -->
@@ -5251,4 +5283,20 @@ function startCinematic() {
     sceneIndex++;
   }, 10000);
 }
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
+  ids.forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){
+      b.disabled=false;
+      b.style.pointerEvents='auto';
+      b.style.opacity='1';
+      b.style.zIndex='99999';
+    }
+  });
+});
 </script>

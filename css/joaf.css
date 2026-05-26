@@ -893,3 +893,19 @@ body{font-family:var(--font);color:var(--text);}.wrapper{overflow-x:hidden;}
 .mnav-sub-list{list-style:none;margin:0;padding:0;max-height:0;overflow:hidden;transition:max-height .3s ease;}
 .mnav-has-sub.mnav-open > .mnav-link .mnav-arrow{transform:rotate(90deg);opacity:.9;}
 .mnav-has-sub.mnav-open > .mnav-sub-list{max-height:500px;}
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
+  ids.forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){
+      b.disabled=false;
+      b.style.pointerEvents='auto';
+      b.style.opacity='1';
+      b.style.zIndex='99999';
+    }
+  });
+});
+</script>

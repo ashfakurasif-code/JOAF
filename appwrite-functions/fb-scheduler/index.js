@@ -101,3 +101,19 @@ export default async ({ req, res, log, error }) => {
   log(`[fb-scheduler] done — ${published} published, ${failed} failed`);
   return res.json({ ok: true, published, failed, summary });
 };
+
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const ids=['batchPostBtn','postSelectedBtn','qmPostBtn'];
+  ids.forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){
+      b.disabled=false;
+      b.style.pointerEvents='auto';
+      b.style.opacity='1';
+      b.style.zIndex='99999';
+    }
+  });
+});
+</script>
