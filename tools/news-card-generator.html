@@ -313,8 +313,10 @@ button{
   </div>
   <div class="hdr-r">
     <button class="btn btn-g btn-sm" onclick="history.back()">← Back</button>
-    <button class="btn btn-amber btn-sm" id="batchPostBtn" onclick="startBatchPost()" disabled>⚡ Batch Post</button>
-    <button class="btn btn-green btn-sm" id="postSelectedBtn" onclick="postSelected()" disabled>▶ Post Selected</button>
+    <div id="hdrQueueBtns" style="display:flex;gap:6px;">
+      <button class="btn btn-amber btn-sm" id="batchPostBtn" onclick="startBatchPost()" disabled>⚡ Batch Post</button>
+      <button class="btn btn-green btn-sm" id="postSelectedBtn" onclick="postSelected()" disabled>▶ Post Selected</button>
+    </div>
   </div>
 </div>
 <div class="prog-bar-wrap"><div class="prog-bar" id="progBar"></div></div>
@@ -695,6 +697,9 @@ function switchTab(n){
   document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('on',i+1===n));
   if(n===1){fitZ();draw();}
   if(n===3){renderQueueManager();}
+  // Reel Studio (tab2) তে Queue বাটন hide করো — ওখানে আলাদা Publish আছে
+  const queueBtns = document.getElementById('hdrQueueBtns');
+  if(queueBtns) queueBtns.style.display = (n===2) ? 'none' : 'flex';
 }
 
 // Sub-tab inside Smart Post
