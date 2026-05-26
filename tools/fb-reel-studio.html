@@ -838,11 +838,13 @@ async function exportReelVideo(){
 
 // ── Facebook Publishing ──
 // SECURITY NOTE: This implementation uses implicit OAuth flow with token storage in localStorage.
-// This is suitable for demonstration purposes but for production, consider:
-// 1. Implementing authorization code flow with PKCE
-// 2. Using httpOnly cookies on the backend
-// 3. Adding server-side token refresh and validation
-// For now, localStorage is used with XSS warnings in comments as a temporary measure.
+// WARNING: localStorage is vulnerable to XSS attacks. This implementation is suitable for
+// demonstration purposes only. For production, consider:
+// 1. Implementing authorization code flow with PKCE via backend proxy
+// 2. Using httpOnly cookies (not accessible to JavaScript)
+// 3. Adding server-side token refresh, validation, and rotation
+// 4. Implementing Content Security Policy (CSP) to prevent XSS
+// TODO: Move token handling to secure backend proxy with httpOnly cookies
 
 let fbAccessToken = null;
 let fbPages = [];
@@ -905,10 +907,14 @@ function showConnectFB() {
     connectBtn.style.background = '#1877F2';
     connectBtn.innerHTML = '🔷 Facebook Account সংযোগ করুন';
     connectBtn.onclick = () => {
-      // Open with security restrictions (noopener prevents opener access, noreferrer prevents referer)
-      window.open(url, 'fbconnect', 'width=500,height=600,noopener,noreferrer');
+      // Open with security restriction (noopener prevents opener access)
+      window.open(url, 'fbconnect', 'width=500,height=600,noopener');
     };
-    btnContainer.querySelector('.publish-section div:nth-child(2)').appendChild(connectBtn);
+    // Append to the button container div within publish-section
+    const buttonDiv = btnContainer.querySelector('div:nth-child(3)');
+    if (buttonDiv) {
+      buttonDiv.appendChild(connectBtn);
+    }
   }
 }
 
@@ -919,7 +925,9 @@ function handleFacebookToken() {
     const params = new URLSearchParams(hash.substring(1));
     fbAccessToken = params.get('access_token');
     if (fbAccessToken) {
-      // Store token securely (for demo; in production use httpOnly cookies via backend)
+      // WARNING: Storing in localStorage is XSS-vulnerable. This should be:
+      // 1. Proxied through a secure backend with httpOnly cookies, or
+      // 2. Stored in a memory variable only (lost on page refresh)
       localStorage.setItem('fbAccessToken', fbAccessToken);
       window.location.hash = '';
       getFacebookPages();
@@ -1038,7 +1046,8 @@ async function publishToFacebook() {
     const caption = (r.caption?.main || '') + '\n\n' + allHashtags + 
                    (r.caption?.first_comment ? '\n\n---\n' + r.caption.first_comment : '');
     
-    // Post to Facebook using Authorization header
+    // Post to Facebook with access token in body
+    // (Facebook Graph API v22 requires access_token in body or Authorization header)
     const response = await fetch(`https://graph.facebook.com/v22.0/${pageId}/feed`, {
       method: 'POST',
       headers: {
@@ -1054,13 +1063,12 @@ async function publishToFacebook() {
     
     if (data.error) {
       const errCode = data.error.code; // numeric code like 190, 104
-      const errType = data.error.type; // string type like 'INVALID_PARAMETER'
       
-      // Check for token-related errors
-      if (errCode === 190 || errCode === 104 || errType === 'INVALID_PARAMETER' || errType === 'OAuthException') {
+      // Facebook API error codes: 190=invalid token, 104=access token expired, etc
+      if (errCode === 190 || errCode === 104 || errCode === 2 || errCode === 190 /* OAuthException errors */) {
         throw new Error('Invalid or expired Facebook token. Please reconnect.');
       }
-      throw new Error(data.error.message || `Facebook API error (${errCode || errType})`);
+      throw new Error(data.error.message || `Facebook API error (code: ${errCode || 'unknown'})`);
     }
     
     status.className = 'publish-status show success';
