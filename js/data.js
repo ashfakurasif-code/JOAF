@@ -289,6 +289,34 @@ JOAF.maze = {
   }
 };
 
+// ── Facebook Post Config ────────────────────────────────────
+const FB_CONFIG = {
+  API_VER: 'v22.0',
+  tones: {
+    urgent:       'urgent, shocking, breaking news tone — মানুষ scroll থামাবেই',
+    emotional:    'emotional, heartfelt, touching — মানুষের হৃদয় স্পর্শ করবে',
+    informative:  'informative, factual, clear — তথ্যবহুল এবং বিশ্বাসযোগ্য',
+    motivational: 'motivational, inspiring, call to action — মানুষকে অনুপ্রাণিত করবে',
+    alert:        'urgent alert, warning tone — সতর্ক করতে হবে',
+  },
+  systemPrompt(toneDesc, newsText) {
+    return 'তুমি বাংলাদেশের সেরা Facebook viral content strategist।\n'
+      + 'Tone: ' + toneDesc + '\n\n'
+      + 'RULES:\n'
+      + '- hook = প্রথম ৩ সেকেন্ড scroll stopper, max ৮ শব্দ\n'
+      + '- caption = hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ\n'
+      + '- slides = plain বাংলা text, max ১০ শব্দ প্রতি slide\n'
+      + '- mood = urgent/sad/positive/angry/neutral\n\n'
+      + 'শুধু raw JSON:\n'
+      + '{"mood":"urgent","hook":"...","caption":"...","tags":"#tag1 #JOAF #বাংলাদেশ","slides":[{"text":"..."},{"text":"..."},{"text":"..."}]}\n\n'
+      + 'News: ' + newsText;
+  },
+  models: {
+    withImage: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    textOnly:  'llama-3.3-70b-versatile',
+  },
+};
+
 // ── Bangla Utilities ───────────────────────────────────────
 const BanglaUtil = {
   digits: ['০','১','২','৩','৪','৫','৬','৭','৮','৯'],
