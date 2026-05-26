@@ -1343,44 +1343,65 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
   <div id="batch-post-log" style="display:none;margin-top:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;max-height:260px;overflow-y:auto;"></div>
 </div>
           <!-- STANDALONE FB POST CARD -->
-          <div class="card" style="margin:0;">
-            <div class="card-header" style="padding-bottom:8px;">
-              <div class="card-title" style="font-size:13px;">📤 সরাসরি FB Pages এ Post</div>
-            </div>
-            <div style="margin-bottom:10px;">
-              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">📎 Image / Video বেছে নিন</label>
-              <div id="sa-drop" onclick="document.getElementById('sa-img-input').click()" style="border:2px dashed var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+          <div class="card" style="margin:0;padding:0;overflow:hidden;">
+
+            <!-- ── Step 1: Media ── -->
+            <div style="padding:14px 16px 0;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">① Media</div>
+              <div id="sa-drop" onclick="document.getElementById('sa-img-input').click()" style="border:2px dashed var(--border2);border-radius:9px;padding:10px 12px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg3);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
                 <input type="file" id="sa-img-input" accept="image/*,video/*" style="display:none" onchange="saPreviewImg(this)">
-                <div id="sa-img-preview" style="display:none;margin-bottom:8px;text-align:center;"><img id="sa-thumb" style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></div>
-                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image বা 🎬 Video select করুন</div>
+                <div id="sa-img-preview" style="display:none;margin-bottom:6px;"><img id="sa-thumb" style="max-width:100%;max-height:180px;border-radius:7px;border:1px solid var(--border);object-fit:contain;"></div>
+                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image &nbsp;/&nbsp; 🎬 Video</div>
               </div>
             </div>
-            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">✍️ Caption</label>
-            <textarea id="sa-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;margin-bottom:10px;" placeholder="Caption লিখুন..."></textarea>
-            <!-- Token is stored in Netlify env var FB_USER_TOKEN — not needed here -->
-            <div id="sa-token-status" style="display:none;"></div>
-            <!-- Schedule + Carousel section -->
-            <div style="border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--bg3);margin-bottom:10px;">
-              <div style="font-size:11px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:.3px;">⚙️ Advanced Options</div>
 
-              <!-- Schedule row -->
-              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">⏰ Schedule করুন <span style="font-weight:400;font-size:10px;">(খালি রাখলে এখনই post হবে)</span></label>
-              <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;">
-                <input type="datetime-local" id="fb-schedule-time" style="flex:1;font-size:11px;border:1px solid var(--border2);border-radius:7px;padding:7px 10px;background:var(--bg4);color:var(--text);font-family:inherit;">
-                <button onclick="document.getElementById('fb-schedule-time').value=''" style="padding:7px 10px;background:var(--bg4);border:1px solid var(--border2);border-radius:7px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;" title="Clear">✕</button>
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 2: Caption ── -->
+            <div style="padding:0 16px;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">② Caption</div>
+              <textarea id="sa-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:9px 11px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;line-height:1.6;box-sizing:border-box;" placeholder="Caption লিখুন... অথবা বাম দিক থেকে Generate করুন"></textarea>
+              <div id="sa-token-status" style="display:none;"></div>
+            </div>
+
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 3: Token (collapsible) ── -->
+            <div style="padding:0 16px;">
+              <button onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('sa-token-box'))" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">🔑 FB Token</div>
+                <div id="sa-token-saved-badge" style="font-size:10px;color:var(--green);font-weight:700;">✓ Saved</div>
+              </button>
+              <div id="sa-token-box" style="display:none;margin-top:8px;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <input id="sa-fb-token-input" type="password" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:monospace;" placeholder="EAAj... paste করুন">
+                  <button onclick="saveFbToken()" style="padding:7px 14px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">Save</button>
+                </div>
+                <div style="font-size:10px;color:var(--text3);margin-top:5px;">Graph API Explorer থেকে নিন। ৬০ দিনে expire হয়।</div>
               </div>
-
-              <!-- Carousel row -->
-              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🎠 Carousel <span style="font-weight:400;font-size:10px;">(একটা URL per line, min 2 হলে carousel হবে)</span></label>
-              <textarea id="fb-carousel-urls" rows="3" placeholder="https://cdn.example.com/img1.jpg&#10;https://cdn.example.com/img2.jpg&#10;https://cdn.example.com/img3.jpg" style="width:100%;font-size:11px;border:1px solid var(--border2);border-radius:7px;padding:7px 10px;background:var(--bg4);color:var(--text);resize:vertical;font-family:monospace;line-height:1.6;box-sizing:border-box;"></textarea>
             </div>
 
-            <!-- Action buttons -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <button onclick="saOpenPostHelper()" style="padding:12px;background:#1877f2;border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;">📤 এখনই Post</button>
-              <button onclick="fbQueueFromUI()" style="padding:12px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;">📅 Queue এ রাখো</button>
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 4: Schedule + Carousel ── -->
+            <div style="padding:0 16px;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">③ Timing &amp; Format</div>
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                <span style="font-size:11px;color:var(--text2);white-space:nowrap;">⏰</span>
+                <input type="datetime-local" id="fb-schedule-time" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:inherit;">
+                <button onclick="document.getElementById('fb-schedule-time').value=''" style="padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;">✕</button>
+              </div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">🎠 Carousel URLs <span style="opacity:.6;">(min 2 line হলে carousel হবে)</span></div>
+              <textarea id="fb-carousel-urls" rows="2" placeholder="https://cdn.../img1.jpg&#10;https://cdn.../img2.jpg" style="width:100%;font-size:10px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);resize:none;font-family:monospace;box-sizing:border-box;line-height:1.7;"></textarea>
             </div>
-            <div id="sa-post-log" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
+
+            <!-- ── Action buttons ── -->
+            <div style="padding:14px 16px;display:grid;grid-template-columns:3fr 2fr;gap:8px;">
+              <button onclick="saOpenPostHelper()" style="padding:13px;background:#1877f2;border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📤 এখনই Post</button>
+              <button onclick="fbQueueFromUI()" style="padding:13px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">📅 Queue</button>
+            </div>
+
+            <div id="sa-post-log" style="display:none;margin:0 16px 16px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
           </div>
         </div>
       </div>
