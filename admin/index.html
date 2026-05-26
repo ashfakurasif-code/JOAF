@@ -5005,18 +5005,13 @@ window.fbQueueFromUI = async function() {
 
   try {
     const id = await window.fbQueueAdd({
-      caption: caption + (tags ? '
-
-' + tags : ''),
+      caption: caption + (tags ? '\n\n' + tags : ''),
       imageUrl: carouselUrls.length >= 2 ? null : imgUrl,
       videoUrl: carouselUrls.length >= 2 ? null : vidUrl,
       carouselUrls: carouselUrls.length >= 2 ? carouselUrls : [],
       scheduledAt: scheduledAt || new Date().toISOString(),
     });
-    alert('✅ Queue এ যোগ হয়েছে!
-ID: ' + id + (scheduledAt ? '
-Scheduled: ' + scheduledAt : '
-এখনই publish হবে (scheduler এর পরের run এ)'));
+    alert('✅ Queue এ যোগ হয়েছে!\nID: ' + id + (scheduledAt ? '\nScheduled: ' + scheduledAt : '\nএখনই publish হবে (scheduler এর পরের run এ)'));
   } catch (e) {
     alert('❌ Queue add failed: ' + e.message);
   }
