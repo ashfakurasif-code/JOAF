@@ -1314,6 +1314,8 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <div id="fb-preview" style="display:none;text-align:center;">
               <canvas id="fb-card-canvas" width="1080" height="1080" style="width:100%;max-width:280px;border-radius:12px;display:block;margin:0 auto;box-shadow:0 8px 32px rgba(0,0,0,.5);"></canvas>
               <video id="fb-reel-video" controls style="width:100%;max-width:280px;border-radius:12px;margin-top:8px;display:none;"></video>
+              <div id="fb-preview-strip" style="display:none;margin-top:10px;padding:6px 0;border-top:1px solid var(--border);"></div>
+              <div id="fb-preview-strip-label" style="display:none;font-size:10px;color:var(--text3);margin-top:4px;">👆 thumbnail click করলে বড় preview দেখাবে</div>
             </div>
             <div id="fb-post-log" style="margin-top:10px;font-size:11px;max-height:180px;overflow-y:auto;"></div>
           </div>
@@ -3570,6 +3572,8 @@ window.fbGenerateAll = async function() {
   window._fbBatchBlobs = []; window._fbBatchQueue = [];
   const batchCard = document.getElementById('fb-batch-results-card'); if (batchCard) batchCard.style.display = 'none';
   const batchStrip = document.getElementById('fb-batch-strip'); if (batchStrip) batchStrip.innerHTML = '';
+  const prevStrip = document.getElementById('fb-preview-strip'); if (prevStrip) { prevStrip.innerHTML = ''; prevStrip.style.display = 'none'; }
+  const prevLabel = document.getElementById('fb-preview-strip-label'); if (prevLabel) prevLabel.style.display = 'none';
 
   const selected = (window._fbSelected && window._fbSelected.length) ? window._fbSelected : files.map((_,i) => i);
   for (let si = 0; si < selected.length; si++) {
@@ -4970,6 +4974,73 @@ window.renderBatchQueue = function() {
     col.appendChild(badge); col.appendChild(ta); col.appendChild(btnRow); col.appendChild(soloLog);
     row.appendChild(chk); row.appendChild(thumb); row.appendChild(col);
     strip.appendChild(row);
+  });
+  // Sync preview thumbnail strip
+  fbSyncPreviewStrip();
+};
+
+window.fbSyncPreviewStrip = function() {
+  const queue = window._fbBatchQueue || [];
+  const strip = document.getElementById('fb-preview-strip');
+  const label = document.getElementById('fb-preview-strip-label');
+  if (!strip) return;
+  if (queue.length <= 1) {
+    strip.style.display = 'none';
+    if (label) label.style.display = 'none';
+    return;
+  }
+  strip.style.display = 'flex';
+  strip.style.flexWrap = 'wrap';
+  strip.style.gap = '6px';
+  strip.style.justifyContent = 'center';
+  if (label) label.style.display = 'block';
+  strip.innerHTML = '';
+  queue.forEach(function(item, idx) {
+    const thumbUrl = URL.createObjectURL(item.blob);
+    const wrapper = document.createElement('div');
+    wrapper.title = 'Card ' + (idx+1);
+    wrapper.style.cssText = 'position:relative;cursor:pointer;border-radius:6px;border:2px solid var(--border);overflow:hidden;transition:.15s;flex-shrink:0;';
+    wrapper.onmouseover = function() { this.style.borderColor = 'var(--accent)'; };
+    wrapper.onmouseout  = function() { this.style.borderColor = 'var(--border)'; };
+    if (item.isVideo) {
+      const vid = document.createElement('video');
+      vid.src = thumbUrl; vid.muted = true;
+      vid.style.cssText = 'width:60px;height:60px;object-fit:cover;display:block;';
+      wrapper.appendChild(vid);
+    } else {
+      const img = document.createElement('img');
+      img.src = thumbUrl;
+      img.style.cssText = 'width:60px;height:60px;object-fit:cover;display:block;';
+      wrapper.appendChild(img);
+    }
+    const num = document.createElement('div');
+    num.textContent = idx + 1;
+    num.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:9px;font-weight:900;color:#fff;text-shadow:0 0 4px #000;';
+    wrapper.appendChild(num);
+    wrapper.onclick = (function(b, isVid) { return function() {
+      strip.querySelectorAll('div[title]').forEach(function(w) { w.style.borderColor = 'var(--border)'; });
+      this.style.borderColor = 'var(--accent)';
+      if (isVid) {
+        const vid2 = document.getElementById('fb-reel-video');
+        const canvas = document.getElementById('fb-card-canvas');
+        if (canvas) canvas.style.display = 'none';
+        if (vid2) { vid2.src = URL.createObjectURL(b); vid2.style.display = 'block'; }
+      } else {
+        const img2 = new Image();
+        img2.onload = function() {
+          const c = document.getElementById('fb-card-canvas');
+          const vid2 = document.getElementById('fb-reel-video');
+          if (vid2) vid2.style.display = 'none';
+          if (!c) return;
+          c.style.display = 'block';
+          const ctx2 = c.getContext('2d');
+          c.width = img2.width; c.height = img2.height;
+          ctx2.drawImage(img2, 0, 0);
+        };
+        img2.src = URL.createObjectURL(b);
+      }
+    }; })(item.blob, item.isVideo);
+    strip.appendChild(wrapper);
   });
 };
 
