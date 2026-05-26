@@ -1284,6 +1284,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <label style="font-size:10px;font-weight:700;color:var(--text2);">Full Caption</label>
             <textarea id="fb-caption" rows="5" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical;font-family:inherit;"></textarea>
             <button onclick="navigator.clipboard.writeText(document.getElementById('fb-caption').value).then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Caption Copy',1500)})" style="margin-top:5px;padding:5px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Caption Copy</button>
+            <span id="fb-draft-indicator" style="font-size:10px;color:var(--green);margin-left:8px;opacity:0;transition:opacity 0.5s;">Draft saved ✓</span>
             <div style="margin-top:10px;">
               <label style="font-size:10px;font-weight:700;color:var(--text2);">🏷️ Hashtags</label>
               <textarea id="fb-tags-display" rows="2" readonly style="width:100%;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg2);color:var(--text2);margin-top:4px;resize:none;font-family:inherit;"></textarea>
@@ -1364,7 +1365,21 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
               </div>
               <div id="sa-token-status" style="font-size:10px;margin-top:3px;color:var(--text2);"></div>
             </div>
-            <button onclick="saOpenPostHelper()" style="width:100%;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">📤 FB Pages এ Post করুন</button>
+            <!-- Schedule control -->
+            <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+              <label style="font-size:10px;color:var(--text2);white-space:nowrap;">⏰ Schedule:</label>
+              <input type="datetime-local" id="fb-schedule-time" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;background:var(--bg3);color:var(--text);font-family:inherit;">
+              <button onclick="document.getElementById('fb-schedule-time').value=''" style="padding:5px 8px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;font-size:10px;color:var(--text2);cursor:pointer;font-family:inherit;">✕</button>
+            </div>
+            <!-- Carousel multi-image -->
+            <div style="margin-bottom:6px;">
+              <label style="font-size:10px;color:var(--text2);">🎠 Carousel URLs (একটা per line, min 2):</label>
+              <textarea id="fb-carousel-urls" rows="3" placeholder="https://cdn.../img1.jpg&#10;https://cdn.../img2.jpg" style="width:100%;font-size:10px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg3);color:var(--text);margin-top:3px;resize:vertical;font-family:monospace;"></textarea>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="saOpenPostHelper()" style="flex:2;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📤 Post এখনই</button>
+              <button onclick="fbQueueFromUI()" style="flex:1;padding:11px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📅 Queue এ রাখো</button>
+            </div>
             <div id="sa-post-log" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
           </div>
         </div>
@@ -3132,6 +3147,8 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="/js/data.js"></script>
+<script src="/js/fb-draft-queue.js" type="module"></script>
 </body>
 </body>
 </html><script>
@@ -3424,14 +3441,7 @@ window.fbGenerateSingle = async function(idx) {
   if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
   showLog('🤖 AI caption তৈরি হচ্ছে...');
 
-  const tonePromptMap = {
-    urgent:'urgent, shocking, breaking news tone — মানুষ scroll থামাবেই',
-    emotional:'emotional, heartfelt, touching — মানুষের হৃদয় স্পর্শ করবে',
-    informative:'informative, factual, clear — তথ্যবহুল এবং বিশ্বাসযোগ্য',
-    motivational:'motivational, inspiring, call to action — মানুষকে অনুপ্রাণিত করবে',
-    alert:'urgent alert, warning tone — সতর্ক করতে হবে',
-  };
-  const toneDesc = tonePromptMap[_fbCurrentTone] || tonePromptMap.urgent;
+  const toneDesc = (FB_CONFIG.tones[_fbCurrentTone] || FB_CONFIG.tones.urgent);
 
   try {
     let imgBase64 = '';
@@ -3445,7 +3455,7 @@ window.fbGenerateSingle = async function(idx) {
     }
     const content = [];
     if (file && imgBase64) content.push({ type: 'image_url', image_url: { url: 'data:' + (file.type||'image/jpeg') + ';base64,' + imgBase64 } });
-    content.push({ type: 'text', text: 'তুমি বাংলাদেশের সেরা Facebook viral content strategist।\nTone: ' + toneDesc + '\n\nRULES:\n- hook = প্রথম ৩ সেকেন্ড scroll stopper, max ৮ শব্দ\n- caption = hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ\n- slides = plain বাংলা text, max ১০ শব্দ প্রতি slide\n- mood = urgent/sad/positive/angry/neutral\n\nশুধু raw JSON:\n{"mood":"urgent","hook":"...","caption":"...","tags":"#tag1 #JOAF #বাংলাদেশ","slides":[{"text":"..."},{"text":"..."},{"text":"..."}]}\n\nNews: ' + text });
+    content.push({ type: 'text', text: FB_CONFIG.systemPrompt(toneDesc, text) });
 
     const aiRes = await fetch('/.netlify/functions/groq-proxy', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -3578,14 +3588,7 @@ window.fbGenerateReel = async function() {
     }
 
     // AI caption + hook + slides
-    const tonePromptMap = {
-      urgent: 'urgent, shocking, breaking news tone — মানুষ scroll থামাবেই',
-      emotional: 'emotional, heartfelt, touching — মানুষের হৃদয় স্পর্শ করবে',
-      informative: 'informative, factual, clear — তথ্যবহুল এবং বিশ্বাসযোগ্য',
-      motivational: 'motivational, inspiring, call to action — মানুষকে অনুপ্রাণিত করবে',
-      alert: 'urgent alert, warning tone — সতর্ক করতে হবে',
-    };
-    const toneDesc = tonePromptMap[_fbCurrentTone] || tonePromptMap.urgent;
+    const toneDesc = (FB_CONFIG.tones[_fbCurrentTone] || FB_CONFIG.tones.urgent);
 
     const aiRes = await fetch('/.netlify/functions/groq-proxy', {
       method: 'POST',
@@ -4935,45 +4938,113 @@ window.batchSelectAll = function(val) {
 };
 
 // Shared: fetch + filter pages once
+// ── _fbGetPages: token stays server-side, routed via netlify function ──
 window._fbGetPages = async function() {
-  const TOKEN = localStorage.getItem('joaf_fb_token');
-  if (!TOKEN) throw new Error('Token নেই — SA panel-এ save করুন');
   const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  let pages = [], url = 'https://graph.facebook.com/v19.0/me/accounts?limit=50&access_token=' + TOKEN;
-  while (url) {
-    const r = await fetch(url); const d = await r.json();
-    if (d.error) throw new Error(d.error.message);
-    pages = pages.concat(d.data || []); url = d.paging?.next || null;
-  }
+  const res = await fetch('/.netlify/functions/fb-autopost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'get-pages' }),
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  let pages = d.pages || [];
   pages = pages.filter(function(p) { return !excludeIds.includes(p.id) && !excludeIds.includes(p.name.trim()); });
   if (!pages.length) throw new Error('কোনো page পাওয়া যায়নি (সব exclude?)');
   return pages;
 };
 
-// Shared: post one file+caption to one page (image/video/text auto-detect)
-window._fbPostOneFileToPage = async function(file, caption, page) {
-  let postRes;
-  if (file && file.type && file.type.startsWith('video/')) {
-    const fd = new FormData();
-    fd.append('source', new Blob([file], { type: file.type }), file.name || 'joaf-video.webm');
-    fd.append('description', caption); fd.append('access_token', page.access_token);
-    postRes = await fetch('https://graph.facebook.com/v19.0/' + page.id + '/videos', { method: 'POST', body: fd });
-  } else if (file) {
-    const fd = new FormData();
-    fd.append('source', file); fd.append('message', caption); fd.append('access_token', page.access_token);
-    postRes = await fetch('https://graph.facebook.com/v19.0/' + page.id + '/photos', { method: 'POST', body: fd });
-  } else {
-    postRes = await fetch('https://graph.facebook.com/v19.0/' + page.id + '/feed', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: caption, access_token: page.access_token })
-    });
+// Shared: post one file+caption to one page — routed via Netlify proxy (token stays server-side)
+window._fbPostOneFileToPage = async function(file, caption, page, scheduledAt) {
+  let imageUrl = null, videoUrl = null;
+
+  // If file provided, upload to Appwrite Storage first to get a public URL
+  if (file) {
+    if (typeof uploadToAppwriteStorage === 'function') {
+      const publicUrl = await uploadToAppwriteStorage(file);
+      if (file.type && file.type.startsWith('video/')) {
+        videoUrl = publicUrl;
+      } else {
+        imageUrl = publicUrl;
+      }
+    } else {
+      // Fallback: create object URL (works for same-session posts)
+      if (file.type && file.type.startsWith('video/')) {
+        videoUrl = URL.createObjectURL(file);
+      } else {
+        imageUrl = URL.createObjectURL(file);
+      }
+    }
   }
-  const d = await postRes.json();
-  if (d.error) throw new Error(d.error.message);
+
+  const payload = {
+    action: 'post',
+    caption,
+    imageUrl,
+    videoUrl,
+    excludeIds: [],
+  };
+  if (scheduledAt) payload.scheduled_at = scheduledAt;
+
+  const res = await fetch('/.netlify/functions/fb-autopost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  // Return first result matching this page
+  const match = (d.results || []).find(r => r.id === page.id);
+  if (match && !match.ok) throw new Error(match.error || 'Post failed');
   return d;
 };
 
 // Post single card (by idx) → all pages, log in per-card solo log
+// ── Queue from UI ─────────────────────────────────────────────
+window.fbQueueFromUI = async function() {
+  const caption     = document.getElementById('fb-caption')?.value || '';
+  const tags        = document.getElementById('fb-tags-display')?.value || '';
+  const scheduledAt = document.getElementById('fb-schedule-time')?.value || '';
+  const carouselRaw = document.getElementById('fb-carousel-urls')?.value || '';
+  const carouselUrls = carouselRaw.split('
+').map(s => s.trim()).filter(Boolean);
+  const imgUrl      = window._fbUploadedImageUrl || null;
+  const vidUrl      = window._fbUploadedVideoUrl || null;
+
+  if (!caption.trim()) { alert('Caption লিখুন বা generate করুন আগে'); return; }
+
+  try {
+    const id = await window.fbQueueAdd({
+      caption: caption + (tags ? '
+
+' + tags : ''),
+      imageUrl: carouselUrls.length >= 2 ? null : imgUrl,
+      videoUrl: carouselUrls.length >= 2 ? null : vidUrl,
+      carouselUrls: carouselUrls.length >= 2 ? carouselUrls : [],
+      scheduledAt: scheduledAt || new Date().toISOString(),
+    });
+    alert('✅ Queue এ যোগ হয়েছে!
+ID: ' + id + (scheduledAt ? '
+Scheduled: ' + scheduledAt : '
+এখনই publish হবে (scheduler এর পরের run এ)'));
+  } catch (e) {
+    alert('❌ Queue add failed: ' + e.message);
+  }
+};
+
+// ── Carousel post direct (bypasses queue, posts immediately) ──
+window.fbPostCarousel = async function(imageUrls, caption) {
+  const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  const res = await fetch('/.netlify/functions/fb-autopost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'carousel', caption, imageUrls, excludeIds }),
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  return d;
+};
+
 window.batchPostSingle = async function(idx) {
   const queue = window._fbBatchQueue || []; const item = queue[idx]; if (!item) return;
   const soloLog = document.getElementById('batch-solo-log-' + idx);
@@ -5043,6 +5114,13 @@ window.fbDownloadReel = function() {
 }
 </script>
 <script>
+// ── FB Draft auto-save init ───────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof window.fbDraftStartAutoSave === 'function') {
+    window.fbDraftStartAutoSave();
+  }
+});
+
 window.isCinematic = true;
 let sceneIndex = 0;
 const scenes = ["সকাল ৮টা: রাজধানী স্থবির", "দুপুর ১২টা: নতুন ঘোষণা", "রাত ৮টা: চূড়ান্ত সিদ্ধান্ত"];
