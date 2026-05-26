@@ -890,7 +890,7 @@ function showConnectFB() {
   }
   
   const redirectUri = `${window.location.origin}${window.location.pathname}`;
-  const scope = 'pages_manage_posts,pages_read_engagement,pages_manage_metadata';
+  const scope = 'pages_manage_posts,pages_read_engagement'; // Minimal permissions needed
   const url = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${fbAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=token`;
   
   const pageSelect = document.getElementById('fbPageSelect');
@@ -944,7 +944,9 @@ async function getFacebookPages() {
   }
   
   try {
-    const res = await fetch(`https://graph.facebook.com/v22.0/me/accounts?access_token=${fbAccessToken}`);
+    // Note: Facebook Graph API v22 requires access_token as URL parameter or Authorization header
+    // Using URL parameter for compatibility; in production, use backend proxy with httpOnly cookies
+    const res = await fetch(`https://graph.facebook.com/v22.0/me/accounts?access_token=${encodeURIComponent(fbAccessToken)}`);
     const data = await res.json();
     
     if (data.error) {
@@ -994,8 +996,6 @@ function updatePageSelect() {
 // Reconnect Facebook
 function reconnectFB() {
   localStorage.removeItem('fbAccessToken');
-  localStorage.removeItem('selectedPageId');
-  localStorage.removeItem('selectedPageName');
   fbAccessToken = null;
   fbPages = [];
   pageTokenMap = {};
@@ -1065,7 +1065,7 @@ async function publishToFacebook() {
       const errCode = data.error.code; // numeric code like 190, 104
       
       // Facebook API error codes: 190=invalid token, 104=access token expired, etc
-      if (errCode === 190 || errCode === 104 || errCode === 2 || errCode === 190 /* OAuthException errors */) {
+      if (errCode === 190 || errCode === 104 || errCode === 2) {
         throw new Error('Invalid or expired Facebook token. Please reconnect.');
       }
       throw new Error(data.error.message || `Facebook API error (code: ${errCode || 'unknown'})`);
