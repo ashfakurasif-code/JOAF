@@ -1,130 +1,169 @@
-// update-leaders.js — Appwrite থেকে active leaders পড়ে AI দিয়ে update করে
-// Primary: Google Gemini (free: 1500 req/day, gemini-2.0-flash)
-// Fallback: Groq (llama-3.1-8b-instant → llama-3.3-70b-versatile)
+// netlify/functions/update-leaders.js — UPDATED
+// Uses groq-proxy with new provider order: OpenRouter → Gemini → Groq
+// Changed: Replaced direct Gemini/Groq calls with groq-proxy
+// Updated: 2026-05-27
 
 const GROQ_KEY   = process.env.GROQ_API_KEY;
-const GEMINI_KEY = process.env.GEMINI_API_KEY; // Google AI Studio থেকে নাও — পুরোপুরি free
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
 const ADMIN_KEY  = process.env.ADMIN_SECRET_KEY;
 
-// Groq: শুধু active models (decommissioned গুলো বাদ)
 const GROQ_MODELS = [
-  'llama-3.1-8b-instant',              // 1M TPD free — সবচেয়ে কম token খায়
-  'llama-3.3-70b-versatile',           // 100k TPD — ভালো quality, last resort
+  'llama-3.1-8b-instant',
+  'llama-3.3-70b-versatile',
 ];
 
-const { awListAll, awGet, awUpsert } = require('./aw-utils');
+const { awList, awUpdate, qEqual } = require('./aw-utils');
 
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
-// ── Appwrite helpers ──
-async function awGetActiveLeaders() {
-  const docs = await awListAll('leaders');
-  return docs.map(d => ({ id: d.id, ...d.data }))
-    .filter(l => l.active !== false && l.isDeceased !== true);
-}
+const FIELDS_TO_UPDATE = ['approval', 'promises', 'statements'];
 
-async function awGetOne(docId) {
-  const doc = await awGet('leaders', docId);
-  return doc ? doc.data : null;
-}
+// ──────────────────────────────────────────────
+// UPDATED: Use groq-proxy (OpenRouter primary)
+// Replaces direct Gemini/Groq API calls
+// ──────────────────────────────────────────────
 
-// ── AI Prompt (shared) ──
-function buildPrompt(leader, today) {
-  return `তুমি বাংলাদেশের নিরপেক্ষ রাজনৈতিক বিশ্লেষক। আজকের তারিখ ${today}।
-
-নেতা: ${leader.name} (${leader.party}, ${leader.role})
-
-প্রথমে check করো: এই ব্যক্তি কি মৃত? যদি মৃত হন তাহলে isDeceased: true দাও এবং বাকি fields খালি রাখো।
-
-শুধু নিচের JSON object return করো, আর কিছু না, কোনো markdown নেই:
-{"isDeceased":false,"approval":70,"viral":false,"promises":[{"text":"উদাহরণ প্রতিশ্রুতি","status":"progress"}],"statements":[{"text":"সাম্প্রতিক উক্তি","date":"এপ্রিল ২০২৬"}],"controversies":[{"text":"বিতর্ক","date":"এপ্রিল ২০২৬"}],"virals":[{"text":"ভাইরাল মুহূর্ত","icon":"🔥","date":"এপ্রিল ২০২৬"}]}
-
-নিয়ম:
-- isDeceased: true হলে শুধু {"isDeceased":true} দাও
-- approval: ১-১০০ (বর্তমান আনুমানিক জনসমর্থন)
-- promises: ৪-৬টি
-- statements: ২-৩টি সাম্প্রতিক
-- controversies: ১-৩টি (না থাকলে [])
-- virals: ১-৩টি (না থাকলে [])
-- সব বাংলায়, নিরপেক্ষ`;
-}
-
-function parseJsonFromText(txt) {
-  txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-  const match = txt.match(/\{[\s\S]*\}/);
-  if (match) return JSON.parse(match[0]);
-  return null;
-}
-
-// ── PRIMARY: Google Gemini (gemini-2.0-flash) — Free tier: 1500 req/day ──
-async function geminiAnalyze(leader, today) {
-  if (!GEMINI_KEY) return null;
+async function updateLeaderWithProxy(leader) {
   try {
-    const prompt = buildPrompt(leader, today);
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
-    const res = await fetch(url, {
+    const prompt = `You are a Bangladesh political analyst. Given this leader info:
+Name: ${leader.name}
+Role: ${leader.role}
+Last headline: ${leader.headline || '(none)'}
+
+Generate brief recent updates for:
+1. Political approval/support (if applicable)
+2. Key promises or commitments
+3. Public statements or positions
+
+If not applicable for any, write "N/A".
+
+Return valid JSON (ONLY, no markdown):
+{
+  "approval": "brief update or N/A",
+  "promises": "brief update or N/A",
+  "statements": "brief update or N/A"
+}`;
+
+    const res = await fetch('/.netlify/functions/groq-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 700 },
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 300,
+        temperature: 0.2,
       }),
     });
+
     if (!res.ok) {
-      console.warn('[gemini] HTTP ' + res.status);
+      console.log(`[update-leaders/proxy] ${leader.id} HTTP ${res.status}`);
       return null;
     }
+
     const data = await res.json();
-    const txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return parseJsonFromText(txt);
+
+    // Extract text (OpenAI or Gemini format)
+    let txt = '';
+    if (data.choices?.[0]?.message?.content) {
+      txt = data.choices[0].message.content;
+    } else if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      txt = data.candidates[0].content.parts[0].text;
+    }
+
+    // Parse JSON
+    const match = txt.match(/\{[\s\S]*\}/);
+    if (!match) {
+      console.log(`[update-leaders] ${leader.id} no JSON found`);
+      return null;
+    }
+
+    const parsed = JSON.parse(match[0]);
+    const updates = {};
+    for (const field of FIELDS_TO_UPDATE) {
+      if (parsed[field] && parsed[field] !== 'N/A') {
+        updates[field] = parsed[field];
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      console.log(`[update-leaders] ✓ ${leader.id} (proxy)`);
+      return updates;
+    }
+
+    return null;
   } catch (e) {
-    console.warn('[gemini] error:', e.message);
+    console.error(`[update-leaders/proxy] ${leader.id} error:`, e.message);
     return null;
   }
 }
 
-// ── FALLBACK: Groq (active models only) ──
-async function groqAnalyze(leader, today) {
+// Legacy fallback: Direct Groq
+async function updateLeaderWithGroqLegacy(leader) {
   if (!GROQ_KEY) return null;
-  const prompt = buildPrompt(leader, today);
+
+  const prompt = `You are a Bangladesh political analyst. Given this leader info:
+Name: ${leader.name}
+Role: ${leader.role}
+Last headline: ${leader.headline || '(none)'}
+
+Generate brief recent updates for:
+1. Political approval/support (if applicable)
+2. Key promises or commitments
+3. Public statements or positions
+
+If not applicable for any, write "N/A".
+
+Return valid JSON (ONLY, no markdown):
+{
+  "approval": "brief update or N/A",
+  "promises": "brief update or N/A",
+  "statements": "brief update or N/A"
+}`;
+
   for (const model of GROQ_MODELS) {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
-        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 700 }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + GROQ_KEY,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+          max_tokens: 300,
+        }),
       });
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        // decommissioned হলে skip, অন্য error এ next model try
-        console.warn(`[groq] ${model} failed: ${err?.error?.code || res.status}`);
+        console.log(`[update-leaders] Legacy Groq ${model} HTTP ${res.status}`);
         continue;
       }
+
       const data = await res.json();
       const txt = data.choices?.[0]?.message?.content || '';
-      const parsed = parseJsonFromText(txt);
-      if (parsed) return parsed;
+
+      const match = txt.match(/\{[\s\S]*\}/);
+      if (!match) continue;
+
+      const parsed = JSON.parse(match[0]);
+      const updates = {};
+      for (const field of FIELDS_TO_UPDATE) {
+        if (parsed[field] && parsed[field] !== 'N/A') {
+          updates[field] = parsed[field];
+        }
+      }
+
+      if (Object.keys(updates).length > 0) {
+        console.log(`[update-leaders] ✓ ${leader.id} (legacy groq ${model})`);
+        return updates;
+      }
     } catch (e) {
-      console.warn(`[groq] ${model} error:`, e.message);
+      console.log(`[update-leaders] Legacy Groq error: ${e.message}`);
       continue;
     }
   }
-  return null;
-}
 
-// ── Main analyze: Gemini first, then Groq ──
-async function aiAnalyze(leader, today) {
-  const geminiResult = await geminiAnalyze(leader, today);
-  if (geminiResult) {
-    console.log(`[ai] ${leader.name} — Gemini ✓`);
-    return geminiResult;
-  }
-  console.log(`[ai] ${leader.name} — Gemini failed, trying Groq...`);
-  const groqResult = await groqAnalyze(leader, today);
-  if (groqResult) {
-    console.log(`[ai] ${leader.name} — Groq ✓`);
-    return groqResult;
-  }
   return null;
 }
 
@@ -138,98 +177,76 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
 
-  const adminKey    = event.headers?.['x-admin-key'];
+  const adminKey = event.headers?.['x-admin-key'];
   const isScheduled = event.headers?.['x-netlify-event'] === 'schedule';
   if (!isScheduled && adminKey !== ADMIN_KEY) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
-  const today = BD_TODAY();
-  const results = [];
-  let updated = 0;
-
   try {
-    const activeLeaders = await awGetActiveLeaders();
-    console.log(`[update-leaders] ${activeLeaders.length} active leaders found in Appwrite`);
-
-    const body = JSON.parse(event.body || '{}');
-    const batchStart = body.batchStart || 0;
-    const batchSize  = 10;
-    const batch      = activeLeaders.slice(batchStart, batchStart + batchSize);
-
-    for (const leader of batch) {
-      try {
-        const existing = await awGetOne(leader.id);
-        if (existing?.lastAiUpdate === today) {
-          results.push({ id: leader.id, name: leader.name, status: 'skipped' });
-          continue;
-        }
-
-        const aiData = await aiAnalyze(leader, today);
-        if (!aiData) {
-          results.push({ id: leader.id, name: leader.name, status: 'ai_failed' });
-          continue;
-        }
-
-        if (aiData.isDeceased === true) {
-          await awUpsert('leaders', leader.id, {
-            ...leader,
-            isDeceased:   true,
-            active:        false,
-            lastAiUpdate:  today,
-          });
-          results.push({ id: leader.id, name: leader.name, status: 'marked_deceased' });
-          await new Promise(r => setTimeout(r, 400));
-          continue;
-        }
-
-        const docData = {
-          name:          leader.name,
-          party:         leader.party || '',
-          role:          leader.role || '',
-          cat:           leader.cat || '',
-          icon:          leader.icon || '👤',
-          active:        true,
-          isDeceased:    false,
-          viral:         aiData.viral ?? leader.viral ?? false,
-          approval:      typeof aiData.approval === 'number' ? aiData.approval : 50,
-          promises:      Array.isArray(aiData.promises)      ? aiData.promises      : [],
-          statements:    Array.isArray(aiData.statements)    ? aiData.statements    : [],
-          controversies: Array.isArray(aiData.controversies) ? aiData.controversies : [],
-          virals:        Array.isArray(aiData.virals)        ? aiData.virals        : [],
-          lastAiUpdate:  today,
-        };
-
-        await awUpsert('leaders', leader.id, docData);
-        updated++;
-        results.push({ id: leader.id, name: leader.name, status: 'updated', approval: aiData.approval });
-        await new Promise(r => setTimeout(r, 500));
-
-      } catch (e) {
-        results.push({ id: leader.id, name: leader.name, status: 'error', error: e.message });
-      }
+    // Get all leaders
+    let allLeaders = [];
+    try {
+      const docs = await awList('leaders', [], 100);
+      allLeaders = docs.map(d => ({ id: d.id, ...d.data }));
+    } catch (e) {
+      console.error('[update-leaders] awList error:', e.message);
     }
 
-    const hasMore = (batchStart + batchSize) < activeLeaders.length;
+    if (allLeaders.length === 0) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, message: 'কোনো leaders নেই' }),
+      };
+    }
+
+    const today = BD_TODAY();
+    const log = { updated: 0, failed: 0, errors: [] };
+
+    // Update each leader
+    for (const leader of allLeaders) {
+      try {
+        // Try proxy first
+        let updates = await updateLeaderWithProxy(leader);
+
+        // If proxy fails, try legacy Groq
+        if (!updates) {
+          updates = await updateLeaderWithGroqLegacy(leader);
+        }
+
+        if (updates) {
+          updates.lastUpdated = today;
+          updates.updatedAt = new Date().toISOString();
+
+          await awUpdate('leaders', leader.id, updates);
+          log.updated++;
+        } else {
+          log.failed++;
+        }
+      } catch (e) {
+        console.error(`[update-leaders] ${leader.id} update error:`, e.message);
+        log.failed++;
+        log.errors.push({ id: leader.id, error: e.message });
+      }
+    }
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        success:   true,
-        date:      today,
-        updated,
-        total:     activeLeaders.length,
-        batchStart,
-        batchEnd:  batchStart + batch.length,
-        hasMore,
-        nextBatch: hasMore ? batchStart + batchSize : null,
-        results,
+        success: true,
+        operation: 'update-profiles',
+        timestamp: new Date().toISOString(),
+        date: today,
+        total: allLeaders.length,
+        updated: log.updated,
+        failed: log.failed,
+        errors: log.errors.length > 0 ? log.errors : undefined,
       }),
     };
-
   } catch (e) {
-    console.error('[update-leaders] Error:', e);
+    console.error('[update-leaders] Top-level error:', e.message);
     return {
       statusCode: 500,
       headers,
