@@ -1,4 +1,5 @@
-// groq-proxy.js — Gemini primary → OpenRouter fallback → Groq last resort
+// groq-proxy.js — REORDERED: OpenRouter primary → Gemini fallback → Groq last resort
+// Updated: 2026-05-27 | Change: Prioritized OpenRouter (proven reliable) over Gemini (currently offline)
 
 exports.handler = async (event) => {
 
@@ -24,8 +25,56 @@ exports.handler = async (event) => {
   );
 
   // ─────────────────────────────────────────────
-  // LAYER 1: GEMINI PRIMARY
+  // LAYER 1: OPENROUTER PRIMARY (REORDERED)
   // ─────────────────────────────────────────────
+  // Reason: Currently working (114.3ms), Gemini offline
+  // Used by: News Card Generator, Content Moderation, Post Suggestions
+
+  if (OPENROUTER_KEY) {
+    try {
+
+      // Pick free vision or text model
+      const orModel = hasImage
+        ? 'meta-llama/llama-4-scout-17b-16e-instruct:free'
+        : 'meta-llama/llama-4-scout-17b-16e-instruct:free';
+
+      const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer ' + OPENROUTER_KEY,
+          'HTTP-Referer':  'https://julyforum.com',
+          'X-Title':       'JOAF'
+        },
+        body: JSON.stringify({
+          model:       orModel,
+          max_tokens:  body.max_tokens  || 1000,
+          temperature: body.temperature || 0.7,
+          messages:    body.messages
+        })
+      });
+
+      if (orRes.ok) {
+        const orData = await orRes.json();
+        console.log('✅ OpenRouter PRIMARY success with', orModel);
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orData)
+        };
+      }
+
+      console.log('⚠️ OpenRouter PRIMARY failed:', orRes.status, '→ Gemini fallback');
+
+    } catch (e) {
+      console.log('⚠️ OpenRouter PRIMARY error:', e.message, '→ Gemini fallback');
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // LAYER 2: GEMINI FALLBACK (REORDERED)
+  // ─────────────────────────────────────────────
+  // Note: Currently offline, but keeping as fallback for when it's fixed
 
   if (GEMINI_KEY) {
     try {
@@ -100,6 +149,7 @@ exports.handler = async (event) => {
           ?.map(p => p.text || '')
           ?.join('\n') || '';
 
+        console.log('✅ Gemini FALLBACK success');
         return {
           statusCode: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -111,56 +161,10 @@ exports.handler = async (event) => {
         };
       }
 
-      console.log('Gemini failed:', gRes.status, '→ OpenRouter fallback');
+      console.log('⚠️ Gemini FALLBACK failed:', gRes.status, '→ Groq last resort');
 
     } catch (e) {
-      console.log('Gemini error:', e.message, '→ OpenRouter fallback');
-    }
-  }
-
-  // ─────────────────────────────────────────────
-  // LAYER 2: OPENROUTER FALLBACK
-  // ─────────────────────────────────────────────
-
-  if (OPENROUTER_KEY) {
-    try {
-
-      // Pick free vision or text model
-      // Try vision-capable free models
-      const orModel = hasImage
-        ? 'meta-llama/llama-4-scout-17b-16e-instruct:free'
-        : 'meta-llama/llama-4-scout-17b-16e-instruct:free';
-
-      const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': 'Bearer ' + OPENROUTER_KEY,
-          'HTTP-Referer':  'https://julyforum.com',
-          'X-Title':       'JOAF'
-        },
-        body: JSON.stringify({
-          model:       orModel,
-          max_tokens:  body.max_tokens  || 1000,
-          temperature: body.temperature || 0.7,
-          messages:    body.messages
-        })
-      });
-
-      if (orRes.ok) {
-        const orData = await orRes.json();
-        console.log('OpenRouter success with', orModel);
-        return {
-          statusCode: 200,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orData)
-        };
-      }
-
-      console.log('OpenRouter failed:', orRes.status, '→ Groq fallback');
-
-    } catch (e) {
-      console.log('OpenRouter error:', e.message, '→ Groq fallback');
+      console.log('⚠️ Gemini FALLBACK error:', e.message, '→ Groq last resort');
     }
   }
 
@@ -202,6 +206,12 @@ exports.handler = async (event) => {
 
     const data = await response.json();
 
+    if (response.ok) {
+      console.log('✅ Groq LAST RESORT success');
+    } else {
+      console.log('❌ Groq LAST RESORT failed:', response.status);
+    }
+
     return {
       statusCode: response.status,
       headers: { 'Content-Type': 'application/json' },
@@ -209,6 +219,7 @@ exports.handler = async (event) => {
     };
 
   } catch (e) {
+    console.log('❌ Groq LAST RESORT error:', e.message);
     return {
       statusCode: 500,
       headers: { 'Content-Type': 'application/json' },

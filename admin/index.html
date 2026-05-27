@@ -1754,9 +1754,9 @@ async function initDashboard() {
     // groq-proxy নিজেই Gemini→OpenRouter→Groq চেইন করে।
     // তাই একটাই call দিয়ে যে model respond করে সেটা দেখে কোন provider active বোঝা যায়।
     const PROVIDER_MAP = [
-      { id:'gemini',     label:'Gemini',     role:'Primary',    keywords:['gemini'] },
-      { id:'openrouter', label:'OpenRouter', role:'Fallback 1', keywords:['llama','meta','mistral','qwen','deepseek'] },
-      { id:'groq',       label:'Groq',       role:'Fallback 2', keywords:['groq','llama-3'] }
+  { id:'openrouter', label:'OpenRouter', role:'Primary',    keywords:['llama','meta','mistral','qwen','deepseek'] },
+  { id:'gemini',     label:'Gemini',     role:'Fallback 1', keywords:['gemini'] },
+  { id:'groq',       label:'Groq',       role:'Fallback 2', keywords:['groq','llama-3'] }
     ];
     // সব row render করো — idle state
     listEl.innerHTML = PROVIDER_MAP.map(p=>`
