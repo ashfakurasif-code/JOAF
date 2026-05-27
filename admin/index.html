@@ -1255,7 +1255,8 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
 
         <!-- Action buttons -->
         <div class="btn-row">
-          <button id="mig-btn-start"  class="btn btn-primary" onclick="migrationStart()">🚀 Validate &amp; Migrate</button>
+          <button id="mig-btn-dryrun" class="btn btn-ghost"    onclick="migrationDryRun()">🔍 Dry Run</button>
+          <button id="mig-btn-start"  class="btn btn-primary"  onclick="migrationStart()">🚀 Validate &amp; Migrate</button>
           <button id="mig-btn-resume" class="btn btn-primary"  onclick="migrationResume()" style="display:none;">🔄 Resume / Retry</button>
         </div>
       </div>
@@ -2835,59 +2836,96 @@ window.clearCache = function() { toast('Cache cleared','success'); };
       (data.failed ? ' &nbsp;|&nbsp; ❌ Failed: <b>' + data.failed + '</b>' : '');
   }
 
-  async function runMigrationFull() {
+  // ── Safe fetch: guards against HTML error pages (<!DOCTYPE) ──────────────
+  async function safeFetchJson(url, options) {
+    const res = await fetch(url, options);
+    const text = await res.text();
+    // If Netlify returns an HTML error page instead of JSON
+    if (text.trimStart().startsWith('<')) {
+      throw new Error(
+        'Function returned HTML instead of JSON (HTTP ' + res.status + ').\n' +
+        'Likely cause: function not deployed, or Netlify routing error.\n' +
+        'Check Netlify Functions log in your dashboard.'
+      );
+    }
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e) { throw new Error('Invalid JSON from function: ' + text.slice(0, 200)); }
+    return { res, data };
+  }
+
+  function buildCollectionSummary(collections) {
+    if (!collections || typeof collections !== 'object') return '';
+    return Object.entries(collections).map(function([name, s]) {
+      if (s.note && s.total === 0) return '  • ' + name + ': ' + (s.note || 'empty');
+      return '  • ' + name + ': ' + (s.total||0) + ' docs → ✅' + (s.created||0) + ' created, 🔄' + (s.updated||0) + ' updated' + (s.failed ? ', ❌'+s.failed+' failed' : '');
+    }).join('\n');
+  }
+
+  async function runMigration(isDry) {
     clearError();
-    const startBtn = document.getElementById('mig-btn-start');
-    if (startBtn) { startBtn.disabled = true; startBtn.textContent = '⏳ Running…'; }
+    const startBtn  = document.getElementById('mig-btn-start');
+    const dryBtn    = document.getElementById('mig-btn-dryrun');
+    const resumeBtn = document.getElementById('mig-btn-resume');
+    const label     = isDry ? '🔍 Dry Run' : '🚀 Validate & Migrate';
+
+    if (startBtn)  { startBtn.disabled  = true; }
+    if (dryBtn)    { dryBtn.disabled    = true; }
+    if (resumeBtn) { resumeBtn.style.display = 'none'; }
 
     try {
-      // ── Step 1: Validate ────────────────────────────────
+      // ── Step 1: Validate ──────────────────────────────────────────────────
       setProgress(10, 'validate', '🔍 Validating Firestore & Appwrite connectivity…');
-      const valRes = await fetch('/.netlify/functions/migrate-to-appwrite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
-        body: JSON.stringify({ action: 'validate' }),
-      });
-      const valData = await valRes.json();
-      if (!valRes.ok || !valData.ok) {
-        throw new Error(
-          'Validation failed:\n' + (valData.errors || []).join('\n') ||
-          JSON.stringify(valData)
-        );
+      const { res: vRes, data: valData } = await safeFetchJson(
+        '/.netlify/functions/migrate-to-appwrite',
+        { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY}, body:JSON.stringify({action:'validate'}) }
+      );
+      if (!vRes.ok || !valData.ok) {
+        throw new Error('Validation failed:\n' + (valData.errors||[]).join('\n') || JSON.stringify(valData));
       }
-      setProgress(30, 'fetch', '📥 Fetching all records from Firestore…');
+      setProgress(30, 'fetch', isDry ? '🔍 Dry-run: counting records in Firestore…' : '📥 Fetching all records from Firestore…');
 
-      // ── Step 2+3: Migrate ───────────────────────────────
-      setProgress(50, 'upsert', '🔄 Upserting into Appwrite (no duplicates, active:true)…');
-      const migRes = await fetch('/.netlify/functions/migrate-to-appwrite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
-        body: JSON.stringify({ action: 'migrate' }),
-      });
-      const migData = await migRes.json();
+      // ── Step 2+3: Migrate / Dry-run ────────────────────────────────────────
+      setProgress(50, 'upsert', isDry ? '🔍 Simulating upserts (no data written)…' : '🔄 Upserting into Appwrite across all collections…');
+      const { res: mRes, data: migData } = await safeFetchJson(
+        '/.netlify/functions/migrate-to-appwrite',
+        { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY}, body:JSON.stringify({action: isDry ? 'dry-run' : 'migrate'}) }
+      );
 
-      if (!migRes.ok) {
-        throw new Error(migData.error || 'Migration failed: HTTP ' + migRes.status);
+      if (!mRes.ok) {
+        throw new Error((migData && migData.error) || 'Migration failed: HTTP ' + mRes.status);
       }
-
-      if (!migData.success && migData.failed > 0 && !migData.created && !migData.updated) {
-        // Complete failure
+      if (!isDry && migData.totalFailed > 0 && !migData.totalCreated && !migData.totalUpdated) {
         throw new Error(migData.message + '\n\nFailures:\n' +
-          (migData.failures || []).map(function(f){ return f.id + ': ' + f.error; }).join('\n'));
+          (migData.allFailures||[]).map(function(f){ return '['+f.collection+'] '+f.id+': '+f.error; }).join('\n'));
       }
 
-      // ── Step 4: Done ────────────────────────────────────
-      setProgress(100, 'done', '✅ Migration complete!');
-      showResult(migData);
+      // ── Step 4: Done ───────────────────────────────────────────────────────
+      setProgress(100, 'done', isDry ? '🔍 Dry-run complete!' : '✅ Migration complete!');
 
-      // Warn about partial failures but don't block success
-      if (migData.failed > 0) {
+      const colSummary = buildCollectionSummary(migData.collections);
+      const resultHtml =
+        '<strong>' + (migData.message || (isDry ? 'Dry-run complete' : 'Migration complete')) + '</strong><br>' +
+        (migData.totalCreated !== undefined
+          ? '<br>Created: ' + migData.totalCreated + ' | Updated: ' + migData.totalUpdated + ' | Skipped: ' + migData.totalSkipped + ' | Failed: ' + migData.totalFailed
+          : '') +
+        (colSummary ? '<br><pre style="font-size:10px;margin:6px 0 0;white-space:pre-wrap;">' + colSummary + '</pre>' : '') +
+        (migData.allFailures && migData.allFailures.length
+          ? '<br><details><summary style="font-size:11px;cursor:pointer;">⚠️ Show ' + migData.allFailures.length + ' failure(s)</summary><pre style="font-size:10px;white-space:pre-wrap;">' +
+            migData.allFailures.map(function(f){return '['+f.collection+'] '+f.id+': '+f.error;}).join('\n') + '</pre></details>'
+          : '');
+
+      const rb = document.getElementById('mig-result-box');
+      const rt = document.getElementById('mig-result-text');
+      if (rb && rt) { rt.innerHTML = resultHtml; rb.style.display = 'block'; }
+
+      if (migData.totalFailed > 0) {
         const st = document.getElementById('mig-status-text');
-        if (st) st.textContent = '⚠️ Completed with ' + migData.failed + ' failed record(s). See details above.';
+        if (st) st.textContent = '⚠️ Completed with ' + migData.totalFailed + ' failed record(s). See details.';
       }
 
-      // Only permanently hide on full success (0 failures)
-      if (!migData.failed || migData.failed === 0) {
+      // Permanently hide only on full success real migration
+      if (!isDry && (!migData.totalFailed || migData.totalFailed === 0)) {
         localStorage.setItem(DONE_KEY, '1');
         setTimeout(function() {
           const panel = document.getElementById('migration-panel');
@@ -2903,18 +2941,19 @@ window.clearCache = function() { toast('Cache cleared','success'); };
     } catch (err) {
       setProgress(0, '', '');
       showError(err.message || String(err));
-      if (startBtn) { startBtn.disabled = false; startBtn.textContent = '🚀 Validate & Migrate'; }
+      if (resumeBtn) resumeBtn.style.display = '';
+    } finally {
+      if (startBtn) { startBtn.disabled = false; }
+      if (dryBtn)   { dryBtn.disabled   = false; }
     }
   }
 
-  window.migrationStart  = runMigrationFull;
-  window.migrationResume = function() {
-    clearError();
-    runMigrationFull();
-  };
+  function runMigrationFull() { return runMigration(false); }
 
-  // Legacy alias (in case old code references it)
-  window.runMigration = window.migrationStart;
+  window.migrationStart  = function() { runMigration(false); };
+  window.migrationDryRun = function() { runMigration(true); };
+  window.migrationResume = function() { clearError(); runMigration(false); };
+  window.runMigration    = window.migrationStart;
 })();
 
 // ── Helpers ──────────────────────────────────────────────
