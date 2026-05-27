@@ -688,7 +688,15 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
         <div class="card" style="padding:14px">
           <div class="card-header" style="margin-bottom:10px"><div class="card-title">🟢 System Health</div></div>
           <div id="ds-health" style="display:flex;flex-direction:column;gap:7px"></div>
-        </div>
+        </div><!-- AI Provider Health -->
+<div id="ai-health-section" style="margin-top:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <span style="font-size:11px;font-weight:700;color:var(--text2)">🤖 AI PROVIDERS</span>
+    <button onclick="window.runAIHealthCheck()" style="font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit">↻ Check</button>
+  </div>
+  <div id="ai-health-list" style="display:flex;flex-direction:column;gap:6px"></div>
+  <div id="ai-rate-limit-alert" style="display:none;margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);font-size:11px;color:var(--red)"></div>
+</div>
 
       </div>
 
@@ -1738,6 +1746,55 @@ async function initDashboard() {
   let dsSparkInst = null;
 
   // ── Health indicators (array-driven) ──
+  window.runAIHealthCheck = async function() {
+  const listEl = document.getElementById('ai-health-list');
+  const alertEl = document.getElementById('ai-rate-limit-alert');
+  if (!listEl) return;
+  const AI_PROXY = '/.netlify/functions/groq-proxy';
+  const TEST_PAYLOAD = { messages:[{role:'user',content:'Reply with exactly: OK'}], max_tokens:5, temperature:0 };
+  const providers = [
+    { id:'gemini',     label:'Gemini',     role:'Primary',    },
+    { id:'openrouter', label:'OpenRouter', role:'Fallback 1', },
+    { id:'groq',       label:'Groq',       role:'Fallback 2', }
+  ];
+  listEl.innerHTML = providers.map(p=>`
+    <div id="aih-${p.id}" style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--text2)">${p.label} <span style="opacity:.6;font-size:10px">${p.role}</span></span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:50px;background:var(--bg3);color:var(--text2)">Testing…</span>
+    </div>`).join('');
+  const limitedProviders = [];
+  for (const p of providers) {
+    const row = document.getElementById('aih-'+p.id);
+    const badgeEl = row?.querySelector('span:last-child');
+    const t0 = performance.now();
+    try {
+      const res = await fetch(AI_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(TEST_PAYLOAD),signal:AbortSignal.timeout(12000)});
+      const latency = Math.round(performance.now()-t0);
+      if (res.status===429) {
+        if(badgeEl){badgeEl.textContent='Rate Limited ⚠️';badgeEl.style.background='rgba(251,191,36,.15)';badgeEl.style.color='var(--amber)';}
+        limitedProviders.push(p.label); continue;
+      }
+      if (!res.ok) {
+        if(badgeEl){badgeEl.textContent='Error '+res.status;badgeEl.style.background='rgba(248,113,113,.12)';badgeEl.style.color='var(--red)';}
+        continue;
+      }
+      const data = await res.json();
+      if (data.error?.code==='rate_limit_exceeded') {
+        if(badgeEl){badgeEl.textContent='Rate Limited ⚠️';badgeEl.style.background='rgba(251,191,36,.15)';badgeEl.style.color='var(--amber)';}
+        limitedProviders.push(p.label); continue;
+      }
+      const activeModel = (data.model||'?').split('/').pop().slice(0,20);
+      if(badgeEl){badgeEl.textContent=`✓ ${latency}ms · ${activeModel}`;badgeEl.style.background='rgba(52,211,153,.12)';badgeEl.style.color='var(--green)';}
+    } catch(e) {
+      if(badgeEl){badgeEl.textContent=e.name==='TimeoutError'?'Timeout':'Offline';badgeEl.style.background='rgba(248,113,113,.12)';badgeEl.style.color='var(--red)';}
+    }
+    await new Promise(r=>setTimeout(r,300));
+  }
+  if(alertEl){
+    if(limitedProviders.length>0){alertEl.style.display='block';alertEl.textContent='⚠️ Rate limit: '+limitedProviders.join(', ')+' — কিছুক্ষণ অপেক্ষা করুন';}
+    else{alertEl.style.display='none';}
+  }
+};
   const HEALTH_ITEMS = [
     { label: 'Appwrite',        check: async () => { const s=await getDocs(collection(db,'push_subscriptions')); return {ok:true,val:'Connected'}; } },
     { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
@@ -1753,6 +1810,7 @@ async function initDashboard() {
         if(el) { el.textContent=val; el.style.background=ok?'rgba(52,211,153,.12)':'rgba(248,113,113,.12)'; el.style.color=ok?'var(--green)':'var(--red)'; }
       } catch(e) { if(el){el.textContent='Error';el.style.color='var(--red)';} }
     });
+    window.runAIHealthCheck();
   }
 
   try {
