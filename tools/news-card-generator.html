@@ -10,9 +10,9 @@ function addReelToQueue(){
   const r=window._lastReelR,meta=window._lastReelMeta;
   if(!r){showT('আগে Generate করুন','er');return;}
   const allHashtags=[...(r.hashtags?.tier1_trending||[]),...(r.hashtags?.tier2_niche||[]),...(r.hashtags?.tier3_brand||[])].join(' ');
-  const caption=(r.caption?.main||'')+'
-
-'+allHashtags;
+  const caption=(r.caption?.main||'')+'\n\n'+allHashtags;
+  const caption=(r.caption?.main||'')+'\n\n'+allHashtags;
+  const caption=(r.caption?.main||'')+'\n\n'+allHashtags;
   showT('⏳ Video capture হচ্ছে...','am');
   captureReelBlob(meta).then(blob=>{
     queue.push({id:uid(),name:'Reel: '+(r.hook?.text||'').substring(0,30)+'...',imgSrc:null,imgB64:null,imgMime:null,videoBlob:blob,caption:caption,platform:'reel',status:'ready',selected:false});
@@ -44,9 +44,9 @@ function sendReelToFBAutoPost(){
   const r=window._lastReelR, meta=window._lastReelMeta;
   if(!r){showT('আগে Generate করুন','er');return;}
   const allHashtags=[...(r.hashtags?.tier1_trending||[]),...(r.hashtags?.tier2_niche||[]),...(r.hashtags?.tier3_brand||[])].join(' ');
-  const caption=(r.caption?.main||'')+'
-
-'+allHashtags;
+  const caption=(r.caption?.main||'')+'\n\n'+allHashtags;
+  const caption=(r.caption?.main||'')+'\n\n'+allHashtags;
+  const caption=(r.caption?.main||'')+'\n\n'+allHashtags;
   showT('⏳ Video capture হচ্ছে...','am');
   captureReelBlob(meta).then(blob=>{
     // Convert blob to base64 to send via postMessage
