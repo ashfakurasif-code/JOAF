@@ -29,6 +29,19 @@ const NOTIFICATION_TYPES = {
   welcome:    { title: '🔥 JOAF-এ স্বাগতম!',       body: 'বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চে যোগ দিন।',    url: '/' },
 };
 
+
+function safeJsonParse(str) {
+  if (!str || typeof str !== 'string' || str.trim() === '') {
+    return null;
+  }
+
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return null;
+  }
+}
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -131,11 +144,19 @@ exports.handler = async (event) => {
       docs.map(async (doc) => {
         try {
           const sub = typeof doc.subscriptionJson === 'string'
-            ? JSON.parse(doc.subscriptionJson)
+            ? safeJsonParse(doc.subscriptionJson)
             : doc.subscriptionJson;
 
-          if (!sub?.endpoint) {
-            throw new Error('Invalid subscription payload');
+          if (!sub || !sub?.endpoint) {
+            console.warn('Skipping corrupted subscriber ID: ' + (doc.$id || doc.id));
+
+            await awUpdate(COL_SUBS, doc.$id || doc.id, {
+              active: false,
+              updatedAt: new Date().toISOString(),
+            }).catch(() => {});
+
+            failed += 1;
+            return;
           }
 
           await webpush.sendNotification(sub, payload);
