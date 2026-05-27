@@ -1,9 +1,11 @@
+// netlify/functions/send-notification.js
+// Pure Appwrite — Firebase dependency fully removed post-migration
+
 const webpush = require('web-push');
 const {
   awListAll,
   awCreate,
   awUpdate,
-  awUpsert,
   sanitizeId,
 } = require('./aw-utils');
 
@@ -30,149 +32,10 @@ const NOTIFICATION_TYPES = {
   welcome:    { title: '🔥 JOAF-এ স্বাগতম!',       body: 'বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চে যোগ দিন।',    url: '/' },
 };
 
-// ── Firebase Admin singleton ───────────────────────────────────────────────
-let _firebaseApp = null;
-
-function getFirebaseFirestore() {
-  // Lazily initialize firebase-admin only when needed (fallback path)
-  const admin = require('firebase-admin');
-
-  if (_firebaseApp) {
-    return admin.firestore();
-  }
-
-  const projectId    = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail  = process.env.FIREBASE_CLIENT_EMAIL;
-  // Netlify stores literal \n in env vars — convert back to real newlines for PEM
-  const privateKey   = process.env.FIREBASE_PRIVATE_KEY
-    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-    : undefined;
-
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error(
-      'Firebase env vars missing: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY'
-    );
-  }
-
-  // Guard against double-init (multiple warm lambda invocations)
-  if (!admin.apps.length) {
-    _firebaseApp = admin.initializeApp({
-      credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
-    });
-  } else {
-    _firebaseApp = admin.app();
-  }
-
-  return admin.firestore();
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-
 function safeJsonParse(str) {
   if (!str || typeof str !== 'string' || str.trim() === '') return null;
   try { return JSON.parse(str); } catch (e) { return null; }
 }
-
-/**
- * Derive the deterministic Appwrite document ID from a push endpoint URL.
- * Must stay in sync with save-subscription.js.
- */
-function endpointToDocId(endpoint) {
-  return sanitizeId(
-    Buffer.from(endpoint).toString('base64url').slice(-32)
-  );
-}
-
-/**
- * Fetch the original clean subscription from Firestore, upsert it back into
- * Appwrite with active:true, and return the parsed PushSubscription object.
- *
- * Returns null if the document cannot be recovered (missing, no valid sub).
- */
-async function recoverFromFirestore(docId, knownEndpoint) {
-  let firestore;
-  try {
-    firestore = getFirebaseFirestore();
-  } catch (initErr) {
-    console.error('[Fallback] Firebase init failed:', initErr.message);
-    return null;
-  }
-
-  try {
-    // Try by Appwrite doc ID first (Firestore docs often share the same key)
-    let fsDoc = null;
-
-    // Attempt 1: direct doc lookup by docId
-    const directRef = firestore.collection('push_subscriptions').doc(docId);
-    const directSnap = await directRef.get();
-    if (directSnap.exists) {
-      fsDoc = directSnap.data();
-    }
-
-    // Attempt 2: query by endpoint
-    if (!fsDoc && knownEndpoint) {
-      const snap = await firestore
-        .collection('push_subscriptions')
-        .where('endpoint', '==', knownEndpoint)
-        .limit(1)
-        .get();
-      if (!snap.empty) {
-        fsDoc = snap.docs[0].data();
-      }
-    }
-
-    if (!fsDoc) {
-      console.warn('[Fallback] No Firestore document found for docId:', docId);
-      return null;
-    }
-
-    // Extract the subscription object — handle all known storage shapes
-    let sub = fsDoc.subscription || fsDoc.pushSubscription || fsDoc.subscriptionJson || null;
-    if (typeof sub === 'string') sub = safeJsonParse(sub);
-
-    // Ensure we at least have an endpoint
-    const endpoint = (sub && sub.endpoint) || fsDoc.endpoint || knownEndpoint;
-    if (!endpoint) {
-      console.warn('[Fallback] Recovered Firestore doc has no endpoint, skipping.');
-      return null;
-    }
-
-    // Rebuild a clean, well-formed subscription object
-    const cleanSub = {
-      endpoint,
-      keys: sub && sub.keys ? sub.keys : (fsDoc.keys || {}),
-      ...(sub && sub.expirationTime !== undefined ? { expirationTime: sub.expirationTime } : {}),
-    };
-
-    if (!cleanSub.keys || !cleanSub.keys.p256dh || !cleanSub.keys.auth) {
-      console.warn('[Fallback] Recovered subscription missing keys, cannot send:', endpoint);
-      return null;
-    }
-
-    const cleanSubJson = JSON.stringify(cleanSub);
-    const upsertId = endpointToDocId(endpoint);
-
-    // Upsert clean data back into Appwrite, forcing active:true
-    await awUpsert(COL_SUBS, upsertId, {
-      endpoint,
-      subscriptionJson: cleanSubJson,
-      district: fsDoc.district || '',
-      active: true,
-      updatedAt: new Date().toISOString(),
-    }).catch((upsertErr) => {
-      // Non-fatal — we still attempt the push
-      console.error('[Fallback] Appwrite upsert failed (non-fatal):', upsertErr.message);
-    });
-
-    console.log('[Fallback] Recovered and upserted clean subscription:', upsertId);
-    return cleanSub;
-  } catch (err) {
-    console.error('[Fallback] Firestore recovery error:', err.message);
-    return null;
-  }
-}
-
-// ── Main handler ───────────────────────────────────────────────────────────
 
 exports.handler = async (event) => {
   const headers = {
@@ -181,10 +44,7 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
-
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
@@ -195,10 +55,6 @@ exports.handler = async (event) => {
   }
 
   try {
-    // TASK 1: Fix \n token in VAPID_PRIVATE_KEY before passing to web-push.
-    // Netlify stores env var newlines as literal \n — web-push expects a raw base64url
-    // string (no newlines), but if the key was accidentally stored with embedded \n
-    // they must be stripped, not left as literal backslash-n which corrupts the key.
     const vapidPrivateKey = (process.env.VAPID_PRIVATE_KEY || '').replace(/\\n/g, '').replace(/\n/g, '');
     const vapidPublicKey  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/\\n/g, '').replace(/\n/g, '');
 
@@ -209,7 +65,6 @@ exports.handler = async (event) => {
     );
 
     const requestBody = JSON.parse(event.body || '{}');
-
     const {
       type,
       title: customTitle,
@@ -236,35 +91,21 @@ exports.handler = async (event) => {
           url:   customUrl   || '/',
         };
 
-    // Fetch all subscriptions (Appwrite 1.9.5 boolean query workaround — filter in-memory)
     let docs = await awListAll(COL_SUBS, [], 500);
 
-    // Keep both active docs AND inactive/corrupted ones (we'll attempt recovery below)
-    const allDocs = (docs || []).map((doc) => ({
-      id: doc.id,
-      ...doc.data,
-    }));
-
-    // Separate healthy from potentially-recoverable
-    let activeDocs = allDocs.filter((doc) => {
-      if (doc.active === false) return false;
-      return !!(doc.endpoint || doc.subscriptionJson);
-    });
-
-    const corruptedOrInactive = allDocs.filter((doc) => {
-      // active===false OR missing both endpoint and subscriptionJson
-      return doc.active === false || (!doc.endpoint && !doc.subscriptionJson);
-    });
+    let activeDocs = (docs || [])
+      .map(doc => ({ id: doc.id, ...doc.data }))
+      .filter(doc => doc.active !== false && !!(doc.endpoint || doc.subscriptionJson));
 
     if (filterDistrict && ['blood', 'alert', 'weather'].includes(type)) {
-      activeDocs = activeDocs.filter((doc) => doc.district === filterDistrict);
+      activeDocs = activeDocs.filter(doc => doc.district === filterDistrict);
     }
 
-    if (!activeDocs.length && !corruptedOrInactive.length) {
+    if (!activeDocs.length) {
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ success: true, sent: 0, failed: 0, total: 0, message: 'No subscribers' }),
+        body: JSON.stringify({ success: true, sent: 0, failed: 0, total: 0, message: 'No active subscribers' }),
       };
     }
 
@@ -279,7 +120,6 @@ exports.handler = async (event) => {
     let sent   = 0;
     let failed = 0;
 
-    // ── Process healthy active subscribers ─────────────────────────────────
     await Promise.allSettled(
       activeDocs.map(async (doc) => {
         const docId = doc.$id || doc.id;
@@ -288,72 +128,20 @@ exports.handler = async (event) => {
             ? safeJsonParse(doc.subscriptionJson)
             : doc.subscriptionJson;
 
-          // TASK 2: If sub is null/missing, attempt Firestore recovery
           if (!sub || !sub.endpoint) {
-            console.warn('[Active] Corrupted subscription detected, attempting Firestore recovery. ID:', docId);
-            const recovered = await recoverFromFirestore(docId, doc.endpoint || null);
-            if (recovered) {
-              await webpush.sendNotification(recovered, payload);
-              sent += 1;
-            } else {
-              await awUpdate(COL_SUBS, docId, {
-                active: false,
-                updatedAt: new Date().toISOString(),
-              }).catch(() => {});
-              failed += 1;
-            }
+            // Corrupted doc — mark inactive and skip
+            await awUpdate(COL_SUBS, docId, { active: false, updatedAt: new Date().toISOString() }).catch(() => {});
+            failed++;
             return;
           }
 
           await webpush.sendNotification(sub, payload);
-          sent += 1;
+          sent++;
         } catch (err) {
-          failed += 1;
-          console.error('Push send failure:', err.statusCode || 'UNKNOWN', err.message);
-
+          failed++;
+          console.error('Push failure:', err.statusCode || 'UNKNOWN', err.message);
           if (err.statusCode === 404 || err.statusCode === 410) {
-            await awUpdate(COL_SUBS, docId, {
-              active: false,
-              updatedAt: new Date().toISOString(),
-            }).catch(() => {});
-            console.log('Disabled stale subscription:', docId);
-          }
-        }
-      })
-    );
-
-    // ── TASK 2: Process corrupted/inactive subscribers via Firestore fallback ──
-    await Promise.allSettled(
-      corruptedOrInactive.map(async (doc) => {
-        const docId = doc.$id || doc.id;
-        const knownEndpoint = doc.endpoint || null;
-
-        console.log('[Fallback] Attempting Firestore recovery for inactive/corrupted doc:', docId);
-
-        try {
-          const recovered = await recoverFromFirestore(docId, knownEndpoint);
-
-          if (!recovered) {
-            console.warn('[Fallback] Could not recover doc, marking failed:', docId);
-            failed += 1;
-            return;
-          }
-
-          // Send notification immediately using the recovered clean subscription
-          await webpush.sendNotification(recovered, payload);
-          sent += 1;
-          console.log('[Fallback] Successfully sent notification via recovered subscription:', docId);
-        } catch (err) {
-          failed += 1;
-          console.error('[Fallback] Push failed for recovered sub:', err.statusCode || 'UNKNOWN', err.message);
-
-          if (err.statusCode === 404 || err.statusCode === 410) {
-            // The recovered subscription is also stale — disable it
-            await awUpdate(COL_SUBS, docId, {
-              active: false,
-              updatedAt: new Date().toISOString(),
-            }).catch(() => {});
-            console.log('[Fallback] Disabled irrecoverable stale subscription:', docId);
+            await awUpdate(COL_SUBS, docId, { active: false, updatedAt: new Date().toISOString() }).catch(() => {});
           }
         }
       })
@@ -366,20 +154,16 @@ exports.handler = async (event) => {
       url:    notifData.url,
       sent,
       failed,
-      total:  allDocs.length,
+      total:  activeDocs.length,
       sentAt: new Date().toISOString(),
     }).catch(() => {});
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        success: true,
-        sent,
-        failed,
-        total: allDocs.length,
-      }),
+      body: JSON.stringify({ success: true, sent, failed, total: activeDocs.length }),
     };
+
   } catch (err) {
     console.error('send-notification fatal:', err);
     return {
