@@ -229,12 +229,10 @@ export async function getDoc(docRef) {
 }
 
 export async function getDocs(ref) {
-  const { db, Query } = await getSdk();
+  const { db } = await getSdk();
   const { collection, constraints } = buildQuery(ref);
   const queries = await buildQueries(constraints);
-  // Force fresh fetch — prevent Appwrite SDK response caching
-  const freshQueries = [...queries];
-  const result = await db.listDocuments(AW_DB, collection, freshQueries);
+  const result = await db.listDocuments(AW_DB, collection, queries);
   const docs = (result.documents || []).map(makeDoc);
   return makeSnapshot(docs);
 }

@@ -1,9 +1,12 @@
+// netlify/functions/send-notification.js
+// Pure Appwrite — Firebase dependency fully removed post-migration
+
 const webpush = require('web-push');
 const {
   awListAll,
   awCreate,
   awUpdate,
-  
+  sanitizeId,
 } = require('./aw-utils');
 
 const COL_SUBS = 'push_subscriptions';
@@ -29,17 +32,9 @@ const NOTIFICATION_TYPES = {
   welcome:    { title: '🔥 JOAF-এ স্বাগতম!',       body: 'বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চে যোগ দিন।',    url: '/' },
 };
 
-
 function safeJsonParse(str) {
-  if (!str || typeof str !== 'string' || str.trim() === '') {
-    return null;
-  }
-
-  try {
-    return JSON.parse(str);
-  } catch (e) {
-    return null;
-  }
+  if (!str || typeof str !== 'string' || str.trim() === '') return null;
+  try { return JSON.parse(str); } catch (e) { return null; }
 }
 
 exports.handler = async (event) => {
@@ -49,28 +44,27 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
-
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   const adminKey = event.headers['x-admin-key'] || '';
-
   if (adminKey !== process.env.ADMIN_SECRET_KEY) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
   try {
-    // Sanitize VAPID keys — Netlify env vars can inject literal \n strings
-    const vapidPublic  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/\\n/g, '').trim();
-    const vapidPrivate = (process.env.VAPID_PRIVATE_KEY || '').replace(/\\n/g, '').trim();
-    webpush.setVapidDetails('mailto:admin@julyforum.com', vapidPublic, vapidPrivate);
+    const vapidPrivateKey = (process.env.VAPID_PRIVATE_KEY || '').replace(/\\n/g, '').replace(/\n/g, '');
+    const vapidPublicKey  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/\\n/g, '').replace(/\n/g, '');
+
+    webpush.setVapidDetails(
+      'mailto:admin@julyforum.com',
+      vapidPublicKey,
+      vapidPrivateKey
+    );
 
     const requestBody = JSON.parse(event.body || '{}');
-
     const {
       type,
       title: customTitle,
@@ -88,125 +82,94 @@ exports.handler = async (event) => {
       ? {
           ...NOTIFICATION_TYPES[type],
           ...(customTitle ? { title: customTitle } : {}),
-          ...(customBody ? { body: customBody } : {}),
-          ...(customUrl ? { url: customUrl } : {}),
+          ...(customBody  ? { body: customBody }   : {}),
+          ...(customUrl   ? { url: customUrl }     : {}),
         }
       : {
           title: customTitle || '🔥 JOAF',
-          body: customBody || 'নতুন আপডেট এসেছে',
-          url: customUrl || '/',
+          body:  customBody  || 'নতুন আপডেট এসেছে',
+          url:   customUrl   || '/',
         };
 
-    // Appwrite 1.9.5 boolean query parser workaround:
-    // fetch all subscriptions and filter in-memory.
     let docs = await awListAll(COL_SUBS, [], 500);
 
-    docs = (docs || [])
-      .map((doc) => ({
-        id: doc.id,
-        ...doc.data,
-      }))
-      .filter((doc) => {
-        if (doc.active === false) return false;
-
-        const hasEndpoint =
-          !!doc.endpoint ||
-          !!doc.subscriptionJson;
-
-        return hasEndpoint;
-      });
+    let activeDocs = (docs || [])
+      .map(doc => ({ id: doc.id, ...doc.data }))
+      .filter(doc => doc.active !== false && !!(doc.endpoint || doc.subscriptionJson));
 
     if (filterDistrict && ['blood', 'alert', 'weather'].includes(type)) {
-      docs = docs.filter((doc) => doc.district === filterDistrict);
+      activeDocs = activeDocs.filter(doc => doc.district === filterDistrict);
     }
 
-    if (!docs.length) {
+    if (!activeDocs.length) {
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ success: true, sent: 0, failed: 0, total: 0, message: 'No subscribers' }),
+        body: JSON.stringify({ success: true, sent: 0, failed: 0, total: 0, message: 'No active subscribers' }),
       };
     }
 
     const payload = JSON.stringify({
       title: notifData.title,
-      body: notifData.body,
-      url: notifData.url,
-      type: type || 'custom',
-      tag: `joaf-${type || 'custom'}-${Date.now()}`,
+      body:  notifData.body,
+      url:   notifData.url,
+      type:  type || 'custom',
+      tag:   `joaf-${type || 'custom'}-${Date.now()}`,
     });
 
-    let sent = 0;
+    let sent   = 0;
     let failed = 0;
 
     await Promise.allSettled(
-      docs.map(async (doc) => {
+      activeDocs.map(async (doc) => {
+        const docId = doc.$id || doc.id;
         try {
-          let sub = typeof doc.subscriptionJson === 'string'
+          const sub = typeof doc.subscriptionJson === 'string'
             ? safeJsonParse(doc.subscriptionJson)
             : doc.subscriptionJson;
 
-          // If JSON parse failed but we have a raw endpoint, reconstruct minimal sub
-          if ((!sub || !sub?.endpoint) && doc.endpoint) {
-            sub = { endpoint: doc.endpoint };
-          }
-
-          if (!sub || !sub?.endpoint) {
-            console.warn('Skipping truly corrupted subscriber ID: ' + (doc.$id || doc.id));
-            // Do NOT mark inactive — may be a transient parse issue; just skip this send
-            failed += 1;
+          if (!sub || !sub.endpoint) {
+            // Corrupted doc — mark inactive and skip
+            await awUpdate(COL_SUBS, docId, { active: false, updatedAt: new Date().toISOString() }).catch(() => {});
+            failed++;
             return;
           }
 
           await webpush.sendNotification(sub, payload);
-          sent += 1;
+          sent++;
         } catch (err) {
-          failed += 1;
-          console.error('Push send failure:', err.statusCode || 'UNKNOWN', err.message);
-
+          failed++;
+          console.error('Push failure:', err.statusCode || 'UNKNOWN', err.message);
           if (err.statusCode === 404 || err.statusCode === 410) {
-            await awUpdate(COL_SUBS, doc.id, {
-              active: false,
-              updatedAt: new Date().toISOString(),
-            }).catch(() => {});
-
-            console.log('Disabled stale subscription:', doc.id);
+            await awUpdate(COL_SUBS, docId, { active: false, updatedAt: new Date().toISOString() }).catch(() => {});
           }
         }
       })
     );
 
     await awCreate(COL_HIST, {
-      type: type || 'custom',
-      title: notifData.title,
-      body: notifData.body,
-      url: notifData.url,
+      type:   type || 'custom',
+      title:  notifData.title,
+      body:   notifData.body,
+      url:    notifData.url,
       sent,
       failed,
-      total: docs.length,
+      total:  activeDocs.length,
       sentAt: new Date().toISOString(),
     }).catch(() => {});
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        success: true,
-        sent,
-        failed,
-        total: docs.length,
-      }),
+      body: JSON.stringify({ success: true, sent, failed, total: activeDocs.length }),
     };
+
   } catch (err) {
     console.error('send-notification fatal:', err);
-
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({
-        success: false,
-        error: err.message,
-      }),
+      body: JSON.stringify({ success: false, error: err.message }),
     };
   }
 };

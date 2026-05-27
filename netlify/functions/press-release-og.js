@@ -119,8 +119,10 @@ const img = imgRaw.split('/').map((seg, i) => i < 3 ? seg : encodeURIComponent(s
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { getFirestore, getDocs, collection, query, orderBy, limit, initializeApp, getApps } from '/js/aw-firestore.js';
-const _db = getFirestore();
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, getDocs, collection, query, orderBy, limit } from '/js/aw-firestore.js';
+const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _db = getFirestore(_fa);
 (async () => {
   try {
     const snap = await getDocs(query(collection(_db,'press_releases'), orderBy('date','desc'), limit(5)));

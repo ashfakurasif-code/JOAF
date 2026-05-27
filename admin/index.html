@@ -876,7 +876,7 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
     <div class="page" id="page-leader">
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">🏛️ নেতা ট্র্যাকার</div><div class="card-sub">Appwrite-এ data save হলে সাইটে automatically দেখাবে</div></div>
+          <div><div class="card-title">🏛️ নেতা ট্র্যাকার</div><div class="card-sub">Firestore এ data save হলে সাইটে automatically দেখাবে</div></div>
           <div style="display:flex;gap:6px;align-items:center;">
             <button class="btn btn-ghost btn-sm" id="leader-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);" onclick="bulkDeleteLeaders()">🗑️ Selected Delete</button>
             <button class="btn btn-primary btn-sm" onclick="openModal('leaderModal')">+ নতুন নেতা</button>
@@ -966,7 +966,7 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">আজকের দাম</div></div>
+        <div class="card-header"><div class="card-title">আজকের দাম (Firestore)</div></div>
         <div id="bajar-current"><div class="loading">লোড হচ্ছে...</div></div>
       </div>
     </div>
@@ -1210,14 +1210,53 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
       <div class="card">
         <div class="card-header"><div class="card-title">🔧 System Tools</div></div>
         <div class="btn-row">
-          <button class="btn btn-ghost" id="btn-migrate-start" onclick="migrationStart()">🔄 Full Mirror Migration</button>
-          <button class="btn btn-ghost" id="btn-migrate-resume" style="display:none" onclick="migrationResume()">▶️ Resume</button>
-          <button class="btn btn-ghost" onclick="migrationVerify()">📊 Sync Report</button>
-          <button class="btn btn-ghost" onclick="fixActiveSubscribers()">🔧 Fix Inactive Subs</button>
           <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
           <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
           <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">🔥 Appwrite Console</a>
           <a href="https://app.netlify.com/projects/joaf" target="_blank" class="btn btn-ghost">🌐 Netlify Dashboard</a>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           FIRESTORE → APPWRITE MIGRATION PANEL
+           Auto-hidden permanently after successful migration.
+           Stored in localStorage key: joaf_migration_done
+      ════════════════════════════════════════════════════════════ -->
+      <div class="card" id="migration-panel" style="border:1.5px solid var(--amber-border,#f59e0b44);background:var(--amber-bg,#fffbeb10);">
+        <div class="card-header">
+          <div class="card-title">🚚 Firestore → Appwrite Migration</div>
+          <div style="font-size:11px;color:var(--text2)">One-time operation — panel hides permanently after success</div>
+        </div>
+
+        <!-- Step badges -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="mig-steps">
+          <span class="mig-step" id="mig-step-validate" style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">① Validate</span>
+          <span class="mig-step" id="mig-step-fetch"    style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">② Fetch Firestore</span>
+          <span class="mig-step" id="mig-step-upsert"   style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">③ Upsert Appwrite</span>
+          <span class="mig-step" id="mig-step-done"     style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">④ Complete</span>
+        </div>
+
+        <!-- Progress bar -->
+        <div style="background:var(--surface2);border-radius:8px;height:10px;overflow:hidden;margin-bottom:8px;" id="mig-progress-wrap">
+          <div id="mig-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#10b981);border-radius:8px;transition:width 0.4s ease;"></div>
+        </div>
+        <div id="mig-status-text" style="font-size:12px;color:var(--text2);margin-bottom:12px;min-height:18px;"></div>
+
+        <!-- Error box -->
+        <div id="mig-error-box" style="display:none;background:var(--red-bg,#fef2f2);border:1px solid var(--red-border,#fca5a5);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:600;color:var(--red,#ef4444);margin-bottom:4px;">❌ Error</div>
+          <pre id="mig-error-msg" style="font-size:11px;color:var(--red,#ef4444);white-space:pre-wrap;margin:0;"></pre>
+        </div>
+
+        <!-- Result summary -->
+        <div id="mig-result-box" style="display:none;background:var(--green-bg,#f0fdf4);border:1px solid var(--green-border,#86efac);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+          <div id="mig-result-text" style="font-size:12px;color:var(--green,#16a34a);"></div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="btn-row">
+          <button id="mig-btn-start"  class="btn btn-primary" onclick="migrationStart()">🚀 Validate &amp; Migrate</button>
+          <button id="mig-btn-resume" class="btn btn-primary"  onclick="migrationResume()" style="display:none;">🔄 Resume / Retry</button>
         </div>
       </div>
     </div>
@@ -1825,7 +1864,7 @@ async function initDashboard() {
     }
   };
   const HEALTH_ITEMS = [
-    { label: 'Appwrite',        check: async () => { const r=await fetch('https://fra.cloud.appwrite.io/v1/databases/joaf/collections/push_subscriptions/documents?limit=1',{headers:{'X-Appwrite-Project':'6a11b6cd000b59f318eb'},cache:'no-store'}); return {ok:r.ok,val:r.ok?'Connected':'Err '+r.status}; } },
+    { label: 'Appwrite',        check: async () => { try{ const r=await fetch('/.netlify/functions/get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Error'}; }catch(e){return{ok:false,val:'Offline'};} } },
     { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
     { label: 'Notifications Fn',check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
   ];
@@ -1843,34 +1882,19 @@ async function initDashboard() {
   }
 
   try {
-    // Fresh direct Appwrite REST fetch — no cache, no Firebase shim
-    const AW_EP = 'https://fra.cloud.appwrite.io/v1';
-    const AW_PJ = '6a11b6cd000b59f318eb';
-    const AW_DB = 'joaf';
-    const TS = Date.now(); // cache-bust
-
-    async function awFetch(col, limit=200) {
-      const r = await fetch(`${AW_EP}/databases/${AW_DB}/collections/${col}/documents?limit=${limit}&queries[]=limit(${limit})&_t=${TS}`,{
-        headers:{'X-Appwrite-Project':AW_PJ,'Content-Type':'application/json'},
-        cache:'no-store'
-      });
-      if(!r.ok) throw new Error('AW '+col+' '+r.status);
-      return r.json();
-    }
-
-    const [subData, donorData, alertData, histData] = await Promise.all([
-      awFetch('push_subscriptions', 500),
-      awFetch('donors', 300),
-      awFetch('alerts', 200),
-      awFetch('notification_history', 200)
+    // Parallel load: Appwrite stats (subs + notif history) + Firestore (donors + alerts)
+    // push_subscriptions and notification_history have migrated to Appwrite;
+    // donors/alerts remain in Firestore.
+    const [statsRes, donorSnap, alertSnap] = await Promise.all([
+      fetch('/.netlify/functions/get-stats', {
+        headers: { 'X-Admin-Key': ADMIN_KEY }
+      }).then(r => r.ok ? r.json() : Promise.reject(new Error('get-stats ' + r.status))),
+      getDocs(collection(db,'donors')),
+      getDocs(collection(db,'alerts')),
     ]);
 
-    const allSubs = subData.documents || [];
-    const activeCount = allSubs.filter(d => d.active !== false).length;
-    const inactiveCount = allSubs.length - activeCount;
-    const donors = (donorData.documents||[]).length;
-    const alerts = (alertData.documents||[]).length;
-    const notifs = (histData.documents||[]).length;
+    const activeCount = statsRes.activeSubs || 0;
+    const donors = donorSnap.size, alerts = alertSnap.size, notifs = statsRes.totalNotifs || 0;
 
     // Set KPIs
     setEl('ds-sub', activeCount); setEl('b-notif', activeCount); setEl('n-sub', activeCount); setEl('an-subs', activeCount); setEl('an-kpi-subs', activeCount); anCachedSubs = activeCount;
@@ -1878,24 +1902,19 @@ async function initDashboard() {
     setEl('b-blood', donors); setEl('n-total', notifs); setEl('an-notifs', notifs); setEl('an-kpi-notif', notifs); anCachedNotifs = notifs;
 
     const subSubEl = document.getElementById('ds-sub-sub');
-    if(subSubEl){ subSubEl.textContent = `${inactiveCount} inactive`; }
+    if(subSubEl){ subSubEl.textContent = `${(statsRes.totalSubs||0) - activeCount} inactive`; }
 
-    // Today notifications
-    const today = new Date(); today.setHours(0,0,0,0);
-    const histDocs = histData.documents || [];
-    let todayNotifs = 0;
-    histDocs.forEach(d=>{ const t=d.sentAt?new Date(d.sentAt):null; if(t&&t>=today)todayNotifs++; });
+    // Today notifications — computed server-side in get-stats
+    const todayNotifs = statsRes.todayNotifs || 0;
     setEl('n-today', todayNotifs);
     const todaySubEl = document.getElementById('ds-notif-today');
     if(todaySubEl) todaySubEl.textContent = `আজ ${todayNotifs}টি পাঠানো`;
 
-    // Recent history
-    const hDocs = histDocs.map(d=>({...d,id:d.$id,sentAt:{seconds:d.sentAt?new Date(d.sentAt).getTime()/1000:0,toDate:()=>new Date(d.sentAt)}}))
-      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0))).slice(0,5);
-    renderHistory('dash-history', hDocs);
+    // Recent history (already sorted newest-first by get-stats)
+    renderHistory('dash-history', (statsRes.history || []).slice(0, 5));
 
     // Blood preview
-    const bDocs = (donorData.documents||[]).slice(0,5).map(d=>({...d,id:d.$id}));
+    const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
     renderBloodPreview(bDocs);
   } catch(e) { console.log('dashboard error', e); }
 
@@ -2012,18 +2031,15 @@ async function callSendNotif(payload) {
 
 async function loadNotifPage() {
   try {
-    const AW_EP2='https://fra.cloud.appwrite.io/v1',AW_PJ2='6a11b6cd000b59f318eb',AW_DB2='joaf',TS2=Date.now();
-    async function awFetch2(col,lim=200){const r=await fetch(`${AW_EP2}/databases/${AW_DB2}/collections/${col}/documents?limit=${lim}&_t=${TS2}`,{headers:{'X-Appwrite-Project':AW_PJ2},cache:'no-store'});if(!r.ok)throw new Error(col+' '+r.status);return r.json();}
-    const [histData2, subData2] = await Promise.all([awFetch2('notification_history'), awFetch2('push_subscriptions',500)]);
-    const rawDocs = (histData2.documents||[]).map(d=>({...d,id:d.$id,sentAt:{seconds:d.sentAt?new Date(d.sentAt).getTime()/1000:0,toDate:()=>new Date(d.sentAt)}}))
-      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0)));
-    setEl('n-total', (histData2.documents||[]).length);
-    const activeCount = (subData2.documents||[]).filter(d=>d.active!==false).length;
-    setEl('n-sub', activeCount);
-    const today = new Date(); today.setHours(0,0,0,0);
-    const todayCount = rawDocs.filter(d=>{ const t=d.sentAt?.toDate?.(); return t&&t>=today; }).length;
-    setEl('n-today', todayCount);
-    renderHistory('notif-history', rawDocs.slice(0,10));
+    // push_subscriptions and notification_history live in Appwrite — use get-stats
+    const statsRes = await fetch('/.netlify/functions/get-stats', {
+      headers: { 'X-Admin-Key': ADMIN_KEY }
+    }).then(r => r.ok ? r.json() : Promise.reject(new Error('get-stats ' + r.status)));
+
+    setEl('n-total', statsRes.totalNotifs || 0);
+    setEl('n-sub',   statsRes.activeSubs  || 0);
+    setEl('n-today', statsRes.todayNotifs || 0);
+    renderHistory('notif-history', (statsRes.history || []).slice(0, 10));
   } catch(e) { console.log(e); }
 }
 
@@ -2033,7 +2049,20 @@ function renderHistory(elId, docs) {
   const colors = {bajar:'#fbbf24',weather:'#60a5fa',streak:'#f05252',blood:'#f05252',alert:'#f05252',live:'#a78bfa',default:'#34d399'};
   el.innerHTML = docs.map(d => {
     const color = colors[d.type]||colors.default;
-    const time = d.sentAt?.toDate?.()?.toLocaleString('bn-BD') || (d.sentAt?.seconds ? new Date(d.sentAt.seconds*1000).toLocaleString('bn-BD') : '—');
+    // Handle all three date formats: Appwrite ISO string, Firestore Timestamp object, Firestore seconds
+    let time = '—';
+    if (d.sentAt) {
+      if (typeof d.sentAt === 'string') {
+        // Appwrite stores as ISO string
+        const dt = new Date(d.sentAt);
+        if (!isNaN(dt)) time = dt.toLocaleString('bn-BD');
+      } else if (typeof d.sentAt.toDate === 'function') {
+        // Firestore Timestamp
+        time = d.sentAt.toDate().toLocaleString('bn-BD');
+      } else if (typeof d.sentAt.seconds === 'number') {
+        time = new Date(d.sentAt.seconds * 1000).toLocaleString('bn-BD');
+      }
+    }
     return `<div class="hist-item">
       <div class="hist-dot" style="background:${color}"></div>
       <div class="hist-info"><div class="hist-title">${d.title||'—'}</div><div class="hist-time">${time}</div></div>
@@ -2281,7 +2310,7 @@ async function loadLeaders() {
   tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await getDocs(collection(db,'leaders'));
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">Appwrite-এ কোনো data নেই</td></tr>'; return; }
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
       return `<tr>
@@ -2446,7 +2475,7 @@ window.runLeaderAiUpdate = async function() {
 };
 
 window.migrateLeaders = async function() {
-  if (!confirm('Appwrite-এ সব নেতার latest data migrate করবেন? পুরনো data replace হবে না, নতুন add হবে।')) return;
+  if (!confirm('Firestore-এ সব নেতার latest data migrate করবেন? পুরনো data replace হবে না, নতুন add হবে।')) return;
   const leaders = [
     {id:'yunus',name:'ড. মুহাম্মদ ইউনূস',party:'অন্তর্বর্তীকালীন সরকার',role:'প্রধান উপদেষ্টা',icon:'👴',cat:'সরকার',approval:68,viral:true,
       promises:[{text:'নির্বাচন কমিশন সংস্কার',status:'done'},{text:'বিচার বিভাগ সংস্কার',status:'progress'},{text:'দুর্নীতি দমন কমিশন শক্তিশালীকরণ',status:'progress'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'pending'},{text:'সংবিধান সংস্কার কমিশন গঠন',status:'done'},{text:'নতুন নির্বাচনী রোডম্যাপ',status:'progress'}],
@@ -2731,173 +2760,162 @@ window.changePassword = function() {
 
 window.saveSettings = function() { toast('Settings saved (UI only)','success'); };
 
-// ── Full Firestore → Appwrite Mirror Migration ────────────────────────────────
-const ALL_COLLECTIONS = [
-  'push_subscriptions','notification_history','donors','alerts',
-  'leaders','warriors','members','medicines','press_releases','poll_users'
-];
-
-const _mig = {
-  running: false,
-  collections: [],     // [{name, batches, batchIndex, done}]
-  colIdx: 0,           // current collection index
-  created: 0, updated: 0, failed: 0,
-  grandTotal: 0,
-};
-
-function _migLog(msg, type='info') { toast(msg, type); console.log('[MIG]', msg); }
-
-function _migSetButtons(running) {
-  const s = document.getElementById('btn-migrate-start');
-  const r = document.getElementById('btn-migrate-resume');
-  if (!s) return;
-  s.disabled = running;
-  s.textContent = running ? '⏳ Migrating…' : '🔄 Full Mirror Migration';
-  if (r) r.style.display = 'none';
-}
-
-// Run one batch for the current collection
-async function _migRunBatch() {
-  _mig.running = true;
-  const col = _mig.collections[_mig.colIdx];
-  if (!col) { return _migFinish(); }
-
-  try {
-    const url = `/.netlify/functions/migrate-to-appwrite?key=${ADMIN_KEY}&action=batch&col=${col.name}&batchIndex=${col.batchIndex}`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || 'HTTP ' + res.status);
-
-    _mig.created += data.created || 0;
-    _mig.updated += data.updated || 0;
-    _mig.failed  += data.failed  || 0;
-
-    const colPct  = col.batches > 0 ? Math.round(((col.batchIndex + 1) / col.batches) * 100) : 100;
-    const colsDone = _mig.colIdx + (data.done ? 1 : 0);
-    const overallPct = Math.round((colsDone / _mig.collections.length) * 100);
-
-    _migLog(`⏳ [${col.name}] batch ${col.batchIndex + 1}/${col.batches} (${colPct}%) | মোট ${overallPct}% — ✅${_mig.created} নতুন, 🔄${_mig.updated} আপডেট, ❌${_mig.failed} ব্যর্থ`);
-
-    if (data.done) {
-      _mig.colIdx++;
-      if (_mig.colIdx < _mig.collections.length) {
-        _mig.collections[_mig.colIdx].batchIndex = 0;
-        setTimeout(_migRunBatch, 300);
-      } else {
-        _migFinish();
-      }
-    } else {
-      col.batchIndex++;
-      setTimeout(_migRunBatch, 300);
-    }
-  } catch (e) {
-    _mig.running = false;
-    _migSetButtons(false);
-    const r = document.getElementById('btn-migrate-resume');
-    if (r) r.style.display = 'inline-block';
-    _migLog(`❌ [${col.name}] batch ${col.batchIndex + 1} ব্যর্থ: ${e.message} — Resume চাপুন`, 'error');
-  }
-}
-
-async function _migFinish() {
-  _mig.running = false;
-  _migSetButtons(false);
-  const total = _mig.created + _mig.updated;
-  _migLog(`✅ Migration Complete: ${total} total documents synced successfully (${_mig.created} নতুন, ${_mig.updated} আপডেট, ${_mig.failed} ব্যর্থ)`, 'success');
-  // Auto-run verify
-  setTimeout(migrationVerify, 1000);
-}
-
-window.migrationStart = async function() {
-  if (_mig.running) return;
-  _migSetButtons(true);
-  try {
-    const res  = await fetch(`/.netlify/functions/migrate-to-appwrite?key=${ADMIN_KEY}&action=count`);
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || 'HTTP ' + res.status);
-
-    if (!data.grandTotal) {
-      _migSetButtons(false);
-      return _migLog('ℹ️ Firestore-এ কোনো document পাওয়া যায়নি', 'info');
-    }
-
-    // Build per-collection queue
-    _mig.collections = Object.entries(data.totals)
-      .filter(([, count]) => count > 0)
-      .map(([name, count]) => ({
-        name,
-        count,
-        batches: Math.ceil(count / 8),
-        batchIndex: 0,
-        done: false,
-      }));
-    _mig.colIdx   = 0;
-    _mig.created  = 0;
-    _mig.updated  = 0;
-    _mig.failed   = 0;
-    _mig.grandTotal = data.grandTotal;
-
-    const colList = _mig.collections.map(c => `${c.name}(${c.count})`).join(', ');
-    _migLog(`🚀 Mirror Migration শুরু — ${data.grandTotal} documents, ${_mig.collections.length} collections: ${colList}`);
-    await _migRunBatch();
-  } catch (e) {
-    _migSetButtons(false);
-    _migLog('❌ Migration শুরু হয়নি: ' + e.message, 'error');
-  }
-};
-
-window.migrationResume = async function() {
-  if (_mig.running) return;
-  const r = document.getElementById('btn-migrate-resume');
-  if (r) r.style.display = 'none';
-  _migSetButtons(true);
-  await _migRunBatch();
-};
-
-window.migrationVerify = async function() {
-  toast('📊 Sync Report তৈরি হচ্ছে…', 'info');
-  try {
-    const res  = await fetch(`/.netlify/functions/migrate-to-appwrite?key=${ADMIN_KEY}&action=verify`);
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || 'HTTP ' + res.status);
-
-    const lines = Object.entries(data.report)
-      .map(([col, r]) => `${r.status} ${col}: FB=${r.firebase} → AW=${r.appwrite}`)
-      .join('
-');
-
-    const summary = data.synced
-      ? `✅ Sync সম্পন্ন! Firebase=${data.totalFB} → Appwrite=${data.totalAW} documents`
-      : `⚠️ ${data.mismatches} collection(s)-এ mismatch! Firebase=${data.totalFB}, Appwrite=${data.totalAW}`;
-
-    console.table(data.report);
-    alert(`📊 SYNC REPORT
-
-${lines}
-
-${summary}`);
-    toast(summary, data.synced ? 'success' : 'error');
-  } catch (e) {
-    toast('❌ Verify failed: ' + e.message, 'error');
-  }
-};
-
-window.fixActiveSubscribers = async function() {
-  const btn = event?.target;
-  if(btn){btn.disabled=true;btn.textContent='⏳ Fixing...';}
-  try {
-    const res = await fetch(`/.netlify/functions/migrate-to-appwrite?key=${ADMIN_KEY}&action=fix-active`);
-    const data = await res.json();
-    if(!res.ok||data.error) throw new Error(data.error||'HTTP '+res.status);
-    toast(`✅ ${data.fixed}/${data.total} documents forced to active:true (সব collections)`, 'success');
-  } catch(e) {
-    toast('❌ Fix failed: ' + e.message, 'error');
-  } finally {
-    if(btn){btn.disabled=false;btn.textContent='🔧 Fix Inactive Subs';}
-  }
-};
-
 window.clearCache = function() { toast('Cache cleared','success'); };
+
+// ── Migration Engine ──────────────────────────────────────
+(function() {
+  const DONE_KEY = 'joaf_migration_done';
+
+  // On load: hide panel if migration already completed
+  document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem(DONE_KEY) === '1') {
+      const panel = document.getElementById('migration-panel');
+      if (panel) panel.style.display = 'none';
+    }
+  });
+
+  function setProgress(pct, stepId, label) {
+    const bar = document.getElementById('mig-progress-bar');
+    if (bar) bar.style.width = pct + '%';
+    if (label) {
+      const st = document.getElementById('mig-status-text');
+      if (st) st.textContent = label;
+    }
+    // Highlight step
+    ['validate','fetch','upsert','done'].forEach(function(s) {
+      const el = document.getElementById('mig-step-' + s);
+      if (!el) return;
+      if (s === stepId) {
+        el.style.background = '#f59e0b';
+        el.style.color = '#fff';
+      } else if (
+        (['validate','fetch','upsert','done'].indexOf(s) <
+         ['validate','fetch','upsert','done'].indexOf(stepId))
+      ) {
+        el.style.background = '#10b981';
+        el.style.color = '#fff';
+      } else {
+        el.style.background = 'var(--surface2)';
+        el.style.color = 'var(--text2)';
+      }
+    });
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('mig-error-box');
+    const pre  = document.getElementById('mig-error-msg');
+    if (box) box.style.display = 'block';
+    if (pre) pre.textContent = msg;
+    const resume = document.getElementById('mig-btn-resume');
+    const start  = document.getElementById('mig-btn-start');
+    if (resume) resume.style.display = 'inline-flex';
+    if (start)  start.style.display  = 'none';
+  }
+
+  function clearError() {
+    const box = document.getElementById('mig-error-box');
+    if (box) box.style.display = 'none';
+    const resume = document.getElementById('mig-btn-resume');
+    const start  = document.getElementById('mig-btn-start');
+    if (resume) resume.style.display = 'none';
+    if (start)  start.style.display  = 'inline-flex';
+  }
+
+  function showResult(data) {
+    const box  = document.getElementById('mig-result-box');
+    const text = document.getElementById('mig-result-text');
+    if (!box || !text) return;
+    box.style.display = 'block';
+    text.innerHTML =
+      '<strong>✅ ' + (data.message || 'Migration complete!') + '</strong><br>' +
+      '📦 Total in Firestore: <b>' + (data.total || 0) + '</b> &nbsp;|&nbsp; ' +
+      '➕ Created: <b>' + (data.created || 0) + '</b> &nbsp;|&nbsp; ' +
+      '✏️ Updated: <b>' + (data.updated || 0) + '</b> &nbsp;|&nbsp; ' +
+      '⏭️ Skipped: <b>' + (data.skipped || 0) + '</b>' +
+      (data.failed ? ' &nbsp;|&nbsp; ❌ Failed: <b>' + data.failed + '</b>' : '');
+  }
+
+  async function runMigrationFull() {
+    clearError();
+    const startBtn = document.getElementById('mig-btn-start');
+    if (startBtn) { startBtn.disabled = true; startBtn.textContent = '⏳ Running…'; }
+
+    try {
+      // ── Step 1: Validate ────────────────────────────────
+      setProgress(10, 'validate', '🔍 Validating Firestore & Appwrite connectivity…');
+      const valRes = await fetch('/.netlify/functions/migrate-to-appwrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+        body: JSON.stringify({ action: 'validate' }),
+      });
+      const valData = await valRes.json();
+      if (!valRes.ok || !valData.ok) {
+        throw new Error(
+          'Validation failed:\n' + (valData.errors || []).join('\n') ||
+          JSON.stringify(valData)
+        );
+      }
+      setProgress(30, 'fetch', '📥 Fetching all records from Firestore…');
+
+      // ── Step 2+3: Migrate ───────────────────────────────
+      setProgress(50, 'upsert', '🔄 Upserting into Appwrite (no duplicates, active:true)…');
+      const migRes = await fetch('/.netlify/functions/migrate-to-appwrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
+        body: JSON.stringify({ action: 'migrate' }),
+      });
+      const migData = await migRes.json();
+
+      if (!migRes.ok) {
+        throw new Error(migData.error || 'Migration failed: HTTP ' + migRes.status);
+      }
+
+      if (!migData.success && migData.failed > 0 && !migData.created && !migData.updated) {
+        // Complete failure
+        throw new Error(migData.message + '\n\nFailures:\n' +
+          (migData.failures || []).map(function(f){ return f.id + ': ' + f.error; }).join('\n'));
+      }
+
+      // ── Step 4: Done ────────────────────────────────────
+      setProgress(100, 'done', '✅ Migration complete!');
+      showResult(migData);
+
+      // Warn about partial failures but don't block success
+      if (migData.failed > 0) {
+        const st = document.getElementById('mig-status-text');
+        if (st) st.textContent = '⚠️ Completed with ' + migData.failed + ' failed record(s). See details above.';
+      }
+
+      // Only permanently hide on full success (0 failures)
+      if (!migData.failed || migData.failed === 0) {
+        localStorage.setItem(DONE_KEY, '1');
+        setTimeout(function() {
+          const panel = document.getElementById('migration-panel');
+          if (panel) {
+            panel.style.transition = 'opacity 1s ease';
+            panel.style.opacity = '0';
+            setTimeout(function() { panel.style.display = 'none'; }, 1000);
+          }
+          toast('🎉 Migration 100% complete! Panel removed.', 'success');
+        }, 3000);
+      }
+
+    } catch (err) {
+      setProgress(0, '', '');
+      showError(err.message || String(err));
+      if (startBtn) { startBtn.disabled = false; startBtn.textContent = '🚀 Validate & Migrate'; }
+    }
+  }
+
+  window.migrationStart  = runMigrationFull;
+  window.migrationResume = function() {
+    clearError();
+    runMigrationFull();
+  };
+
+  // Legacy alias (in case old code references it)
+  window.runMigration = window.migrationStart;
+})();
 
 // ── Helpers ──────────────────────────────────────────────
 window.openModal  = id => document.getElementById(id).classList.add('open');

@@ -1,415 +1,274 @@
 // netlify/functions/migrate-to-appwrite.js
-// Full Firestore → Appwrite Mirror Migration
-// Covers ALL collections. Chunked 8/batch. Upsert. active:true forced. Pure JSON.
+// Firestore → Appwrite one-way migration
+// Uses public Firestore REST API (no firebase-admin required)
+// Upserts into Appwrite: no duplicates, forces active:true
 
-'use strict';
+const {
+  AW_ENDPOINT,
+  AW_PROJECT,
+  DB_ID,
+  COLLECTION_ID,
+  awListAll,
+  awCreate,
+  awUpdate,
+  awGet,
+  sanitizeId,
+  DEFAULT_DOC_PERMISSIONS,
+  qEqual,
+  awList,
+} = require('./aw-utils');
 
-const { Client, Databases, Query, ID } = require('node-appwrite');
+// ── Firestore REST (public API key only) ────────────────────────────────────
+const FS_PROJECT = 'joaf-app-45753';
+const FS_API_KEY = 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk';
+const FS_BASE    = `https://firestore.googleapis.com/v1/projects/${FS_PROJECT}/databases/(default)/documents`;
 
-// ── Config ────────────────────────────────────────────────────────────────────
-const FB_API_KEY = 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk';
-const FB_PROJECT = 'joaf-app-45753';
-const FB_BASE    = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents`;
-
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT  = '6a11b6cd000b59f318eb';
-const AW_DB       = 'joaf';
-
-const BATCH_SIZE  = 8;
-
-// All collections to mirror. Schema defines which fields get written and how.
-// Fields not in schema are serialised to JSON strings automatically.
-// 'active' is always forced to true. 'updatedAt' always set.
-const COLLECTIONS = {
-  push_subscriptions: {
-    idField:    'endpoint',         // field used to build deterministic ID
-    idBuilder:  endpointDocId,
-    normalize:  normalizePushSub,
-  },
-  notification_history: {
-    idField:    null,               // use Firestore document ID
-    normalize:  normalizeGeneric,
-  },
-  donors: {
-    idField:    null,
-    normalize:  normalizeGeneric,
-  },
-  alerts: {
-    idField:    null,
-    normalize:  normalizeGeneric,
-  },
-  leaders: {
-    idField:    null,
-    normalize:  normalizeGeneric,
-  },
-  warriors: {
-    idField:    null,
-    normalize:  normalizeGeneric,
-  },
-  members: {
-    idField:    null,
-    normalize:  normalizeGeneric,
-  },
-  medicines: {
-    idField:    null,
-    normalize:  normalizeGeneric,
-  },
-  press_releases: {
-    idField:    null,
-    normalize:  normalizeGeneric,
-  },
-  poll_users: {
-    idField:    null,
-    normalize:  normalizeGeneric,
-  },
-};
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const H = {
-  'Access-Control-Allow-Origin': '*',
-  'Content-Type': 'application/json',
-};
-
-const ok  = (b) => ({ statusCode: 200, headers: H, body: JSON.stringify(b) });
-const bad = (s, m) => ({ statusCode: s,   headers: H, body: JSON.stringify({ error: String(m) }) });
-
-// ── Appwrite ID sanitiser ─────────────────────────────────────────────────────
-function safeId(raw) {
-  if (!raw) return null;
-  let s = String(raw).replace(/[^a-zA-Z0-9]/g, '_').slice(0, 36);
-  if (!s || /^_+$/.test(s) || !/^[a-zA-Z0-9]/.test(s)) {
-    s = 'doc_' + String(raw).replace(/[^a-zA-Z0-9]/g, '').slice(0, 28);
-  }
-  if (!s || s.length < 4) s = 'doc_' + Math.random().toString(36).slice(2, 12);
-  return s.slice(0, 36);
-}
-
-function endpointDocId(endpoint) {
-  if (!endpoint) return null;
-  const b64 = Buffer.from(endpoint).toString('base64url').replace(/[^a-zA-Z0-9]/g, '').slice(-32);
-  return b64.length >= 4 ? b64 : 'sub_' + b64;
-}
-
-// ── Firebase field decoder ────────────────────────────────────────────────────
-function decodeField(v) {
-  if (v === undefined || v === null) return null;
-  if (v.nullValue  !== undefined) return null;
-  if (v.booleanValue !== undefined) return v.booleanValue;
-  if (v.integerValue !== undefined) return String(v.integerValue);
-  if (v.doubleValue  !== undefined) return v.doubleValue;
+function fsFieldToValue(v) {
+  if (!v || typeof v !== 'object') return null;
   if (v.stringValue  !== undefined) return v.stringValue;
-  if (v.timestampValue !== undefined) return v.timestampValue; // ISO string
-  if (v.arrayValue) {
-    return (v.arrayValue.values || []).map(decodeField);
-  }
+  if (v.booleanValue !== undefined) return v.booleanValue;
+  if (v.integerValue !== undefined) return parseInt(v.integerValue, 10);
+  if (v.doubleValue  !== undefined) return parseFloat(v.doubleValue);
+  if (v.nullValue    !== undefined) return null;
+  if (v.timestampValue !== undefined) return v.timestampValue;
   if (v.mapValue) {
     const m = {};
-    for (const [mk, mv] of Object.entries(v.mapValue.fields || {})) {
-      m[mk] = decodeField(mv);
+    for (const [k, mv] of Object.entries(v.mapValue.fields || {})) {
+      m[k] = fsFieldToValue(mv);
     }
     return m;
+  }
+  if (v.arrayValue) {
+    return (v.arrayValue.values || []).map(av => fsFieldToValue(av));
   }
   return null;
 }
 
-// ── Firebase REST fetcher (full paginated collection) ─────────────────────────
-async function fetchFirebaseDocs(colName) {
+async function fsGetCollection(collection, pageToken = null) {
+  let url = `${FS_BASE}/${collection}?key=${FS_API_KEY}&pageSize=300`;
+  if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
+  const r = await fetch(url);
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`Firestore GET failed (${r.status}): ${text.slice(0, 300)}`);
+  }
+  return r.json();
+}
+
+async function fsGetAllDocs(collection) {
   const all = [];
   let pageToken = null;
-
   do {
-    let url = `${FB_BASE}/${colName}?key=${FB_API_KEY}&pageSize=300`;
-    if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
-
-    const res = await fetch(url);
-
-    if (res.status === 404) return []; // collection doesn't exist in Firestore
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Firebase GET /${colName} → ${res.status}: ${txt.slice(0, 300)}`);
-    }
-
-    const data = await res.json();
-
+    const data = await fsGetCollection(collection, pageToken);
     for (const doc of (data.documents || [])) {
-      const fbId   = doc.name.split('/').pop();
-      const fields = doc.fields || {};
-      const obj    = { _fbId: fbId };
-      for (const [k, v] of Object.entries(fields)) {
-        obj[k] = decodeField(v);
+      const id = doc.name.split('/').pop();
+      const obj = { _fsId: id };
+      for (const [k, v] of Object.entries(doc.fields || {})) {
+        obj[k] = fsFieldToValue(v);
       }
       all.push(obj);
     }
-
     pageToken = data.nextPageToken || null;
   } while (pageToken);
-
   return all;
 }
 
-// ── Appwrite client ───────────────────────────────────────────────────────────
-function getAppwrite() {
-  const key = process.env.APPWRITE_API_KEY;
-  if (!key) throw new Error('APPWRITE_API_KEY env var missing');
-  const client = new Client().setEndpoint(AW_ENDPOINT).setProject(AW_PROJECT).setKey(key);
-  return new Databases(client);
+// ── Validation ──────────────────────────────────────────────────────────────
+async function validateFirestore() {
+  const r = await fetch(
+    `${FS_BASE}/push_subscriptions?key=${FS_API_KEY}&pageSize=1`
+  );
+  if (!r.ok) throw new Error(`Firestore unreachable: HTTP ${r.status}`);
+  return true;
 }
 
-// ── Value encoder for Appwrite (no nested objects; convert to JSON string) ────
-function encodeForAppwrite(v) {
-  if (v === undefined || v === null) return '';
-  if (typeof v === 'boolean') return v;
-  if (typeof v === 'number') return String(v);
-  if (typeof v === 'string') return v;
-  if (Array.isArray(v) || typeof v === 'object') return JSON.stringify(v);
-  return String(v);
-}
-
-function encodePayload(obj) {
-  const out = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (k.startsWith('_')) continue; // skip internal fields like _fbId
-    const enc = encodeForAppwrite(v);
-    if (enc !== undefined) out[k] = enc;
+async function validateAppwrite() {
+  const res = await fetch(
+    `${AW_ENDPOINT}/databases/${DB_ID}/collections/${COLLECTION_ID}/documents?limit=1`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': AW_PROJECT,
+        'X-Appwrite-Key': process.env.APPWRITE_API_KEY,
+      },
+    }
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Appwrite unreachable: HTTP ${res.status} — ${text.slice(0, 200)}`);
   }
-  return out;
+  return true;
 }
 
-// ── Collection-specific normalisers ──────────────────────────────────────────
-function normalizePushSub(doc) {
-  let sub = doc.subscription || doc.pushSubscription || doc.subscriptionJson || doc.subscription_data;
+// ── Parse & normalize a Firestore subscription doc ─────────────────────────
+function normalizeSubscription(fsDoc) {
+  // Extract raw sub from all known field shapes
+  let sub = fsDoc.subscription || fsDoc.pushSubscription || fsDoc.subscriptionJson || null;
+
   if (typeof sub === 'string') {
     try { sub = JSON.parse(sub); } catch (_) { sub = null; }
   }
-  const endpoint = (sub && sub.endpoint) || doc.endpoint || null;
-  if (!endpoint) return null; // unpersistable without endpoint
 
-  return {
-    endpoint,
-    subscriptionJson: JSON.stringify(sub || { endpoint }),
-    district:  typeof doc.district === 'string' ? doc.district : 'unknown',
-    active:    true,
-    updatedAt: new Date().toISOString(),
+  // If sub is still null, try reconstructing from top-level fields
+  if (!sub || typeof sub !== 'object') {
+    const ep = fsDoc.endpoint;
+    if (ep) {
+      sub = {
+        endpoint: ep,
+        keys: fsDoc.keys || {},
+      };
+    }
+  }
+
+  if (!sub || !sub.endpoint) return null;
+
+  // Ensure keys
+  const keys = sub.keys || fsDoc.keys || {};
+
+  const clean = {
+    endpoint: sub.endpoint,
+    keys: {
+      p256dh: keys.p256dh || '',
+      auth:   keys.auth   || '',
+    },
   };
-}
 
-function normalizeGeneric(doc) {
-  const payload = {};
-  for (const [k, v] of Object.entries(doc)) {
-    if (k === '_fbId') continue;
-    if (k === 'active') { payload.active = true; continue; } // always force true
-    payload[k] = encodeForAppwrite(v);
+  if (sub.expirationTime !== undefined) {
+    clean.expirationTime = sub.expirationTime;
   }
-  // ensure active is always set
-  payload.active    = true;
-  payload.updatedAt = new Date().toISOString();
-  return payload;
+
+  return clean;
 }
 
-// ── Appwrite upsert ───────────────────────────────────────────────────────────
-async function upsertDoc(databases, colId, docId, payload) {
-  try {
-    await databases.updateDocument(AW_DB, colId, docId, payload);
-    return 'updated';
-  } catch (e) {
-    if (e.code === 404) {
-      await databases.createDocument(AW_DB, colId, docId, payload);
-      return 'created';
-    }
-    throw e;
+function endpointToDocId(endpoint) {
+  return sanitizeId(
+    Buffer.from(endpoint).toString('base64url').slice(-32)
+  );
+}
+
+// ── Upsert one subscription into Appwrite ──────────────────────────────────
+async function upsertSubscription(cleanSub, district) {
+  const docId = endpointToDocId(cleanSub.endpoint);
+
+  const payload = {
+    endpoint:         cleanSub.endpoint,
+    subscriptionJson: JSON.stringify(cleanSub),
+    district:         typeof district === 'string' ? district.slice(0, 255) : '',
+    active:           true,
+    updatedAt:        new Date().toISOString(),
+  };
+
+  // Check Appwrite first — no duplicates
+  const existing = await awGet(COLLECTION_ID, docId);
+  if (existing) {
+    await awUpdate(COLLECTION_ID, docId, payload);
+    return { action: 'updated', id: docId };
   }
+
+  await awCreate(COLLECTION_ID, payload, docId, DEFAULT_DOC_PERMISSIONS);
+  return { action: 'created', id: docId };
 }
 
-// ── Ensure Appwrite collection exists (best-effort) ───────────────────────────
-async function ensureCollection(databases, colId) {
-  try {
-    await databases.getCollection(AW_DB, colId);
-  } catch (e) {
-    if (e.code === 404) {
-      try {
-        await databases.createCollection(
-          AW_DB, colId, colId,
-          ['read("any")', 'create("any")', 'update("any")', 'delete("any")'],
-          true, true
-        );
-      } catch (ce) {
-        if (ce.code !== 409) console.error('createCollection failed:', colId, ce.message);
-      }
-    }
-  }
-}
-
-// ── Count documents in Appwrite collection ────────────────────────────────────
-async function countAppwriteDocs(databases, colId) {
-  let total = 0, offset = 0;
-  const PAGE = 100;
-  while (true) {
-    try {
-      const res = await databases.listDocuments(AW_DB, colId, [Query.limit(PAGE), Query.offset(offset)]);
-      const docs = res.documents || [];
-      total += docs.length;
-      if (docs.length < PAGE) break;
-      offset += PAGE;
-    } catch (e) {
-      break; // collection may not exist yet
-    }
-  }
-  return total;
-}
-
-// ── HANDLER ───────────────────────────────────────────────────────────────────
+// ── Main handler ────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: H, body: '' };
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Key',
+    'Content-Type': 'application/json',
+  };
 
-  const adminKey = (event.headers?.['x-admin-key'])
-    || (event.queryStringParameters?.key)
-    || '';
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) return bad(401, 'Unauthorized');
-
-  try {
-    const p      = event.queryStringParameters || {};
-    const action = p.action || 'count';
-
-    // ── action=scan : discover all FB collections + their doc counts ──────────
-    if (action === 'scan') {
-      const report = {};
-      for (const colName of Object.keys(COLLECTIONS)) {
-        try {
-          const docs = await fetchFirebaseDocs(colName);
-          report[colName] = { firebase: docs.length };
-        } catch (e) {
-          report[colName] = { firebase: 0, error: e.message };
-        }
-      }
-      return ok({ report });
-    }
-
-    // ── action=count : count valid documents across all collections ───────────
-    if (action === 'count') {
-      const totals = {};
-      let grandTotal = 0;
-
-      for (const [colName, def] of Object.entries(COLLECTIONS)) {
-        const docs  = await fetchFirebaseDocs(colName);
-        const valid = docs.map(d => def.normalize(d)).filter(Boolean);
-        totals[colName] = valid.length;
-        grandTotal += valid.length;
-      }
-
-      const totalBatches = Math.ceil(grandTotal / BATCH_SIZE);
-      return ok({ totals, grandTotal, totalBatches, batchSize: BATCH_SIZE });
-    }
-
-    // ── action=batch : migrate one COLLECTION batch ──────────────────────────
-    if (action === 'batch') {
-      const colName    = p.col;
-      const batchIndex = parseInt(p.batchIndex || '0', 10);
-
-      if (!colName || !COLLECTIONS[colName]) {
-        return bad(400, `Unknown collection: ${colName}. Valid: ${Object.keys(COLLECTIONS).join(', ')}`);
-      }
-
-      const def  = COLLECTIONS[colName];
-      const docs = await fetchFirebaseDocs(colName);
-
-      // Normalise valid payloads
-      const valid = docs.map((d, i) => {
-        const payload = def.normalize(d);
-        if (!payload) return null;
-        // Determine document ID
-        let docId;
-        if (def.idBuilder) {
-          docId = def.idBuilder(payload[def.idField]);
-        } else {
-          docId = safeId(d._fbId);
-        }
-        return { docId, payload };
-      }).filter(Boolean);
-
-      const totalBatches = Math.ceil(valid.length / BATCH_SIZE);
-      const start        = batchIndex * BATCH_SIZE;
-      const slice        = valid.slice(start, start + BATCH_SIZE);
-
-      if (slice.length === 0) {
-        return ok({ col: colName, batchIndex, processed: 0, created: 0, updated: 0, failed: 0, done: true, totalBatches, totalValid: valid.length });
-      }
-
-      const databases = getAppwrite();
-      await ensureCollection(databases, colName);
-
-      let created = 0, updated = 0, failed = 0;
-      const errors = [];
-
-      for (const { docId, payload } of slice) {
-        try {
-          const result = await upsertDoc(databases, colName, docId, payload);
-          if (result === 'created') created++; else updated++;
-        } catch (e) {
-          failed++;
-          errors.push(`${docId}: ${e.message}`);
-        }
-      }
-
-      const done = (start + slice.length) >= valid.length;
-      return ok({ col: colName, batchIndex, processed: slice.length, created, updated, failed, errors: errors.slice(0, 5), done, totalBatches, totalValid: valid.length });
-    }
-
-    // ── action=verify : sync report — Firebase count vs Appwrite count ────────
-    if (action === 'verify') {
-      const databases = getAppwrite();
-      const report    = {};
-      let totalFB = 0, totalAW = 0, mismatches = 0;
-
-      for (const colName of Object.keys(COLLECTIONS)) {
-        const [fbDocs, awCount] = await Promise.all([
-          fetchFirebaseDocs(colName),
-          countAppwriteDocs(databases, colName),
-        ]);
-        const fbCount = fbDocs.length;
-        const match   = awCount >= fbCount; // AW can have MORE (existing data) but never less
-        if (!match) mismatches++;
-        totalFB += fbCount;
-        totalAW += awCount;
-        report[colName] = { firebase: fbCount, appwrite: awCount, status: match ? '✅ OK' : '⚠️ MISMATCH' };
-      }
-
-      return ok({ report, totalFB, totalAW, mismatches, synced: mismatches === 0 });
-    }
-
-    // ── action=fix-active : force active:true on all Appwrite docs ────────────
-    if (action === 'fix-active') {
-      const databases = getAppwrite();
-      let fixed = 0, total = 0;
-
-      for (const colName of Object.keys(COLLECTIONS)) {
-        let offset = 0;
-        const PAGE = 100;
-        while (true) {
-          let docs;
-          try {
-            const res = await databases.listDocuments(AW_DB, colName, [Query.limit(PAGE), Query.offset(offset)]);
-            docs = res.documents || [];
-          } catch (_) { break; }
-
-          total += docs.length;
-          for (const doc of docs) {
-            if (doc.active !== true) {
-              await databases.updateDocument(AW_DB, colName, doc.$id, { active: true, updatedAt: new Date().toISOString() }).catch(() => {});
-              fixed++;
-            }
-          }
-          if (docs.length < PAGE) break;
-          offset += PAGE;
-        }
-      }
-
-      return ok({ fixed, total, message: `${fixed}/${total} documents forced to active:true across all collections` });
-    }
-
-    return bad(400, 'Unknown action. Use: scan | count | batch | verify | fix-active');
-
-  } catch (e) {
-    console.error('migrate-to-appwrite crash:', e);
-    return bad(500, e.message || 'Internal server error');
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
+
+  const adminKey = event.headers['x-admin-key'] || '';
+  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
+  }
+
+  let body = {};
+  try { body = JSON.parse(event.body || '{}'); } catch (_) {}
+
+  const action = body.action || 'migrate';
+
+  // ── VALIDATE ──────────────────────────────────────────────────────────────
+  if (action === 'validate') {
+    const results = { firestore: false, appwrite: false, errors: [] };
+    try { await validateFirestore(); results.firestore = true; }
+    catch (e) { results.errors.push('Firestore: ' + e.message); }
+    try { await validateAppwrite(); results.appwrite = true; }
+    catch (e) { results.errors.push('Appwrite: ' + e.message); }
+
+    const ok = results.firestore && results.appwrite;
+    return {
+      statusCode: ok ? 200 : 503,
+      headers,
+      body: JSON.stringify({ ok, ...results }),
+    };
+  }
+
+  // ── MIGRATE ───────────────────────────────────────────────────────────────
+  if (action === 'migrate') {
+    // Pre-flight
+    try { await validateFirestore(); } catch (e) {
+      return { statusCode: 503, headers, body: JSON.stringify({ error: 'Pre-flight failed — Firestore: ' + e.message }) };
+    }
+    try { await validateAppwrite(); } catch (e) {
+      return { statusCode: 503, headers, body: JSON.stringify({ error: 'Pre-flight failed — Appwrite: ' + e.message }) };
+    }
+
+    let fsDocs;
+    try {
+      fsDocs = await fsGetAllDocs('push_subscriptions');
+    } catch (e) {
+      return { statusCode: 502, headers, body: JSON.stringify({ error: 'Firestore fetch failed: ' + e.message }) };
+    }
+
+    const total    = fsDocs.length;
+    let created    = 0;
+    let updated    = 0;
+    let skipped    = 0;
+    const failures = [];
+
+    for (const fsDoc of fsDocs) {
+      try {
+        const cleanSub = normalizeSubscription(fsDoc);
+        if (!cleanSub || !cleanSub.keys.p256dh || !cleanSub.keys.auth) {
+          skipped++;
+          continue;
+        }
+
+        const result = await upsertSubscription(cleanSub, fsDoc.district || '');
+        if (result.action === 'created') created++;
+        else updated++;
+
+        // Small rate-limit buffer
+        await new Promise(r => setTimeout(r, 50));
+      } catch (e) {
+        failures.push({ id: fsDoc._fsId, error: e.message });
+      }
+    }
+
+    const success = failures.length === 0;
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success,
+        total,
+        created,
+        updated,
+        skipped,
+        failed: failures.length,
+        failures: failures.slice(0, 20), // cap to avoid huge response
+        message: success
+          ? `✅ Migration complete! ${created} created, ${updated} updated, ${skipped} skipped.`
+          : `⚠️ Migration finished with ${failures.length} error(s). ${created} created, ${updated} updated.`,
+      }),
+    };
+  }
+
+  return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown action' }) };
 };
