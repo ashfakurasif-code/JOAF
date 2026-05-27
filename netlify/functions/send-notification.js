@@ -111,7 +111,7 @@ exports.handler = async (event) => {
     }
 
     // Appwrite থেকে active subscriptions নাও
-    let docs = await awList(COL_SUBS);
+    let docs = await awList(COL_SUBS, ['equal("active",true)']);
 
     // district filter
     if (filterDistrict && ['blood','alert','weather'].includes(type)) {
@@ -134,9 +134,9 @@ exports.handler = async (event) => {
     let sent = 0, failed = 0;
 
     await Promise.all(docs.map(async (doc) => {
-      if (!doc.subscriptionJson) return;
+      if (!doc.subscriptionJson || doc.active === false) return;
       try {
-        const sub = JSON.parse(doc.subscriptionJson);
+        const sub = typeof doc.subscriptionJson === 'string' ? JSON.parse(doc.subscriptionJson) : doc.subscriptionJson;
         await webpush.sendNotification(sub, payload);
         sent++;
       } catch (err) {
