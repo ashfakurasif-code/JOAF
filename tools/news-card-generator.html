@@ -1049,8 +1049,17 @@ async function postSingleItem(idx){
       try{
         const body={message:caption,access_token:page.access_token};
         let url=`https://graph.facebook.com/v22.0/${page.id}/feed`;
-        if(imageUrl){url=`https://graph.facebook.com/v22.0/${page.id}/photos`;body.url=imageUrl;}
-        const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        let res;
+        if(item.videoBlob){
+          const fd=new FormData();
+          fd.append("source",item.videoBlob,"reel.webm");
+          fd.append("description",caption);
+          fd.append("access_token",page.access_token);
+          res=await fetch(`https://graph.facebook.com/v22.0/${page.id}/videos`,{method:"POST",body:fd});
+        } else {
+          if(imageUrl){url=`https://graph.facebook.com/v22.0/${page.id}/photos`;body.url=imageUrl;}
+          res=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+        }
         const d=await res.json();if(d.error)throw new Error(d.error.message);
         return{ok:true,id:page.id,name:page.name,postId:d.id||d.post_id};
       }catch(e){return{ok:false,id:page.id,name:page.name,error:e.message};}
