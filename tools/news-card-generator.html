@@ -33,7 +33,7 @@ async function captureReelBlob(meta){
     rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
     rec.onstop=()=>resolve(new Blob(chunks,{type:'video/webm'}));
     rec.start();let t=0;
-    const tick=()=>{if(t>=dur){rec.stop();return;}drawReelFrame(cv,reelData.r,t,dur);t+=1000/fps;requestAnimationFrame(tick);};
+    const tick=()=>{if(t>=dur){rec.stop();return;}// old renderer removedt+=1000/fps;requestAnimationFrame(tick);};
     requestAnimationFrame(tick);
   });
 }
@@ -548,6 +548,49 @@ button{
 }
 
 </style>
+
+<style id="fb-cinematic-renderer">
+.fb-cinematic-card{
+  background:linear-gradient(145deg,#0b1020,#161b2e);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
+  color:#fff;
+  padding:24px;
+  position:relative;
+}
+.fb-cinematic-card h1{
+  font-size:32px;
+  line-height:1.2;
+  font-weight:800;
+  margin-bottom:16px;
+}
+.fb-cinematic-card .hook{
+  color:#f87171;
+  font-weight:700;
+  margin-bottom:12px;
+}
+.fb-cinematic-card .caption{
+  opacity:.92;
+  line-height:1.6;
+  max-height:240px;
+  overflow:hidden;
+}
+.fb-cinematic-tags{
+  margin-top:18px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.fb-cinematic-tags span{
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+  padding:6px 12px;
+  font-size:12px;
+}
+</style>
+
 </head>
 <body>
 
@@ -1522,7 +1565,7 @@ function renderReelOutput(r,meta){
 
 // ── Reel Canvas + Video ──
 let reelData=null, reelAnim=null;
-function initReelCanvas(r,meta){reelData={r,meta};const cv=document.getElementById('reelCanvas');if(!cv)return;drawReelFrame(cv,r,0,meta.duration*1000);}
+function initReelCanvas(r,meta){reelData={r,meta};const cv=document.getElementById('reelCanvas');if(!cv)return;// old renderer removed}
 function drawReelFrame(cv,r,elapsed,total){
   const ctx=cv.getContext('2d');const W=cv.width,H=cv.height;const prog=Math.min(elapsed/total,1);
   ctx.clearRect(0,0,W,H);
@@ -1546,7 +1589,7 @@ function previewReelVideo(){
   if(!reelData){document.getElementById('vidStatus').textContent='আগে Generate করুন';return;}
   const cv=document.getElementById('reelCanvas');const{r,meta}=reelData;const dur=meta.duration*1000;
   let start=null;cancelAnimationFrame(reelAnim);document.getElementById('vidStatus').textContent='▶ Preview চলছে...';
-  function frame(ts){if(!start)start=ts;const el=ts-start;drawReelFrame(cv,r,el,dur);if(el<dur)reelAnim=requestAnimationFrame(frame);else document.getElementById('vidStatus').textContent='✅ Preview শেষ';}
+  function frame(ts){if(!start)start=ts;const el=ts-start;// old renderer removedif(el<dur)reelAnim=requestAnimationFrame(frame);else document.getElementById('vidStatus').textContent='✅ Preview শেষ';}
   requestAnimationFrame(frame);
 }
 async function exportReelWebM(){
@@ -1560,7 +1603,7 @@ async function exportReelWebM(){
   rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
   rec.onstop=()=>{const blob=new Blob(chunks,{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='JOAF_reel_'+Date.now()+'.webm';a.click();URL.revokeObjectURL(url);document.getElementById('vidStatus').textContent='✅ WebM Download শুরু!';};
   rec.start();let start=null;
-  function frame(ts){if(!start)start=ts;const el=ts-start;drawReelFrame(cv,r,el,dur);if(el<dur)requestAnimationFrame(frame);else rec.stop();}
+  function frame(ts){if(!start)start=ts;const el=ts-start;// old renderer removedif(el<dur)requestAnimationFrame(frame);else rec.stop();}
   requestAnimationFrame(frame);
 }
 
@@ -1588,7 +1631,7 @@ async function exportReelMP4(){
     statusEl.textContent=`⏳ ${totalFrames} frames capture হচ্ছে...`;
     const frameBlobs=[];
     for(let i=0;i<totalFrames;i++){
-      const t=(i/fps)*1000;drawReelFrame(cv,r,t,dur);
+      const t=(i/fps)*1000;// old renderer removed
       const blob=await new Promise(res=>cv.toBlob(res,'image/png'));
       frameBlobs.push(blob);
       const pct=Math.round((i/totalFrames)*60);barEl.style.width=pct+'%';
@@ -1633,37 +1676,64 @@ async function exportReelMP4(){
 })();
 </script>
 
-<!-- Reel Studio Batch Queue -->
-<script>
-window.reelBatchQueue = window.reelBatchQueue || [];
 
-function addReelToBatchQueue(data){
-  window.reelBatchQueue.push(data || {
-    title: document.getElementById('rtopic')?.value || 'Untitled Reel',
-    createdAt: new Date().toISOString()
-  });
 
-  const queueBox = document.getElementById('reel-batch-queue-list');
-  if(queueBox){
-    queueBox.innerHTML = window.reelBatchQueue.map((q,i)=>`
-      <div style="padding:8px;border:1px solid #333;border-radius:8px;margin:6px 0;">
-        <b>${i+1}. ${q.title}</b><br>
-        <small>${q.createdAt}</small>
-      </div>
-    `).join('');
-  }
 
-  alert('✅ Reel added to Batch Queue');
-}
+<script id="fb-auto-post-unified-renderer">
+window.renderWithFBCinematicDesign = function(data={}){
+  const root = document.getElementById('fb-cinematic-preview') || (()=>{
+    const d=document.createElement('div');
+    d.id='fb-cinematic-preview';
+    d.style.margin='24px 0';
+    document.body.prepend(d);
+    return d;
+  })();
+
+  const tags = (data.tags||[]).map(t=>`<span>#${t}</span>`).join('');
+
+  root.innerHTML = `
+    <div class="fb-cinematic-card">
+      <div class="hook">${data.hook||'🔥 Trending Now'}</div>
+      <h1>${data.title||'Untitled Reel'}</h1>
+      <div class="caption">${data.caption||''}</div>
+      <div class="fb-cinematic-tags">${tags}</div>
+    </div>
+  `;
+};
 </script>
 
-<div id="reel-batch-queue-panel" style="margin-top:20px;padding:14px;border:1px solid #333;border-radius:12px;">
-  <h3>🎬 Reel Studio Batch Queue</h3>
-  <button onclick="addReelToBatchQueue()" style="padding:10px 16px;border-radius:8px;">
-    ➕ Add Current Reel To Queue
-  </button>
-  <div id="reel-batch-queue-list" style="margin-top:14px;"></div>
-</div>
+
+<script id="smart-style-reel-queue">
+// Reel Studio now uses Smart Studio queue system
+window.addReelToQueue = async function(){
+  try{
+    const payload = {
+      type:'reel',
+      title:(document.getElementById('rtopic')?.value || 'Untitled Reel').split('\n')[0],
+      createdAt:new Date().toISOString()
+    };
+
+    // Reuse Smart Studio queue
+    window.smartPostQueue = window.smartPostQueue || [];
+    window.smartPostQueue.push(payload);
+
+    // Update existing Smart Queue UI if available
+    if(typeof renderSmartQueue === 'function'){
+      renderSmartQueue();
+    }
+
+    if(typeof showT === 'function'){
+      showT('✅ Smart Queue তে Reel যোগ হয়েছে', 'ok');
+    } else {
+      alert('✅ Smart Queue তে Reel যোগ হয়েছে');
+    }
+
+    console.log('🎬 Reel added using Smart Studio Queue system');
+  }catch(err){
+    console.error(err);
+  }
+}
+</script>
 
 </body>
 </html>

@@ -5116,5 +5116,23 @@ function startCinematic() {
 }
 
 </script>
+
+<script id="joaf-polished-bridge">
+window.addEventListener('message', async (e)=>{
+  if(!e.data || e.data.type!=='JOAF_STUDIO_TO_FBPOST') return;
+
+  console.log('🎬 Unified FB cinematic renderer active');
+
+  if(window.renderWithFBCinematicDesign){
+    window.renderWithFBCinematicDesign({
+      title:e.data.text || 'Generated Content',
+      hook:'🔥 FB Auto Post Cinematic Design',
+      caption:e.data.text || '',
+      tags:['viral','reel','news','auto']
+    });
+  }
+});
+</script>
+
 </body>
 </html>
