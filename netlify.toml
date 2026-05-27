@@ -55,3 +55,10 @@
   to = "/.netlify/functions/press-release-og"
   status = 200
   query = {id = ":id"}
+# admin folder এর HTML গুলো iframe এ চলতে পারবে (same origin)
+[[headers]]
+  for = "/admin/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=600"
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
