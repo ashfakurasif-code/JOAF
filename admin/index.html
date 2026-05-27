@@ -3031,7 +3031,7 @@ window.addEventListener('message', async function(e) {
   // 3. Navigate to Smart Studio
   if (typeof goPage === 'function') {
     
-    const ni = document.querySelector('[onclick*="goPage(\\'smartstudio\\'"]');
+    const ni = document.querySelector("[onclick*=\"goPage('smartstudio')\"]");
     if (ni) goPage('smartstudio', ni);
     
   }
