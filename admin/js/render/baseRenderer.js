@@ -73,14 +73,14 @@ export function drawBrandBar(ctx, W, H, palette) {
     ctx.arc(54, barY + 40, 28, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 22px Arial';
+    ctx.font = "bold 22px 'Hind Siliguri', Arial";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('✊', 54, barY + 40);
   }
 
   // Brand name
-  ctx.font = 'bold 32px Arial';
+  ctx.font = "bold 32px 'Hind Siliguri', Arial";
   ctx.fillStyle = '#ffffff';
   ctx.shadowColor = palette.accent;
   ctx.shadowBlur = 14;
@@ -90,7 +90,7 @@ export function drawBrandBar(ctx, W, H, palette) {
   ctx.shadowBlur = 0;
 
   // URL
-  ctx.font = '20px Arial';
+  ctx.font = "20px 'Hind Siliguri', Arial";
   ctx.fillStyle = '#e2e8f0';
   ctx.fillText('www.julyforum.com', 100, barY + 72);
 
@@ -98,7 +98,7 @@ export function drawBrandBar(ctx, W, H, palette) {
   const d = new Date();
   const months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
   const dateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-  ctx.font = 'bold 20px Arial';
+  ctx.font = "bold 20px 'Hind Siliguri', Arial";
   ctx.fillStyle = palette.sub;
   ctx.textAlign = 'right';
   ctx.fillText(dateStr, W - 24, barY + 72);
@@ -142,7 +142,7 @@ export function drawBadge(ctx, W, palette, emotion = 'urgent') {
   ctx.arc(bX + 18, bY + bH / 2, 6, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.font = 'bold 18px Arial';
+  ctx.font = "bold 18px 'Hind Siliguri', Arial";
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
