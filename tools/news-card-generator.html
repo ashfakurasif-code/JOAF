@@ -4,7 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>JOAF Studio — Smart Post · Reel · Queue · Settings</title>
-<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'>
+function addReelToQueue(){
+  const r=window._lastReelR,meta=window._lastReelMeta;
+  if(!r){showT('আগে Generate করুন','er');return;}
+  const allHashtags=[...(r.hashtags?.tier1_trending||[]),...(r.hashtags?.tier2_niche||[]),...(r.hashtags?.tier3_brand||[])].join(' ');
+  const caption=(r.caption?.main||'')+'
+
+'+allHashtags;
+  showT('⏳ Video capture হচ্ছে...','am');
+  captureReelBlob(meta).then(blob=>{
+    queue.push({id:uid(),name:'Reel: '+(r.hook?.text||'').substring(0,30)+'...',imgSrc:null,imgB64:null,imgMime:null,videoBlob:blob,caption:caption,platform:'reel',status:'ready',selected:false});
+    updateQueueUI();showT('✅ Reel Queue তে যোগ হয়েছে','ok');setTimeout(()=>switchTab(3),1200);
+  }).catch(()=>{
+    queue.push({id:uid(),name:'Reel: '+(r.hook?.text||'').substring(0,30)+'...',imgSrc:null,imgB64:null,imgMime:null,videoBlob:null,caption:caption,platform:'reel',status:'ready',selected:false});
+    updateQueueUI();showT('✅ Reel (video ছাড়া) Queue তে যোগ','ok');setTimeout(()=>switchTab(3),1200);
+  });
+}
+async function captureReelBlob(meta){
+  return new Promise((resolve,reject)=>{
+    const cv=document.getElementById('reelCanvas');
+    if(!cv||!reelData)return reject('no canvas');
+    const fps=24,dur=(meta?.duration||30)*1000;
+    const stream=cv.captureStream(fps);
+    const mime=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
+    const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:2500000});
+    const chunks=[];
+    rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+    rec.onstop=()=>resolve(new Blob(chunks,{type:'video/webm'}));
+    rec.start();let t=0;
+    const tick=()=>{if(t>=dur){rec.stop();return;}drawReelFrame(cv,reelData.r,t,dur);t+=1000/fps;requestAnimationFrame(tick);};
+    requestAnimationFrame(tick);
+  });
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;900&family=Noto+Sans+Bengali:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -691,6 +724,8 @@ function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 // TAB SWITCHING (main)
 // ══════════════════════════════════════════
 function switchTab(n){
+  const hdrBtns=document.getElementById('batchPostBtn')?.closest('.hdr-actions');
+  if(hdrBtns)hdrBtns.style.display=n===2?'none':'flex';
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i+1===n));
   document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('on',i+1===n));
   if(n===1){fitZ();draw();}
@@ -1255,9 +1290,11 @@ function renderReelOutput(r,meta){
       </div>
     </div>
     <div style="text-align:center;padding:14px 0 8px;">
-      <button class="btn btn-reel" onclick="reelGenerate()" style="margin:auto;">🔄 আবার Generate</button>
+      <button class="btn btn-amber" onclick="addReelToQueue()" style="font-size:12px;padding:8px 16px;">⚡ Queue তে যোগ করুন</button>
+      <button class="btn btn-reel" onclick="reelGenerate()" style="margin:0;">🔄 আবার Generate</button>
     </div>`;
   setTimeout(()=>initReelCanvas(r,meta),100);
+  window._lastReelR=r; window._lastReelMeta=meta;
 }
 
 // ── Reel Canvas + Video ──
