@@ -1747,54 +1747,80 @@ async function initDashboard() {
 
   // ── Health indicators (array-driven) ──
   window.runAIHealthCheck = async function() {
-  const listEl = document.getElementById('ai-health-list');
-  const alertEl = document.getElementById('ai-rate-limit-alert');
-  if (!listEl) return;
-  const AI_PROXY = '/.netlify/functions/groq-proxy';
-  const TEST_PAYLOAD = { messages:[{role:'user',content:'Reply with exactly: OK'}], max_tokens:5, temperature:0 };
-  const providers = [
-    { id:'gemini',     label:'Gemini',     role:'Primary',    },
-    { id:'openrouter', label:'OpenRouter', role:'Fallback 1', },
-    { id:'groq',       label:'Groq',       role:'Fallback 2', }
-  ];
-  listEl.innerHTML = providers.map(p=>`
-    <div id="aih-${p.id}" style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid var(--border)">
-      <span style="color:var(--text2)">${p.label} <span style="opacity:.6;font-size:10px">${p.role}</span></span>
-      <span style="font-size:10px;padding:2px 8px;border-radius:50px;background:var(--bg3);color:var(--text2)">Testing…</span>
-    </div>`).join('');
-  const limitedProviders = [];
-  for (const p of providers) {
-    const row = document.getElementById('aih-'+p.id);
-    const badgeEl = row?.querySelector('span:last-child');
+    const listEl = document.getElementById('ai-health-list');
+    const alertEl = document.getElementById('ai-rate-limit-alert');
+    if (!listEl) return;
+    const AI_PROXY = '/.netlify/functions/groq-proxy';
+    // groq-proxy নিজেই Gemini→OpenRouter→Groq চেইন করে।
+    // তাই একটাই call দিয়ে যে model respond করে সেটা দেখে কোন provider active বোঝা যায়।
+    const PROVIDER_MAP = [
+      { id:'gemini',     label:'Gemini',     role:'Primary',    keywords:['gemini'] },
+      { id:'openrouter', label:'OpenRouter', role:'Fallback 1', keywords:['llama','meta','mistral','qwen','deepseek'] },
+      { id:'groq',       label:'Groq',       role:'Fallback 2', keywords:['groq','llama-3'] }
+    ];
+    // সব row render করো — idle state
+    listEl.innerHTML = PROVIDER_MAP.map(p=>`
+      <div id="aih-${p.id}" style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">${p.label} <span style="opacity:.6;font-size:10px">${p.role}</span></span>
+        <span class="aih-badge" style="font-size:10px;padding:2px 8px;border-radius:50px;background:var(--bg3);color:var(--text2)">—</span>
+      </div>`).join('');
+    const setBadge = (id,txt,bg,color) => {
+      const el = document.querySelector(`#aih-${id} .aih-badge`);
+      if(el){el.textContent=txt;el.style.background=bg;el.style.color=color;}
+    };
+    // সব provider-কে প্রথমে "Checking..." দেখাও
+    PROVIDER_MAP.forEach(p=>setBadge(p.id,'Checking…','var(--bg3)','var(--text2)'));
     const t0 = performance.now();
     try {
-      const res = await fetch(AI_PROXY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(TEST_PAYLOAD),signal:AbortSignal.timeout(12000)});
+      const res = await fetch(AI_PROXY,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({messages:[{role:'user',content:'Reply with exactly: OK'}],max_tokens:5,temperature:0})
+      });
       const latency = Math.round(performance.now()-t0);
-      if (res.status===429) {
-        if(badgeEl){badgeEl.textContent='Rate Limited ⚠️';badgeEl.style.background='rgba(251,191,36,.15)';badgeEl.style.color='var(--amber)';}
-        limitedProviders.push(p.label); continue;
+      // Rate limit
+      if(res.status===429){
+        PROVIDER_MAP.forEach(p=>setBadge(p.id,'Rate Limited ⚠️','rgba(251,191,36,.15)','var(--amber)'));
+        if(alertEl){alertEl.style.display='block';alertEl.textContent='⚠️ সব AI provider rate limited — কিছুক্ষণ অপেক্ষা করুন';}
+        return;
       }
-      if (!res.ok) {
-        if(badgeEl){badgeEl.textContent='Error '+res.status;badgeEl.style.background='rgba(248,113,113,.12)';badgeEl.style.color='var(--red)';}
-        continue;
+      // Server error
+      if(!res.ok){
+        PROVIDER_MAP.forEach(p=>setBadge(p.id,'Error '+res.status,'rgba(248,113,113,.12)','var(--red)'));
+        return;
       }
       const data = await res.json();
-      if (data.error?.code==='rate_limit_exceeded') {
-        if(badgeEl){badgeEl.textContent='Rate Limited ⚠️';badgeEl.style.background='rgba(251,191,36,.15)';badgeEl.style.color='var(--amber)';}
-        limitedProviders.push(p.label); continue;
+      // rate_limit body error
+      if(data.error?.code==='rate_limit_exceeded'){
+        PROVIDER_MAP.forEach(p=>setBadge(p.id,'Rate Limited ⚠️','rgba(251,191,36,.15)','var(--amber)'));
+        if(alertEl){alertEl.style.display='block';alertEl.textContent='⚠️ AI rate limit — কিছুক্ষণ অপেক্ষা করুন';}
+        return;
       }
-      const activeModel = (data.model||'?').split('/').pop().slice(0,20);
-      if(badgeEl){badgeEl.textContent=`✓ ${latency}ms · ${activeModel}`;badgeEl.style.background='rgba(52,211,153,.12)';badgeEl.style.color='var(--green)';}
-    } catch(e) {
-      if(badgeEl){badgeEl.textContent=e.name==='TimeoutError'?'Timeout':'Offline';badgeEl.style.background='rgba(248,113,113,.12)';badgeEl.style.color='var(--red)';}
+      const activeModel = (data.model||'').toLowerCase();
+      // কোন provider respond করেছে model name দেখে বোঝো
+      let activeIdx = -1;
+      for(let i=0;i<PROVIDER_MAP.length;i++){
+        if(PROVIDER_MAP[i].keywords.some(k=>activeModel.includes(k))){activeIdx=i;break;}
+      }
+      // active provider — green
+      // আগের provider (failed/skipped) — red/amber
+      // পরের provider (unused) — gray dash
+      PROVIDER_MAP.forEach((p,i)=>{
+        if(i<activeIdx){
+          setBadge(p.id,'Skipped (failed)','rgba(248,113,113,.08)','var(--red)');
+        } else if(i===activeIdx){
+          const shortModel = activeModel.split('/').pop().slice(0,22);
+          setBadge(p.id,`✓ ${latency}ms · ${shortModel}`,'rgba(52,211,153,.12)','var(--green)');
+        } else {
+          setBadge(p.id,'—','var(--bg3)','var(--text2)');
+        }
+      });
+      if(alertEl) alertEl.style.display='none';
+    } catch(e){
+      const msg = e.name==='TimeoutError'?'Timeout':'Offline';
+      PROVIDER_MAP.forEach(p=>setBadge(p.id,msg,'rgba(248,113,113,.12)','var(--red)'));
     }
-    await new Promise(r=>setTimeout(r,300));
-  }
-  if(alertEl){
-    if(limitedProviders.length>0){alertEl.style.display='block';alertEl.textContent='⚠️ Rate limit: '+limitedProviders.join(', ')+' — কিছুক্ষণ অপেক্ষা করুন';}
-    else{alertEl.style.display='none';}
-  }
-};
+  };
   const HEALTH_ITEMS = [
     { label: 'Appwrite',        check: async () => { const s=await getDocs(collection(db,'push_subscriptions')); return {ok:true,val:'Connected'}; } },
     { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
