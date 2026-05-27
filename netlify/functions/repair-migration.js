@@ -8,8 +8,7 @@ const {
   APPWRITE_PROJECT_ID,
   APPWRITE_API_KEY,
   APPWRITE_DATABASE_ID,
-  APPWRITE_COLLECTION_ID = 'push_subscriptions',
-  REPAIR_MIGRATION_SECRET
+  APPWRITE_COLLECTION_ID = 'push_subscriptions'
 } = process.env;
 
 let firebaseInitialized = false;
@@ -105,21 +104,7 @@ async function upsertSubscription(databases, payload) {
 }
 
 exports.handler = async (event) => {
-  try {
-    if (
-      !REPAIR_MIGRATION_SECRET ||
-      event.headers['x-repair-secret'] !== REPAIR_MIGRATION_SECRET
-    ) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({
-          success: false,
-          error: 'Unauthorized'
-        })
-      };
-    }
-
-    const firestore = initializeFirebase();
+  try {const firestore = initializeFirebase();
     const databases = initializeAppwrite();
 
     console.log(`📦 Fetching Firebase collection: ${FIREBASE_COLLECTION}`);
@@ -177,6 +162,9 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         success: true,
         repaired,
@@ -189,6 +177,9 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         success: false,
         error: error.message
