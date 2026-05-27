@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>JOAF Studio — Smart Post · Reel · Queue · Settings</title>
-<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'>
+<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+<script>
 function addReelToQueue(){
   const r=window._lastReelR,meta=window._lastReelMeta;
   if(!r){showT('আগে Generate করুন','er');return;}
@@ -33,7 +34,8 @@ async function captureReelBlob(meta){
     rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
     rec.onstop=()=>resolve(new Blob(chunks,{type:'video/webm'}));
     rec.start();let t=0;
-    const tick=()=>{if(t>=dur){rec.stop();return;}// old renderer removedt+=1000/fps;requestAnimationFrame(tick);};
+    const tick=()=>{if(t>=dur){rec.stop();return;}// old renderer removed
+t+=1000/fps;requestAnimationFrame(tick);};
     requestAnimationFrame(tick);
   });
 }
