@@ -3,8 +3,7 @@ const {
   awListAll,
   awCreate,
   awUpdate,
-  qEqual,
-  sanitizeQueries,
+  
 } = require('./aw-utils');
 
 const COL_SUBS = 'push_subscriptions';
@@ -86,31 +85,24 @@ exports.handler = async (event) => {
           url: customUrl || '/',
         };
 
-    const subscriptionQueries = sanitizeQueries([
-      qEqual('active', true),
-    ]);
-
-    let docs = [];
-
-    try {
-      docs = await awListAll(COL_SUBS, subscriptionQueries, 500);
-    } catch (queryError) {
-      console.error('send-notification query failure:', queryError.message);
-      docs = await awListAll(COL_SUBS, [], 500);
-    }
+    // Appwrite 1.9.5 boolean query parser workaround:
+    // fetch all subscriptions and filter in-memory.
+    let docs = await awListAll(COL_SUBS, [], 500);
 
     docs = (docs || [])
       .map((doc) => ({
         id: doc.id,
         ...doc.data,
       }))
-      .filter((doc) => doc.subscriptionJson);
+      .filter((doc) => {
+        if (doc.active === false) return false;
 
-    if (!docs.length) {
-      docs = (await awListAll(COL_SUBS, [], 500))
-        .map((doc) => ({ id: doc.id, ...doc.data }))
-        .filter((doc) => doc.subscriptionJson && doc.active !== false);
-    }
+        const hasEndpoint =
+          !!doc.endpoint ||
+          !!doc.subscriptionJson;
+
+        return hasEndpoint;
+      });
 
     if (filterDistrict && ['blood', 'alert', 'weather'].includes(type)) {
       docs = docs.filter((doc) => doc.district === filterDistrict);
@@ -150,10 +142,15 @@ exports.handler = async (event) => {
           sent += 1;
         } catch (err) {
           failed += 1;
-          console.error('Push send failure:', err.message);
+          console.error('Push send failure:', err.statusCode || 'UNKNOWN', err.message);
 
           if (err.statusCode === 404 || err.statusCode === 410) {
-            await awUpdate(COL_SUBS, doc.id, { active: false }).catch(() => {});
+            await awUpdate(COL_SUBS, doc.id, {
+              active: false,
+              updatedAt: new Date().toISOString(),
+            }).catch(() => {});
+
+            console.log('Disabled stale subscription:', doc.id);
           }
         }
       })

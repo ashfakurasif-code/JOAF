@@ -1,0 +1,16 @@
+JOAF Production Cleanup Report
+
+Completed:
+- Removed Appwrite boolean query dependency from send-notification.js
+- Added runtime-safe subscription filtering
+- Added stale subscription auto-deactivation (404/410)
+- Preserved fallback-safe notification dispatching
+- Removed legacy __MACOSX archive artifacts
+- Removed hidden macOS metadata files
+- Verified Appwrite bootstrap compatibility
+- Maintained Netlify serverless compatibility
+
+Production Notes:
+- Appwrite 1.9.5 boolean query parser bug bypassed completely.
+- Notification delivery now self-cleans stale subscriptions.
+- Runtime filtering prevents invalid endpoint dispatch attempts.
