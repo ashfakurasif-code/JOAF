@@ -1632,5 +1632,38 @@ async function exportReelMP4(){
   draw();
 })();
 </script>
+
+<!-- Reel Studio Batch Queue -->
+<script>
+window.reelBatchQueue = window.reelBatchQueue || [];
+
+function addReelToBatchQueue(data){
+  window.reelBatchQueue.push(data || {
+    title: document.getElementById('rtopic')?.value || 'Untitled Reel',
+    createdAt: new Date().toISOString()
+  });
+
+  const queueBox = document.getElementById('reel-batch-queue-list');
+  if(queueBox){
+    queueBox.innerHTML = window.reelBatchQueue.map((q,i)=>`
+      <div style="padding:8px;border:1px solid #333;border-radius:8px;margin:6px 0;">
+        <b>${i+1}. ${q.title}</b><br>
+        <small>${q.createdAt}</small>
+      </div>
+    `).join('');
+  }
+
+  alert('✅ Reel added to Batch Queue');
+}
+</script>
+
+<div id="reel-batch-queue-panel" style="margin-top:20px;padding:14px;border:1px solid #333;border-radius:12px;">
+  <h3>🎬 Reel Studio Batch Queue</h3>
+  <button onclick="addReelToBatchQueue()" style="padding:10px 16px;border-radius:8px;">
+    ➕ Add Current Reel To Queue
+  </button>
+  <div id="reel-batch-queue-list" style="margin-top:14px;"></div>
+</div>
+
 </body>
 </html>
