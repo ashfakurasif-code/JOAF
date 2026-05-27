@@ -1,40 +1,16 @@
-JOAF Production Cleanup Report — Migration v2 (May 2026)
+JOAF Production Cleanup Report
 
-COMPLETED THIS SESSION:
-- Created netlify/functions/migrate-to-appwrite.js
-    New UI-driven migration function with:
-    * validate action: checks both Firestore REST + Appwrite connectivity
-    * migrate action: fetches ALL Firestore docs (paginated), upserts to
-      Appwrite (no duplicates, forces active:true, clean subscriptionJson)
-    * No firebase-admin dependency — uses public Firestore REST API only
+Completed:
+- Removed Appwrite boolean query dependency from send-notification.js
+- Added runtime-safe subscription filtering
+- Added stale subscription auto-deactivation (404/410)
+- Preserved fallback-safe notification dispatching
+- Removed legacy __MACOSX archive artifacts
+- Removed hidden macOS metadata files
+- Verified Appwrite bootstrap compatibility
+- Maintained Netlify serverless compatibility
 
-- Removed netlify/functions/migrate-subscriptions.js (old, incomplete)
-- Removed netlify/functions/repair-migration.js (used firebase-admin)
-- Removed firebase-admin from netlify/functions/package.json
-
-- Rewrote netlify/functions/send-notification.js
-    Firebase fallback (recoverFromFirestore) fully removed.
-    Pure Appwrite-only notification dispatch.
-
-- Admin panel (admin/index.html) — Settings tab:
-    Replaced basic "Subscription Migration" button with full UI:
-    * Step badges (Validate / Fetch / Upsert / Complete)
-    * Live progress bar (0→100%)
-    * Real-time status text
-    * Error box showing EXACT error message + Resume/Retry button
-    * On 100% success: panel auto-hides permanently via localStorage
-
-FIREBASE DEPENDENCY STATUS (post-migration):
-- firebase-admin:    REMOVED from functions
-- Firebase SDK (js): NOT used — js/aw-firestore.js is an Appwrite shim
-- firebase-messaging-sw.js: kept as a 2-line SW stub (no Firebase SDK)
-  Required for the health check in admin/index.html
-
-IMPORTANT — YOU MUST SET THESE ENV VARS IN NETLIFY:
-  APPWRITE_API_KEY     → your Appwrite server API key
-  ADMIN_SECRET_KEY     → your admin password
-  VAPID_PUBLIC_KEY     → web push public key
-  VAPID_PRIVATE_KEY    → web push private key
-
-  Firebase env vars (FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY,
-  FIREBASE_CLIENT_EMAIL) can be REMOVED from Netlify after migration.
+Production Notes:
+- Appwrite 1.9.5 boolean query parser bug bypassed completely.
+- Notification delivery now self-cleans stale subscriptions.
+- Runtime filtering prevents invalid endpoint dispatch attempts.
