@@ -1,5 +1,5 @@
-// JOAF Service Worker v3.1
-// ⚠️ নতুন deploy দিলে CACHE version বাড়াও: joaf-v10 → joaf-v11
+// JOAF Service Worker v3.0
+// ⚠️ নতুন deploy দিলে CACHE version বাড়াও: joaf-v5 → joaf-v6
 const CACHE = 'joaf-v10';
 const OFFLINE_URL = '/offline.html';
 
@@ -68,6 +68,12 @@ self.addEventListener('push', e => {
     data = { title: '🔥 JOAF', body: e.data ? e.data.text() : 'নতুন আপডেট' };
   }
 
+  // notification type অনুযায়ী icon/badge/color
+  const typeIcons = {
+    breaking: '🚨', blood: '🩸', bajar: '🛒',
+    weather: '🌦️', poll: '🗳️', alert: '🚨', reward: '🎉'
+  };
+
   const title = data.title || '🔥 JOAF সংবাদ';
   const options = {
     body: data.body || 'নতুন আপডেট এসেছে — এখনই দেখুন',
@@ -92,16 +98,19 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   if (e.action === 'close') return;
 
+  // 'view' action বা title click — দুটোই একই কাজ করবে
   const url = (e.notification.data && e.notification.data.url) || '/';
   const fullUrl = self.location.origin + url;
 
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cls => {
+      // ইতোমধ্যে সেই page খোলা আছে কিনা দেখো
       const existing = cls.find(c => c.url === fullUrl || c.url.startsWith(fullUrl));
       if (existing) {
         existing.focus();
         return existing.navigate ? existing.navigate(fullUrl) : existing.focus();
       }
+      // নতুন window/tab খোলো
       return clients.openWindow(fullUrl);
     })
   );
@@ -117,35 +126,12 @@ self.addEventListener('sync', e => {
 async function syncSubscription() {
   try {
     const sub = await self.registration.pushManager.getSubscription();
-    if (!sub) return;
-
-    // TASK 3: Send a properly-structured payload so save-subscription.js can
-    // validate keys and build a canonical clean subscription.
-    // The raw PushSubscription object is also accepted by the server (dual-shape
-    // handling), but wrapping it ensures district and deviceInfo slots are present
-    // and that the payload is identical to what components.js sends.
-    const payload = {
-      subscription: sub.toJSON(),   // serialises endpoint + keys cleanly
-      district: '',                  // district unknown in SW context
-      deviceInfo: {
-        userAgent: self.navigator ? self.navigator.userAgent.substring(0, 150) : 'sw-sync',
-        savedAt: new Date().toISOString(),
-      },
-    };
-
-    const res = await fetch('/api/save-subscription', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => String(res.status));
-      console.error('[SW] syncSubscription failed:', res.status, txt);
-    } else {
-      console.log('[SW] syncSubscription succeeded');
+    if (sub) {
+      await fetch('/api/save-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sub)
+      });
     }
-  } catch(e) {
-    console.error('[SW] syncSubscription error:', e);
-  }
+  } catch(e) { console.log('sync failed', e); }
 }

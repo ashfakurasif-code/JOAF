@@ -1,46 +1,25 @@
 const webpush = require('web-push');
 const {
-  awList,
-  awUpdate,
-  awCreate,
+  awUpsert,
+  initDatabase,
   sanitizeId,
   COLLECTION_ID,
-  qEqual,
-  DEFAULT_DOC_PERMISSIONS,
 } = require('./aw-utils');
 
-// Strip literal \n that Netlify injects into env var string values.
-// VAPID keys are base64url — no newlines allowed.
-function getVapidKeys() {
-  const pub  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/\\n/g, '').replace(/\n/g, '').trim();
-  const priv = (process.env.VAPID_PRIVATE_KEY || '').replace(/\\n/g, '').replace(/\n/g, '').trim();
-  const sub  =  process.env.VAPID_SUBJECT || 'mailto:admin@joaf.local';
-  return { pub, priv, sub };
-}
+function validateVapidKeys() {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  const contact = process.env.VAPID_SUBJECT || 'mailto:admin@joaf.local';
 
-function validateVapid() {
-  const { pub, priv, sub } = getVapidKeys();
-  if (!pub || !priv) throw new Error('Missing VAPID keys');
-  try {
-    webpush.setVapidDetails(sub, pub, priv);
-  } catch (e) {
-    throw new Error('Invalid VAPID config: ' + e.message);
+  if (!publicKey || !privateKey) {
+    throw new Error('Missing VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY environment variables');
   }
-}
 
-// Find an existing doc in Appwrite by endpoint field value.
-// Returns { docId, data } or null.
-async function findByEndpoint(endpoint) {
   try {
-    const query = qEqual('endpoint', endpoint);
-    if (!query) return null;
-    const docs = await awList(COLLECTION_ID, [query], 1);
-    if (docs && docs.length > 0) {
-      return { docId: docs[0].id, data: docs[0].data };
-    }
-    return null;
-  } catch (_) {
-    return null;
+    webpush.setVapidDetails(contact, publicKey, privateKey);
+    return { publicKey, contact };
+  } catch (error) {
+    throw new Error(`Invalid VAPID configuration: ${error.message}`);
   }
 }
 
@@ -51,89 +30,67 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    };
   }
 
   try {
-    validateVapid();
-    // NOTE: initDatabase() removed from hot path — it has a 3-second sleep and
-    // should only be called once during setup, not on every subscription save.
+    validateVapidKeys();
+    await initDatabase();
 
-    let rawBody;
-    try { rawBody = JSON.parse(event.body || '{}'); }
-    catch (_) { return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
+    const body = JSON.parse(event.body || '{}');
+    const { subscription, district = '', deviceInfo = {} } = body;
 
-    // Accept both shapes:
-    // Shape A (sw.js): raw PushSubscription at root  -> { endpoint, keys, ... }
-    // Shape B (components.js): wrapped              -> { subscription: {...}, district, deviceInfo }
-    let subscription, district, deviceInfo;
-    if (rawBody && rawBody.endpoint) {
-      subscription = rawBody; district = ''; deviceInfo = {};
-    } else {
-      subscription = rawBody.subscription || null;
-      district     = rawBody.district     || '';
-      deviceInfo   = rawBody.deviceInfo   || {};
+    if (!subscription?.endpoint) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid subscription payload' }),
+      };
     }
 
-    if (typeof subscription === 'string') {
-      try { subscription = JSON.parse(subscription); } catch (_) { subscription = null; }
-    }
+    const id = sanitizeId(
+      Buffer.from(subscription.endpoint)
+        .toString('base64url')
+        .slice(-32)
+    );
 
-    if (!subscription || !subscription.endpoint) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing endpoint' }) };
-    }
-
-    const keys = subscription.keys || {};
-    if (!keys.p256dh || !keys.auth) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing push keys' }) };
-    }
-
-    // Canonical subscription object
-    const cleanSub = {
+    await awUpsert(COLLECTION_ID, id, {
       endpoint: subscription.endpoint,
-      keys: { p256dh: keys.p256dh, auth: keys.auth },
-      ...(subscription.expirationTime !== undefined ? { expirationTime: subscription.expirationTime } : {}),
-    };
-
-    const upsertData = {
-      endpoint:         cleanSub.endpoint,
-      subscriptionJson: JSON.stringify(cleanSub),
-      district:         typeof district === 'string' ? district.slice(0, 255) : '',
-      active:           true,
-      updatedAt:        new Date().toISOString(),
-    };
-
-    // Step 1: search Appwrite for existing doc by endpoint (handles both random IDs
-    // from the original migration AND deterministic IDs from new saves).
-    const existing = await findByEndpoint(cleanSub.endpoint);
-
-    let savedId;
-    if (existing) {
-      // Update the existing doc — force active:true
-      await awUpdate(COLLECTION_ID, existing.docId, upsertData);
-      savedId = existing.docId;
-    } else {
-      // New subscription — create with deterministic ID derived from endpoint
-      const newId = sanitizeId(
-        Buffer.from(cleanSub.endpoint).toString('base64url').slice(-32)
-      );
-      await awCreate(COLLECTION_ID, upsertData, newId, DEFAULT_DOC_PERMISSIONS);
-      savedId = newId;
-    }
+      subscriptionJson: JSON.stringify(subscription),
+      district,
+      deviceInfo,
+      active: true,
+      updatedAt: new Date().toISOString(),
+    });
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ success: true, id: savedId, active: true }),
+      body: JSON.stringify({
+        success: true,
+        id,
+        active: true,
+      }),
     };
-  } catch (err) {
-    console.error('save-subscription error:', err);
+  } catch (error) {
+    console.error('save-subscription failure', error);
+
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ success: false, error: err.message }),
+      body: JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
     };
   }
 };

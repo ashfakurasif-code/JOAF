@@ -529,7 +529,7 @@ body  { overflow-x:hidden; }
 })();
 })();
 </script>
-</head>
+\n</head>
 <body>
 <script>
 function seededRand(seed) {
@@ -1210,52 +1210,11 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
       <div class="card">
         <div class="card-header"><div class="card-title">🔧 System Tools</div></div>
         <div class="btn-row">
+          <button class="btn btn-ghost" onclick="runMigration()">⬆️ Subscription Migration</button>
           <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
           <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
           <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">🔥 Appwrite Console</a>
           <a href="https://app.netlify.com/projects/joaf" target="_blank" class="btn btn-ghost">🌐 Netlify Dashboard</a>
-        </div>
-      </div>
-
-      <!-- FIRESTORE → APPWRITE BATCHED MIGRATION PANEL
-           Hidden permanently via localStorage after 100% success -->
-      <div class="card" id="mig-panel" style="border:1.5px solid #f59e0b55;background:#fffbeb08;">
-        <div class="card-header">
-          <div class="card-title">🚚 Firestore → Appwrite Migration</div>
-          <div style="font-size:11px;color:var(--text2)">Batched — 8 docs per request. Safe against Netlify 10s timeout. Resumes exactly where it left off.</div>
-        </div>
-
-        <!-- Step pills -->
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
-          <span id="mig-s1" style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">① Validate</span>
-          <span id="mig-s2" style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">② Batch Loop</span>
-          <span id="mig-s3" style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">③ Complete</span>
-        </div>
-
-        <!-- Progress bar -->
-        <div style="background:var(--surface2);border-radius:8px;height:12px;overflow:hidden;margin-bottom:6px;">
-          <div id="mig-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#10b981);border-radius:8px;transition:width 0.35s ease;"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-          <div id="mig-status" style="font-size:12px;color:var(--text2);"></div>
-          <div id="mig-counter" style="font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;"></div>
-        </div>
-
-        <!-- Error box -->
-        <div id="mig-err" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-          <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:4px;">❌ Error — Migration Paused</div>
-          <pre id="mig-err-msg" style="font-size:11px;color:#dc2626;white-space:pre-wrap;word-break:break-all;margin:0;max-height:120px;overflow:auto;"></pre>
-        </div>
-
-        <!-- Success box -->
-        <div id="mig-ok" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-          <div id="mig-ok-msg" style="font-size:12px;color:#16a34a;"></div>
-        </div>
-
-        <!-- Buttons -->
-        <div class="btn-row">
-          <button id="mig-btn-start"  class="btn btn-primary" onclick="migStart()">🚀 Validate &amp; Migrate</button>
-          <button id="mig-btn-resume" class="btn btn-primary"  style="display:none;" onclick="migResume()">🔄 Resume Next Batch</button>
         </div>
       </div>
     </div>
@@ -1863,7 +1822,7 @@ async function initDashboard() {
     }
   };
   const HEALTH_ITEMS = [
-    { label: 'Appwrite',        check: async () => { try{ const r=await fetch('/.netlify/functions/get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Error'}; }catch(e){return{ok:false,val:'Offline'};} } },
+    { label: 'Appwrite',        check: async () => { const s=await getDocs(collection(db,'push_subscriptions')); return {ok:true,val:'Connected'}; } },
     { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
     { label: 'Notifications Fn',check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
   ];
@@ -1881,19 +1840,16 @@ async function initDashboard() {
   }
 
   try {
-    // Parallel load: Appwrite stats (subs + notif history) + Firestore (donors + alerts)
-    // push_subscriptions and notification_history have migrated to Appwrite;
-    // donors/alerts remain in Firestore.
-    const [statsRes, donorSnap, alertSnap] = await Promise.all([
-      fetch('/.netlify/functions/get-stats', {
-        headers: { 'X-Admin-Key': ADMIN_KEY }
-      }).then(r => r.ok ? r.json() : Promise.reject(new Error('get-stats ' + r.status))),
+    // Parallel load: subscribers + donors + alerts + notifications
+    const [subSnap, donorSnap, alertSnap, histSnap] = await Promise.all([
+      getDocs(collection(db,'push_subscriptions')),
       getDocs(collection(db,'donors')),
       getDocs(collection(db,'alerts')),
+      getDocs(collection(db,'notification_history'))
     ]);
 
-    const activeCount = statsRes.activeSubs || 0;
-    const donors = donorSnap.size, alerts = alertSnap.size, notifs = statsRes.totalNotifs || 0;
+    const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
+    const donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
 
     // Set KPIs
     setEl('ds-sub', activeCount); setEl('b-notif', activeCount); setEl('n-sub', activeCount); setEl('an-subs', activeCount); setEl('an-kpi-subs', activeCount); anCachedSubs = activeCount;
@@ -1901,16 +1857,20 @@ async function initDashboard() {
     setEl('b-blood', donors); setEl('n-total', notifs); setEl('an-notifs', notifs); setEl('an-kpi-notif', notifs); anCachedNotifs = notifs;
 
     const subSubEl = document.getElementById('ds-sub-sub');
-    if(subSubEl){ subSubEl.textContent = `${(statsRes.totalSubs||0) - activeCount} inactive`; }
+    if(subSubEl){ subSubEl.textContent = `${subSnap.size-activeCount} inactive`; }
 
-    // Today notifications — computed server-side in get-stats
-    const todayNotifs = statsRes.todayNotifs || 0;
+    // Today notifications
+    const today = new Date(); today.setHours(0,0,0,0);
+    let todayNotifs = 0;
+    histSnap.forEach(d=>{const t=d.data().sentAt?.toDate?.();if(t&&t>=today)todayNotifs++;});
     setEl('n-today', todayNotifs);
     const todaySubEl = document.getElementById('ds-notif-today');
     if(todaySubEl) todaySubEl.textContent = `আজ ${todayNotifs}টি পাঠানো`;
 
-    // Recent history (already sorted newest-first by get-stats)
-    renderHistory('dash-history', (statsRes.history || []).slice(0, 5));
+    // Recent history
+    const hDocs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
+      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0))).slice(0,5);
+    renderHistory('dash-history', hDocs);
 
     // Blood preview
     const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
@@ -2030,15 +1990,19 @@ async function callSendNotif(payload) {
 
 async function loadNotifPage() {
   try {
-    // push_subscriptions and notification_history live in Appwrite — use get-stats
-    const statsRes = await fetch('/.netlify/functions/get-stats', {
-      headers: { 'X-Admin-Key': ADMIN_KEY }
-    }).then(r => r.ok ? r.json() : Promise.reject(new Error('get-stats ' + r.status)));
-
-    setEl('n-total', statsRes.totalNotifs || 0);
-    setEl('n-sub',   statsRes.activeSubs  || 0);
-    setEl('n-today', statsRes.todayNotifs || 0);
-    renderHistory('notif-history', (statsRes.history || []).slice(0, 10));
+    const [histSnap, subSnap] = await Promise.all([
+      getDocs(collection(db,'notification_history')),
+      getDocs(collection(db,'push_subscriptions'))
+    ]);
+    const docs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
+      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0)));
+    setEl('n-total', histSnap.size);
+    const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
+    setEl('n-sub', activeCount);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayCount = docs.filter(d=>{ const t=d.sentAt?.toDate?.(); return t&&t>=today; }).length;
+    setEl('n-today', todayCount);
+    renderHistory('notif-history', docs.slice(0,10));
   } catch(e) { console.log(e); }
 }
 
@@ -2048,20 +2012,7 @@ function renderHistory(elId, docs) {
   const colors = {bajar:'#fbbf24',weather:'#60a5fa',streak:'#f05252',blood:'#f05252',alert:'#f05252',live:'#a78bfa',default:'#34d399'};
   el.innerHTML = docs.map(d => {
     const color = colors[d.type]||colors.default;
-    // Handle all three date formats: Appwrite ISO string, Firestore Timestamp object, Firestore seconds
-    let time = '—';
-    if (d.sentAt) {
-      if (typeof d.sentAt === 'string') {
-        // Appwrite stores as ISO string
-        const dt = new Date(d.sentAt);
-        if (!isNaN(dt)) time = dt.toLocaleString('bn-BD');
-      } else if (typeof d.sentAt.toDate === 'function') {
-        // Firestore Timestamp
-        time = d.sentAt.toDate().toLocaleString('bn-BD');
-      } else if (typeof d.sentAt.seconds === 'number') {
-        time = new Date(d.sentAt.seconds * 1000).toLocaleString('bn-BD');
-      }
-    }
+    const time = d.sentAt?.toDate?.()?.toLocaleString('bn-BD') || (d.sentAt?.seconds ? new Date(d.sentAt.seconds*1000).toLocaleString('bn-BD') : '—');
     return `<div class="hist-item">
       <div class="hist-dot" style="background:${color}"></div>
       <div class="hist-info"><div class="hist-title">${d.title||'—'}</div><div class="hist-time">${time}</div></div>
@@ -2759,275 +2710,15 @@ window.changePassword = function() {
 
 window.saveSettings = function() { toast('Settings saved (UI only)','success'); };
 
+window.runMigration = async function() {
+  try {
+    const res = await fetch('/.netlify/functions/migrate-subscriptions?key='+ADMIN_KEY);
+    const data = await res.json();
+    toast('✅ '+data.message,'success');
+  } catch(e) { toast('❌ Error','error'); }
+};
+
 window.clearCache = function() { toast('Cache cleared','success'); };
-
-// ══════════════════════════════════════════════════════════
-//  BATCHED FIRESTORE → APPWRITE MIGRATION ENGINE
-//  State is kept in memory (migState) and checkpointed to
-//  localStorage so Resume picks up exactly where it left off.
-//  Each batch call processes 8 Firestore docs — well under
-//  Netlify's 10-second function limit.
-// ══════════════════════════════════════════════════════════
-(function() {
-  var DONE_KEY  = 'joaf_migration_done';
-  var STATE_KEY = 'joaf_migration_state';
-
-  // ── On page load: hide panel if already completed ──────
-  document.addEventListener('DOMContentLoaded', function() {
-    if (localStorage.getItem(DONE_KEY) === '1') {
-      var p = document.getElementById('mig-panel');
-      if (p) p.style.display = 'none';
-    }
-  });
-
-  // ── In-memory state (also checkpointed to localStorage) ─
-  var migState = {
-    running:        false,
-    nextPageToken:  null,
-    totalCount:     null,
-    processedCount: 0,
-    createdCount:   0,
-    updatedCount:   0,
-    skippedCount:   0,
-    failedCount:    0,
-  };
-
-  function saveState() {
-    try { localStorage.setItem(STATE_KEY, JSON.stringify(migState)); } catch(_) {}
-  }
-
-  function loadState() {
-    try {
-      var s = localStorage.getItem(STATE_KEY);
-      if (s) { var parsed = JSON.parse(s); Object.assign(migState, parsed); }
-    } catch(_) {}
-  }
-
-  function clearState() {
-    try { localStorage.removeItem(STATE_KEY); } catch(_) {}
-    migState = { running:false, nextPageToken:null, totalCount:null, processedCount:0,
-                 createdCount:0, updatedCount:0, skippedCount:0, failedCount:0 };
-  }
-
-  // ── DOM helpers ────────────────────────────────────────
-  function setBar(pct) {
-    var b = document.getElementById('mig-bar');
-    if (b) b.style.width = Math.min(pct, 100) + '%';
-  }
-
-  function setStatus(txt) {
-    var el = document.getElementById('mig-status');
-    if (el) el.textContent = txt;
-  }
-
-  function setCounter(processed, total) {
-    var el = document.getElementById('mig-counter');
-    if (!el) return;
-    el.textContent = total ? processed + ' / ' + total : processed + ' processed';
-  }
-
-  function setStep(active) {
-    // active: 1=validate, 2=batch, 3=done
-    var steps = ['mig-s1','mig-s2','mig-s3'];
-    var GREEN = '#10b981', AMBER = '#f59e0b';
-    steps.forEach(function(id, i) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      var n = i + 1;
-      if (n < active)       { el.style.background = GREEN; el.style.color = '#fff'; }
-      else if (n === active) { el.style.background = AMBER; el.style.color = '#fff'; }
-      else                   { el.style.background = 'var(--surface2)'; el.style.color = 'var(--text2)'; }
-    });
-  }
-
-  function showError(msg) {
-    var box = document.getElementById('mig-err');
-    var pre = document.getElementById('mig-err-msg');
-    var btnR = document.getElementById('mig-btn-resume');
-    var btnS = document.getElementById('mig-btn-start');
-    if (box) box.style.display = 'block';
-    if (pre) pre.textContent = msg;
-    if (btnR) btnR.style.display = 'inline-flex';
-    if (btnS) btnS.style.display = 'none';
-    migState.running = false;
-    saveState();
-  }
-
-  function clearError() {
-    var box = document.getElementById('mig-err');
-    var btnR = document.getElementById('mig-btn-resume');
-    var btnS = document.getElementById('mig-btn-start');
-    if (box) box.style.display = 'none';
-    if (btnR) btnR.style.display = 'none';
-    if (btnS) btnS.style.display = 'inline-flex';
-  }
-
-  function showSuccess(msg) {
-    var box = document.getElementById('mig-ok');
-    var txt = document.getElementById('mig-ok-msg');
-    if (box) box.style.display = 'block';
-    if (txt) txt.innerHTML = msg;
-    var btnS = document.getElementById('mig-btn-start');
-    if (btnS) { btnS.disabled = false; btnS.textContent = '🚀 Validate & Migrate'; }
-  }
-
-  function setBusy(busy) {
-    var btnS = document.getElementById('mig-btn-start');
-    if (btnS) { btnS.disabled = busy; if (!busy) btnS.textContent = '🚀 Validate & Migrate'; else btnS.textContent = '⏳ Running…'; }
-  }
-
-  // ── Safe fetch: catches non-JSON (504 HTML pages) ──────
-  async function safeFetch(payload) {
-    var res;
-    var rawText;
-    try {
-      res = await fetch('/.netlify/functions/migrate-to-appwrite', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
-        body:    JSON.stringify(payload),
-      });
-      rawText = await res.text();
-    } catch (netErr) {
-      throw new Error('Network error: ' + netErr.message);
-    }
-    // Parse JSON — if it fails (e.g. 504 HTML), throw a user-friendly message
-    try {
-      return JSON.parse(rawText);
-    } catch (_) {
-      // Determine likely cause
-      if (res && res.status === 504) {
-        throw new Error('Server timeout (504). The last batch may have partially run.\nClick "Resume Next Batch" — your progress is saved. No records will be duplicated.');
-      }
-      throw new Error(
-        'Server returned non-JSON (HTTP ' + (res ? res.status : '?') + ').\n' +
-        'Click "Resume Next Batch" to continue from where you left off.\n\n' +
-        'Raw response preview:\n' + rawText.slice(0, 300)
-      );
-    }
-  }
-
-  // ── Core batch loop ────────────────────────────────────
-  async function runBatchLoop() {
-    migState.running = true;
-
-    while (migState.running) {
-      var payload = {
-        action:         'batch',
-        pageToken:       migState.nextPageToken,
-        processedSoFar:  migState.processedCount,
-        createdSoFar:    migState.createdCount,
-        updatedSoFar:    migState.updatedCount,
-        skippedSoFar:    migState.skippedCount,
-        failedSoFar:     migState.failedCount,
-        totalCount:      migState.totalCount,
-      };
-
-      var data;
-      try {
-        data = await safeFetch(payload);
-      } catch (err) {
-        showError(err.message);
-        return;
-      }
-
-      if (!data.ok) {
-        showError((data.error || 'Unknown error from server.') + '\n\nClick Resume to retry this batch.');
-        return;
-      }
-
-      // Update state from server response
-      migState.nextPageToken  = data.nextPageToken  || null;
-      migState.processedCount = data.processedCount || migState.processedCount;
-      migState.createdCount   = data.createdCount   || migState.createdCount;
-      migState.updatedCount   = data.updatedCount   || migState.updatedCount;
-      migState.skippedCount   = data.skippedCount   || migState.skippedCount;
-      migState.failedCount    = data.failedCount     || migState.failedCount;
-      if (data.totalCount)    migState.totalCount   = data.totalCount;
-      saveState();
-
-      // Update UI
-      var pct = migState.totalCount
-        ? Math.round((migState.processedCount / migState.totalCount) * 100)
-        : (data.isComplete ? 100 : 60);
-      setBar(pct);
-      setCounter(migState.processedCount, migState.totalCount);
-      setStatus(data.isComplete ? '✅ All batches complete!' : '🔄 Processing batch… (' + pct + '%)');
-
-      if (data.isComplete) {
-        setStep(3);
-        setBar(100);
-        var summary =
-          '<strong>✅ ' + (data.message || 'Migration complete!') + '</strong><br>' +
-          '➕ Created: <b>' + migState.createdCount + '</b> &nbsp;|&nbsp; ' +
-          '✏️ Updated: <b>' + migState.updatedCount + '</b> &nbsp;|&nbsp; ' +
-          '⏭️ Skipped: <b>' + migState.skippedCount + '</b>' +
-          (migState.failedCount ? ' &nbsp;|&nbsp; ❌ Failed: <b>' + migState.failedCount + '</b>' : '');
-        showSuccess(summary);
-        setBusy(false);
-        migState.running = false;
-
-        // Permanently hide panel only on zero failures
-        if (!migState.failedCount) {
-          localStorage.setItem(DONE_KEY, '1');
-          clearState();
-          setTimeout(function() {
-            var panel = document.getElementById('mig-panel');
-            if (panel) { panel.style.transition='opacity 1s'; panel.style.opacity='0'; setTimeout(function(){ panel.style.display='none'; }, 1000); }
-            toast('🎉 Migration 100% complete — panel removed permanently.', 'success');
-          }, 4000);
-        } else {
-          clearState();
-          toast('⚠️ Migration done with ' + migState.failedCount + ' failure(s). Check the summary.', 'info');
-        }
-        return;
-      }
-
-      // Small breather between batches to avoid hammering
-      await new Promise(function(r){ setTimeout(r, 200); });
-    }
-  }
-
-  // ── Public entry points ────────────────────────────────
-  window.migStart = async function() {
-    clearError();
-    clearState();
-    setBusy(true);
-    setStep(1);
-    setBar(5);
-    setStatus('🔍 Validating Firestore & Appwrite…');
-    setCounter(0, null);
-
-    var val;
-    try { val = await safeFetch({ action: 'validate' }); }
-    catch(err) { setBusy(false); showError(err.message); return; }
-
-    if (!val.ok) {
-      setBusy(false);
-      showError('Pre-flight validation failed:\n' + (val.errors || []).join('\n'));
-      return;
-    }
-
-    if (val.totalCount) migState.totalCount = val.totalCount;
-    setStep(2);
-    setBar(10);
-    setStatus('✅ Validated. Starting batch migration…');
-    setCounter(0, migState.totalCount);
-    await runBatchLoop();
-  };
-
-  window.migResume = async function() {
-    clearError();
-    loadState(); // restore checkpoint
-    setBusy(true);
-    setStep(2);
-    setStatus('🔄 Resuming from batch checkpoint…');
-    setCounter(migState.processedCount, migState.totalCount);
-    await runBatchLoop();
-  };
-
-  // Legacy alias
-  window.runMigration = window.migStart;
-})();
 
 // ── Helpers ──────────────────────────────────────────────
 window.openModal  = id => document.getElementById(id).classList.add('open');
