@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JOAF AI Media Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#06060a;--bg1:#0d0d14;--bg2:#131320;--bg3:#1a1a2e;--bg4:#1e1e35;
+  --border:#2a2a44;--border2:#3d3d5c;
+  --text:#f0f0f8;--text2:#a0a0c0;--text3:#606080;
+  --accent:#7c3aed;--accent2:#a855f7;
+  --red:#ef4444;--green:#22c55e;--blue:#3b82f6;--gold:#f59e0b;--orange:#f97316;
+  --red-bg:rgba(239,68,68,.12);--green-bg:rgba(34,197,94,.12);--blue-bg:rgba(59,130,246,.12);
+  --radius:10px;--radius-lg:16px;
+  font-family:'Hind Siliguri',Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg0);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* Layout */
+.studio{display:grid;grid-template-columns:320px 1fr 300px;grid-template-rows:56px 1fr;min-height:100vh;gap:0}
+.topbar{grid-column:1/-1;background:var(--bg1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;padding:0 20px;z-index:100}
+.col-left{background:var(--bg1);border-right:1px solid var(--border);overflow-y:auto;padding:16px}
+.col-center{background:var(--bg0);overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.col-right{background:var(--bg1);border-left:1px solid var(--border);overflow-y:auto;padding:16px}
+
+/* Topbar */
+.logo{font-size:20px;font-weight:700;color:var(--accent2);white-space:nowrap}
+.logo span{color:var(--gold)}
+.topbar-tabs{display:flex;gap:4px;flex:1}
+.tab-btn{padding:7px 16px;border:none;background:transparent;color:var(--text2);
+  font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;font-family:inherit;transition:.15s}
+.tab-btn.active{background:var(--accent);color:#fff}
+.tab-btn:hover:not(.active){background:var(--bg3);color:var(--text)}
+.status-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-title .badge{padding:2px 8px;border-radius:20px;font-size:10px;background:var(--accent);color:#fff}
+
+/* Form elements */
+textarea,input[type=text],input[type=url],select{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;
+  transition:.15s;outline:none;resize:vertical}
+textarea:focus,input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+textarea{min-height:80px;line-height:1.6}
+select{cursor:pointer}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:5px;font-weight:500}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;
+  border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-green{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.btn-green:hover{background:rgba(34,197,94,.25)}
+.btn-red{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.btn-red:hover{background:rgba(239,68,68,.25)}
+.btn-blue{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.btn-blue:hover{background:rgba(59,130,246,.25)}
+.btn-gold{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
+.btn-gold:hover{background:rgba(245,158,11,.25)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-block{width:100%;justify-content:center}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+
+/* Preview canvas */
+.preview-wrap{position:relative;background:var(--bg3);border-radius:var(--radius-lg);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;min-height:300px}
+#main-canvas{max-width:100%;border-radius:var(--radius-lg);display:block}
+#main-video{max-width:100%;border-radius:var(--radius-lg);display:none}
+.preview-tabs{display:flex;gap:6px;margin-bottom:12px}
+.preview-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.preview-tab.active{background:var(--accent);color:#fff;border-color:transparent}
+
+/* Content tabs */
+.content-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.ctab{padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;
+  color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;font-weight:600}
+.ctab.active{background:var(--bg4);color:var(--text);border-color:var(--border2)}
+.ctab-panel{display:none}
+.ctab-panel.active{display:block}
+
+/* Queue items */
+.q-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.q-thumb{width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg4)}
+.q-info{flex:1;min-width:0}
+.q-name{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-cap{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.q-actions{display:flex;gap:4px;margin-top:6px}
+.q-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.q-badge.pending{background:rgba(245,158,11,.15);color:var(--gold)}
+.q-badge.publishing{background:rgba(59,130,246,.15);color:var(--blue)}
+.q-badge.done{background:rgba(34,197,94,.15);color:var(--green)}
+.q-badge.failed{background:rgba(239,68,68,.15);color:var(--red)}
+.q-badge.scheduled{background:rgba(124,58,237,.15);color:var(--accent2)}
+
+/* Log area */
+.log-area{background:var(--bg3);border-radius:8px;padding:12px;font-size:11px;
+  color:var(--text2);min-height:60px;max-height:120px;overflow-y:auto;line-height:1.7}
+
+/* Analytics mini cards */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-card{background:var(--bg3);border-radius:8px;padding:10px 12px;text-align:center}
+.stat-num{font-size:22px;font-weight:700;color:var(--text)}
+.stat-lbl{font-size:10px;color:var(--text2);margin-top:2px}
+
+/* Progress bar */
+.progress-bar{height:4px;background:var(--bg4);border-radius:4px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
+
+/* Upload area */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:28px;
+  text-align:center;cursor:pointer;transition:.2s;background:var(--bg3)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(124,58,237,.08)}
+.upload-zone .icon{font-size:32px;margin-bottom:8px}
+.upload-zone .hint{font-size:12px;color:var(--text2)}
+
+/* Toggle switch */
+.toggle{position:relative;width:38px;height:20px;display:inline-block}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-track{position:absolute;inset:0;background:var(--bg4);border-radius:20px;cursor:pointer;transition:.2s}
+.toggle input:checked+.toggle-track{background:var(--accent)}
+.toggle-track::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;
+  background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-track::before{transform:translateX(18px)}
+
+/* Range slider */
+input[type=range]{-webkit-appearance:none;height:4px;background:var(--bg4);border-radius:4px;outline:none;padding:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  background:var(--accent);border-radius:50%;cursor:pointer}
+
+/* Drag handle for images */
+.img-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 0}
+.img-thumb{position:relative;flex-shrink:0;width:72px;height:72px;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent}
+.img-thumb.selected{border-color:var(--accent)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.8);
+  border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* Scroll bars */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+
+/* Animations */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+.pulsing{animation:pulse 1.5s ease-in-out infinite}
+
+/* Responsive */
+@media(max-width:1100px){
+  .studio{grid-template-columns:280px 1fr 260px}
+}
+@media(max-width:900px){
+  .studio{grid-template-columns:1fr;grid-template-rows:auto}
+  .col-left,.col-right{border:none;border-bottom:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+<div class="studio" id="studio">
+
+<!-- ── TOPBAR ─────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="logo">JOAF <span>AI Studio</span></div>
+  <div class="topbar-tabs">
+    <button class="tab-btn active" onclick="showMode('card')">🖼️ Card</button>
+    <button class="tab-btn" onclick="showMode('reel')">🎬 Reel</button>
+    <button class="tab-btn" onclick="showMode('batch')">📦 Batch</button>
+    <button class="tab-btn" onclick="showMode('queue')">📋 Queue</button>
+  </div>
+  <div id="token-status" class="status-pill" style="background:rgba(245,158,11,.15);color:var(--gold)">⏳ Token চেক...</div>
+</header>
+
+<!-- ── LEFT PANEL ─────────────────────────────────────────────── -->
+<aside class="col-left">
+
+  <!-- Input Source -->
+  <div class="card">
+    <div class="card-title">📥 Input Source <span class="badge" id="source-badge">টাইপ করুন</span></div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn btn-sm btn-ghost active" id="src-text-btn" onclick="setSource('text')">📝 Text</button>
+      <button class="btn btn-sm btn-ghost" id="src-image-btn" onclick="setSource('image')">🖼️ Image+OCR</button>
+      <button class="btn btn-sm btn-ghost" id="src-url-btn" onclick="setSource('url')">🔗 URL</button>
+    </div>
+
+    <!-- Text input -->
+    <div id="src-text-panel">
+      <textarea id="topic-input" rows="5" placeholder="খবরের বিষয়, টপিক, বা সংবাদ লিখুন..."></textarea>
+    </div>
+
+    <!-- Image/OCR input -->
+    <div id="src-image-panel" style="display:none">
+      <div class="upload-zone" id="ocr-dropzone" onclick="document.getElementById('ocr-file').click()"
+           ondragover="e=>e.preventDefault()" ondrop="handleOCRDrop(event)">
+        <div class="icon">📸</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">ছবি drag করুন বা ক্লিক করুন</div>
+        <div class="hint">OCR → AI pipeline • JPG/PNG/WebP</div>
+      </div>
+      <input type="file" id="ocr-file" accept="image/*" multiple style="display:none" onchange="handleOCRFiles(this.files)">
+      <div class="img-strip" id="ocr-strip"></div>
+    </div>
+
+    <!-- URL input -->
+    <div id="src-url-panel" style="display:none">
+      <input type="url" id="url-input" placeholder="https://news.example.com/article">
+      <div class="hint" style="font-size:11px;color:var(--text2);margin-top:6px">URL থেকে content scrape করে AI-তে পাঠাবে</div>
+    </div>
+  </div>
+
+  <!-- AI Controls -->
+  <div class="card">
+    <div class="card-title">🤖 AI Settings</div>
+    <label>Tone / Mood</label>
+    <select id="tone-select" style="margin-bottom:10px">
+      <option value="urgent">🔴 Urgent — জরুরি</option>
+      <option value="breaking">⚡ Breaking — ব্রেকিং</option>
+      <option value="sad">💙 Sad — দুঃখজনক</option>
+      <option value="positive">💚 Positive — ইতিবাচক</option>
+      <option value="angry">🔥 Angry — ক্ষুব্ধ</option>
+      <option value="informative">ℹ️ Informative — তথ্যমূলক</option>
+      <option value="motivational">✨ Motivational — অনুপ্রেরণামূলক</option>
+    </select>
+
+    <label>Template</label>
+    <select id="template-select" style="margin-bottom:10px">
+      <option value="breaking">Breaking News</option>
+      <option value="feature">Feature Story</option>
+      <option value="quote">Quote Card</option>
+      <option value="data">Data/Stats</option>
+      <option value="announcement">Announcement</option>
+    </select>
+
+    <label>Output Mode</label>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+        <input type="radio" name="mode" value="card" checked onchange="updateOutputMode(this.value)">
+        <span style="font-size:12px">🖼️ Card (JPG)</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+        <input type="radio" name="mode" value="reel" onchange="updateOutputMode(this.value)">
+        <span style="font-size:12px">🎬 Reel (Video)</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
+        <input type="radio" name="mode" value="both" onchange="updateOutputMode(this.value)">
+        <span style="font-size:12px">Both</span>
+      </label>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="generate-btn" onclick="runGenerate()">
+      🚀 Generate
+    </button>
+  </div>
+
+  <!-- Templates / Quick Topics -->
+  <div class="card">
+    <div class="card-title">⚡ Quick Templates</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button class="btn btn-ghost btn-sm btn-block" onclick="quickTopic('আজকের শীর্ষ সংবাদ: বাংলাদেশের রাজনৈতিক পরিস্থিতি')">🇧🇩 রাজনীতি</button>
+      <button class="btn btn-ghost btn-sm btn-block" onclick="quickTopic('ঢাকার আবহাওয়া আপডেট এবং জনজীবনে প্রভাব')">🌤️ আবহাওয়া</button>
+      <button class="btn btn-ghost btn-sm btn-block" onclick="quickTopic('বাংলাদেশের অর্থনীতি: নতুন বিনিয়োগ ও উন্নয়ন')">💰 অর্থনীতি</button>
+      <button class="btn btn-ghost btn-sm btn-block" onclick="quickTopic('জুলাই ফোরামের সাম্প্রতিক কার্যক্রম ও আপডেট')">✊ JOAF আপডেট</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ── CENTER PANEL ───────────────────────────────────────────── -->
+<main class="col-center">
+
+  <!-- Preview -->
+  <div class="card" style="margin:0">
+    <div class="card-title">👁️ Preview
+      <div class="preview-tabs" style="margin:0 0 0 auto">
+        <button class="preview-tab active" onclick="switchPreview('card')">Card</button>
+        <button class="preview-tab" onclick="switchPreview('reel')">Reel</button>
+      </div>
+    </div>
+    <div class="preview-wrap" id="preview-wrap">
+      <canvas id="main-canvas" width="1080" height="1080" style="max-height:500px;width:auto;height:auto"></canvas>
+      <video id="main-video" controls style="max-height:500px;width:auto"></video>
+      <div id="preview-placeholder" style="position:absolute;text-align:center;color:var(--text3)">
+        <div style="font-size:48px;margin-bottom:12px">🎨</div>
+        <div style="font-size:14px">Generate করলে preview দেখাবে</div>
+      </div>
+    </div>
+    <!-- Action buttons below preview -->
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn btn-gold" id="download-card-btn" onclick="downloadCard()" disabled>⬇️ Download JPG</button>
+      <button class="btn btn-green" id="download-reel-btn" onclick="downloadReel()" style="display:none">⬇️ Download Video</button>
+      <button class="btn btn-blue" id="queue-btn" onclick="addToQueue()" disabled>📋 Add to Queue</button>
+      <button class="btn btn-primary" id="publish-now-btn" onclick="publishNow()" disabled>📤 Publish Now</button>
+    </div>
+  </div>
+
+  <!-- Generated Content Tabs -->
+  <div class="card" style="margin:0">
+    <div class="card-title">📝 Generated Content</div>
+    <div class="content-tabs">
+      <button class="ctab active" onclick="showCtab('caption')">Caption</button>
+      <button class="ctab" onclick="showCtab('hook')">Hook</button>
+      <button class="ctab" onclick="showCtab('script')">Reel Script</button>
+      <button class="ctab" onclick="showCtab('platforms')">Platforms</button>
+      <button class="ctab" onclick="showCtab('analytics')">Analytics</button>
+    </div>
+
+    <div id="ctab-caption" class="ctab-panel active">
+      <textarea id="caption-out" rows="6" placeholder="Caption এখানে দেখাবে..."></textarea>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="copyCaption()">📋 Copy</button>
+        <button class="btn btn-ghost btn-sm" onclick="useInQueue()">➕ Queue-এ ব্যবহার</button>
+        <select id="caption-variant" onchange="switchCaption(this.value)" style="width:auto;flex:1">
+          <option value="caption">Full Caption</option>
+          <option value="shortCaption">Short</option>
+          <option value="mediumCaption">Medium</option>
+          <option value="longCaption">Long</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="ctab-hook" class="ctab-panel">
+      <div id="hook-out" style="font-size:18px;font-weight:700;padding:16px;background:var(--bg3);
+        border-radius:8px;border-left:4px solid var(--accent);line-height:1.6">—</div>
+      <div id="breaking-line-out" style="font-size:13px;color:var(--text2);margin-top:8px;padding:10px;
+        background:rgba(239,68,68,.08);border-radius:8px;display:none"></div>
+      <div id="cta-out" style="font-size:13px;color:var(--gold);margin-top:8px;font-weight:700"></div>
+    </div>
+
+    <div id="ctab-script" class="ctab-panel">
+      <div id="script-out" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <div id="ctab-platforms" class="ctab-panel">
+      <div id="platforms-out" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+
+    <div id="ctab-analytics" class="ctab-panel">
+      <div class="stat-grid" id="analytics-out">
+        <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">Viral Score</div></div>
+        <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">Engagement</div></div>
+        <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">Controversy</div></div>
+        <div class="stat-card"><div class="stat-num">—</div><div class="stat-lbl">Priority</div></div>
+      </div>
+      <div id="safety-out" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="card" style="margin:0">
+    <div class="card-title">📊 Log</div>
+    <div class="log-area" id="log-area">Studio ready. Generate করুন...</div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+</main>
+
+<!-- ── RIGHT PANEL ─────────────────────────────────────────────── -->
+<aside class="col-right">
+
+  <!-- Batch Images strip -->
+  <div class="card" id="batch-images-card" style="display:none">
+    <div class="card-title">🗂️ Batch Images
+      <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="document.getElementById('batch-file').click()">+ Add</button>
+    </div>
+    <input type="file" id="batch-file" accept="image/*,video/*" multiple style="display:none" onchange="addBatchFiles(this.files)">
+    <div class="img-strip" id="batch-strip"></div>
+    <div style="margin-top:8px;font-size:11px;color:var(--text2)" id="batch-count">0 files</div>
+  </div>
+
+  <!-- Schedule -->
+  <div class="card">
+    <div class="card-title">📅 Publish Settings</div>
+    <label>Schedule (optional)</label>
+    <input type="datetime-local" id="schedule-input" style="margin-bottom:10px">
+    <label>Exclude Pages</label>
+    <textarea id="exclude-pages" rows="2" placeholder="Page নাম বা ID, comma separated..." style="margin-bottom:10px;min-height:50px"></textarea>
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer">
+      <span class="toggle"><input type="checkbox" id="auto-queue-toggle" checked><span class="toggle-track"></span></span>
+      Generate-এর পর auto queue
+    </label>
+  </div>
+
+  <!-- Queue Panel -->
+  <div class="card">
+    <div class="card-title">
+      📋 Publish Queue
+      <span id="q-count-badge" class="badge" style="background:var(--bg4);color:var(--text2)">0</span>
+      <button class="btn btn-sm btn-ghost" style="margin-left:auto;font-size:10px" onclick="clearQueue()">Clear</button>
+    </div>
+
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn btn-green btn-sm" onclick="publishSelected()">✅ Publish Selected</button>
+      <button class="btn btn-primary btn-sm" onclick="publishAll()">📤 Publish All</button>
+    </div>
+
+    <div id="queue-status" style="font-size:11px;color:var(--text2);margin-bottom:8px"></div>
+    <div id="queue-list"></div>
+  </div>
+
+  <!-- Facebook Pages -->
+  <div class="card">
+    <div class="card-title">📄 FB Pages</div>
+    <div id="fb-pages-list" style="font-size:12px;color:var(--text2)">লোড হচ্ছে...</div>
+    <button class="btn btn-ghost btn-sm btn-block" style="margin-top:8px" onclick="loadFBPages()">🔄 Refresh</button>
+  </div>
+
+</aside>
+</div>
+
+<!-- LOGO DATA (same as existing admin) -->
+<script>
+const LOGO_SRC = '/logoc7c3.png';
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- STUDIO JS                                                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<script type="module">
+import { generateMasterContent, processImageWithOCR } from './js/ai/aiMaster.js';
+import { drawNewsCard, drawReelFrame, loadBrandLogo, PALETTES } from './js/render/baseRenderer.js';
+import { queueStore, STATUS } from './js/queue/queueSystem.js';
+import { getFacebookPages, checkFBToken } from './js/queue/fbPublisher.js';
+
+// ── State ─────────────────────────────────────────────────────
+let currentContent = null;
+let currentMode = 'card';
+let outputMode = 'card'; // 'card' | 'reel' | 'both'
+let reelBlob = null;
+let cardBlob = null;
+let ocrFiles = [];
+let batchFiles = [];
+let fbPages = [];
+let activeSource = 'text';
+
+const canvas = document.getElementById('main-canvas');
+const ctx = canvas.getContext('2d');
+const video = document.getElementById('main-video');
+
+// ── Init ──────────────────────────────────────────────────────
+(async () => {
+  await loadBrandLogo(LOGO_SRC);
+  await loadFBPages();
+  await checkToken();
+  queueStore.subscribe(renderQueue);
+  renderQueue(queueStore.items);
+})();
+
+async function checkToken() {
+  try {
+    const r = await checkFBToken();
+    const el = document.getElementById('token-status');
+    if (r.is_valid) {
+      el.style.background = 'rgba(34,197,94,.15)';
+      el.style.color = 'var(--green)';
+      el.textContent = '✅ Token Valid';
+    } else {
+      el.style.background = 'rgba(239,68,68,.15)';
+      el.style.color = 'var(--red)';
+      el.textContent = '❌ Token Invalid';
+    }
+  } catch { /* network */ }
+}
+
+window.loadFBPages = async function() {
+  const el = document.getElementById('fb-pages-list');
+  el.textContent = 'লোড হচ্ছে...';
+  try {
+    fbPages = await getFacebookPages();
+    if (!fbPages.length) { el.textContent = 'কোনো page পাওয়া যায়নি'; return; }
+    el.innerHTML = fbPages.map(p =>
+      `<div style="padding:4px 0;display:flex;justify-content:space-between;border-bottom:1px solid var(--border)">
+        <span>${p.name}</span><span style="color:var(--text2)">${p.id}</span>
+       </div>`
+    ).join('');
+  } catch (e) { el.textContent = 'Error: ' + e.message; }
+};
+
+// ── Source switching ──────────────────────────────────────────
+window.setSource = function(type) {
+  activeSource = type;
+  ['text','image','url'].forEach(t => {
+    document.getElementById(`src-${t}-panel`).style.display = t === type ? 'block' : 'none';
+    document.getElementById(`src-${t}-btn`).classList.toggle('active', t === type);
+  });
+  document.getElementById('source-badge').textContent =
+    type === 'text' ? 'টাইপ করুন' : type === 'image' ? 'OCR+Vision' : 'URL Scrape';
+};
+
+window.updateOutputMode = function(v) { outputMode = v; };
+window.quickTopic = function(t) {
+  document.getElementById('topic-input').value = t;
+  setSource('text');
+};
+
+// ── OCR File handling ─────────────────────────────────────────
+window.handleOCRFiles = function(files) {
+  ocrFiles = Array.from(files);
+  renderOCRStrip();
+};
+
+window.handleOCRDrop = function(e) {
+  e.preventDefault();
+  window.handleOCRFiles(e.dataTransfer.files);
+};
+
+function renderOCRStrip() {
+  const strip = document.getElementById('ocr-strip');
+  strip.innerHTML = ocrFiles.map((f, i) =>
+    `<div class="img-thumb selected" onclick="selectOCRFile(${i})">
+       <img src="${URL.createObjectURL(f)}" alt="">
+       <div class="rm" onclick="removeOCRFile(event,${i})">✕</div>
+     </div>`
+  ).join('');
+}
+
+window.selectOCRFile = function(i) {
+  document.querySelectorAll('#ocr-strip .img-thumb').forEach((t,j) => t.classList.toggle('selected', j===i));
+};
+
+window.removeOCRFile = function(e, i) {
+  e.stopPropagation();
+  ocrFiles.splice(i, 1);
+  renderOCRStrip();
+};
+
+// ── Batch file handling ───────────────────────────────────────
+window.addBatchFiles = function(files) {
+  batchFiles = [...batchFiles, ...Array.from(files)];
+  renderBatchStrip();
+};
+
+function renderBatchStrip() {
+  const strip = document.getElementById('batch-strip');
+  document.getElementById('batch-count').textContent = `${batchFiles.length} files`;
+  strip.innerHTML = batchFiles.map((f, i) =>
+    `<div class="img-thumb selected">
+       <img src="${URL.createObjectURL(f)}" alt="">
+       <div class="rm" onclick="removeBatchFile(event,${i})">✕</div>
+     </div>`
+  ).join('');
+}
+
+window.removeBatchFile = function(e, i) {
+  e.stopPropagation();
+  batchFiles.splice(i, 1);
+  renderBatchStrip();
+};
+
+// ── Mode switching ────────────────────────────────────────────
+window.showMode = function(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.tab-btn').forEach((b,i) =>
+    b.classList.toggle('active', ['card','reel','batch','queue'][i] === mode));
+  document.getElementById('batch-images-card').style.display = mode === 'batch' ? 'block' : 'none';
+  if (mode === 'batch') {
+    document.getElementById('batch-file').click();
+  }
+};
+
+window.switchPreview = function(type) {
+  document.querySelectorAll('.preview-tab').forEach((b,i) => b.classList.toggle('active', ['card','reel'][i]===type));
+  canvas.style.display = type === 'card' ? 'block' : 'none';
+  video.style.display = type === 'reel' ? 'block' : 'none';
+};
+
+window.showCtab = function(tab) {
+  document.querySelectorAll('.ctab').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab.slice(0,4))));
+  document.querySelectorAll('.ctab-panel').forEach(p => p.classList.toggle('active', p.id === `ctab-${tab}`));
+};
+
+// ── Main Generate ─────────────────────────────────────────────
+window.runGenerate = async function() {
+  const btn = document.getElementById('generate-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⚙️</span> Generating...';
+  setProgress(5);
+  log('🤖 AI request পাঠানো হচ্ছে...');
+
+  try {
+    const tone = document.getElementById('tone-select').value;
+
+    // Gather input
+    let inputText = '';
+    let inputFile = null;
+
+    if (activeSource === 'text') {
+      inputText = document.getElementById('topic-input').value.trim();
+      if (!inputText) throw new Error('Topic লিখুন');
+    } else if (activeSource === 'image') {
+      if (!ocrFiles.length) throw new Error('ছবি select করুন');
+      inputFile = ocrFiles[0];
+    } else if (activeSource === 'url') {
+      const url = document.getElementById('url-input').value.trim();
+      if (!url) throw new Error('URL দিন');
+      inputText = await scrapeURL(url);
+    }
+
+    setProgress(20);
+    log('🧠 Master Content Object তৈরি হচ্ছে...');
+
+    let content;
+    if (inputFile) {
+      content = await processImageWithOCR(inputFile, tone);
+    } else {
+      content = await generateMasterContent(inputText, tone);
+    }
+
+    currentContent = content;
+    setProgress(50);
+    log('✅ Content ready — rendering...');
+
+    // Populate UI
+    populateContentUI(content);
+
+    // Render card
+    if (outputMode === 'card' || outputMode === 'both') {
+      await renderCard(content, inputFile);
+      setProgress(75);
+    }
+
+    // Render reel
+    if (outputMode === 'reel' || outputMode === 'both') {
+      log('🎬 Reel rendering শুরু...');
+      await renderReelVideo(content, inputFile);
+      setProgress(90);
+    }
+
+    // Auto-queue
+    if (document.getElementById('auto-queue-toggle').checked) {
+      addToQueue();
+    }
+
+    setProgress(100);
+    log('🎉 Complete! Queue-এ add করুন বা এখনই Publish করুন।');
+    enableActions();
+
+    // Batch mode — process remaining files
+    if (currentMode === 'batch' && batchFiles.length > 1) {
+      await runBatchGenerate(content, tone);
+    }
+
+  } catch (e) {
+    log('❌ Error: ' + e.message, 'error');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Generate';
+  }
+};
+
+async function scrapeURL(url) {
+  try {
+    const proxy = `/.netlify/functions/fetch-rss?url=${encodeURIComponent(url)}`;
+    const r = await fetch(proxy);
+    if (!r.ok) return url; // fallback to URL as text
+    const text = await r.text();
+    return text.slice(0, 2000);
+  } catch { return url; }
+}
+
+// ── Card Rendering ────────────────────────────────────────────
+async function renderCard(content, bgFile = null) {
+  document.getElementById('preview-placeholder').style.display = 'none';
+  canvas.style.display = 'block';
+
+  let bgImg = null;
+  if (bgFile) {
+    bgImg = await loadImage(bgFile);
+  }
+
+  canvas.width = 1080;
+  canvas.height = 1080;
+  drawNewsCard(ctx, 1080, 1080, content, bgImg);
+
+  // Store as blob
+  cardBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
+  log('🖼️ Card rendered (1080×1080 JPG)');
+}
+
+// ── Reel Rendering ────────────────────────────────────────────
+async function renderReelVideo(content, bgFile = null) {
+  const W = 1080, H = 1920;
+  const reelCanvas = document.createElement('canvas');
+  reelCanvas.width = W; reelCanvas.height = H;
+  const rCtx = reelCanvas.getContext('2d');
+
+  const scenes = content.sceneBreakdown || content.reelScript.map((text, i) => ({
+    title: `Slide ${i+1}`, text, duration: i === 0 ? 5 : 10, mood: content.emotion
+  }));
+  const durations = content.sceneDurations || scenes.map(s => s.duration || 8);
+  const fps = content.renderSettings?.fps || 30;
+  const totalFrames = durations.reduce((a, b) => a + b, 0) * fps;
+
+  let bgImg = null;
+  if (bgFile) bgImg = await loadImage(bgFile);
+
+  const stream = reelCanvas.captureStream(fps);
+  const recorder = new MediaRecorder(stream, {
+    mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
+    videoBitsPerSecond: 4_000_000
+  });
+  const chunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+  recorder.start(100);
+
+  let frame = 0;
+  let sceneIdx = 0;
+  let sceneFrame = 0;
+
+  await new Promise((resolve) => {
+    const tick = () => {
+      if (frame >= totalFrames) { recorder.stop(); return; }
+
+      const sceneTotalFrames = durations[sceneIdx] * fps;
+      const t = sceneFrame / sceneTotalFrames;
+
+      drawReelFrame(rCtx, W, H, scenes[sceneIdx], content, t, bgImg);
+
+      sceneFrame++;
+      if (sceneFrame >= sceneTotalFrames) {
+        sceneIdx = Math.min(sceneIdx + 1, scenes.length - 1);
+        sceneFrame = 0;
+      }
+      frame++;
+
+      // Progress update every 30 frames
+      if (frame % 30 === 0) {
+        const pct = 50 + Math.round((frame / totalFrames) * 40);
+        setProgress(pct);
+        log(`🎬 Rendering ${Math.round(frame/totalFrames*100)}%...`);
+      }
+
+      requestAnimationFrame(tick);
+    };
+    recorder.onstop = resolve;
+    requestAnimationFrame(tick);
+  });
+
+  reelBlob = new Blob(chunks, { type: 'video/webm' });
+  video.src = URL.createObjectURL(reelBlob);
+  video.style.display = 'block';
+  log(`🎬 Reel ready (${(reelBlob.size / 1024 / 1024).toFixed(1)}MB)`);
+}
+
+// ── Batch Generate ────────────────────────────────────────────
+async function runBatchGenerate(firstContent, tone) {
+  log(`📦 Batch mode: ${batchFiles.length} files processing...`);
+  for (let i = 1; i < batchFiles.length; i++) {
+    log(`📸 Image ${i+1}/${batchFiles.length} processing...`);
+    try {
+      const bContent = await processImageWithOCR(batchFiles[i], tone);
+      await renderCard(bContent, batchFiles[i]);
+      if (cardBlob) {
+        const id = queueStore.add({
+          blob: cardBlob,
+          name: `batch-card-${i+1}-${Date.now()}.jpg`,
+          caption: (bContent.caption || '') + (bContent.hashtags?.join(' ') ? '\n\n' + bContent.hashtags.join(' ') : ''),
+          isVideo: false,
+          contentObj: bContent
+        });
+        log(`✅ Card ${i+1} queued (id: ${id.slice(0,8)})`);
+      }
+    } catch (e) {
+      log(`⚠️ Image ${i+1} failed: ${e.message}`, 'warn');
+    }
+    setProgress(Math.round(((i+1) / batchFiles.length) * 100));
+  }
+  log(`🎉 Batch complete! ${queueStore.count} items in queue.`);
+}
+
+// ── Content UI Population ─────────────────────────────────────
+function populateContentUI(c) {
+  // Caption
+  document.getElementById('caption-out').value = c.caption || '';
+  // Hook
+  document.getElementById('hook-out').textContent = c.hook || c.headline || '—';
+  const bl = document.getElementById('breaking-line-out');
+  if (c.breakingLine) { bl.textContent = '⚡ ' + c.breakingLine; bl.style.display='block'; }
+  else bl.style.display = 'none';
+  document.getElementById('cta-out').textContent = c.cta ? '📢 ' + c.cta : '';
+  // Script
+  const scriptOut = document.getElementById('script-out');
+  scriptOut.innerHTML = (c.reelScript || []).map((s, i) =>
+    `<div style="padding:10px 14px;background:var(--bg3);border-radius:8px;border-left:3px solid var(--accent)">
+       <div style="font-size:10px;color:var(--text2);margin-bottom:4px">Slide ${i+1}</div>
+       <div style="font-size:13px">${s}</div>
+     </div>`
+  ).join('');
+  // Platforms
+  const platOut = document.getElementById('platforms-out');
+  const pv = c.platformVariants || {};
+  platOut.innerHTML = ['facebook','instagram','youtube'].map(p =>
+    pv[p] ? `<div style="background:var(--bg3);border-radius:8px;padding:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:6px">${p.toUpperCase()}</div>
+      <div style="font-size:12px;color:var(--text2)">${pv[p].caption || pv[p].description || '—'}</div>
+     </div>` : ''
+  ).join('');
+  // Analytics
+  const ah = c.analyticsHints || {};
+  document.getElementById('analytics-out').innerHTML = `
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${ah.viralScore||'—'}</div><div class="stat-lbl">Viral Score</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${ah.engagementPotential||'—'}</div><div class="stat-lbl">Engagement</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--orange)">${ah.controversyLevel||'—'}</div><div class="stat-lbl">Controversy</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent2)">${(c.publishSettings?.priority||'—').toUpperCase()}</div><div class="stat-lbl">Priority</div></div>
+  `;
+  const s = c.safety || {};
+  document.getElementById('safety-out').innerHTML =
+    `Safety: NSFW:${s.nsfw?'⚠️':'✅'} Political:${s.political?'⚠️':'✅'} Sensitive:${s.sensitive?'⚠️':'✅'}`;
+}
+
+window.switchCaption = function(v) {
+  if (!currentContent) return;
+  document.getElementById('caption-out').value = currentContent[v] || currentContent.caption || '';
+};
+
+// ── Actions ───────────────────────────────────────────────────
+function enableActions() {
+  document.getElementById('download-card-btn').disabled = !cardBlob;
+  document.getElementById('download-reel-btn').style.display = reelBlob ? 'inline-flex' : 'none';
+  document.getElementById('queue-btn').disabled = (!cardBlob && !reelBlob);
+  document.getElementById('publish-now-btn').disabled = (!cardBlob && !reelBlob);
+}
+
+window.downloadCard = function() {
+  if (!cardBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(cardBlob);
+  a.download = `joaf-card-${Date.now()}.jpg`;
+  a.click();
+};
+
+window.downloadReel = function() {
+  if (!reelBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(reelBlob);
+  a.download = `joaf-reel-${Date.now()}.webm`;
+  a.click();
+};
+
+window.copyCaption = function() {
+  const v = document.getElementById('caption-out').value;
+  navigator.clipboard.writeText(v).then(() => log('📋 Caption copied!'));
+};
+
+window.useInQueue = function() {
+  if (!currentContent) return;
+  document.getElementById('caption-out').dispatchEvent(new Event('change'));
+  addToQueue();
+};
+
+window.addToQueue = function() {
+  if (!currentContent) return;
+  const caption = document.getElementById('caption-out').value || currentContent.caption || '';
+  const schedVal = document.getElementById('schedule-input').value;
+  const scheduledAt = schedVal ? new Date(schedVal).toISOString() : null;
+
+  if (cardBlob) {
+    queueStore.add({
+      blob: cardBlob,
+      name: `joaf-card-${Date.now()}.jpg`,
+      caption,
+      isVideo: false,
+      scheduledAt,
+      contentObj: { ...currentContent }
+    });
+    log('📋 Card added to queue');
+  }
+  if (reelBlob) {
+    queueStore.add({
+      blob: reelBlob,
+      name: `joaf-reel-${Date.now()}.webm`,
+      caption,
+      isVideo: true,
+      scheduledAt,
+      contentObj: { ...currentContent }
+    });
+    log('📋 Reel added to queue');
+  }
+};
+
+window.publishNow = async function() {
+  if (!currentContent) return;
+  const caption = document.getElementById('caption-out').value || currentContent.caption;
+  const id = queueStore.add({
+    blob: cardBlob || reelBlob,
+    name: `joaf-now-${Date.now()}`,
+    caption,
+    isVideo: !!reelBlob && !cardBlob,
+    contentObj: currentContent
+  });
+  log('📤 Publishing...');
+  try {
+    await queueStore.publishOne(id);
+    log('✅ Published successfully!');
+  } catch (e) {
+    log('❌ Publish failed: ' + e.message, 'error');
+  }
+};
+
+// ── Queue Actions ─────────────────────────────────────────────
+window.publishSelected = async function() {
+  log('📤 Selected items publishing...');
+  try {
+    const r = await queueStore.publishSelected((done, total, item) => {
+      log(`📤 ${done}/${total} — ${item.name}`);
+      setProgress(Math.round(done/total*100));
+    });
+    log(`✅ Done: ${r.done}/${r.total} published`);
+  } catch (e) {
+    log('❌ ' + e.message, 'error');
+  }
+};
+
+window.publishAll = async function() {
+  queueStore.selectAll(true);
+  return window.publishSelected();
+};
+
+window.clearQueue = function() {
+  if (confirm('Queue-এর সব item remove করবেন?')) {
+    queueStore.clear();
+    log('🗑️ Queue cleared');
+  }
+};
+
+// ── Queue Rendering ───────────────────────────────────────────
+function renderQueue(items) {
+  const list = document.getElementById('queue-list');
+  document.getElementById('q-count-badge').textContent = items.length;
+  const pending = items.filter(i => i.status === STATUS.PENDING || i.status === STATUS.SCHEDULED).length;
+  document.getElementById('queue-status').textContent =
+    `${items.length} items • ${pending} pending • ${items.filter(i=>i.status===STATUS.DONE).length} done`;
+
+  list.innerHTML = items.map(item => `
+    <div class="q-item">
+      ${item.blobUrl ? `<img class="q-thumb" src="${item.blobUrl}" alt="">` : `<div class="q-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px">${item.isVideo?'🎬':'🖼️'}</div>`}
+      <div class="q-info">
+        <div class="q-name">${item.name || 'unnamed'}</div>
+        <div class="q-cap">${(item.caption||'').slice(0,60)}...</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <span class="q-badge ${item.status}">${item.status}</span>
+          ${item.scheduledAt ? `<span style="font-size:10px;color:var(--text2)">${new Date(item.scheduledAt).toLocaleString('bn-BD')}</span>` : ''}
+        </div>
+        ${item.error ? `<div style="font-size:10px;color:var(--red);margin-top:2px">${item.error}</div>` : ''}
+        ${item.postId ? `<div style="font-size:10px;color:var(--green);margin-top:2px">Post ID: ${item.postId}</div>` : ''}
+        <div class="q-actions">
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px">
+            <input type="checkbox" ${item.selected?'checked':''} onchange="queueStore.toggleSelect('${item.id}')"> Select
+          </label>
+          <button class="btn btn-sm btn-ghost" style="padding:3px 8px;font-size:10px" onclick="queueStore.publishOne('${item.id}').catch(e=>log('❌'+e.message,'error'))">📤</button>
+          <button class="btn btn-sm btn-red" style="padding:3px 8px;font-size:10px" onclick="queueStore.remove('${item.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>
+  `).join('') || '<div style="font-size:12px;color:var(--text3);padding:16px;text-align:center">Queue empty</div>';
+}
+
+// ── Utilities ─────────────────────────────────────────────────
+function log(msg, type = 'info') {
+  const area = document.getElementById('log-area');
+  const color = type === 'error' ? 'var(--red)' : type === 'warn' ? 'var(--gold)' : 'var(--text2)';
+  const time = new Date().toLocaleTimeString('bn-BD');
+  area.innerHTML += `<div style="color:${color}">[${time}] ${msg}</div>`;
+  area.scrollTop = area.scrollHeight;
+}
+
+function setProgress(pct) {
+  document.getElementById('prog-fill').style.width = pct + '%';
+}
+
+function loadImage(file) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = typeof file === 'string' ? file : URL.createObjectURL(file);
+  });
+}
+
+// Expose queueStore to inline event handlers
+window.queueStore = queueStore;
+window.STATUS = STATUS;
+</script>
+
+<!-- Appwrite draft queue (existing script, preserved) -->
+<script src="/js/fb-draft-queue.js" type="module"></script>
+</body>
+</html>
