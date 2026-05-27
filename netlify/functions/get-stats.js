@@ -1,13 +1,14 @@
 /**
- * get-stats.js
- * Returns subscriber count + recent notification history from Appwrite.
- * Called by the admin dashboard instead of Firestore so the KPIs reflect
- * the live Appwrite state (where push_subscriptions now live).
+ * get-stats.js  v2
+ * Returns subscriber count + recent notification history + donor/alert counts
+ * exclusively from Appwrite. Firebase is never read.
  */
-const { awListAll } = require('./aw-utils');
+const { awListAll, qEqual } = require('./aw-utils');
 
-const COL_SUBS = 'push_subscriptions';
-const COL_HIST = 'notification_history';
+const COL_SUBS   = 'push_subscriptions';
+const COL_HIST   = 'notification_history';
+const COL_DONORS = 'donors';
+const COL_ALERTS = 'alerts';
 
 exports.handler = async (event) => {
   const headers = {
@@ -30,14 +31,23 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Fetch in parallel — cap history at 50 docs to keep response fast
-    const [subDocs, histDocs] = await Promise.all([
-      awListAll(COL_SUBS,  [], 500).catch(() => []),
-      awListAll(COL_HIST,  [], 50 ).catch(() => []),
+    // Fetch all four collections in parallel — Appwrite only, no Firebase
+    const [subDocs, histDocs, donorDocs, alertDocs] = await Promise.all([
+      awListAll(COL_SUBS,   [], 500).catch(() => []),
+      awListAll(COL_HIST,   [], 50 ).catch(() => []),
+      awListAll(COL_DONORS, [], 500).catch(() => []),
+      awListAll(COL_ALERTS, [], 200).catch(() => []),
     ]);
 
-    const activeSubs = subDocs.filter(d => d.data && d.data.active !== false).length;
-    const totalSubs  = subDocs.length;
+    const activeSubs   = subDocs.filter(d => d.data && d.data.active !== false).length;
+    const totalSubs    = subDocs.length;
+    const totalDonors  = donorDocs.length;
+    const totalAlerts  = alertDocs.length;
+    const activeAlerts = alertDocs.filter(d => d.data && d.data.active !== false).length;
+
+    // Blood-group quick stats
+    const bloodAPos = donorDocs.filter(d => d.data && (d.data.blood === 'A+' || d.data.bloodGroup === 'A+')).length;
+    const bloodOPos = donorDocs.filter(d => d.data && (d.data.blood === 'O+' || d.data.bloodGroup === 'O+')).length;
 
     // Sort history newest-first
     const history = histDocs
@@ -49,10 +59,18 @@ exports.handler = async (event) => {
       })
       .slice(0, 20);
 
-    // Count today's notifications (server-side, avoids timezone guesswork on client)
+    // Count today's notifications (server-side)
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayCount = history.filter(d => d.sentAt && new Date(d.sentAt) >= todayStart).length;
+
+    // Sync status: a collection is "synced" if it has at least 1 document
+    const syncStatus = {
+      push_subscriptions:   totalSubs   > 0 ? 'synced' : 'empty',
+      notification_history: histDocs.length > 0 ? 'synced' : 'empty',
+      donors:               totalDonors > 0 ? 'synced' : 'empty',
+      alerts:               totalAlerts > 0 ? 'synced' : 'empty',
+    };
 
     return {
       statusCode: 200,
@@ -61,9 +79,17 @@ exports.handler = async (event) => {
         ok: true,
         activeSubs,
         totalSubs,
-        totalNotifs: histDocs.length,
-        todayNotifs: todayCount,
+        totalNotifs:  histDocs.length,
+        todayNotifs:  todayCount,
+        totalDonors,
+        totalAlerts,
+        activeAlerts,
+        bloodAPos,
+        bloodOPos,
+        syncStatus,
         history,
+        // Shallow donor list for dashboard preview (first 5)
+        recentDonors: donorDocs.slice(0, 5).map(d => ({ id: d.id, ...d.data })),
       }),
     };
   } catch (err) {

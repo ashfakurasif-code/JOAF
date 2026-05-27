@@ -398,5 +398,116 @@ exports.handler = async (event) => {
     })};
   }
 
-  return { statusCode:400, headers, body: JSON.stringify({ error:'Unknown action. Use: validate | dry-run | fetch-counts | migrate-collection' }) };
+  // ── 5. VALIDATE-SCHEMA  — check & auto-patch Appwrite collection attributes ─
+  if (action === 'validate-schema') {
+    const SDK = require('node-appwrite');
+    const client = new SDK.Client()
+      .setEndpoint(AW_ENDPOINT)
+      .setProject(AW_PROJECT)
+      .setKey(process.env.APPWRITE_API_KEY);
+    const db = new SDK.Databases(client);
+
+    // Schema definitions per collection
+    const SCHEMAS = {
+      donors: [
+        { key:'name',      type:'string',   size:255  },
+        { key:'email',     type:'string',   size:512  },
+        { key:'phone',     type:'string',   size:50   },
+        { key:'amount',    type:'float'               },
+        { key:'currency',  type:'string',   size:10   },
+        { key:'district',  type:'string',   size:255  },
+        { key:'message',   type:'string',   size:2000 },
+        { key:'method',    type:'string',   size:100  },
+        { key:'status',    type:'string',   size:50   },
+        { key:'donatedAt', type:'string',   size:50   },
+        { key:'anonymous', type:'boolean'             },
+      ],
+      notification_history: [
+        { key:'title',     type:'string',   size:512  },
+        { key:'body',      type:'string',   size:2000 },
+        { key:'url',       type:'string',   size:1024 },
+        { key:'type',      type:'string',   size:100  },
+        { key:'district',  type:'string',   size:255  },
+        { key:'sentAt',    type:'string',   size:50   },
+        { key:'totalSent', type:'integer'             },
+      ],
+      leaders: [
+        { key:'name',       type:'string',  size:255  },
+        { key:'slug',       type:'string',  size:255  },
+        { key:'party',      type:'string',  size:255  },
+        { key:'district',   type:'string',  size:255  },
+        { key:'position',   type:'string',  size:255  },
+        { key:'photoUrl',   type:'string',  size:1024 },
+        { key:'active',     type:'boolean'            },
+        { key:'bio',        type:'string',  size:5000 },
+        { key:'promises',   type:'string',  size:5000 },
+        { key:'statements', type:'string',  size:5000 },
+        { key:'updatedAt',  type:'string',  size:50   },
+      ],
+      alerts: [
+        { key:'title',     type:'string',   size:512  },
+        { key:'message',   type:'string',   size:5000 },
+        { key:'type',      type:'string',   size:100  },
+        { key:'district',  type:'string',   size:255  },
+        { key:'active',    type:'boolean'             },
+        { key:'createdAt', type:'string',   size:50   },
+        { key:'expiresAt', type:'string',   size:50   },
+      ],
+      members: [
+        { key:'name',     type:'string',    size:255  },
+        { key:'email',    type:'string',    size:512  },
+        { key:'phone',    type:'string',    size:50   },
+        { key:'district', type:'string',    size:255  },
+        { key:'role',     type:'string',    size:100  },
+        { key:'active',   type:'boolean'             },
+        { key:'joinedAt', type:'string',    size:50   },
+        { key:'photoUrl', type:'string',    size:1024 },
+      ],
+      press_releases: [
+        { key:'title',     type:'string',   size:512   },
+        { key:'slug',      type:'string',   size:255   },
+        { key:'body',      type:'string',   size:65535 },
+        { key:'summary',   type:'string',   size:2000  },
+        { key:'date',      type:'string',   size:50    },
+        { key:'imageUrl',  type:'string',   size:1024  },
+        { key:'published', type:'boolean'              },
+      ],
+    };
+
+    const report = {};
+
+    for (const [colName, attrs] of Object.entries(SCHEMAS)) {
+      report[colName] = { checked: attrs.length, patched: [], errors: [] };
+      let existing = [];
+      try {
+        const res = await db.listAttributes(DB_ID, colName);
+        existing = (res.attributes || []).map(a => a.key);
+      } catch(e) {
+        report[colName].errors.push('listAttributes: ' + e.message.slice(0,100));
+        continue;
+      }
+
+      for (const attr of attrs) {
+        if (existing.includes(attr.key)) continue;
+        try {
+          if (attr.type === 'string')  await db.createStringAttribute(DB_ID, colName, attr.key, attr.size || 255, false, '', false);
+          else if (attr.type === 'boolean') await db.createBooleanAttribute(DB_ID, colName, attr.key, false, false);
+          else if (attr.type === 'integer') await db.createIntegerAttribute(DB_ID, colName, attr.key, false, null, null, 0);
+          else if (attr.type === 'float')   await db.createFloatAttribute(DB_ID, colName, attr.key, false, null, null, 0);
+          report[colName].patched.push(attr.key);
+          // Appwrite needs a brief pause between attribute creations
+          await new Promise(r => setTimeout(r, 350));
+        } catch(e) {
+          if (e.code !== 409) report[colName].errors.push(attr.key + ': ' + e.message.slice(0,100));
+        }
+      }
+    }
+
+    return { statusCode:200, headers, body: JSON.stringify({ ok:true, schemaValidation: report }) };
+  }
+
+  return { statusCode:400, headers, body: JSON.stringify({ error:'Unknown action. Use: validate | dry-run | fetch-counts | migrate-collection | validate-schema' }) };
 };
+
+// NOTE: The handler above is the canonical export.
+// validate-schema action is injected via monkey-patch below.

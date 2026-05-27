@@ -820,7 +820,7 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
 
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">🩸 রক্তদাতা তালিকা</div></div>
+          <div><div class="card-title">🩸 রক্তদাতা তালিকা</div><div style="margin-top:3px"><span id="blood-sync-badge" class="badge badge-amber" style="font-size:9px">⏳ Loading</span> <span style="font-size:9px;color:var(--text3)">Source: Appwrite</span></div></div>
           <div class="flex" style="display:flex;gap:6px;align-items:center;">
             <button class="btn btn-ghost btn-sm" id="donor-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);" onclick="bulkDeleteDonors()">🗑️ Selected Delete</button>
             <input type="text" id="bl-search" placeholder="নাম / গ্রুপ / জেলা..." style="padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;outline:none;width:180px;" oninput="filterDonors()">
@@ -1256,6 +1256,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         <!-- Action buttons -->
         <div class="btn-row">
           <button id="mig-btn-dryrun" class="btn btn-ghost"    onclick="migrationDryRun()">🔍 Dry Run</button>
+          <button id="mig-btn-schema" class="btn btn-ghost"    onclick="migrationValidateSchema()">🧬 Validate Schema</button>
           <button id="mig-btn-start"  class="btn btn-primary"  onclick="migrationStart()">🚀 Validate &amp; Migrate</button>
           <button id="mig-btn-resume" class="btn btn-primary"  onclick="migrationResume()" style="display:none;">🔄 Resume / Retry</button>
         </div>
@@ -1680,7 +1681,14 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from '/js/aw-firestore.js';
 
+// ── Firebase config (LEGACY — READ-ONLY reference, no writes) ────────────────
+// All imports above come from /js/aw-firestore.js which is a Firebase-API-compatible
+// shim that routes ALL operations (addDoc, setDoc, updateDoc, deleteDoc, getDocs)
+// exclusively to Appwrite. Firebase Firestore is NEVER written to from this panel.
+// This config object is passed to the shim's initializeApp() only for API compat;
+// the shim ignores it and uses the Appwrite endpoint/project hardcoded in aw-firestore.js.
 const FB = { apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk', authDomain:'joaf-app-45753.firebaseapp.com', projectId:'joaf-app-45753', storageBucket:'joaf-app-45753.firebasestorage.app', messagingSenderId:'472362223214', appId:'1:472362223214:web:9186a4f90dc608bae4487f' };
+// ─────────────────────────────────────────────────────────────────────────────
 const app = getApps().length ? getApps()[0] : initializeApp(FB);
 const db  = getFirestore(app);
 
@@ -1883,24 +1891,29 @@ async function initDashboard() {
   }
 
   try {
-    // Parallel load: Appwrite stats (subs + notif history) + Firestore (donors + alerts)
-    // push_subscriptions and notification_history have migrated to Appwrite;
-    // donors/alerts remain in Firestore.
-    const [statsRes, donorSnap, alertSnap] = await Promise.all([
-      fetch('/.netlify/functions/get-stats', {
-        headers: { 'X-Admin-Key': ADMIN_KEY }
-      }).then(r => r.ok ? r.json() : Promise.reject(new Error('get-stats ' + r.status))),
-      getDocs(collection(db,'donors')),
-      getDocs(collection(db,'alerts')),
-    ]);
+    // ── Appwrite-only dashboard load ──────────────────────────────────────────
+    // get-stats v2 returns donor/alert counts from Appwrite (no Firebase reads)
+    const statsRes = await fetch('/.netlify/functions/get-stats', {
+      headers: { 'X-Admin-Key': ADMIN_KEY }
+    }).then(async r => {
+      const text = await r.text();
+      if (text.trimStart().startsWith('<')) throw new Error('get-stats returned HTML (HTTP ' + r.status + ')');
+      return JSON.parse(text);
+    }).catch(e => { console.warn('get-stats failed:', e.message); return {}; });
 
-    const activeCount = statsRes.activeSubs || 0;
-    const donors = donorSnap.size, alerts = alertSnap.size, notifs = statsRes.totalNotifs || 0;
+    const activeCount = statsRes.activeSubs   || 0;
+    const donors      = statsRes.totalDonors  || 0;
+    const alerts      = statsRes.totalAlerts  || 0;
+    const notifs      = statsRes.totalNotifs  || 0;
 
     // Set KPIs
     setEl('ds-sub', activeCount); setEl('b-notif', activeCount); setEl('n-sub', activeCount); setEl('an-subs', activeCount); setEl('an-kpi-subs', activeCount); anCachedSubs = activeCount;
     setEl('ds-donors', donors); setEl('ds-alerts', alerts); setEl('ds-notifs', notifs);
     setEl('b-blood', donors); setEl('n-total', notifs); setEl('an-notifs', notifs); setEl('an-kpi-notif', notifs); anCachedNotifs = notifs;
+
+    // Blood sub-stats from Appwrite
+    setEl('bl-apos', statsRes.bloodAPos || 0);
+    setEl('bl-opos', statsRes.bloodOPos || 0);
 
     const subSubEl = document.getElementById('ds-sub-sub');
     if(subSubEl){ subSubEl.textContent = `${(statsRes.totalSubs||0) - activeCount} inactive`; }
@@ -1914,9 +1927,11 @@ async function initDashboard() {
     // Recent history (already sorted newest-first by get-stats)
     renderHistory('dash-history', (statsRes.history || []).slice(0, 5));
 
-    // Blood preview
-    const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
-    renderBloodPreview(bDocs);
+    // Blood preview — from Appwrite via get-stats recentDonors
+    renderBloodPreview(statsRes.recentDonors || []);
+
+    // ── Sync status badges ────────────────────────────────────────────────────
+    renderSyncBadges(statsRes.syncStatus || {});
   } catch(e) { console.log('dashboard error', e); }
 
   // Pageview sparkline (today hourly)
@@ -2165,27 +2180,40 @@ window.deleteAlert = async function(id) {
   toast('Deleted','info'); loadAlerts();
 };
 
-// ── Blood Donors ─────────────────────────────────────────
+// ── Blood Donors (Appwrite primary) ─────────────────────
 let allDonors = [];
 async function loadDonors() {
   const tbody = document.getElementById('donor-tbody');
-  tbody.innerHTML = '<tr><td colspan="6" class="loading">লোড হচ্ছে...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="loading">লোড হচ্ছে... (Appwrite)</td></tr>';
   try {
+    // aw-firestore.js shim routes this to Appwrite — no Firebase read
     const snap = await getDocs(collection(db,'donors'));
     allDonors = snap.docs.map(d=>({...d.data(),id:d.id}));
     // Stats
-    setEl('bl-total', allDonors.length);
+    setEl('bl-total',  allDonors.length);
     setEl('bl-active', allDonors.filter(d=>d.available!==false).length);
-    setEl('bl-apos', allDonors.filter(d=>d.blood==='A+'||d.bloodGroup==='A+').length);
-    setEl('bl-opos', allDonors.filter(d=>d.blood==='O+'||d.bloodGroup==='O+').length);
-    setEl('b-blood', allDonors.length);
+    setEl('bl-apos',   allDonors.filter(d=>d.blood==='A+'||d.bloodGroup==='A+').length);
+    setEl('bl-opos',   allDonors.filter(d=>d.blood==='O+'||d.bloodGroup==='O+').length);
+    setEl('b-blood',   allDonors.length);
     renderDonors(allDonors);
-  } catch(e) { tbody.innerHTML='<tr><td colspan="7" class="empty text-red">Error</td></tr>'; }
+
+    // Sync status indicator for blood panel header
+    const syncEl = document.getElementById('blood-sync-badge');
+    if (syncEl) {
+      syncEl.textContent = allDonors.length > 0 ? '✅ Synced' : '⚠️ Empty';
+      syncEl.className   = 'badge ' + (allDonors.length > 0 ? 'badge-green' : 'badge-amber');
+    }
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty text-red">❌ Appwrite লোড ব্যর্থ: ' + (e.message || 'Error') + '</td></tr>';
+  }
 }
 
 function renderDonors(donors) {
   const tbody = document.getElementById('donor-tbody');
-  if (!donors.length) { tbody.innerHTML='<tr><td colspan="7" class="empty">কোনো দাতা নেই</td></tr>'; return; }
+  if (!donors.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty" style="padding:28px;text-align:center;color:var(--text2)">📭 কোনো দাতা পাওয়া যায়নি<br><span style="font-size:10px;margin-top:4px;display:block">Migration চালান অথবা রক্তদান পেজ থেকে নতুন দাতা যোগ করুন</span></td></tr>';
+    return;
+  }
   tbody.innerHTML = donors.slice(0,50).map(d => `
     <tr>
       <td><input type="checkbox" class="donor-chk" data-id="${d.id}" onchange="onDonorCheck()" style="cursor:pointer;accent-color:var(--accent)"></td>
@@ -2235,6 +2263,43 @@ window.deleteDonor = async function(id) {
   await deleteDoc(doc(db,'donors',id));
   toast('Deleted','info'); loadDonors();
 };
+
+function renderSyncBadges(syncStatus) {
+  // Inject sync status badges into the migration panel header (if visible)
+  const existingBadges = document.getElementById('sync-status-badges');
+  if (existingBadges) existingBadges.remove();
+
+  const container = document.createElement('div');
+  container.id = 'sync-status-badges';
+  container.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;';
+
+  const label = document.createElement('span');
+  label.style.cssText = 'font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;width:100%;margin-bottom:4px;';
+  label.textContent = '🗄️ Appwrite Collection Sync Status';
+  container.appendChild(label);
+
+  const entries = Object.entries(syncStatus).length > 0
+    ? Object.entries(syncStatus)
+    : [['push_subscriptions','unknown'],['notification_history','unknown'],['donors','unknown'],['alerts','unknown']];
+
+  entries.forEach(([col, status]) => {
+    const badge = document.createElement('span');
+    const isSynced = status === 'synced';
+    badge.className = 'badge ' + (isSynced ? 'badge-green' : status === 'empty' ? 'badge-amber' : 'badge-red');
+    badge.innerHTML = (isSynced ? '✅ ' : '⚠️ ') + col.replace(/_/g,' ') + ' <span style="font-weight:400;opacity:.7">' + (isSynced ? 'Synced' : 'Needs Sync') + '</span>';
+    container.appendChild(badge);
+  });
+
+  // Append to migration panel or dashboard
+  const migPanel = document.getElementById('migration-panel');
+  if (migPanel && migPanel.style.display !== 'none') {
+    migPanel.appendChild(container);
+  } else {
+    // Fall back to inserting in dashboard stats area
+    const statsGrid = document.querySelector('#page-dashboard .stats-grid');
+    if (statsGrid) statsGrid.parentElement.insertBefore(container, statsGrid.nextSibling);
+  }
+}
 
 function renderBloodPreview(donors) {
   const el = document.getElementById('dash-blood');
@@ -3000,6 +3065,33 @@ window.clearCache = function() { toast('Cache cleared','success'); };
   window.migrationDryRun = function() { runMigration(true); };
   window.migrationResume = function() { clearError(); runMigration(false); };
   window.runMigration    = window.migrationStart;
+
+  window.migrationValidateSchema = async function() {
+    clearError();
+    const btn = document.getElementById('mig-btn-schema');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
+    setStatus('🧬 Validating Appwrite schema and auto-patching missing attributes…');
+    try {
+      const res = await apiFetch({ action: 'validate-schema' });
+      const report = res.schemaValidation || {};
+      const lines = Object.entries(report).map(([col, r]) => {
+        const patched = r.patched && r.patched.length ? ` (+patched: ${r.patched.join(', ')})` : '';
+        const errs    = r.errors  && r.errors.length  ? ` ⚠️ ${r.errors.join('; ')}` : '';
+        return `✅ ${col}: ${r.checked} attrs checked${patched}${errs}`;
+      });
+      setStatus('🧬 Schema OK:\n' + lines.join('\n'));
+      const rb = document.getElementById('mig-result-box');
+      const rt = document.getElementById('mig-result-text');
+      if (rb && rt) {
+        rb.style.display = 'block';
+        rt.innerHTML = '<strong>Schema Validation Report</strong><pre style="font-size:10px;margin-top:6px;white-space:pre-wrap;color:var(--green)">' + lines.join('\n') + '</pre>';
+      }
+    } catch(e) {
+      showError('Schema validation failed: ' + e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🧬 Validate Schema'; }
+    }
+  };
 })();
 
 // ── Helpers ──────────────────────────────────────────────
