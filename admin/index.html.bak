@@ -32,7 +32,14 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 /* Upload */
 .upload-zone{border:2px dashed var(--border2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:.15s;position:relative;}
 .upload-zone:hover{border-color:var(--accent);background:var(--red-bg);}
-.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-zone input[type=file]{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+  width:100%;
+  height:100%;
+}
 .upload-zone .uz-icon{font-size:28px;margin-bottom:6px;}
 .upload-zone .uz-text{font-size:12px;color:var(--text2);}
 .upload-preview{margin-top:10px;display:none;}
@@ -471,7 +478,58 @@ tr:hover td{background:rgba(255,255,255,.02);}
 body  { overflow-x:hidden; }
 
 </style>
-</head>
+
+<script id="joaf-safe-ai-patch">
+(function(){
+
+  // Prevent duplicate AI execution
+  window.__JOAF_AI_BUSY = false;
+
+  // Delay helper
+  window.joafDelay = (ms) =>
+    new Promise(resolve => setTimeout(resolve, ms));
+
+  // ══════════════════════════════════════════════════════════════
+// 🛡️ JOAF SAFE AI PATCH (STABLE INTERCEPTOR)
+// ══════════════════════════════════════════════════════════════
+(function() {
+  const originalFetch = window.fetch;
+  window.__AI_COOLDOWN = false;
+
+  window.fetch = async function(...args) {
+    const url = args[0];
+    if (typeof url === 'string' && url.includes('groq-proxy')) {
+      if (window.__AI_COOLDOWN) {
+        log('<span style="color:var(--amber)">⏳ Local Cooldown একটিভ। দয়া করে একটু অপেক্ষা করুন...</span>');
+        throw new Error('AI gateway is cooling down locally.');
+      }
+      
+      try {
+        const res = await originalFetch(...args);
+        
+        // যদি রেট লিমিট (429) এরর আসে
+        if (res.status === 429) {
+          log('<span style="color:var(--red)">⚠️ Rate limit (429) হিট করেছে! ৫ সেকেন্ড অপেক্ষা করছি...</span>');
+          await joafDelay(5000); // ৫ সেকেন্ড অপেক্ষা করবে
+          return originalFetch(...args); // আবার চেষ্টা করবে
+        }
+        
+        return res;
+      } catch (err) {
+        // যদি সার্ভার পুরোপুরি ব্লক করে, তাহলে ৬০ সেকেন্ডের জন্য লোকাল কুলডাউন অন হবে
+        if (err.message && err.message.includes('429')) {
+          window.__AI_COOLDOWN = true;
+          setTimeout(() => { window.__AI_COOLDOWN = false; }, 60000);
+        }
+        throw err;
+      }
+    }
+    return originalFetch(...args);
+  };
+})();
+})();
+</script>
+\n</head>
 <body>
 <script>
 function seededRand(seed) {
@@ -1165,8 +1223,8 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
                    ondragleave="this.style.borderColor='var(--border2)'"
                    ondrop="event.preventDefault();fbHandleDrop(event)">
                 <input type="file" id="fb-img-input" accept="image/*,video/*" multiple
-                       style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"
-                       onchange="fbAnalyzeImage(this)">
+                       style="position:absolute;left:0;top:0;opacity:0;cursor:pointer;width:100%;height:100%; inset:0;"
+                       onchange="if(typeof fbAnalyzeImage==='function'){fbAnalyzeImage(this)}else{setTimeout(()=>fbAnalyzeImage(this),500)}">
                 <div id="img-upload-preview" style="display:none;margin-bottom:5px">
                   <img id="img-preview-thumb" style="max-height:70px;border-radius:6px;border:1px solid var(--border)">
                 </div>
@@ -1186,7 +1244,9 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <!-- News Text -->
             <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">✍️ News / Topic</label>
-            <textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;" placeholder="সংবাদের মূল বিষয় লিখুন..."></textarea>
+            <div id="fb-image-texts-container">
+              <textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;" placeholder="সংবাদের মূল বিষয় লিখুন..."></textarea>
+            </div>
             <!-- Tone Selector -->
             <div style="margin-top:10px;">
               <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;">🎭 Tone</label>
@@ -1208,7 +1268,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <!-- Action Buttons -->
             <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-              <button onclick="fbGenerateReel()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন</button>
+              <button onclick="fbGenerateAll()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন</button>
             </div>
             <div id="fb-mode-notice" style="margin-top:7px;padding:7px 10px;border-radius:6px;font-size:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber);">
               🖼️ <b>Card mode:</b> ৩-৫ সেকেন্ডে JPG ready — সাথে caption ও hashtags
@@ -1224,6 +1284,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <label style="font-size:10px;font-weight:700;color:var(--text2);">Full Caption</label>
             <textarea id="fb-caption" rows="5" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical;font-family:inherit;"></textarea>
             <button onclick="navigator.clipboard.writeText(document.getElementById('fb-caption').value).then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Caption Copy',1500)})" style="margin-top:5px;padding:5px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Caption Copy</button>
+            <span id="fb-draft-indicator" style="font-size:10px;color:var(--green);margin-left:8px;opacity:0;transition:opacity 0.5s;">Draft saved ✓</span>
             <div style="margin-top:10px;">
               <label style="font-size:10px;font-weight:700;color:var(--text2);">🏷️ Hashtags</label>
               <textarea id="fb-tags-display" rows="2" readonly style="width:100%;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg2);color:var(--text2);margin-top:4px;resize:none;font-family:inherit;"></textarea>
@@ -1253,42 +1314,110 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <div id="fb-preview" style="display:none;text-align:center;">
               <canvas id="fb-card-canvas" width="1080" height="1080" style="width:100%;max-width:280px;border-radius:12px;display:block;margin:0 auto;box-shadow:0 8px 32px rgba(0,0,0,.5);"></canvas>
               <video id="fb-reel-video" controls style="width:100%;max-width:280px;border-radius:12px;margin-top:8px;display:none;"></video>
+              <div id="fb-preview-strip" style="display:none;margin-top:10px;padding:6px 0;border-top:1px solid var(--border);"></div>
+              <div id="fb-preview-strip-label" style="display:none;font-size:10px;color:var(--text3);margin-top:4px;">👆 thumbnail click করলে বড় preview দেখাবে</div>
             </div>
             <div id="fb-post-log" style="margin-top:10px;font-size:11px;max-height:180px;overflow-y:auto;"></div>
           </div>
           <!-- BATCH CARDS RESULT STRIP -->
-          <div class="card" id="fb-batch-results-card" style="margin:0;display:none;">
-            <div class="card-header" style="padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
-              <div class="card-title" style="font-size:13px;">🗂️ Batch Cards</div>
-              <button onclick="fbDownloadAllCards()" style="padding:4px 10px;background:#25d366;color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ সব Download</button>
-            </div>
-            <div id="fb-batch-strip" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-          </div>
+          <!-- ── BATCH PUBLISH QUEUE ─────────────────────────────────
+     _fbBatchQueue  = [{blob, name, caption, selected}]
+     Rendered by  renderBatchQueue()
+     Post logic   in  batchPostSelected() / batchPostSingle(idx)
+──────────────────────────────────────────────────────────── -->
+<div class="card" id="fb-batch-results-card" style="margin:0;display:none;">
+  <div class="card-header" style="padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+    <div class="card-title" style="font-size:13px;">🗂️ Batch Publish Queue</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;">
+      <!-- select helpers -->
+      <button onclick="batchSelectAll(true)"  style="padding:3px 9px;border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">✅ সব Select</button>
+      <button onclick="batchSelectAll(false)" style="padding:3px 9px;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">❌ Deselect</button>
+      <!-- bulk actions -->
+      <button onclick="fbDownloadAllCards()" style="padding:3px 9px;border-radius:12px;border:none;background:#25d366;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ সব Download</button>
+      <button onclick="batchPostSelected()" id="batch-post-all-btn" style="padding:3px 9px;border-radius:12px;border:none;background:#1877f2;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Selected post করুন</button>
+    </div>
+  </div>
+  <!-- queue status — updated by renderBatchQueue() -->
+  <div id="batch-queue-status" style="font-size:10px;color:var(--text2);margin-bottom:8px;"></div>
+  <!-- card rows injected here by renderBatchQueue() -->
+  <div id="fb-batch-strip" style="display:flex;flex-direction:column;gap:10px;"></div>
+  <!-- bulk post log -->
+  <div id="batch-post-log" style="display:none;margin-top:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;max-height:260px;overflow-y:auto;"></div>
+</div>
           <!-- STANDALONE FB POST CARD -->
-          <div class="card" style="margin:0;">
-            <div class="card-header" style="padding-bottom:8px;">
-              <div class="card-title" style="font-size:13px;">📤 সরাসরি FB Pages এ Post</div>
-            </div>
-            <div style="margin-bottom:10px;">
-              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">📎 Image / Video বেছে নিন</label>
-              <div id="sa-drop" onclick="document.getElementById('sa-img-input').click()" style="border:2px dashed var(--border2);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+          <div class="card" style="margin:0;padding:0;overflow:hidden;">
+
+            <!-- ── Step 1: Media ── -->
+            <div style="padding:14px 16px 0;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">① Media</div>
+              <div id="sa-drop"
+                onclick="document.getElementById('sa-img-input').click()"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--bg4)'"
+                ondragleave="this.style.borderColor='var(--border2)';this.style.background='var(--bg3)'"
+                ondrop="event.preventDefault();this.style.borderColor='var(--border2)';this.style.background='var(--bg3)';const f=event.dataTransfer.files[0];if(f){const dt=new DataTransfer();dt.items.add(f);document.getElementById('sa-img-input').files=dt.files;saPreviewImg(document.getElementById('sa-img-input'));}"
+                style="border:2px dashed var(--border2);border-radius:9px;padding:10px 12px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg3);"
+                onmouseover="this.style.borderColor='var(--accent)'"
+                onmouseout="this.style.borderColor='var(--border2)'">
                 <input type="file" id="sa-img-input" accept="image/*,video/*" style="display:none" onchange="saPreviewImg(this)">
-                <div id="sa-img-preview" style="display:none;margin-bottom:8px;text-align:center;"><img id="sa-thumb" style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></div>
-                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image বা 🎬 Video select করুন</div>
+                <div id="sa-img-preview" style="display:none;margin-bottom:6px;"></div>
+                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image &nbsp;/&nbsp; 🎬 Video — Click বা Drag করুন</div>
+              </div>
+              <!-- Feature 10: upload progress -->
+              <div id="sa-upload-progress" style="display:none;margin-top:8px;">
+                <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+                  <div id="sa-upload-bar" style="width:0%;height:100%;background:var(--accent);transition:width .2s;border-radius:4px;"></div>
+                </div>
+                <div id="sa-upload-txt" style="font-size:10px;color:var(--text2);margin-top:4px;text-align:center;"></div>
               </div>
             </div>
-            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">✍️ Caption</label>
-            <textarea id="sa-caption" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;margin-bottom:10px;" placeholder="Caption লিখুন..."></textarea>
-            <div style="margin-bottom:10px;">
-              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🔑 FB User Token <span style="font-weight:400;font-size:10px;">(Graph API Explorer থেকে নিন)</span></label>
-              <div style="display:flex;gap:6px;">
-                <input id="sa-fb-token-input" type="password" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:monospace;" placeholder="EAAj... token paste করুন" oninput="document.getElementById('sa-token-status').textContent=''">
-                <button onclick="saveFbToken()" style="padding:7px 12px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">💾 Save</button>
-              </div>
-              <div id="sa-token-status" style="font-size:10px;margin-top:3px;color:var(--text2);"></div>
+
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 2: Caption ── -->
+            <div style="padding:0 16px;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">② Caption</div>
+              <textarea id="sa-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:9px 11px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;line-height:1.6;box-sizing:border-box;" placeholder="Caption লিখুন... অথবা বাম দিক থেকে Generate করুন"></textarea>
+              <div id="sa-token-status" style="display:none;"></div>
             </div>
-            <button onclick="saOpenPostHelper()" style="width:100%;padding:11px;background:#1877f2;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">📤 FB Pages এ Post করুন</button>
-            <div id="sa-post-log" style="display:none;margin-top:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
+
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 3: Token (collapsible) ── -->
+            <div style="padding:0 16px;">
+              <button onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('sa-token-box'))" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">🔑 FB Token</div>
+                <div id="sa-token-saved-badge" style="font-size:10px;color:var(--green);font-weight:700;">✓ Saved</div>
+              </button>
+              <div id="sa-token-box" style="display:none;margin-top:8px;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <input id="sa-fb-token-input" type="password" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:monospace;" placeholder="EAAj... paste করুন">
+                  <button onclick="saveFbToken()" style="padding:7px 14px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">Save</button>
+                </div>
+                <div style="font-size:10px;color:var(--text3);margin-top:5px;">Graph API Explorer থেকে নিন। ৬০ দিনে expire হয়।</div>
+              </div>
+            </div>
+
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 4: Schedule + Carousel ── -->
+            <div style="padding:0 16px;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">③ Timing &amp; Format</div>
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                <span style="font-size:11px;color:var(--text2);white-space:nowrap;">⏰</span>
+                <input type="datetime-local" id="fb-schedule-time" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:inherit;">
+                <button onclick="document.getElementById('fb-schedule-time').value=''" style="padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;">✕</button>
+              </div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">🎠 Carousel URLs <span style="opacity:.6;">(min 2 line হলে carousel হবে)</span></div>
+              <textarea id="fb-carousel-urls" rows="2" placeholder="https://cdn.../img1.jpg&#10;https://cdn.../img2.jpg" style="width:100%;font-size:10px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);resize:none;font-family:monospace;box-sizing:border-box;line-height:1.7;"></textarea>
+            </div>
+
+            <!-- ── Action buttons ── -->
+            <div style="padding:14px 16px;display:grid;grid-template-columns:3fr 2fr;gap:8px;">
+              <button onclick="saOpenPostHelper()" style="padding:13px;background:#1877f2;border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📤 এখনই Post</button>
+              <button onclick="fbQueueFromUI()" style="padding:13px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">📅 Queue</button>
+            </div>
+
+            <div id="sa-post-log" style="display:none;margin:0 16px 16px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
           </div>
         </div>
       </div>
@@ -3055,6 +3184,48 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="/js/data.js"></script>
+<script src="/js/fb-draft-queue.js" type="module"></script>
+
+// ── Reel Studio → FB Auto Post bridge ──────────────────────
+window.addEventListener('message', async function(e) {
+  if (!e.data || e.data.type !== 'JOAF_REEL_TO_FBPOST') return;
+  const {caption, videoBase64, mimeType, filename} = e.data;
+
+  // 1. Fill caption
+  const capEl = document.getElementById('sa-caption');
+  if (capEl) capEl.value = caption || '';
+
+  // 2. Set video file if available
+  if (videoBase64) {
+    try {
+      const res = await fetch(videoBase64);
+      const blob = await res.blob();
+      const file = new File([blob], filename || 'joaf-reel.webm', {type: mimeType || 'video/webm'});
+      window._saImgFile = file;
+      // Show preview label
+      const lbl = document.getElementById('sa-img-label');
+      const prev = document.getElementById('sa-img-preview');
+      if (lbl) lbl.textContent = '🎬 ' + (filename || 'joaf-reel.webm') + ' — ready';
+      if (prev) prev.style.display = 'none';
+      const drop = document.getElementById('sa-drop');
+      if (drop) { drop.style.borderColor='var(--green)'; drop.style.background='rgba(34,197,94,.08)'; }
+    } catch(err) { console.warn('Reel blob error', err); }
+  }
+
+  // 3. Navigate to FB Auto Post tab
+  if (typeof goPage === 'function') {
+    const ni = document.querySelector('[onclick*="goPage(\'fbpost\'"]');
+    goPage('fbpost', ni);
+  }
+
+  // 4. Toast
+  setTimeout(() => {
+    const log = document.getElementById('sa-post-log');
+    if (log) { log.style.display='block'; log.innerHTML='<div style="color:var(--green);font-weight:700">✅ Reel Studio থেকে video + caption এসেছে — Post করুন</div>'; }
+  }, 500);
+});
+
 </body>
 </body>
 </html><script>
@@ -3111,10 +3282,13 @@ window.fbHandleDrop = function(event) {
   const merged = [...existing];
   files.forEach(f => { if (!merged.find(e => e.name === f.name && e.size === f.size)) merged.push(f); });
   window._fbFiles = merged;
-  window._fbSelected = merged.map((_, i) => i);  // all selected by default
+  window._fbSelected = merged.map((_, i) => i);
+  if (!window._fbImageTexts) window._fbImageTexts = [];
+  while (window._fbImageTexts.length < merged.length) window._fbImageTexts.push('');
   fbRenderThumbStrip();
-  // Analyze first image
-  fbAnalyzeOneFile(merged[0]);
+  fbRenderImageTextBoxes();
+  const status = document.getElementById('img-analyze-status');
+  if (status) { status.style.display = 'block'; status.style.color = 'var(--text2)'; status.textContent = '📸 ' + merged.length + 'টা image ready — Analyse বাটন চাপুন'; }
 };
 
 // ── Select-all / deselect ─────────────────────────────────────
@@ -3125,7 +3299,7 @@ window.fbSelectAllImages = function(selectAll) {
 };
 
 // ── Render interactive thumbnail strip ───────────────────────
-function fbRenderThumbStrip() {
+window.fbRenderThumbStrip = function() {
   const files = window._fbFiles || [];
   const selected = window._fbSelected || [];
   const strip = document.getElementById('img-thumb-strip');
@@ -3165,68 +3339,322 @@ function fbRenderThumbStrip() {
 }
 
 // ── Analyze a single File object ─────────────────────────────
-async function fbAnalyzeOneFile(file) {
-  const preview = document.getElementById('img-upload-preview');
-  const thumb = document.getElementById('img-preview-thumb');
-  const label = document.getElementById('img-upload-label');
-  const status = document.getElementById('img-analyze-status');
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    thumb.src = e.target.result;
-    preview.style.display = 'block';
-    label.style.display = 'none';
-    status.style.display = 'block';
-    status.textContent = 'Image analyze হচ্ছে...';
-    status.style.color = 'var(--amber)';
+// ── Render per-image editable text boxes
+window.fbRenderImageTextBoxes = function() {
+  const container = document.getElementById('fb-image-texts-container');
+  if (!container) return;
+  const files = window._fbFiles || [];
+  if (files.length <= 1) {
+    container.innerHTML = '<textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;" placeholder="সংবাদের মূল বিষয় লিখুন..."></textarea>';
+    return;
+  }
+  container.innerHTML = files.map(function(file, idx) {
+    const url = URL.createObjectURL(file);
+    const stored = (window._fbImageTexts && window._fbImageTexts[idx]) ? window._fbImageTexts[idx] : '';
+    const alreadyDone = stored.length > 0;
+    return '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">'
+      + '<img src="' + url + '" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0;" onerror="this.style.display=\'none\'">'
+      + '<div style="flex:1;">'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">'
+      + '<label style="font-size:10px;color:var(--text3);font-weight:700;flex:1;min-width:0;">Image ' + (idx+1) + ' — ' + file.name.substring(0,20) + '</label>'
+      + '<button id="fb-analyse-btn-' + idx + '" onclick="fbAnalyseSingle(' + idx + ')" data-done="' + (alreadyDone ? 'yes' : '') + '" style="padding:2px 8px;border-radius:10px;border:1px solid var(--blue-border);background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">' + (alreadyDone ? '✅ Done' : '🔍 Analyse') + '</button>'
+      + '<button id="fb-gen-single-btn-' + idx + '" onclick="fbGenerateSingle(' + idx + ')" style="padding:2px 8px;border-radius:10px;border:1px solid var(--amber-border);background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:' + (alreadyDone ? 'inline-block' : 'none') + ';">⚡ Generate</button>'
+      + '</div>'
+      + '<textarea id="fb-img-text-' + idx + '" rows="3" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;" placeholder="এই image-এর news লিখুন...">' + stored + '</textarea>'
+      + '<div id="fb-gen-single-log-' + idx + '" style="display:none;font-size:10px;margin-top:3px;padding:5px 8px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);"></div>'
+      + '</div>'
+      + '</div>';
+  }).join('')
+  + '<div style="margin-top:6px;display:flex;gap:6px;">'
+  + '<button onclick="fbAnalyseAll()" style="flex:1;padding:6px 12px;border-radius:8px;border:1px solid var(--purple-border);background:var(--purple-bg);color:var(--purple);font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">🔍 সব Analyse করুন (queue)</button>'
+  + '</div>';
+}
+
+// ── Sync per-image text boxes into window._fbImageTexts
+window.fbSyncImageTexts = function() {
+  const files = window._fbFiles || [];
+  if (files.length <= 1) {
+    const box = document.getElementById('fb-news-input');
+    window._fbImageTexts = [box ? box.value.trim() : ''];
+    return;
+  }
+  window._fbImageTexts = files.map(function(_, idx) {
+    const box = document.getElementById('fb-img-text-' + idx);
+    return box ? box.value.trim() : '';
+  });
+}
+
+window.fbAnalyzeOneFile = async function(file) {
+  const base64 = await new Promise(function(resolve) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('img-upload-preview');
+      const thumb   = document.getElementById('img-preview-thumb');
+      const label   = document.getElementById('img-upload-label');
+      if (thumb) thumb.src = e.target.result;
+      if (preview) preview.style.display = 'block';
+      if (label) label.style.display = 'none';
+      resolve(e.target.result.split(',')[1]);
+    };
+    reader.onerror = function() { resolve(''); };
+    reader.readAsDataURL(file);
+  });
+  if (!base64) return '';
+  const mimeType = file.type || 'image/jpeg';
+  const RETRY_DELAYS = [5000, 10000, 15000];
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const base64 = e.target.result.split(',')[1];
-      const mimeType = file.type || 'image/jpeg';
+      const status = document.getElementById('img-analyze-status');
+      if (attempt > 0 && status) {
+        status.style.color = 'var(--amber)';
+        status.textContent = '⏳ Rate limit — ' + (RETRY_DELAYS[attempt-1]/1000) + 's পর retry ' + attempt + '/2...';
+        await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt-1]));
+      }
       const res = await fetch('/.netlify/functions/groq-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-          max_tokens: 1000,
+          max_tokens: 500,
           messages: [{ role: 'user', content: [
             { type: 'image_url', image_url: { url: 'data:' + mimeType + ';base64,' + base64 } },
-            { type: 'text', text: 'এই image টি analyze করো। বাংলাদেশী সংবাদ বা ঘটনার ছবি হতে পারে। Image থেকে বাংলায় ৩-৫ বাক্যে news summary লেখো। কোনো hashtag বা formatting ছাড়া।' }
+            { type: 'text', text: 'এই image থেকে বাংলায় ২-৩ বাক্যে news summary লেখো। কোনো hashtag বা formatting ছাড়া।' }
           ]}]
         })
       });
       const data = await res.json();
+      if (res.status === 429 || data.error?.code === 'rate_limit_exceeded') {
+        if (attempt < 2) continue;
+        return '__RATE_LIMITED__';
+      }
       const text = data.choices?.[0]?.message?.content;
-      if (text) {
-        document.getElementById('fb-news-input').value = text.trim();
-        status.textContent = '✅ Analyze সম্পন্ন';
-        status.style.color = 'var(--green)';
-      } else throw new Error('AI response নেই');
+      return text ? text.trim() : '';
     } catch(err) {
-      status.textContent = '❌ ' + err.message;
-      status.style.color = 'var(--red)';
+      if (attempt === 2) return '';
     }
-  };
-  reader.readAsDataURL(file);
+  }
+  return '';
 }
 
-async function fbAnalyzeImage(input) {
+window.fbAnalyzeImage = async function(input) {
   const allFiles = Array.from(input.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
   if (!allFiles.length) return;
-  // Merge with existing files
   const existing = window._fbFiles || [];
   const merged = [...existing];
   allFiles.forEach(f => { if (!merged.find(e => e.name === f.name && e.size === f.size)) merged.push(f); });
   window._fbFiles = merged;
-  window._fbSelected = merged.map((_, i) => i);  // all selected by default
+  window._fbSelected = merged.map((_, i) => i);
   input.value = '';
+  if (!window._fbImageTexts) window._fbImageTexts = [];
+  while (window._fbImageTexts.length < merged.length) window._fbImageTexts.push('');
   fbRenderThumbStrip();
-  fbAnalyzeOneFile(allFiles[0]);
-}
+  fbRenderImageTextBoxes();
+  // NO auto-analyse — user clicks per image or "সব Analyse করুন"
+  const status = document.getElementById('img-analyze-status');
+  if (status) { status.style.display = 'block'; status.style.color = 'var(--text2)'; status.textContent = '📸 ' + merged.length + 'টা image ready — Analyse বাটন চাপুন'; }
+};
 
-async function fbGenerateReel() {
-  const text = document.getElementById('fb-news-input').value.trim();
+// Analyse a single image by index (manual trigger)
+window.fbAnalyseSingle = async function(idx) {
+  if (window.__groqAnalyseBusy) return;
+  window.__groqAnalyseBusy = true;
+  const files = window._fbFiles || [];
+  const file = files[idx];
+  if (!file) { window.__groqAnalyseBusy = false; return; }
+  const btn = document.getElementById('fb-analyse-btn-' + idx);
+  const box = (files.length <= 1) ? document.getElementById('fb-news-input') : document.getElementById('fb-img-text-' + idx);
+  const status = document.getElementById('img-analyze-status');
+  if (btn) { btn.textContent = '⏳...'; btn.disabled = true; btn.dataset.done = ''; }
+  if (status) { status.style.display = 'block'; status.style.color = 'var(--amber)'; status.textContent = '⏳ Image ' + (idx+1) + ' analyse হচ্ছে...'; }
+  const t = await fbAnalyzeOneFile(file);
+  if (!window._fbImageTexts) window._fbImageTexts = [];
+  if (t === '__RATE_LIMITED__') {
+    window._fbImageTexts[idx] = '';
+    if (btn) { btn.textContent = '⚠️ Retry'; btn.disabled = false; btn.dataset.done = ''; }
+    if (status) { status.style.color = 'var(--red)'; status.textContent = '❌ Image ' + (idx+1) + ' — rate limit, পরে retry করুন'; }
+  } else {
+    window._fbImageTexts[idx] = t || '';
+    if (box) box.value = t || '';
+    if (btn) { btn.textContent = '✅ Done'; btn.disabled = false; btn.dataset.done = 'yes'; }
+    const genBtn = document.getElementById('fb-gen-single-btn-' + idx);
+    if (genBtn) genBtn.style.display = 'inline-block';
+    if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ Image ' + (idx+1) + ' সম্পন্ন — ⚡ Generate চাপুন'; }
+  }
+  window.__groqAnalyseBusy = false;
+};
+
+// Analyse all sequentially, 3s gap, skip already-done
+window.fbAnalyseAll = async function() {
+  if (window.__groqAnalyseBusy) { alert('একটা analyse চলছে, শেষ হলে আবার চাপুন'); return; }
+  const files = window._fbFiles || [];
+  if (!files.length) return;
+  const status = document.getElementById('img-analyze-status');
+  for (let i = 0; i < files.length; i++) {
+    const btn = document.getElementById('fb-analyse-btn-' + i);
+    if (btn && btn.dataset.done === 'yes') continue; // already done
+    await fbAnalyseSingle(i);
+    if (i < files.length - 1) {
+      if (status) { status.style.color = 'var(--amber)'; status.textContent = '⏳ ' + (i+2) + '/' + files.length + ' এর জন্য ৩ সেকেন্ড অপেক্ষা...'; }
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
+  if (status) { status.style.color = 'var(--green)'; status.textContent = '✅ সব ' + files.length + 'টা analyse সম্পন্ন'; }
+};
+
+// ── Generate a single card/video for one image index ─────────
+window.fbGenerateSingle = async function(idx) {
+  const files = window._fbFiles || [];
+  const file = files[idx] || null;
+  const textBox = (files.length <= 1) ? document.getElementById('fb-news-input') : document.getElementById('fb-img-text-' + idx);
+  const text = textBox ? textBox.value.trim() : ((window._fbImageTexts && window._fbImageTexts[idx]) || '');
+  if (!text) return alert('Image ' + (idx+1) + ' এর জন্য আগে Analyse করুন বা text লিখুন');
+
+  const btn = document.getElementById('fb-gen-single-btn-' + idx);
+  const logEl = document.getElementById('fb-gen-single-log-' + idx);
+  const globalLog = document.getElementById('fb-post-log');
+  const showLog = function(html, color) {
+    if (logEl) { logEl.style.display = 'block'; logEl.style.color = color || 'var(--blue)'; logEl.innerHTML = html; }
+    if (globalLog) globalLog.innerHTML = '<div style="color:' + (color||'var(--blue)') + ';font-size:11px;font-weight:700">' + html + '</div>';
+  };
+  if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
+  showLog('🤖 AI caption তৈরি হচ্ছে...');
+
+  const toneDesc = (FB_CONFIG.tones[_fbCurrentTone] || FB_CONFIG.tones.urgent);
+
+  try {
+    let imgBase64 = '';
+    if (file) {
+      imgBase64 = await new Promise(function(res) {
+        const rd = new FileReader();
+        rd.onload = e => res(e.target.result.split(',')[1]);
+        rd.onerror = () => res('');
+        rd.readAsDataURL(file);
+      });
+    }
+    const content = [];
+    if (file && imgBase64) content.push({ type: 'image_url', image_url: { url: 'data:' + (file.type||'image/jpeg') + ';base64,' + imgBase64 } });
+    content.push({ type: 'text', text: FB_CONFIG.systemPrompt(toneDesc, text) });
+
+    const aiRes = await fetch('/.netlify/functions/groq-proxy', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: file ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile', max_tokens: 1000, messages: [{ role: 'user', content }] })
+    });
+    const aiData = await aiRes.json();
+    if (aiRes.status === 429 || aiData.error?.code === 'rate_limit_exceeded') throw new Error('Rate limit — কিছুক্ষণ পর আবার চেষ্টা করুন');
+    const raw = aiData.choices?.[0]?.message?.content || '{}';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI JSON parse error');
+    const parsed = JSON.parse(jsonMatch[0]);
+    const mood = parsed.mood || 'urgent';
+    const slideTexts = (parsed.slides || []).map(s => (typeof s === 'string' ? s : s.text || '').replace(/#[\u0980-\u09FF\w]+/g,'').trim()).filter(Boolean);
+    if (!slideTexts.length) slideTexts.push(text.substring(0,100));
+
+    // Update global caption panel
+    const capEl = document.getElementById('fb-caption'); if (capEl) capEl.value = parsed.caption || text;
+    const tagsEl = document.getElementById('fb-tags-display'); if (tagsEl) tagsEl.value = parsed.tags || '';
+    const hookEl = document.getElementById('fb-hook-line'); if (hookEl) hookEl.textContent = parsed.hook || '';
+    const capCard = document.getElementById('fb-caption-card'); if (capCard) capCard.style.display = 'block';
+    window._fbHook = parsed.hook || ''; window._joafTags = parsed.tags || '';
+    const previewEmpty = document.getElementById('fb-preview-empty'); if (previewEmpty) previewEmpty.style.display = 'none';
+    const previewDiv = document.getElementById('fb-preview'); if (previewDiv) previewDiv.style.display = 'block';
+
+    if (_fbCurrentMode === 'card') {
+      const panels = slideTexts.slice(0,3).map(t2 => ({ type:'text', title:'', content:t2 }));
+      window._fbCurrentBatchFile = file;
+      window._fbImgBase64 = imgBase64;
+      const blob = await drawInstantCard(panels, mood, parsed.hook || '', text);
+      if (blob) {
+        if (!window._fbBatchBlobs) window._fbBatchBlobs = [];
+        if (!window._fbBatchQueue) window._fbBatchQueue = [];
+        const capText = (parsed.caption || '') + (parsed.tags ? '\n\n' + parsed.tags : '');
+        const qName = 'joaf-card-img' + (idx+1) + '-' + Date.now() + '.jpg';
+        window._fbBatchBlobs.push({ blob, name: qName });
+        window._fbBatchQueue.push({ blob, name: qName, caption: capText, selected: true, isVideo: false });
+        renderBatchQueue();
+        const batchCard = document.getElementById('fb-batch-results-card'); if (batchCard) batchCard.style.display = 'block';
+        const dlBtn = document.getElementById('fb-download-card-btn'); if (dlBtn) dlBtn.style.display = 'inline-block';
+        showLog('✅ Card ' + (idx+1) + ' ready!', 'var(--green)');
+      }
+    } else {
+      showLog('🎬 Video তৈরি হচ্ছে... (৫-১৫ মিনিট)', 'var(--blue)');
+      window._fbCurrentBatchFile = file; window._fbImgBase64 = imgBase64;
+      const vBlob = await renderVideoWithAudio(slideTexts.map(t2 => ({text:t2})), mood, text, logEl);
+      if (vBlob) {
+        if (!window._fbBatchBlobs) window._fbBatchBlobs = [];
+        if (!window._fbBatchQueue) window._fbBatchQueue = [];
+        const capText = (parsed.caption || '') + (parsed.tags ? '\n\n' + parsed.tags : '');
+        const vName = 'joaf-reel-img' + (idx+1) + '-' + Date.now() + '.webm';
+        window._fbBatchBlobs.push({ blob: vBlob, name: vName });
+        window._fbBatchQueue.push({ blob: vBlob, name: vName, caption: capText, selected: true, isVideo: true });
+        renderBatchQueue();
+        const batchCard2 = document.getElementById('fb-batch-results-card'); if (batchCard2) batchCard2.style.display = 'block';
+        showLog('✅ Video ' + (idx+1) + ' ready!', 'var(--green)');
+      }
+    }
+  } catch(e) {
+    showLog('❌ ' + e.message, 'var(--red)');
+  }
+  if (btn) { btn.textContent = '⚡ Generate'; btn.disabled = false; }
+};
+
+// ── Generate ALL selected images sequentially ─────────────────
+window.fbGenerateAll = async function() {
+  const files = window._fbFiles || [];
+  const btn = document.getElementById('fb-gen-btn');
+
+  // Single image or no image → original simple flow
+  if (files.length <= 1) {
+    return fbGenerateReel();
+  }
+
+  // Multi-image: sequential generate per image
+  if (btn) { btn.textContent = '⏳ সব generate হচ্ছে...'; btn.disabled = true; }
+  const globalLog = document.getElementById('fb-post-log');
+  window._fbBatchBlobs = []; window._fbBatchQueue = []; window._fbBatchRunning = true;
+  const batchCard = document.getElementById('fb-batch-results-card'); if (batchCard) batchCard.style.display = 'none';
+  const batchStrip = document.getElementById('fb-batch-strip'); if (batchStrip) batchStrip.innerHTML = '';
+  const prevStrip = document.getElementById('fb-preview-strip'); if (prevStrip) { prevStrip.innerHTML = ''; prevStrip.style.display = 'none'; }
+  const prevLabel = document.getElementById('fb-preview-strip-label'); if (prevLabel) prevLabel.style.display = 'none';
+
+  const selected = (window._fbSelected && window._fbSelected.length) ? window._fbSelected : files.map((_,i) => i);
+  for (let si = 0; si < selected.length; si++) {
+    const idx = selected[si];
+    if (globalLog) globalLog.innerHTML = '<div style="color:var(--amber);font-size:11px;font-weight:700">⏳ ' + (si+1) + '/' + selected.length + ' — Image ' + (idx+1) + ' generate হচ্ছে...</div>';
+    await fbGenerateSingle(idx);
+    if (si < selected.length - 1) await new Promise(r => setTimeout(r, 2500));
+  }
+  window._fbBatchRunning = false; if (btn) { btn.textContent = '🚀 Generate করুন'; btn.disabled = false; }
+  if (globalLog) globalLog.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ সব ' + selected.length + 'টা generate সম্পন্ন</div>';
+  // Fix 1: reload card 0 into main canvas (last card overwrote it)
+  var q0 = window._fbBatchQueue && window._fbBatchQueue[0];
+  if (q0 && q0.blob && !q0.isVideo) {
+    var img0 = new Image();
+    img0.onload = function() {
+      var c = document.getElementById('fb-card-canvas'); if (!c) return;
+      var ctx0 = c.getContext('2d'); c.width = img0.width; c.height = img0.height; ctx0.drawImage(img0, 0, 0);
+    };
+    img0.src = URL.createObjectURL(q0.blob);
+  }
+  // Fix 2: now queue has all cards — sync strip so all thumbnails show
+  if (typeof fbSyncPreviewStrip === 'function') fbSyncPreviewStrip();
+};
+
+// ── Original single-mode generate (single image / no image) ──
+window.fbGenerateReel = async function() {
+  // Multi-image mode: fb-news-input doesn't exist — read from _fbImageTexts
+  const files = window._fbFiles || [];
+  let text = '';
+  if (files.length > 1) {
+    fbSyncImageTexts();
+    text = (window._fbImageTexts && window._fbImageTexts[0]) ? window._fbImageTexts[0].trim() : '';
+    if (!text) { const b0 = document.getElementById('fb-img-text-0'); text = b0 ? b0.value.trim() : ''; }
+  } else {
+    const newsEl = document.getElementById('fb-news-input');
+    text = newsEl ? newsEl.value.trim() : '';
+  }
   const imgInput = document.getElementById('fb-img-input');
-  const imgFile = (window._fbFiles && window._fbFiles.length) ? window._fbFiles[0] : (imgInput?.files?.[0] || null);
+  const imgFile = files.length ? files[0] : (imgInput?.files?.[0] || null);
   if (!text && !imgFile) return alert('News text লিখুন অথবা Image upload করুন');
+  if (!text && imgFile) return alert('আগে Image Analyse করুন অথবা text box এ news লিখুন');
   if (!text) return alert('News text লিখুন');
 
   const btn = document.getElementById('fb-gen-btn');
@@ -3251,14 +3679,7 @@ async function fbGenerateReel() {
     }
 
     // AI caption + hook + slides
-    const tonePromptMap = {
-      urgent: 'urgent, shocking, breaking news tone — মানুষ scroll থামাবেই',
-      emotional: 'emotional, heartfelt, touching — মানুষের হৃদয় স্পর্শ করবে',
-      informative: 'informative, factual, clear — তথ্যবহুল এবং বিশ্বাসযোগ্য',
-      motivational: 'motivational, inspiring, call to action — মানুষকে অনুপ্রাণিত করবে',
-      alert: 'urgent alert, warning tone — সতর্ক করতে হবে',
-    };
-    const toneDesc = tonePromptMap[_fbCurrentTone] || tonePromptMap.urgent;
+    const toneDesc = (FB_CONFIG.tones[_fbCurrentTone] || FB_CONFIG.tones.urgent);
 
     const aiRes = await fetch('/.netlify/functions/groq-proxy', {
       method: 'POST',
@@ -3341,90 +3762,201 @@ News: ${text}` });
       if (batchCard) batchCard.style.display = 'none';
       if (batchStrip) batchStrip.innerHTML = '';
       window._fbBatchBlobs = [];
+      if (!window._fbBatchRunning) window._fbBatchQueue = [];  // reset only on standalone call
 
       for (let bi = 0; bi < batchFiles.length; bi++) {
         const bFile = batchFiles[bi];
-        if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">🖼️ Card ' + (bi+1) + '/' + batchFiles.length + ' তৈরি হচ্ছে...</div>';
+        if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">🤖 Card ' + (bi+1) + '/' + batchFiles.length + ' — AI caption তৈরি হচ্ছে...</div>';
 
-        // Override _fbFiles[0] so drawInstantCard uses this image
-        if (bFile) window._fbCurrentBatchFile = bFile;
-        else window._fbCurrentBatchFile = null;
+        // ── Per-card AI call: each image gets its own caption/hook/slides ──
+        // This ensures batch cards are NOT identical — each reflects its own image.
+        let cardParsed = parsed;  // fallback to first-card parsed if AI fails
+        if (bFile) {
+          try {
+            const cardBase64 = await new Promise(function(res) {
+              const rd = new FileReader();
+              rd.onload = e => res(e.target.result.split(',')[1]);
+              rd.onerror = () => res('');
+              rd.readAsDataURL(bFile);
+            });
+            fbSyncImageTexts();
+            const _perText = (window._fbImageTexts && window._fbImageTexts[bi]) ? window._fbImageTexts[bi] : text;
+            const cardAiRes = await fetch('/.netlify/functions/groq-proxy', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                max_tokens: 2000,
+                messages: [{ role: 'user', content: [
+                  { type: 'image_url', image_url: { url: 'data:' + (bFile.type||'image/jpeg') + ';base64,' + cardBase64 } },
+                  { type: 'text', text: `তুমি বাংলাদেশের সেরা Facebook viral content strategist।\nTone: ${toneDesc}\n\nRULES:\n- hook = প্রথম ৩ সেকেন্ড scroll stopper, max ৮ শব্দ, question বা shocking statement\n- caption = hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ\n- slides = plain বাংলা text, max ১০ শব্দ প্রতি slide, কোনো hashtag/emoji নেই\n- mood = urgent/sad/positive/angry/neutral থেকে একটা\n\nশুধু raw JSON (no extra text):\n{"mood":"urgent","hook":"max ৮ শব্দের scroll stopper","caption":"full viral caption with emoji + CTA + hashtags","tags":"#tag1 #tag2 #JOAF #বাংলাদেশ","slides":[{"text":"hook slide text"},{"text":"main info"},{"text":"conclusion + CTA"}]}\n\nNews: ${_perText}` }
+                ]}]
+              })
+            });
+            const cardAiData = await cardAiRes.json();
+            const cardRaw = cardAiData.choices?.[0]?.message?.content || '{}';
+            const cardMatch = cardRaw.match(/\{[\s\S]*\}/);
+            if (cardMatch) cardParsed = JSON.parse(cardMatch[0]);
+          } catch(aiErr) {
+            // Non-fatal: fall back to first-card parsed
+            console.warn('Card ' + (bi+1) + ' AI failed, using fallback:', aiErr.message);
+          }
+        }
 
-        await drawInstantCard(panels, mood, parsed.hook || '', text);
+        // Build per-card slides from cardParsed
+        const cardSlideTexts = ((cardParsed.slides || []).map(s => {
+          const t2 = typeof s === 'string' ? s : (s.text || '');
+          return t2.replace(/#[\u0980-\u09FF\w]+/g, '').replace(/Tags?:\s*.*/gi, '').trim();
+        }).filter(Boolean));
+        if (!cardSlideTexts.length) cardSlideTexts.push(text.substring(0, 100));
+        const cardPanels = cardSlideTexts.slice(0, 3).map(function(t) { return { type: 'text', title: '', content: t }; });
+        const cardMood  = cardParsed.mood || 'urgent';
+        const cardHook  = cardParsed.hook || '';
+
+        // Override so drawInstantCard uses this image
+        window._fbCurrentBatchFile = bFile || null;
+
+        const blob = await drawInstantCard(cardPanels, cardMood, cardHook, text);
 
         // Capture this card as blob
-        const cardCanvas2 = document.getElementById('fb-card-canvas');
-        if (cardCanvas2) {
-          const blob = await new Promise(res => cardCanvas2.toBlob(res, 'image/jpeg', 0.95));
+        if (true) {
           if (blob) {
-            window._fbBatchBlobs.push({ blob, name: 'joaf-card-' + Date.now() + '-' + (bi+1) + '.jpg' });
-            // Add to batch strip
-            if (batchStrip) {
-              const thumbUrl = URL.createObjectURL(blob);
-              const item = document.createElement('div');
-              item.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
-              const tImg = document.createElement('img');
-              tImg.src = thumbUrl;
-              tImg.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:7px;border:1px solid var(--border);cursor:pointer;';
-              tImg.title = 'Click to download';
-              tImg.onclick = (function(b, n) { return function() {
-                const a = document.createElement('a'); a.download = n;
-                a.href = URL.createObjectURL(b); a.click();
-              }; })(blob, window._fbBatchBlobs[window._fbBatchBlobs.length-1].name);
-              const dlBtn = document.createElement('button');
-              dlBtn.textContent = '⬇️';
-              dlBtn.style.cssText = 'padding:2px 8px;border-radius:6px;border:none;background:#25d366;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
-              dlBtn.onclick = tImg.onclick;
-              // Preview in main canvas on click
-              const prevBtn = document.createElement('button');
-              prevBtn.textContent = '👁️';
-              prevBtn.style.cssText = 'padding:2px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
-              prevBtn.title = 'Preview';
-              prevBtn.onclick = (function(b) { return function() {
-                const img = new Image(); img.onload = function() {
-                  const c = document.getElementById('fb-card-canvas');
-                  const ctx2 = c.getContext('2d');
-                  c.width = img.width; c.height = img.height;
-                  ctx2.drawImage(img, 0, 0);
-                };
-                img.src = URL.createObjectURL(b);
-              }; })(blob);
-              const btnRow = document.createElement('div');
-              btnRow.style.cssText = 'display:flex;gap:3px;';
-              btnRow.appendChild(prevBtn); btnRow.appendChild(dlBtn);
-              item.appendChild(tImg); item.appendChild(btnRow);
-              batchStrip.appendChild(item);
-            }
-            // First card → auto-fill SA panel
-            if (bi === 0) {
-              const capText = (document.getElementById('fb-caption')?.value||'') + (window._joafTags ? '\n\n' + window._joafTags : '');
-              const cardFile = new File([blob], 'joaf-card-' + Date.now() + '.jpg', { type: 'image/jpeg' });
-              pushToSAPanel(cardFile, URL.createObjectURL(blob), false, capText);
-            }
+            // ── Push into unified batch queue — use per-card caption ──
+            const capText = (cardParsed.caption || document.getElementById('fb-caption')?.value||'')
+              + (cardParsed.tags ? '\n\n' + cardParsed.tags : (window._joafTags ? '\n\n' + window._joafTags : ''));
+            const qName = 'joaf-card-' + Date.now() + '-' + (bi+1) + '.jpg';
+            window._fbBatchBlobs.push({ blob, name: qName });  // keep for fbDownloadAllCards
+            // _fbBatchQueue drives the publish UI — each item: {blob,name,caption,selected,isVideo}
+            if (!window._fbBatchQueue) window._fbBatchQueue = [];
+            window._fbBatchQueue.push({ blob, name: qName, caption: capText, selected: true, isVideo: false });
+            renderBatchQueue();  // re-render after every card so user sees progress
           }
         }
       }
 
-      // Show batch strip if >1
-      if (batchCard && window._fbBatchBlobs.length > 1) batchCard.style.display = 'block';
+      // Show queue card for any count (single card still needs its own post btn)
+      if (batchCard && window._fbBatchBlobs.length >= 1) batchCard.style.display = 'block';
       const downloadCardBtn = document.getElementById('fb-download-card-btn');
       if (downloadCardBtn) downloadCardBtn.style.display = 'inline-block';
       if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ ' + window._fbBatchBlobs.length + 'টা Card ready!</div>';
     } else {
-      // ── VIDEO MODE ─────────────────────────────────────
-      if (logEl) logEl.innerHTML = '<div style="color:var(--blue);font-size:11px;font-weight:700">🎬 AI Video তৈরি হচ্ছে... (৫-১৫ মিনিট)</div>';
-      reelBlob = await renderVideoWithAudio(slideTexts.map(t2 => ({text:t2})), mood, text, logEl);
-      const videoEl = document.getElementById('fb-reel-video');
-      videoEl.src = URL.createObjectURL(reelBlob);
-      videoEl.style.display = 'block';
-      document.getElementById('fb-download-btn').style.display = 'inline-block';
-      document.getElementById('fb-post-reels-btn').style.display = 'inline-block';
-      if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ Video ready!</div>';
-      // Auto-fill SA panel
-      if (reelBlob) {
-        const reelFile = new File([reelBlob], 'joaf-reel-' + Date.now() + '.webm', { type: 'video/webm' });
-        const _cap2 = (document.getElementById('fb-caption')?.value||'') + (window._joafTags ? '\n\n' + window._joafTags : ''); pushToSAPanel(reelFile, URL.createObjectURL(reelBlob), true, _cap2);
+      // ── VIDEO MODE — batch-aware ─────────────────────────────────────
+      const _vSelectedIdxs = (window._fbSelected && window._fbSelected.length)
+        ? window._fbSelected
+        : (window._fbFiles && window._fbFiles.length ? window._fbFiles.map((_,i)=>i) : [null]);
+      const _vBatchFiles = (window._fbFiles && window._fbFiles.length)
+        ? _vSelectedIdxs.map(i => window._fbFiles[i]).filter(Boolean)
+        : [null];
+
+      // Clear previous batch results
+      const batchCard2 = document.getElementById('fb-batch-results-card');
+      const batchStrip2 = document.getElementById('fb-batch-strip');
+      if (batchCard2) batchCard2.style.display = 'none';
+      if (batchStrip2) batchStrip2.innerHTML = '';
+      window._fbBatchBlobs = window._fbBatchBlobs || [];
+      window._fbBatchQueue = [];
+
+      fbSyncImageTexts();
+
+      for (let vi = 0; vi < _vBatchFiles.length; vi++) {
+        const vFile = _vBatchFiles[vi];
+        const _vPerText = (window._fbImageTexts && window._fbImageTexts[vi]) ? window._fbImageTexts[vi] : text;
+
+        if (logEl) logEl.innerHTML = '<div style="color:var(--blue);font-size:11px;font-weight:700">🎬 Video ' + (vi+1) + '/' + _vBatchFiles.length + ' তৈরি হচ্ছে... (৫-১৫ মিনিট)</div>';
+
+        // Per-video AI call for slides/mood
+        let vParsed = parsed;
+        if (vFile) {
+          try {
+            const vBase64 = await new Promise(function(res) {
+              const rd = new FileReader();
+              rd.onload = e => res(e.target.result.split(',')[1]);
+              rd.onerror = () => res('');
+              rd.readAsDataURL(vFile);
+            });
+            const vAiRes = await fetch('/.netlify/functions/groq-proxy', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                max_tokens: 2000,
+                messages: [{ role: 'user', content: [
+                  { type: 'image_url', image_url: { url: 'data:' + (vFile.type||'image/jpeg') + ';base64,' + vBase64 } },
+                  { type: 'text', text: `তুমি বাংলাদেশের সেরা Facebook viral content strategist।
+Tone: ${toneDesc}
+
+RULES:
+- hook = প্রথম ৩ সেকেন্ড scroll stopper, max ৮ শব্দ, question বা shocking statement
+- caption = hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ
+- slides = plain বাংলা text, max ১০ শব্দ প্রতি slide, কোনো hashtag/emoji নেই
+- mood = urgent/sad/positive/angry/neutral থেকে একটা
+
+শুধু raw JSON (no extra text):
+{"mood":"urgent","hook":"max ৮ শব্দের scroll stopper","caption":"full viral caption with emoji + CTA + hashtags","tags":"#tag1 #tag2 #JOAF #বাংলাদেশ","slides":[{"text":"hook slide text"},{"text":"main info"},{"text":"conclusion + CTA"}]}
+
+News: ${_vPerText}` }
+                ]}]
+              })
+            });
+            const vAiData = await vAiRes.json();
+            const vRaw = vAiData.choices?.[0]?.message?.content || '{}';
+            const vMatch = vRaw.match(/\{[\s\S]*\}/);
+            if (vMatch) vParsed = JSON.parse(vMatch[0]);
+          } catch(vErr) {
+            console.warn('Video ' + (vi+1) + ' AI failed, using fallback:', vErr.message);
+          }
+        }
+
+        const vSlideTexts = ((vParsed.slides || []).map(s => {
+          const t2 = typeof s === 'string' ? s : (s.text || '');
+          return t2.replace(/#[\u0980-\u09FF\w]+/g, '').replace(/Tags?:\s*.*/gi, '').trim();
+        }).filter(Boolean));
+        if (!vSlideTexts.length) vSlideTexts.push(_vPerText.substring(0, 100));
+
+        // Set current image for renderVideoWithAudio
+        window._fbCurrentBatchFile = vFile || null;
+        if (vFile) {
+          window._fbImgBase64 = await new Promise(function(res) {
+            const rd = new FileReader();
+            rd.onload = e => res(e.target.result.split(',')[1]);
+            rd.onerror = () => res('');
+            rd.readAsDataURL(vFile);
+          });
+        }
+
+        reelBlob = await renderVideoWithAudio(vSlideTexts.map(t2 => ({text:t2})), vParsed.mood || mood, _vPerText, logEl);
+
+        if (reelBlob) {
+          const vCapText = (vParsed.caption || document.getElementById('fb-caption')?.value || '')
+            + (vParsed.tags ? '\n\n' + vParsed.tags : (window._joafTags ? '\n\n' + window._joafTags : ''));
+          const vName = 'joaf-reel-' + Date.now() + '-' + (vi+1) + '.webm';
+          window._fbBatchBlobs.push({ blob: reelBlob, name: vName });
+          if (!window._fbBatchQueue) window._fbBatchQueue = [];
+          window._fbBatchQueue.push({ blob: reelBlob, name: vName, caption: vCapText, selected: true, isVideo: true });
+          renderBatchQueue();
+
+          // Show first video in preview
+          if (vi === 0) {
+            const videoEl = document.getElementById('fb-reel-video');
+            videoEl.src = URL.createObjectURL(reelBlob);
+            videoEl.style.display = 'block';
+            document.getElementById('fb-download-btn').style.display = 'inline-block';
+            document.getElementById('fb-post-reels-btn').style.display = 'inline-block';
+          }
+
+          // Auto-fill SA panel with first video
+          if (vi === 0) {
+            const reelFile = new File([reelBlob], vName, { type: 'video/webm' });
+            pushToSAPanel(reelFile, URL.createObjectURL(reelBlob), true, vCapText);
+          }
+        }
       }
+
+      // Show queue
+      if (batchCard2 && window._fbBatchBlobs.length >= 1) batchCard2.style.display = 'block';
+      const dlCardBtn2 = document.getElementById('fb-download-card-btn');
+      if (dlCardBtn2) dlCardBtn2.style.display = 'inline-block';
+      if (logEl) logEl.innerHTML = '<div style="color:var(--green);font-size:11px;font-weight:700">✅ ' + window._fbBatchBlobs.length + 'টা Video ready!</div>';
     }
   } catch(e) {
     if (logEl) logEl.innerHTML = '<div style="color:var(--red);font-size:11px;">❌ ' + e.message + '</div>';
@@ -3796,6 +4328,11 @@ async function drawInstantCard(panels, mood, hook, rawText) {
   ctx.fillText(dateStr, W-36, H-34);
   ctx.restore();
   ctx.fillStyle = barG; ctx.fillRect(0, H-7, W, 7);
+
+  // Return blob so callers can capture this card
+  return new Promise(function(resolve) {
+    canvas.toBlob(function(blob) { resolve(blob); }, 'image/jpeg', 0.95);
+  });
 }
 // ── Status Logger ──────────────────────────────────────────────
 function t2vLog(logEl, stage, msg, type) {
@@ -4209,133 +4746,111 @@ window.fbHelperRemoveExclude = function(i) {
 window.saPreviewImg = function(input) {
   const file = input.files[0];
   if (!file) return;
-  // Keep original File — slice() loses MIME type on many devices
   if (window._saPreviewUrl) URL.revokeObjectURL(window._saPreviewUrl);
   const url = URL.createObjectURL(file);
   window._saPreviewUrl = url;
   window._saImgFile = file;
   const isVid = file.type.startsWith('video/');
   const preview = document.getElementById('sa-img-preview');
+  const label   = document.getElementById('sa-img-label');
   if (preview) {
     if (isVid) {
-      preview.innerHTML = '<video controls muted style="max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></video>';
+      preview.innerHTML = '<video controls muted playsinline style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border);object-fit:contain;display:block;margin:0 auto;"></video>';
       preview.querySelector('video').src = url;
     } else {
-      document.getElementById('sa-thumb').src = url;
-      preview.innerHTML = '';
-      const img = document.createElement('img');
-      img.style = 'max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--border);object-fit:contain;';
-      img.src = url;
-      preview.appendChild(img);
+      preview.innerHTML = '<img style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border);object-fit:contain;display:block;margin:0 auto;">';
+      preview.querySelector('img').src = url;
     }
     preview.style.display = 'block';
   }
-  document.getElementById('sa-img-label').textContent = (isVid ? '🎬 ' : '📸 ') + file.name;
+  if (label) label.textContent = (isVid ? '🎬 ' : '📸 ') + file.name + ' ✓';
   input.value = '';
 };
 
 window.saOpenPostHelper = async function() {
   const caption = (document.getElementById('sa-caption').value || '').trim();
-  const file = window._saImgFile;
-  const btn = document.querySelector('[onclick="saOpenPostHelper()"]');
+  const file    = window._saImgFile || null;
+  const btn     = document.querySelector('[onclick="saOpenPostHelper()"]');
+  const logEl   = document.getElementById('sa-post-log');
+
   if (!caption) { alert('Caption লিখুন'); return; }
-
-  const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  const TOKEN = localStorage.getItem('joaf_fb_token') || 'EAAjL2bBHrGoBRjMgaWEdP0GIfH4dSS550wSlUziWxnBhE1ELq1JbwMmqh7l0so0xWAo3t49G8CIIFwhGu7ybr8fBq1PxK79YUpZBdkfBusWKLOGiNXrSBwKotOaRuyP1PZCJArRcBJxJ2psMUrbsUylWmAytUV4WD3frWYYbiFbVUuJr0JqEGFMNR8ayo8Y9zTzfLpBR95Gy7bJBKLllcleBBZBLK6TZBvYBzGDF7XUiSFvtYyiUzqO052X4w0M6IZCU1lFMK0I1NqQLpLZAknJc1xErJ32rAHkwZDZD';
-  if (!TOKEN) {
-    const st=document.getElementById('sa-token-status');
-    if(st){st.textContent='❌ আগে token save করুন';st.style.color='#f87171';}
-    if(logEl){logEl.style.display='block';logEl.innerHTML='<div style="color:#f87171">❌ Token নেই — উপরে save করুন</div>';}
-    if(btn){btn.disabled=false;btn.textContent='📤 FB Pages এ Post করুন';}
-    return;
-  }
-
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting হচ্ছে...'; }
-  const logEl = document.getElementById('sa-post-log');
-  if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ Pages fetch করছি...</div>'; }
+  if (btn)   { btn.disabled = true; btn.textContent = '⏳ Posting...'; }
+  if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = '<div style="color:var(--amber)">⏳ Posting শুরু হচ্ছে...</div>'; }
 
   try {
-    // 1. Fetch all pages from FB directly
-    let pages = [];
-    let url = `https://graph.facebook.com/v19.0/me/accounts?limit=50&access_token=${TOKEN}`;
-    while (url) {
-      const r = await fetch(url);
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      pages = pages.concat(d.data || []);
-      url = d.paging?.next || null;
+    // Upload file to Appwrite Storage first to get a public URL
+    let imageUrl = null, videoUrl = null;
+
+    if (file) {
+      if (logEl) logEl.innerHTML = '<div style="color:var(--amber)">⏳ File upload হচ্ছে...</div>';
+      const { Client, Storage, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
+      const client  = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('6a11b6cd000b59f318eb');
+      const storage = new Storage(client);
+      const uploaded = await storage.createFile('fb_media', ID.unique(), file);
+      const fileUrl  = `https://fra.cloud.appwrite.io/v1/storage/buckets/fb_media/files/${uploaded.$id}/view?project=6a11b6cd000b59f318eb`;
+      if (file.type.startsWith('video/')) { videoUrl = fileUrl; }
+      else { imageUrl = fileUrl; }
+      if (logEl) logEl.innerHTML = '<div style="color:var(--amber)">⏳ Pages এ post হচ্ছে...</div>';
     }
 
-    // 2. Filter excluded
-    pages = pages.filter(p => !excludeIds.includes(p.id) && !excludeIds.includes(p.name.trim()));
-    if (!pages.length) throw new Error('কোনো page পাওয়া যায়নি');
+    const carouselRaw  = document.getElementById('fb-carousel-urls')?.value || '';
+    const carouselUrls = carouselRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const scheduledAt  = document.getElementById('fb-schedule-time')?.value || '';
+    const excludeIds   = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
 
-    if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">⏳ ${pages.length}টা page এ post হচ্ছে...</div>`;
-
-    // 3. Post to each page
-    const results = [];
-    let doneCount = 0;
-    for (const page of pages) {
-      doneCount++;
-      if (logEl) logEl.innerHTML = `<div style="color:var(--amber)">⏳ ${doneCount}/${pages.length} — <b>${page.name}</b> এ post হচ্ছে... (বাকি ${pages.length - doneCount})</div>`;
-      try {
-        let postRes, postData;
-        if (file && file.type.startsWith('video/')) {
-          // Video post — explicit Blob + filename required by FB Graph API
-          const fd = new FormData();
-          const vMime = file.type || 'video/webm';
-          const vName = file.name || ('joaf-video-' + Date.now() + '.webm');
-          const vBlob = new Blob([file], { type: vMime });
-          fd.append('source', vBlob, vName);
-          fd.append('description', caption);
-          fd.append('access_token', page.access_token);
-          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/videos`, {
-            method: 'POST', body: fd
-          });
-        } else if (file) {
-          // Image post — single step: source + message directly to /photos
-          const fdPhoto = new FormData();
-          fdPhoto.append('source', file);
-          fdPhoto.append('message', caption);
-          fdPhoto.append('access_token', page.access_token);
-          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/photos`, {
-            method: 'POST', body: fdPhoto
-          });
-        } else {
-          postRes = await fetch(`https://graph.facebook.com/v19.0/${page.id}/feed`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: caption, access_token: page.access_token })
-          });
-        }
-        postData = await postRes.json();
-        if (postData.error) results.push({ name: page.name, ok: false, error: postData.error.message });
-        else results.push({ name: page.name, ok: true });
-      } catch(e) {
-        results.push({ name: page.name, ok: false, error: e.message });
-      }
+    let payload, action;
+    if (carouselUrls.length >= 2) {
+      action  = 'carousel';
+      payload = { action, caption, imageUrls: carouselUrls, excludeIds };
+    } else {
+      action  = 'post';
+      payload = { action, caption, imageUrl, videoUrl, excludeIds };
+      if (scheduledAt) payload.scheduled_at = scheduledAt;
     }
 
-    const ok = results.filter(r => r.ok).length;
-    const rows = results.map(r =>
+    const res  = await fetch('/.netlify/functions/fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    const rows = (data.results || []).map(r =>
       `<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;">` +
-      (r.ok ? '✅' : '❌') + ' ' + r.name + (r.error ? ` — <span style="color:#f87171">${r.error}</span>` : '') +
+      (r.ok ? '✅' : '❌') + ' ' + r.name +
+      (r.error ? ` — <span style="color:#f87171">${r.error}</span>` : '') +
       `</div>`
     ).join('');
+
     if (logEl) logEl.innerHTML =
-      `<div style="font-weight:700;color:var(--green);margin-bottom:8px;">✅ ${ok}/${results.length} page এ post সফল</div>` +
-      `<div style="max-height:200px;overflow-y:auto;">${rows}</div>`;
+      `<div style="font-weight:700;color:var(--green);margin-bottom:6px;">✅ ${data.ok}/${data.total} page এ post সফল</div>` +
+      `<div style="max-height:180px;overflow-y:auto;">${rows}</div>`;
+
+    // ── Feature 9: Post-publish tracking ──────────────────────
+    try {
+      const { Client, Databases, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
+      const _c = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('6a11b6cd000b59f318eb');
+      const _db = new Databases(_c);
+      await _db.createDocument('joaf', 'fb_post_log', ID.unique(), {
+        caption:    caption.substring(0, 500),
+        media_type: videoUrl ? 'video' : imageUrl ? 'image' : 'text',
+        posted_at:  new Date().toISOString(),
+        pages_ok:   String(data.ok),
+        pages_fail: String(data.fail || 0),
+        summary:    JSON.stringify((data.results || []).map(r => ({ name: r.name, ok: r.ok, post_id: r.postId || '' }))),
+      });
+    } catch(logErr) { /* log silently — don't block UX */ }
 
   } catch(e) {
     if (logEl) logEl.innerHTML = `<div style="color:#f87171">❌ Error: ${e.message}</div>`;
   }
 
-  if (btn) { btn.disabled = false; btn.textContent = '📤 FB Pages এ Post করুন'; }
-  // Free memory — revoke objectURL, clear file ref
+  if (btn) { btn.disabled = false; btn.textContent = '📤 এখনই Post'; }
   if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); window._saPreviewUrl = null; }
   window._saImgFile = null;
-};
-
+}
 window.saveFbToken = function() {
   const inp = document.getElementById('sa-fb-token-input');
   const val = (inp ? inp.value : '').trim();
@@ -4348,12 +4863,40 @@ window.saveFbToken = function() {
   const st = document.getElementById('sa-token-status');
   if(st){st.textContent='✅ Token save হয়েছে!';st.style.color='#34d399';}
   inp.value = '';
+  setTimeout(fbCheckTokenExpiry, 500);
 };
 (function(){
   const t=localStorage.getItem('joaf_fb_token');
   const st=document.getElementById('sa-token-status');
   if(t&&st){st.textContent='✅ Saved ('+t.slice(0,12)+'...)';st.style.color='#34d399';}
+  setTimeout(function(){ if(typeof fbCheckTokenExpiry==="function") fbCheckTokenExpiry(); }, 3000);
 })();
+
+// ── Feature 6: Token expiry check ─────────────────────────────
+window.fbCheckTokenExpiry = async function() {
+  try {
+    const res  = await fetch('/.netlify/functions/fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'check-token' }),
+    });
+    const data = await res.json();
+    if (!data.expires_at) return;
+    const expiresAt = new Date(data.expires_at * 1000);
+    const daysLeft  = Math.ceil((expiresAt - Date.now()) / 86400000);
+    const badge     = document.getElementById('sa-token-saved-badge');
+    const tokenBox  = document.getElementById('sa-token-box');
+    if (daysLeft <= 0) {
+      if (badge) { badge.textContent = '⚠️ Expired!'; badge.style.color = '#f87171'; }
+      if (tokenBox) tokenBox.style.display = 'block';
+    } else if (daysLeft <= 7) {
+      if (badge) { badge.textContent = '⚠️ ' + daysLeft + ' দিন বাকি'; badge.style.color = '#fbbf24'; }
+      if (tokenBox) tokenBox.style.display = 'block';
+    } else {
+      if (badge) { badge.textContent = '✓ ' + daysLeft + ' দিন বাকি'; badge.style.color = 'var(--green)'; }
+    }
+  } catch(e) { /* silent fail — Netlify may not have token yet */ }
+};
 
 window.saAddExclude = function() {
   const inp = document.getElementById('sa-exc-input');
@@ -4422,13 +4965,323 @@ function pushToSAPanel(file, previewSrc, isVideo, caption) {
   if (caption) { const el = document.getElementById('sa-caption'); if (el) el.value = caption; }
 }
 
-function fbDownloadReel() {
+
+// ══════════════════════════════════════════════════════════════
+// BATCH PUBLISH SYSTEM
+// ══════════════════════════════════════════════════════════════
+
+window.renderBatchQueue = function() {
+  const queue  = window._fbBatchQueue || [];
+  const strip  = document.getElementById('fb-batch-strip');
+  const status = document.getElementById('batch-queue-status');
+  if (!strip) return;
+  const selCount = queue.filter(q => q.selected).length;
+  if (status) status.textContent = queue.length + 'টা card — ' + selCount + 'টা selected';
+  strip.innerHTML = '';
+  queue.forEach(function(item, idx) {
+    const thumbUrl = URL.createObjectURL(item.blob);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px;align-items:flex-start;padding:8px;background:var(--bg3);border:1px solid ' + (item.selected ? 'var(--accent)' : 'var(--border)') + ';border-radius:10px;transition:.15s;';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.checked = item.selected; chk.title = 'Select/Deselect';
+    chk.style.cssText = 'margin-top:4px;width:16px;height:16px;cursor:pointer;flex-shrink:0;accent-color:var(--accent);';
+    chk.onchange = function() { window._fbBatchQueue[idx].selected = chk.checked; renderBatchQueue(); };
+    const thumb = document.createElement('img');
+    thumb.src = thumbUrl;
+    thumb.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:7px;border:1px solid var(--border);flex-shrink:0;cursor:pointer;';
+    thumb.onclick = (function(b) { return function() {
+      const img2 = new Image(); img2.onload = function() {
+        const c = document.getElementById('fb-card-canvas'); if (!c) return;
+        const ctx2 = c.getContext('2d'); c.width = img2.width; c.height = img2.height; ctx2.drawImage(img2, 0, 0);
+      }; img2.src = URL.createObjectURL(b);
+    }; })(item.blob);
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;';
+    const badge = document.createElement('div');
+    badge.textContent = 'Card ' + (idx+1) + ' — ' + item.name;
+    badge.style.cssText = 'font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    const ta = document.createElement('textarea');
+    ta.value = item.caption; ta.rows = 3;
+    ta.placeholder = 'Caption (এই card-এর জন্য আলাদা লিখতে পারো)';
+    ta.style.cssText = 'width:100%;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg2);color:var(--text);resize:vertical;font-family:inherit;box-sizing:border-box;';
+    ta.oninput = function() { window._fbBatchQueue[idx].caption = ta.value; };
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;';
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '👁️ Preview';
+    prevBtn.style.cssText = 'padding:3px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
+    prevBtn.onclick = thumb.onclick;
+    const dlBtn = document.createElement('button');
+    dlBtn.textContent = '⬇️ Download';
+    dlBtn.style.cssText = 'padding:3px 8px;border-radius:6px;border:none;background:#25d366;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
+    dlBtn.onclick = (function(b, n) { return function() {
+      const a = document.createElement('a'); a.download = n; a.href = URL.createObjectURL(b); a.click();
+    }; })(item.blob, item.name);
+    const soloBtn = document.createElement('button');
+    soloBtn.textContent = '📤 এটা post করুন';
+    soloBtn.dataset.idx = idx;
+    soloBtn.style.cssText = 'padding:3px 9px;border-radius:6px;border:none;background:#1877f2;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;';
+    soloBtn.onclick = (function(i) { return function() { batchPostSingle(i); }; })(idx);
+    const soloLog = document.createElement('div');
+    soloLog.id = 'batch-solo-log-' + idx;
+    soloLog.style.cssText = 'display:none;font-size:10px;margin-top:4px;padding:6px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;max-height:120px;overflow-y:auto;';
+    btnRow.appendChild(prevBtn); btnRow.appendChild(dlBtn); btnRow.appendChild(soloBtn);
+    col.appendChild(badge); col.appendChild(ta); col.appendChild(btnRow); col.appendChild(soloLog);
+    row.appendChild(chk); row.appendChild(thumb); row.appendChild(col);
+    strip.appendChild(row);
+  });
+  // Sync preview thumbnail strip
+  fbSyncPreviewStrip();
+};
+
+window.fbSyncPreviewStrip = function() {
+  const queue = window._fbBatchQueue || [];
+  const strip = document.getElementById('fb-preview-strip');
+  const label = document.getElementById('fb-preview-strip-label');
+  if (!strip) return;
+  if (queue.length <= 1) {
+    strip.style.display = 'none';
+    if (label) label.style.display = 'none';
+    return;
+  }
+  strip.style.display = 'flex';
+  strip.style.flexWrap = 'wrap';
+  strip.style.gap = '6px';
+  strip.style.justifyContent = 'center';
+  if (label) label.style.display = 'block';
+  strip.innerHTML = '';
+  queue.forEach(function(item, idx) {
+    const thumbUrl = URL.createObjectURL(item.blob);
+    const wrapper = document.createElement('div');
+    wrapper.title = 'Card ' + (idx+1);
+    wrapper.style.cssText = 'position:relative;cursor:pointer;border-radius:6px;border:2px solid var(--border);overflow:hidden;transition:.15s;flex-shrink:0;';
+    wrapper.onmouseover = function() { this.style.borderColor = 'var(--accent)'; };
+    wrapper.onmouseout  = function() { this.style.borderColor = 'var(--border)'; };
+    if (item.isVideo) {
+      const vid = document.createElement('video');
+      vid.src = thumbUrl; vid.muted = true;
+      vid.style.cssText = 'width:60px;height:60px;object-fit:cover;display:block;';
+      wrapper.appendChild(vid);
+    } else {
+      const img = document.createElement('img');
+      img.src = thumbUrl;
+      img.style.cssText = 'width:60px;height:60px;object-fit:cover;display:block;';
+      wrapper.appendChild(img);
+    }
+    const num = document.createElement('div');
+    num.textContent = idx + 1;
+    num.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:9px;font-weight:900;color:#fff;text-shadow:0 0 4px #000;';
+    wrapper.appendChild(num);
+    wrapper.onclick = (function(b, isVid) { return function() {
+      strip.querySelectorAll('div[title]').forEach(function(w) { w.style.borderColor = 'var(--border)'; });
+      this.style.borderColor = 'var(--accent)';
+      if (isVid) {
+        const vid2 = document.getElementById('fb-reel-video');
+        const canvas = document.getElementById('fb-card-canvas');
+        if (canvas) canvas.style.display = 'none';
+        if (vid2) { vid2.src = URL.createObjectURL(b); vid2.style.display = 'block'; }
+      } else {
+        const img2 = new Image();
+        img2.onload = function() {
+          const c = document.getElementById('fb-card-canvas');
+          const vid2 = document.getElementById('fb-reel-video');
+          if (vid2) vid2.style.display = 'none';
+          if (!c) return;
+          c.style.display = 'block';
+          const ctx2 = c.getContext('2d');
+          c.width = img2.width; c.height = img2.height;
+          ctx2.drawImage(img2, 0, 0);
+        };
+        img2.src = URL.createObjectURL(b);
+      }
+    }; })(item.blob, item.isVideo);
+    strip.appendChild(wrapper);
+  });
+};
+
+window.batchSelectAll = function(val) {
+  (window._fbBatchQueue || []).forEach(function(item) { item.selected = val; });
+  renderBatchQueue();
+};
+
+// Shared: fetch + filter pages once
+// ── _fbGetPages: token stays server-side, routed via netlify function ──
+window._fbGetPages = async function() {
+  const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  const res = await fetch('/.netlify/functions/fb-autopost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'get-pages' }),
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  let pages = d.pages || [];
+  pages = pages.filter(function(p) { return !excludeIds.includes(p.id) && !excludeIds.includes(p.name.trim()); });
+  if (!pages.length) throw new Error('কোনো page পাওয়া যায়নি (সব exclude?)');
+  return pages;
+};
+
+// Shared: post one file+caption to one page — routed via Netlify proxy (token stays server-side)
+window._fbPostOneFileToPage = async function(file, caption, page, scheduledAt) {
+  let imageUrl = null, videoUrl = null;
+
+  // If file provided, upload to Appwrite Storage first to get a public URL
+  if (file) {
+    if (typeof uploadToAppwriteStorage === 'function') {
+      const publicUrl = await uploadToAppwriteStorage(file);
+      if (file.type && file.type.startsWith('video/')) {
+        videoUrl = publicUrl;
+      } else {
+        imageUrl = publicUrl;
+      }
+    } else {
+      // Fallback: create object URL (works for same-session posts)
+      if (file.type && file.type.startsWith('video/')) {
+        videoUrl = URL.createObjectURL(file);
+      } else {
+        imageUrl = URL.createObjectURL(file);
+      }
+    }
+  }
+
+  const payload = {
+    action: 'post',
+    caption,
+    imageUrl,
+    videoUrl,
+    excludeIds: [],
+  };
+  if (scheduledAt) payload.scheduled_at = scheduledAt;
+
+  const res = await fetch('/.netlify/functions/fb-autopost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  // Return first result matching this page
+  const match = (d.results || []).find(r => r.id === page.id);
+  if (match && !match.ok) throw new Error(match.error || 'Post failed');
+  return d;
+};
+
+// Post single card (by idx) → all pages, log in per-card solo log
+// ── Queue from UI ─────────────────────────────────────────────
+window.fbQueueFromUI = async function() {
+  const caption     = document.getElementById('fb-caption')?.value || '';
+  const tags        = document.getElementById('fb-tags-display')?.value || '';
+  const scheduledAt = document.getElementById('fb-schedule-time')?.value || '';
+  const carouselRaw = document.getElementById('fb-carousel-urls')?.value || '';
+  const carouselUrls = carouselRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  const imgUrl      = window._fbUploadedImageUrl || null;
+  const vidUrl      = window._fbUploadedVideoUrl || null;
+
+  if (!caption.trim()) { alert('Caption লিখুন বা generate করুন আগে'); return; }
+
+  try {
+    const id = await window.fbQueueAdd({
+      caption: caption + (tags ? '\n\n' + tags : ''),
+      imageUrl: carouselUrls.length >= 2 ? null : imgUrl,
+      videoUrl: carouselUrls.length >= 2 ? null : vidUrl,
+      carouselUrls: carouselUrls.length >= 2 ? carouselUrls : [],
+      scheduledAt: scheduledAt || new Date().toISOString(),
+    });
+    alert('✅ Queue এ যোগ হয়েছে!\nID: ' + id + (scheduledAt ? '\nScheduled: ' + scheduledAt : '\nএখনই publish হবে (scheduler এর পরের run এ)'));
+  } catch (e) {
+    alert('❌ Queue add failed: ' + e.message);
+  }
+};
+
+// ── Carousel post direct (bypasses queue, posts immediately) ──
+window.fbPostCarousel = async function(imageUrls, caption) {
+  const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+  const res = await fetch('/.netlify/functions/fb-autopost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'carousel', caption, imageUrls, excludeIds }),
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  return d;
+};
+
+window.batchPostSingle = async function(idx) {
+  const queue = window._fbBatchQueue || []; const item = queue[idx]; if (!item) return;
+  const soloLog = document.getElementById('batch-solo-log-' + idx);
+  const soloBtn = document.querySelector('[data-idx="' + idx + '"]');
+  const showLog = function(html) { if (soloLog) { soloLog.style.display = 'block'; soloLog.innerHTML = html; } };
+  if (soloBtn) { soloBtn.disabled = true; soloBtn.textContent = '⏳ posting...'; }
+  showLog('<span style="color:var(--amber)">⏳ Pages fetch করছি...</span>');
+  try {
+    const pages = await _fbGetPages();
+    showLog('<span style="color:var(--amber)">⏳ ' + pages.length + 'টা page এ post হচ্ছে...</span>');
+    const cardFile = new File([item.blob], item.name, { type: 'image/jpeg' });
+    const results = [];
+    for (let pi = 0; pi < pages.length; pi++) {
+      const page = pages[pi];
+      showLog('<span style="color:var(--amber)">⏳ ' + (pi+1) + '/' + pages.length + ' — <b>' + page.name + '</b></span>');
+      try { await _fbPostOneFileToPage(cardFile, item.caption, page); results.push({ name: page.name, ok: true }); }
+      catch(e) { results.push({ name: page.name, ok: false, err: e.message }); }
+    }
+    const okCount = results.filter(function(r){ return r.ok; }).length;
+    const rows = results.map(function(r) {
+      return '<div style="padding:2px 0;border-bottom:1px solid var(--border);">'
+        + (r.ok ? '✅' : '❌') + ' ' + r.name
+        + (r.err ? ' — <span style="color:#f87171">' + r.err + '</span>' : '') + '</div>';
+    }).join('');
+    showLog('<div style="font-weight:700;color:var(--green);margin-bottom:4px;">✅ ' + okCount + '/' + results.length + ' page সফল</div>' + rows);
+  } catch(e) { showLog('<span style="color:#f87171">❌ ' + e.message + '</span>'); }
+  if (soloBtn) { soloBtn.disabled = false; soloBtn.textContent = '📤 এটা post করুন'; }
+};
+
+// Post all selected cards → all pages, consolidated log
+window.batchPostSelected = async function() {
+  const queue = window._fbBatchQueue || [];
+  const selected = queue.reduce(function(acc, item, idx) { if (item.selected) acc.push(idx); return acc; }, []);
+  const bulkBtn = document.getElementById('batch-post-all-btn');
+  const bulkLog = document.getElementById('batch-post-log');
+  if (!selected.length) { alert('কোনো card select করা নেই'); return; }
+  const log = function(html) { if (bulkLog) { bulkLog.style.display = 'block'; bulkLog.innerHTML = html; } };
+  if (bulkBtn) { bulkBtn.disabled = true; bulkBtn.textContent = '⏳ posting...'; }
+  log('<span style="color:var(--amber)">⏳ Pages fetch করছি...</span>');
+  try {
+    const pages = await _fbGetPages();
+    const totalCards = selected.length, totalPages = pages.length;
+    let cardsDone = 0, overallOk = 0, overallFail = 0;
+    for (const idx of selected) {
+      const item = queue[idx]; cardsDone++;
+      log('<span style="color:var(--amber)">📤 Card ' + cardsDone + '/' + totalCards + ' — ' + item.name + '<br>⏳ ' + totalPages + 'টা page এ post হচ্ছে...</span>');
+      const cardFile = new File([item.blob], item.name, { type: 'image/jpeg' });
+      for (let pi = 0; pi < pages.length; pi++) {
+        const page = pages[pi];
+        log('<span style="color:var(--amber)">📤 Card ' + cardsDone + '/' + totalCards + ' → <b>' + page.name + '</b> (' + (pi+1) + '/' + totalPages + ')</span>');
+        try { await _fbPostOneFileToPage(cardFile, item.caption, page); overallOk++; }
+        catch(e) { overallFail++; }
+      }
+    }
+    log('<div style="font-weight:700;color:var(--green);margin-bottom:6px;">✅ Done — ' + totalCards + ' card × ' + totalPages + ' pages<br>'
+      + overallOk + ' সফল &nbsp;|&nbsp; '
+      + (overallFail ? '<span style="color:#f87171">' + overallFail + ' failed</span>' : '0 failed') + '</div>');
+  } catch(e) { log('<span style="color:#f87171">❌ ' + e.message + '</span>'); }
+  if (bulkBtn) { bulkBtn.disabled = false; bulkBtn.textContent = '📤 Selected post করুন'; }
+};
+
+// ══════════════════════════════════════════════════════════════
+window.fbDownloadReel = function() {
   if (!reelBlob) return;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(reelBlob); a.download = 'joaf-reel.webm'; a.click();
 }
 </script>
 <script>
+// ── FB Draft auto-save init ───────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof window.fbDraftStartAutoSave === 'function') {
+    window.fbDraftStartAutoSave();
+  }
+});
+
 window.isCinematic = true;
 let sceneIndex = 0;
 const scenes = ["সকাল ৮টা: রাজধানী স্থবির", "দুপুর ১২টা: নতুন ঘোষণা", "রাত ৮টা: চূড়ান্ত সিদ্ধান্ত"];
