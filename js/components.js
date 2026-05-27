@@ -1481,28 +1481,62 @@ async function joafSubscribePush() {
 
 async function joafSaveSubscription(sub) {
   try {
-    // user district বের করো — localStorage থেকে (polls login / blood reg)
     let _userDistrict = '';
     try {
       const _cu = localStorage.getItem('joaf_current_user');
-      if (_cu) { const _p = JSON.parse(_cu); _userDistrict = _p.district || ''; }
+      if (_cu) {
+        const _p = JSON.parse(_cu);
+        _userDistrict = _p.district || '';
+      }
     } catch(_) {}
 
-    await fetch('/.netlify/functions/save-subscription', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subscription: sub.toJSON(),
-        district: _userDistrict,
-        deviceInfo: {
-          userAgent: navigator.userAgent.substring(0, 150),
-          platform: navigator.platform || '',
-          language: navigator.language || '',
-          savedAt: new Date().toISOString(),
+    const payload = {
+      subscription: sub.toJSON(),
+      district: _userDistrict,
+      deviceInfo: {
+        userAgent: navigator.userAgent.substring(0, 150),
+        platform: navigator.platform || '',
+        language: navigator.language || '',
+        savedAt: new Date().toISOString(),
+      }
+    };
+
+    const endpoints = [
+      '/.netlify/functions/save-subscription',
+      '/api/save-subscription',
+      `${window.location.origin}/.netlify/functions/save-subscription`
+    ];
+
+    let lastError = null;
+
+    for (const endpoint of endpoints) {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          console.info('[JOAF] Push subscription synced:', endpoint);
+          return true;
         }
-      })
-    });
-  } catch(e) { console.log('Save subscription failed:', e); }
+
+        if (res.status !== 404) {
+          const errText = await res.text().catch(() => 'Unknown server error');
+          throw new Error(`Push sync failed (${res.status}): ${errText}`);
+        }
+
+        lastError = new Error(`404 on ${endpoint}`);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    throw lastError || new Error('No valid push subscription endpoint found');
+  } catch(e) {
+    console.error('[JOAF] Save subscription failed:', e);
+  }
 }
 
 // ── Device Detection ──────────────────────────────────────────
