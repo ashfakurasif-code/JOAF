@@ -2,7 +2,9 @@ const admin = require('firebase-admin');
 const { Client, Databases, Query, ID } = require('node-appwrite');
 
 const {
-  FIREBASE_SERVICE_ACCOUNT_JSON,
+  FIREBASE_PROJECT_ID,
+  FIREBASE_PRIVATE_KEY,
+  FIREBASE_CLIENT_EMAIL,
   FIREBASE_COLLECTION = 'push_subscriptions',
   APPWRITE_ENDPOINT,
   APPWRITE_PROJECT_ID,
@@ -15,24 +17,35 @@ let firebaseInitialized = false;
 
 function initializeFirebase() {
   if (firebaseInitialized) {
-    return admin.firestore();
+    return { firestore: admin.firestore() };
   }
 
-  if (!FIREBASE_SERVICE_ACCOUNT_JSON) {
-    throw new Error('Missing FIREBASE_SERVICE_ACCOUNT_JSON environment variable');
+  const serviceAccount = {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL
+  };
+
+  if (!serviceAccount.projectId || !serviceAccount.privateKey || !serviceAccount.clientEmail) {
+    return {
+      errorResponse: {
+        statusCode: 400,
+        body: JSON.stringify({ success: false, error: 'Netlify split environment variables are completely missing or misconfigured.' })
+      }
+    };
   }
 
-  const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT_JSON);
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+  }
 
   firebaseInitialized = true;
 
-  console.log('🔥 Firebase Admin initialized');
+  console.log('🔥 Firebase Admin initialized using split Netlify environment variables');
 
-  return admin.firestore();
+  return { firestore: admin.firestore() };
 }
 
 function initializeAppwrite() {
@@ -103,8 +116,15 @@ async function upsertSubscription(databases, payload) {
   };
 }
 
-exports.handler = async (event) => {
-  try {const firestore = initializeFirebase();
+exports.handler = async () => {
+  try {
+    const firebase = initializeFirebase();
+
+    if (firebase.errorResponse) {
+      return firebase.errorResponse;
+    }
+
+    const firestore = firebase.firestore;
     const databases = initializeAppwrite();
 
     console.log(`📦 Fetching Firebase collection: ${FIREBASE_COLLECTION}`);
