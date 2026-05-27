@@ -1070,8 +1070,7 @@ const JOAFComponents = {
           localStorage.setItem('joaf-push-granted','1');
           joafSubscribePush();
           try {
-            const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-    await navigator.serviceWorker.ready;
+            const reg = await navigator.serviceWorker.ready;
             reg.showNotification('✅ Notification চালু হয়েছে!', {
               body: 'JOAF এর সতর্কতা ও খবর এখন থেকে পাবেন।',
               icon: '/logoc7c3.png', badge: '/logoc7c3.png', vibrate: [200,100,200]
@@ -1315,8 +1314,7 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 async function joafSendAlertNotification(data) {
   // Show local notification to current user
   if ('Notification' in window && Notification.permission === 'granted') {
-    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-    await navigator.serviceWorker.ready;
+    const reg = await navigator.serviceWorker.ready;
     reg.showNotification(data.title, {
       body: data.body,
       icon: '/logoc7c3.png',
@@ -1460,22 +1458,10 @@ function joafShowEmergencyPopup(district, alertType) {
   document.body.appendChild(popup);
 }
 
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
-
-  const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
-}
-
 async function joafSubscribePush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
-    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-    await navigator.serviceWorker.ready;
+    const reg = await navigator.serviceWorker.ready;
     const existing = await reg.pushManager.getSubscription();
     if (existing) {
       // Already subscribed — ensure it's saved in backend
@@ -1485,7 +1471,7 @@ async function joafSubscribePush() {
 
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(JOAF_VAPID)
+      applicationServerKey: JOAF_VAPID
     });
 
     await joafSaveSubscription(sub);
