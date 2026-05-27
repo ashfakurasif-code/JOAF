@@ -30,13 +30,15 @@ function parseValue(value) {
   if (typeof value !== 'string') return value;
   const t = value.trim();
   if (!t) return value;
+
   if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
     try {
       return JSON.parse(t);
-    } catch (e) {
+    } catch (_) {
       return value;
     }
   }
+
   return value;
 }
 
@@ -46,16 +48,25 @@ function normalizeDoc(doc) {
   delete data.$createdAt;
   delete data.$updatedAt;
   delete data.$permissions;
-  Object.keys(data).forEach(k => { data[k] = parseValue(data[k]); });
+
+  Object.keys(data).forEach((k) => {
+    data[k] = parseValue(data[k]);
+  });
+
   return data;
 }
 
 function sanitizeId(id) {
   let s = String(id).replace(/[^a-zA-Z0-9]/g, '_').slice(0, 36);
+
   if (!s || /^_+$/.test(s) || !/^[a-zA-Z0-9]/.test(s)) {
     s = 'doc_' + String(id).replace(/[^a-zA-Z0-9]/g, '').slice(0, 28);
   }
-  if (!s || s.length < 4) s = 'doc_' + Math.random().toString(36).slice(2, 12);
+
+  if (!s || s.length < 4) {
+    s = 'doc_' + Math.random().toString(36).slice(2, 12);
+  }
+
   return s.slice(0, 36);
 }
 
@@ -65,16 +76,44 @@ function safeDocId(id) {
 }
 
 function isValidQuery(query) {
-  return typeof query === 'string' && query.trim().length > 0 && !/undefined|null/.test(query);
+  if (typeof query !== 'string') return false;
+
+  const trimmed = query.trim();
+
+  return (
+    trimmed.length > 0 &&
+    !trimmed.includes('undefined') &&
+    !trimmed.includes('null') &&
+    /^[a-zA-Z]+\(.+\)$/.test(trimmed)
+  );
 }
 
 function sanitizeQueries(queries = []) {
   if (!Array.isArray(queries)) return [];
 
-  return queries
-    .flat(Infinity)
-    .filter(isValidQuery)
-    .map(q => q.trim());
+  return [...new Set(
+    queries
+      .flat(Infinity)
+      .filter(Boolean)
+      .map((q) => (typeof q === 'string' ? q.trim() : ''))
+      .filter(isValidQuery)
+  )];
+}
+
+function buildQueryParams(queries = [], limit = 200) {
+  const params = new URLSearchParams();
+  const safeQueries = sanitizeQueries(queries);
+  const safeLimit = Number.isFinite(Number(limit))
+    ? Math.min(Math.max(Number(limit), 1), 5000)
+    : 200;
+
+  safeQueries.forEach((query) => {
+    params.append('queries[]', query);
+  });
+
+  params.set('limit', String(safeLimit));
+
+  return { params, safeLimit, safeQueries };
 }
 
 function qEqual(field, value) {
@@ -112,7 +151,7 @@ async function awRequest(path, options = {}) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Appwrite ${res.status}: ${text.slice(0, 200)}`);
+    throw new Error(`Appwrite ${res.status}: ${text.slice(0, 500)}`);
   }
 
   return res.json();
@@ -120,63 +159,91 @@ async function awRequest(path, options = {}) {
 
 async function awGet(collection, docId) {
   const id = safeDocId(docId);
+
   try {
-    const doc = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents/${id}`, { method: 'GET' });
+    const doc = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents/${id}`, {
+      method: 'GET',
+    });
+
     return { id: doc.$id, data: normalizeDoc(doc) };
-  } catch (e) {
+  } catch (_) {
     return null;
   }
 }
 
 async function awList(collection, queries = [], limit = 200) {
-  const params = new URLSearchParams();
-  params.set('limit', String(limit));
+  const { params } = buildQueryParams(queries, limit);
 
-  sanitizeQueries(queries).forEach(q => params.append('queries[]', q));
+  const data = await awRequest(
+    `/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`,
+    { method: 'GET' }
+  );
 
-  const data = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`, { method: 'GET' });
-  return (data.documents || []).map(doc => ({ id: doc.$id, data: normalizeDoc(doc) }));
+  return (data.documents || []).map((doc) => ({ id: doc.$id, data: normalizeDoc(doc) }));
 }
 
 async function awListAll(collection, queries = [], limit = 200) {
-  let cursor = null;
-  let all = [];
   const baseQueries = sanitizeQueries(queries);
+  const all = [];
+  let cursor = null;
+  let keepPaging = true;
 
-  while (true) {
-    const params = new URLSearchParams();
-    const pageQueries = [...baseQueries];
+  while (keepPaging) {
+    try {
+      const pageQueries = [...baseQueries];
 
-    if (cursor) {
-      const cursorQuery = qCursorAfter(cursor);
-      if (cursorQuery) pageQueries.push(cursorQuery);
+      if (cursor) {
+        const cursorQuery = qCursorAfter(cursor);
+        if (cursorQuery) pageQueries.push(cursorQuery);
+      }
+
+      const { params, safeLimit } = buildQueryParams(pageQueries, limit);
+
+      const data = await awRequest(
+        `/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`,
+        { method: 'GET' }
+      );
+
+      const docs = Array.isArray(data.documents) ? data.documents : [];
+
+      all.push(...docs.map((doc) => ({ id: doc.$id, data: normalizeDoc(doc) })));
+
+      if (docs.length < safeLimit) {
+        keepPaging = false;
+        break;
+      }
+
+      cursor = docs[docs.length - 1]?.$id || null;
+
+      if (!cursor) {
+        keepPaging = false;
+      }
+    } catch (error) {
+      console.error('awListAll query failure:', {
+        collection,
+        queries: baseQueries,
+        error: error.message,
+      });
+
+      if (baseQueries.length > 0) {
+        console.warn('awListAll fallback: retrying without queries');
+        return awListAll(collection, [], limit);
+      }
+
+      return [];
     }
-
-    sanitizeQueries(pageQueries).forEach(q => params.append('queries[]', q));
-
-    const safeLimit = Number.isFinite(Number(limit)) ? Math.min(Math.max(Number(limit), 1), 5000) : 200;
-    params.set('limit', String(safeLimit));
-
-    const data = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`, {
-      method: 'GET',
-    });
-
-    const docs = Array.isArray(data.documents) ? data.documents : [];
-
-    all = all.concat(docs.map(doc => ({ id: doc.$id, data: normalizeDoc(doc) })));
-
-    if (docs.length < safeLimit) break;
-
-    cursor = docs[docs.length - 1]?.$id || null;
-
-    if (!cursor) break;
   }
 
   return all;
 }
 
 async function awCreate(collection, data, docId = 'unique()', permissions = DEFAULT_DOC_PERMISSIONS) {
-  const payload = { documentId: safeDocId(docId) || 'unique()', data: encodeData(data), permissions };
+  const payload = {
+    documentId: safeDocId(docId) || 'unique()',
+    data: encodeData(data),
+    permissions,
+  };
+
   return awRequest(`/databases/${DB_ID}/collections/${collection}/documents`, {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -185,6 +252,7 @@ async function awCreate(collection, data, docId = 'unique()', permissions = DEFA
 
 async function awUpdate(collection, docId, data) {
   const id = safeDocId(docId);
+
   return awRequest(`/databases/${DB_ID}/collections/${collection}/documents/${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ data: encodeData(data) }),
@@ -193,9 +261,11 @@ async function awUpdate(collection, docId, data) {
 
 async function awUpsert(collection, docId, data, permissions = DEFAULT_DOC_PERMISSIONS) {
   const existing = await awGet(collection, docId);
+
   if (existing) {
     return awUpdate(collection, docId, data);
   }
+
   return awCreate(collection, data, docId, permissions);
 }
 
