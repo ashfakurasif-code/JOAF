@@ -2763,11 +2763,20 @@ window.saveSettings = function() { toast('Settings saved (UI only)','success'); 
 
 window.clearCache = function() { toast('Cache cleared','success'); };
 
-// ── Migration Engine ──────────────────────────────────────
+// ── Migration Engine v4 — Chunked Sequential (beats 10s Netlify timeout) ──────
 (function() {
-  const DONE_KEY = 'joaf_migration_done';
+  const DONE_KEY    = 'joaf_migration_done';
+  const FN_URL      = '/.netlify/functions/migrate-to-appwrite';
+  const CHUNK_SIZE  = 25;   // docs per function call
+  const ALL_COLS    = [
+    'push_subscriptions','notification_history','leaders','donors',
+    'timeline','alerts','members','press_releases','warriors',
+    'forum_messages','leader_votes','polls','medicines','bajar_cache',
+    'blood_requests','food_aid','jobs','pageviews','poll_users',
+    'issue_reacts','bajar_override','med_cache','notifications',
+  ];
 
-  // On load: hide panel if migration already completed
+  // Hide panel if already done
   document.addEventListener('DOMContentLoaded', function() {
     if (localStorage.getItem(DONE_KEY) === '1') {
       const panel = document.getElementById('migration-panel');
@@ -2775,157 +2784,195 @@ window.clearCache = function() { toast('Cache cleared','success'); };
     }
   });
 
+  // ── UI helpers ────────────────────────────────────────────────────────────
   function setProgress(pct, stepId, label) {
     const bar = document.getElementById('mig-progress-bar');
     if (bar) bar.style.width = pct + '%';
-    if (label) {
-      const st = document.getElementById('mig-status-text');
-      if (st) st.textContent = label;
-    }
-    // Highlight step
+    if (label) { const st = document.getElementById('mig-status-text'); if (st) st.textContent = label; }
     ['validate','fetch','upsert','done'].forEach(function(s) {
       const el = document.getElementById('mig-step-' + s);
       if (!el) return;
-      if (s === stepId) {
-        el.style.background = '#f59e0b';
-        el.style.color = '#fff';
-      } else if (
-        (['validate','fetch','upsert','done'].indexOf(s) <
-         ['validate','fetch','upsert','done'].indexOf(stepId))
-      ) {
-        el.style.background = '#10b981';
-        el.style.color = '#fff';
-      } else {
-        el.style.background = 'var(--surface2)';
-        el.style.color = 'var(--text2)';
-      }
+      const steps = ['validate','fetch','upsert','done'];
+      if (s === stepId)                                   { el.style.background='#f59e0b'; el.style.color='#fff'; }
+      else if (steps.indexOf(s) < steps.indexOf(stepId)) { el.style.background='#10b981'; el.style.color='#fff'; }
+      else                                                { el.style.background='var(--surface2)'; el.style.color='var(--text2)'; }
     });
+  }
+
+  function setStatus(msg) {
+    const st = document.getElementById('mig-status-text');
+    if (st) st.textContent = msg;
   }
 
   function showError(msg) {
     const box = document.getElementById('mig-error-box');
-    const pre  = document.getElementById('mig-error-msg');
+    const pre = document.getElementById('mig-error-msg');
     if (box) box.style.display = 'block';
-    if (pre) pre.textContent = msg;
-    const resume = document.getElementById('mig-btn-resume');
-    const start  = document.getElementById('mig-btn-start');
-    if (resume) resume.style.display = 'inline-flex';
-    if (start)  start.style.display  = 'none';
+    if (pre) pre.textContent   = msg;
+    setBtns(false);
+    const r = document.getElementById('mig-btn-resume');
+    if (r) r.style.display = 'inline-flex';
   }
 
   function clearError() {
     const box = document.getElementById('mig-error-box');
     if (box) box.style.display = 'none';
-    const resume = document.getElementById('mig-btn-resume');
-    const start  = document.getElementById('mig-btn-start');
-    if (resume) resume.style.display = 'none';
-    if (start)  start.style.display  = 'inline-flex';
+    const r = document.getElementById('mig-btn-resume');
+    if (r) r.style.display = 'none';
   }
 
-  function showResult(data) {
-    const box  = document.getElementById('mig-result-box');
-    const text = document.getElementById('mig-result-text');
-    if (!box || !text) return;
-    box.style.display = 'block';
-    text.innerHTML =
-      '<strong>✅ ' + (data.message || 'Migration complete!') + '</strong><br>' +
-      '📦 Total in Firestore: <b>' + (data.total || 0) + '</b> &nbsp;|&nbsp; ' +
-      '➕ Created: <b>' + (data.created || 0) + '</b> &nbsp;|&nbsp; ' +
-      '✏️ Updated: <b>' + (data.updated || 0) + '</b> &nbsp;|&nbsp; ' +
-      '⏭️ Skipped: <b>' + (data.skipped || 0) + '</b>' +
-      (data.failed ? ' &nbsp;|&nbsp; ❌ Failed: <b>' + data.failed + '</b>' : '');
+  function setBtns(disabled) {
+    ['mig-btn-start','mig-btn-dryrun'].forEach(function(id) {
+      const b = document.getElementById(id);
+      if (b) b.disabled = disabled;
+    });
+    const start = document.getElementById('mig-btn-start');
+    if (start) start.style.display = disabled ? 'none' : 'inline-flex';
   }
 
-  // ── Safe fetch: guards against HTML error pages (<!DOCTYPE) ──────────────
-  async function safeFetchJson(url, options) {
-    const res = await fetch(url, options);
+  function updateResultTable(totals) {
+    const rb = document.getElementById('mig-result-box');
+    const rt = document.getElementById('mig-result-text');
+    if (!rb || !rt) return;
+    rb.style.display = 'block';
+
+    const rows = ALL_COLS.map(function(c) {
+      const s = totals[c];
+      if (!s || s.total === 0) return '<tr><td style="color:var(--text2)">' + c + '</td><td colspan="4" style="color:var(--text2);font-size:10px">—</td></tr>';
+      return '<tr><td>' + c + '</td><td style="color:#10b981">+' + (s.created||0) + '</td><td style="color:#3b82f6">↺' + (s.updated||0) + '</td><td style="color:#6b7280">~' + (s.skipped||0) + '</td><td style="color:' + (s.failed?'#ef4444':'#6b7280') + '">' + (s.failed||0) + '</td></tr>';
+    }).join('');
+
+    rt.innerHTML =
+      '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+      '<thead><tr style="color:var(--text2);border-bottom:1px solid var(--border)">' +
+      '<th style="text-align:left;padding:2px 6px">Collection</th>' +
+      '<th style="text-align:center;padding:2px 4px">Created</th>' +
+      '<th style="text-align:center;padding:2px 4px">Updated</th>' +
+      '<th style="text-align:center;padding:2px 4px">Skipped</th>' +
+      '<th style="text-align:center;padding:2px 4px">Failed</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  // ── Safe fetch with HTML guard ─────────────────────────────────────────────
+  async function apiFetch(body) {
+    const res  = await fetch(FN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-Admin-Key': ADMIN_KEY },
+      body: JSON.stringify(body),
+    });
     const text = await res.text();
-    // If Netlify returns an HTML error page instead of JSON
-    if (text.trimStart().startsWith('<')) {
-      throw new Error(
-        'Function returned HTML instead of JSON (HTTP ' + res.status + ').\n' +
-        'Likely cause: function not deployed, or Netlify routing error.\n' +
-        'Check Netlify Functions log in your dashboard.'
-      );
-    }
+    if (text.trimStart().startsWith('<'))
+      throw new Error('Function returned HTML (HTTP ' + res.status + ') — check Netlify Functions log.\nTip: deploy/redeploy to Netlify first.');
     let data;
-    try { data = JSON.parse(text); }
-    catch(e) { throw new Error('Invalid JSON from function: ' + text.slice(0, 200)); }
-    return { res, data };
+    try { data = JSON.parse(text); } catch(_) { throw new Error('Bad JSON: ' + text.slice(0,200)); }
+    if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+    return data;
   }
 
-  function buildCollectionSummary(collections) {
-    if (!collections || typeof collections !== 'object') return '';
-    return Object.entries(collections).map(function([name, s]) {
-      if (s.note && s.total === 0) return '  • ' + name + ': ' + (s.note || 'empty');
-      return '  • ' + name + ': ' + (s.total||0) + ' docs → ✅' + (s.created||0) + ' created, 🔄' + (s.updated||0) + ' updated' + (s.failed ? ', ❌'+s.failed+' failed' : '');
-    }).join('\n');
-  }
-
+  // ── Main migration runner ─────────────────────────────────────────────────
   async function runMigration(isDry) {
     clearError();
-    const startBtn  = document.getElementById('mig-btn-start');
-    const dryBtn    = document.getElementById('mig-btn-dryrun');
-    const resumeBtn = document.getElementById('mig-btn-resume');
-    const label     = isDry ? '🔍 Dry Run' : '🚀 Validate & Migrate';
+    setBtns(true);
 
-    if (startBtn)  { startBtn.disabled  = true; }
-    if (dryBtn)    { dryBtn.disabled    = true; }
-    if (resumeBtn) { resumeBtn.style.display = 'none'; }
+    // Accumulate results per collection
+    const totals = {};
+    ALL_COLS.forEach(function(c) { totals[c] = { total:0, created:0, updated:0, skipped:0, failed:0, failures:[] }; });
+    let grandCreated=0, grandUpdated=0, grandSkipped=0, grandFailed=0;
 
     try {
-      // ── Step 1: Validate ──────────────────────────────────────────────────
-      setProgress(10, 'validate', '🔍 Validating Firestore & Appwrite connectivity…');
-      const { res: vRes, data: valData } = await safeFetchJson(
-        '/.netlify/functions/migrate-to-appwrite',
-        { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY}, body:JSON.stringify({action:'validate'}) }
-      );
-      if (!vRes.ok || !valData.ok) {
-        throw new Error('Validation failed:\n' + (valData.errors||[]).join('\n') || JSON.stringify(valData));
-      }
-      setProgress(30, 'fetch', isDry ? '🔍 Dry-run: counting records in Firestore…' : '📥 Fetching all records from Firestore…');
+      // ── Step 1: Validate ───────────────────────────────────────────────────
+      setProgress(10, 'validate', '🔍 Validating connectivity…');
+      const val = await apiFetch({ action:'validate' });
+      if (!val.ok) throw new Error('Validation failed:\n' + (val.errors||[]).join('\n'));
 
-      // ── Step 2+3: Migrate / Dry-run ────────────────────────────────────────
-      setProgress(50, 'upsert', isDry ? '🔍 Simulating upserts (no data written)…' : '🔄 Upserting into Appwrite across all collections…');
-      const { res: mRes, data: migData } = await safeFetchJson(
-        '/.netlify/functions/migrate-to-appwrite',
-        { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY}, body:JSON.stringify({action: isDry ? 'dry-run' : 'migrate'}) }
-      );
-
-      if (!mRes.ok) {
-        throw new Error((migData && migData.error) || 'Migration failed: HTTP ' + mRes.status);
+      if (isDry) {
+        // ── Dry-run: fetch counts only ────────────────────────────────────────
+        setProgress(40, 'fetch', '🔍 Counting Firestore docs…');
+        const counts = await apiFetch({ action:'dry-run' });
+        setProgress(100, 'done', '🔍 Dry-run complete!');
+        const rb = document.getElementById('mig-result-box');
+        const rt = document.getElementById('mig-result-text');
+        if (rb && rt) {
+          rb.style.display = 'block';
+          const rows = Object.entries(counts.counts||{}).map(function([c,n]) {
+            return '<tr><td>' + c + '</td><td style="color:#10b981;text-align:center">' + n + ' docs</td></tr>';
+          }).join('');
+          rt.innerHTML = '<strong>' + (counts.message||'Dry-run complete') + '</strong>' +
+            '<table style="margin-top:8px;width:100%;font-size:11px;border-collapse:collapse">' +
+            '<thead><tr style="color:var(--text2)"><th style="text-align:left">Collection</th><th>Docs in Firestore</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody></table>';
+        }
+        setBtns(false);
+        return;
       }
-      if (!isDry && migData.totalFailed > 0 && !migData.totalCreated && !migData.totalUpdated) {
-        throw new Error(migData.message + '\n\nFailures:\n' +
-          (migData.allFailures||[]).map(function(f){ return '['+f.collection+'] '+f.id+': '+f.error; }).join('\n'));
+
+      // ── Steps 2–3: Chunked migration ────────────────────────────────────────
+      setProgress(20, 'fetch', '📥 Starting migration…');
+      const activeCols = ALL_COLS.slice(); // all 23 collections
+      let colsDone = 0;
+
+      for (let ci = 0; ci < activeCols.length; ci++) {
+        const colName = activeCols[ci];
+        let offset    = 0;
+        let colTotal  = null;
+        let colDone   = false;
+
+        while (!colDone) {
+          // Progress: 20% → 95% across all collections + offsets
+          const overallPct = 20 + Math.round(
+            ((ci / activeCols.length) + (offset / Math.max(colTotal||1, 1) / activeCols.length)) * 75
+          );
+          setProgress(Math.min(overallPct, 94), 'upsert',
+            '🔄 [' + (ci+1) + '/' + activeCols.length + '] ' + colName +
+            (colTotal ? ' (' + offset + '/' + colTotal + ')' : '') + '…'
+          );
+
+          const chunk = await apiFetch({
+            action:     'migrate-collection',
+            collection: colName,
+            offset:     offset,
+            limit:      CHUNK_SIZE,
+          });
+
+          if (colTotal === null) colTotal = chunk.total || 0;
+          totals[colName].total    = colTotal;
+          totals[colName].created += chunk.created  || 0;
+          totals[colName].updated += chunk.updated  || 0;
+          totals[colName].skipped += chunk.skipped  || 0;
+          totals[colName].failed  += chunk.failed   || 0;
+          totals[colName].failures.push(...(chunk.failures||[]));
+
+          grandCreated += chunk.created  || 0;
+          grandUpdated += chunk.updated  || 0;
+          grandSkipped += chunk.skipped  || 0;
+          grandFailed  += chunk.failed   || 0;
+
+          updateResultTable(totals);
+
+          if (chunk.done || chunk.processed === 0) {
+            colDone = true;
+          } else {
+            offset = chunk.nextOffset;
+          }
+
+          // Tiny gap between calls to avoid hammering Appwrite rate limit
+          if (!colDone) await new Promise(function(r){ setTimeout(r, 100); });
+        }
+
+        colsDone++;
       }
 
       // ── Step 4: Done ───────────────────────────────────────────────────────
-      setProgress(100, 'done', isDry ? '🔍 Dry-run complete!' : '✅ Migration complete!');
+      setProgress(100, 'done', '✅ Migration complete!');
+      setStatus(
+        '✅ Done! Created: ' + grandCreated +
+        ' | Updated: ' + grandUpdated +
+        ' | Skipped: ' + grandSkipped +
+        (grandFailed ? ' | ❌ Failed: ' + grandFailed : '')
+      );
+      updateResultTable(totals);
 
-      const colSummary = buildCollectionSummary(migData.collections);
-      const resultHtml =
-        '<strong>' + (migData.message || (isDry ? 'Dry-run complete' : 'Migration complete')) + '</strong><br>' +
-        (migData.totalCreated !== undefined
-          ? '<br>Created: ' + migData.totalCreated + ' | Updated: ' + migData.totalUpdated + ' | Skipped: ' + migData.totalSkipped + ' | Failed: ' + migData.totalFailed
-          : '') +
-        (colSummary ? '<br><pre style="font-size:10px;margin:6px 0 0;white-space:pre-wrap;">' + colSummary + '</pre>' : '') +
-        (migData.allFailures && migData.allFailures.length
-          ? '<br><details><summary style="font-size:11px;cursor:pointer;">⚠️ Show ' + migData.allFailures.length + ' failure(s)</summary><pre style="font-size:10px;white-space:pre-wrap;">' +
-            migData.allFailures.map(function(f){return '['+f.collection+'] '+f.id+': '+f.error;}).join('\n') + '</pre></details>'
-          : '');
-
-      const rb = document.getElementById('mig-result-box');
-      const rt = document.getElementById('mig-result-text');
-      if (rb && rt) { rt.innerHTML = resultHtml; rb.style.display = 'block'; }
-
-      if (migData.totalFailed > 0) {
-        const st = document.getElementById('mig-status-text');
-        if (st) st.textContent = '⚠️ Completed with ' + migData.totalFailed + ' failed record(s). See details.';
-      }
-
-      // Permanently hide only on full success real migration
-      if (!isDry && (!migData.totalFailed || migData.totalFailed === 0)) {
+      if (grandFailed === 0) {
         localStorage.setItem(DONE_KEY, '1');
         setTimeout(function() {
           const panel = document.getElementById('migration-panel');
@@ -2936,19 +2983,18 @@ window.clearCache = function() { toast('Cache cleared','success'); };
           }
           toast('🎉 Migration 100% complete! Panel removed.', 'success');
         }, 3000);
+      } else {
+        toast('⚠️ Migration done with ' + grandFailed + ' failure(s). Check the table.', 'warning');
       }
 
-    } catch (err) {
+    } catch(err) {
       setProgress(0, '', '');
       showError(err.message || String(err));
-      if (resumeBtn) resumeBtn.style.display = '';
-    } finally {
-      if (startBtn) { startBtn.disabled = false; }
-      if (dryBtn)   { dryBtn.disabled   = false; }
+      return;
     }
-  }
 
-  function runMigrationFull() { return runMigration(false); }
+    setBtns(false);
+  }
 
   window.migrationStart  = function() { runMigration(false); };
   window.migrationDryRun = function() { runMigration(true); };
