@@ -862,92 +862,190 @@ function todayBn(){
 async function drawCard(ctx,W,H,opts){
   const {img,headline,sub,category,source,location,dt,preset,overlay,bright,contrast,ct,cb,cl,cr}=opts;
   const p=PRESETS[preset||0];
-  const ovl=(overlay||55)/100;
-  const catLabel={breaking:'🔴 BREAKING NEWS',exclusive:'⚡ EXCLUSIVE',update:'📢 আপডেট',analysis:'🔍 বিশ্লেষণ',alert:'🚨 সতর্কতা',positive:'✅ সুখবর'}[category]||'📢';
-  const bg=p.bg,ac=p.ac,ft=p.ft;
+  const ac=p.ac||'#ef4444', bg1=p.bg||'#050000', bg2=p.bg2||'#1c0000', sec=p.sec||'#fca5a5';
 
-  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=ac;ctx.fillRect(0,0,4,H);
+  // Map category to mood
+  const moodMap={breaking:'urgent',exclusive:'urgent',update:'neutral',analysis:'sad',alert:'angry',positive:'positive'};
+  const mood=moodMap[category]||'neutral';
+  const MP={
+    urgent:{bg1:'#050000',bg2:'#1c0000',acc:'#ef4444',sec:'#fca5a5'},
+    sad:{bg1:'#000010',bg2:'#060d30',acc:'#818cf8',sec:'#c7d2fe'},
+    positive:{bg1:'#001008',bg2:'#003318',acc:'#22c55e',sec:'#86efac'},
+    angry:{bg1:'#080200',bg2:'#2a0e00',acc:'#f97316',sec:'#fed7aa'},
+    neutral:{bg1:'#05030f',bg2:'#140d28',acc:'#a855f7',sec:'#d8b4fe'},
+  };
+  const P=MP[mood]||MP.neutral;
 
-  // Image
-  const imgH=Math.round(H*0.52);
+  function wrapText(text,x,y,maxW,lineH,maxLines){
+    const words=(text||'').split(' ');let line='',count=0;
+    for(let i=0;i<words.length;i++){
+      const test=line+words[i]+' ';
+      if(ctx.measureText(test).width>maxW&&line){ctx.fillText(line.trim(),x,y+count*lineH);line=words[i]+' ';count++;
+        if(maxLines&&count>=maxLines){ctx.fillText(line.trim()+(i<words.length-1?'...':''),x,y+count*lineH);return count+1;}}
+      else line=test;}
+    if(line.trim())ctx.fillText(line.trim(),x,y+count*lineH);return count+1;
+  }
+
+  // ── BACKGROUND ──────────────────────────────────────────────
+  ctx.fillStyle=P.bg1;ctx.fillRect(0,0,W,H);
+  const bgA=ctx.createRadialGradient(W*0.28,H*0.26,0,W*0.28,H*0.26,H*0.78);
+  bgA.addColorStop(0,P.bg2);bgA.addColorStop(1,P.bg1);
+  ctx.fillStyle=bgA;ctx.fillRect(0,0,W,H);
+  const bgB=ctx.createRadialGradient(W*0.76,H*0.72,0,W*0.76,H*0.72,H*0.52);
+  bgB.addColorStop(0,P.acc+'1a');bgB.addColorStop(1,'transparent');
+  ctx.fillStyle=bgB;ctx.fillRect(0,0,W,H);
+
+  // cyber grid
+  ctx.strokeStyle='rgba(255,0,0,0.038)';ctx.lineWidth=1;
+  for(let gx=0;gx<W;gx+=36){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+  for(let gy=0;gy<H;gy+=36){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+
+  // noise
+  for(let i=0;i<3000;i++){ctx.fillStyle='rgba(255,0,0,'+(Math.random()*0.016)+')';ctx.fillRect(Math.random()*W,Math.random()*H,1,Math.random()*2.5);}
+
+  // vignette
+  const vig=ctx.createRadialGradient(W/2,H/2,H*0.22,W/2,H/2,H*0.84);
+  vig.addColorStop(0,'transparent');vig.addColorStop(1,'rgba(0,0,0,0.86)');
+  ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+
+  // top/bottom accent bars
+  const barG=ctx.createLinearGradient(0,0,W,0);
+  barG.addColorStop(0,'transparent');barG.addColorStop(0.3,P.acc);
+  barG.addColorStop(0.7,P.sec);barG.addColorStop(1,'transparent');
+  ctx.fillStyle=barG;ctx.fillRect(0,0,W,7);ctx.fillRect(0,H-7,W,7);
+
+  // ── IMAGE ─────────────────────────────────────────────────
   if(img){
-    const sx=Math.round(img.width*(cl||0)),sy=Math.round(img.height*(ct||0));
+    const imgH=Math.round(H*0.48);
+    const sx=Math.round(img.width*(cl||0)),sy=Math.round(img.height*(ct||0.1));
     const sw=Math.round(img.width*(1-(cl||0)-(cr||0)));
-    const sh=Math.round(img.height*(1-(ct||0)-(cb||0)));
+    const sh=Math.round(img.height*(1-(ct||0.1)-(cb||0.05)));
     if(sw>2&&sh>2){
       const tmp=document.createElement('canvas');tmp.width=sw;tmp.height=sh;
       const tc=tmp.getContext('2d');
-      tc.filter=`brightness(${bright||100}%) contrast(${contrast||100}%)`;
+      tc.filter=`brightness(${bright||90}%) contrast(${contrast||110}%)`;
       tc.drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
       const ir=sw/sh,zr=W/imgH;
       let dw,dh;
       if(ir>zr){dw=imgH*ir;dh=imgH;}else{dw=W;dh=W/ir;}
-      const bDx=(W-dw)/2,bDy=80+(imgH-dh)/2;
-      ctx.save();ctx.beginPath();ctx.rect(0,80,W,imgH);ctx.clip();
+      const bDx=(W-dw)/2,bDy=Math.round(H*0.18)+(imgH-dh)/2;
+      ctx.save();ctx.beginPath();ctx.rect(0,Math.round(H*0.18),W,imgH);ctx.clip();
       ctx.drawImage(tmp,0,0,sw,sh,bDx,bDy,dw,dh);
-      const gB=ctx.createLinearGradient(0,80+imgH*0.4,0,80+imgH);
-      gB.addColorStop(0,'transparent');gB.addColorStop(0.5,bg+'dd');gB.addColorStop(1,bg);
-      ctx.fillStyle=gB;ctx.fillRect(0,80+imgH*0.4,W,imgH*0.6);
+      // gradient overlay on image
+      const gImg=ctx.createLinearGradient(0,Math.round(H*0.18),0,Math.round(H*0.18)+imgH);
+      gImg.addColorStop(0,'rgba(0,0,0,0.3)');gImg.addColorStop(0.5,'transparent');gImg.addColorStop(1,P.bg1+'ee');
+      ctx.fillStyle=gImg;ctx.fillRect(0,Math.round(H*0.18),W,imgH);
       ctx.restore();
     }
   }
 
-  // Top bar
-  ctx.fillStyle=p.tBg;ctx.fillRect(0,0,W,80);
-  const lsz=52,lbX=40,lbY=14;
-  ctx.fillStyle=ac;rr(ctx,lbX,lbY,lsz,lsz,8);ctx.fill();
-  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.font=`900 ${Math.round(lsz*0.55)}px sans-serif`;ctx.fillText('J',lbX+lsz/2,lbY+lsz/2);
+  // ── TOP BAR — JOAF badge ────────────────────────────────────
+  ctx.save();
+  ctx.fillStyle='rgba(6,0,0,0.90)';
+  ctx.beginPath();ctx.roundRect(22,22,232,64,15);ctx.fill();
+  ctx.strokeStyle='#8a6d3b';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(22,22,232,64,15);ctx.stroke();
+  const fcG=ctx.createRadialGradient(54,54,0,54,54,21);
+  fcG.addColorStop(0,'#dd2222');fcG.addColorStop(1,'#880000');
+  ctx.fillStyle=fcG;ctx.beginPath();ctx.arc(54,54,21,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,180,100,0.28)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(54,54,21,0,Math.PI*2);ctx.stroke();
+  ctx.font='bold 18px Arial';ctx.fillStyle='#fff';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✊',54,54);
   ctx.textBaseline='alphabetic';
-  const tx=lbX+lsz+10;
-  ctx.fillStyle=p.tTxt;ctx.textAlign='left';
-  ctx.font=`900 19px 'Hind Siliguri',sans-serif`;ctx.fillText('JOAF',tx,lbY+lsz*0.42);
-  ctx.fillStyle=p.tTxt+'99';ctx.font=`600 10px 'Hind Siliguri',sans-serif`;
-  ctx.fillText('জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম',tx,lbY+lsz*0.64);
-  ctx.fillStyle=ac;ctx.font=`500 9px 'Hind Siliguri',sans-serif`;
-  ctx.fillText(cfg.footerUrl||'www.julyforum.com',tx,lbY+lsz*0.84);
-  ctx.textAlign='right';ctx.fillStyle=p.tTxt+'77';
-  ctx.font=`500 10px 'Hind Siliguri',sans-serif`;ctx.fillText(dt,W-40,lbY+lsz*0.6);
-  if(location){ctx.fillStyle=p.tTxt+'99';ctx.fillText('📍 '+location,W-40,lbY+lsz*0.82);}
-
-  // Badge
-  const badgeY=Math.round(H*0.7);
-  ctx.font=`800 15px 'Hind Siliguri',sans-serif`;ctx.textAlign='left';
-  const bw=ctx.measureText(catLabel).width+22;
-  ctx.fillStyle=ac;rr(ctx,40,badgeY,bw,36,4);ctx.fill();
-  ctx.fillStyle='#fff';ctx.fillText(catLabel,51,badgeY+24);
-
-  // Headline
-  const hlY=Math.round(H*0.76);
-  ctx.font=`900 44px 'Noto Sans Bengali','Hind Siliguri',sans-serif`;
-  ctx.fillStyle='#ffffff';ctx.textAlign='left';
-  ctx.shadowColor='rgba(0,0,0,.8)';ctx.shadowBlur=12;
-  const lh=44*1.3;
-  wrp(ctx,headline,W-80).slice(0,4).forEach((ln,i)=>ctx.fillText(ln,40,hlY+44+i*lh));
+  ctx.font="bold 27px 'Noto Sans Bengali',Arial";
+  ctx.fillStyle='#f0ad4e';ctx.shadowColor='#f0ad4e';ctx.shadowBlur=8;
+  ctx.textAlign='left';ctx.fillText('JOAF ⚡',84,68);
   ctx.shadowBlur=0;
+  ctx.restore();
 
-  // Sub
-  if(sub){
-    const subY=Math.round(H*0.89);
-    ctx.font=`400 22px 'Hind Siliguri',sans-serif`;
-    ctx.fillStyle='rgba(255,255,255,.75)';
-    wrp(ctx,sub,W-80).slice(0,2).forEach((ln,i)=>ctx.fillText(ln,40,subY+22+i*32));
+  // TOP BAR — category badge (right)
+  const catLabel={breaking:'🔴 জরুরি',exclusive:'⚡ EXCLUSIVE',update:'📢 আপডেট',analysis:'🔍 বিশ্লেষণ',alert:'🚨 সতর্কতা',positive:'✅ সুখবর'}[category]||'📢 আপডেট';
+  ctx.save();
+  ctx.fillStyle='rgba(6,0,0,0.90)';
+  ctx.beginPath();ctx.roundRect(W-198,22,176,64,15);ctx.fill();
+  ctx.strokeStyle=P.acc+'88';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.roundRect(W-198,22,176,64,15);ctx.stroke();
+  ctx.shadowColor=P.acc;ctx.shadowBlur=12;
+  ctx.fillStyle=P.acc;ctx.beginPath();ctx.arc(W-175,54,9,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.font="bold 23px 'Noto Sans Bengali',Arial";
+  ctx.fillStyle=P.sec;ctx.textAlign='left';
+  ctx.fillText(catLabel,W-157,68);
+  ctx.restore();
+
+  // location/source top right
+  if(location||source){
+    ctx.font="600 15px monospace";ctx.fillStyle='rgba(255,60,60,0.30)';
+    ctx.textAlign='right';ctx.fillText((location?'📍 '+location:source),W-30,110);
   }
 
-  // Footer
-  ctx.fillStyle=ft;ctx.fillRect(0,H-80,W,80);
-  ctx.fillStyle='rgba(255,255,255,.1)';ctx.fillRect(0,H-80,W,2);
-  ctx.fillStyle='#fff';ctx.textAlign='left';
-  ctx.font=`700 15px 'Hind Siliguri',sans-serif`;
-  ctx.fillText(cfg.footerText||'JOAF • দেশ আগে, দল পরে',40,H-80+50);
-  ctx.textAlign='right';ctx.font=`500 13px 'Hind Siliguri',sans-serif`;
-  ctx.fillText(cfg.footerUrl||'www.julyforum.com',W-40,H-80+50);
+  // ── HEADLINE ────────────────────────────────────────────────
+  const headTxt=(headline||'').substring(0,80);
+  let hfs=headTxt.length<14?72:headTxt.length<22?62:headTxt.length<32?52:headTxt.length<46?44:36;
+  ctx.save();
+  ctx.font="900 "+hfs+"px 'Noto Sans Bengali',Arial";
+  ctx.textAlign='center';
+  const hw=headTxt.split(' ');let hln='';const hlns=[];
+  for(const w of hw){if(ctx.measureText(hln+w+' ').width>W-80&&hln){hlns.push(hln.trim());hln=w+' ';}else hln+=w+' ';}
+  if(hln.trim())hlns.push(hln.trim());
+  const hStartY=Math.round(H*0.66);
+  hlns.slice(0,4).forEach((ln,li)=>{
+    ctx.shadowColor=P.acc;ctx.shadowBlur=li===0?50:20;
+    ctx.fillStyle='#ffffff';ctx.fillText(ln,W/2,hStartY+li*hfs*1.22);
+  });
+  ctx.restore();
+  const hEndY=hStartY+(Math.min(hlns.length,4)-1)*hfs*1.22+16;
 
-  // Top accent
-  const lg=ctx.createLinearGradient(0,0,W,0);
-  lg.addColorStop(0,'transparent');lg.addColorStop(.35,ac);lg.addColorStop(.65,ac+'cc');lg.addColorStop(1,'transparent');
-  ctx.fillStyle=lg;ctx.fillRect(0,0,W,3);
+  // divider
+  const divG=ctx.createLinearGradient(0,0,W,0);
+  divG.addColorStop(0,'transparent');divG.addColorStop(0.35,P.acc);
+  divG.addColorStop(0.65,P.sec);divG.addColorStop(1,'transparent');
+  ctx.fillStyle=divG;ctx.fillRect(80,hEndY+12,W-160,3);
+
+  // sub text
+  if(sub){
+    ctx.save();
+    ctx.font="500 22px 'Noto Sans Bengali',Arial";
+    ctx.fillStyle='rgba(255,255,255,0.72)';ctx.textAlign='left';
+    wrapText(sub,40,hEndY+52,W-80,30,3);
+    ctx.restore();
+  }
+
+  // ── BOTTOM BRAND BAR ────────────────────────────────────────
+  ctx.save();
+  const bmG=ctx.createLinearGradient(0,H-140,0,H);
+  bmG.addColorStop(0,'rgba(0,0,0,0)');bmG.addColorStop(0.25,'rgba(0,0,0,0.92)');bmG.addColorStop(1,'rgba(0,0,0,0.98)');
+  ctx.fillStyle=bmG;ctx.fillRect(0,H-140,W,140);
+
+  // JOAF logo circle (left)
+  const lcx=70,lcy=H-48,lr=34;
+  const lcG=ctx.createRadialGradient(lcx,lcy,0,lcx,lcy,lr);
+  lcG.addColorStop(0,P.acc);lcG.addColorStop(1,'#880000');
+  ctx.fillStyle=lcG;ctx.beginPath();ctx.arc(lcx,lcy,lr,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(lcx,lcy,lr,0,Math.PI*2);ctx.stroke();
+  ctx.font='900 22px Arial';ctx.fillStyle='#fff';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⚡',lcx,lcy);
+  ctx.textBaseline='alphabetic';
+
+  ctx.font="900 36px 'Noto Sans Bengali',Arial";ctx.fillStyle='#fff';ctx.textAlign='left';
+  ctx.shadowColor=P.acc;ctx.shadowBlur=14;ctx.fillText('JOAF',114,H-50);ctx.shadowBlur=0;
+  ctx.font="500 22px 'Noto Sans Bengali',Arial";ctx.fillStyle=P.sec+'cc';
+  ctx.fillText('www.julyforum.com',114,H-22);
+
+  // date right
+  const _d=new Date();
+  const _dn=['রোববার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+  const _mn=['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+  const _bd=['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  function toBn(n){return String(n).split('').map(c=>/[0-9]/.test(c)?_bd[+c]:c).join('');}
+  const dateStr=_dn[_d.getDay()]+', '+toBn(_d.getDate())+' '+_mn[_d.getMonth()]+' '+toBn(_d.getFullYear());
+  ctx.font="600 19px 'Noto Sans Bengali',Arial";ctx.fillStyle='rgba(255,255,255,0.55)';ctx.textAlign='right';
+  ctx.fillText(dt||dateStr,W-36,H-34);
+  ctx.restore();
+
+  ctx.fillStyle=barG;ctx.fillRect(0,H-7,W,7);
 }
 
 function rr(ctx,x,y,w,h,r){
@@ -959,11 +1057,11 @@ function rr(ctx,x,y,w,h,r){
 }
 
 function wrp(ctx,text,maxW){
-  if(!text) return [];
-  const words=text.split(' '),lines=[];let cur='';
+  if(!text)return[];const words=text.split(' '),lines=[];let cur='';
   for(const w of words){const t=cur?cur+' '+w:w;if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;}
   if(cur)lines.push(cur);return lines;
 }
+
 
 // ═══════════════════════════════════════════════
 // EDITOR CANVAS (live)

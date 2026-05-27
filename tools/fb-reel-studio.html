@@ -718,51 +718,158 @@ function drawReelFrame(cv, r, elapsed, total){
   const W=cv.width, H=cv.height;
   const prog=Math.min(elapsed/total,1);
   ctx.clearRect(0,0,W,H);
-  const bg=ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#07080d'); bg.addColorStop(1,'#0d0e18');
-  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-  // accent
-  ctx.fillStyle='#90161f'; ctx.fillRect(0,0,4,H);
+
+  // ── BACKGROUND (admin JOAF style) ──
+  const mood='urgent';
+  const P={bg1:'#050000',bg2:'#1c0000',acc:'#ef4444',sec:'#fca5a5'};
+
+  ctx.fillStyle=P.bg1;ctx.fillRect(0,0,W,H);
+  const bgA=ctx.createRadialGradient(W*0.28,H*0.26,0,W*0.28,H*0.26,H*0.78);
+  bgA.addColorStop(0,P.bg2);bgA.addColorStop(1,P.bg1);
+  ctx.fillStyle=bgA;ctx.fillRect(0,0,W,H);
+
+  // cyber grid
+  ctx.strokeStyle='rgba(255,0,0,0.04)';ctx.lineWidth=1;
+  for(let gx=0;gx<W;gx+=24){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+  for(let gy=0;gy<H;gy+=24){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+
+  // noise
+  for(let i=0;i<2000;i++){ctx.fillStyle='rgba(255,0,0,'+(Math.random()*0.018)+')';ctx.fillRect(Math.random()*W,Math.random()*H,1,Math.random()*2);}
+
+  // vignette
+  const vig=ctx.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.8);
+  vig.addColorStop(0,'transparent');vig.addColorStop(1,'rgba(0,0,0,0.82)');
+  ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+
+  // top/bottom accent bars
+  const barG=ctx.createLinearGradient(0,0,W,0);
+  barG.addColorStop(0,'transparent');barG.addColorStop(0.3,P.acc);
+  barG.addColorStop(0.7,P.sec);barG.addColorStop(1,'transparent');
+  ctx.fillStyle=barG;ctx.fillRect(0,0,W,5);ctx.fillRect(0,H-5,W,5);
+
   // progress bar
-  ctx.fillStyle='rgba(255,255,255,.1)'; ctx.fillRect(0,0,W,5);
-  ctx.fillStyle='#f05252'; ctx.fillRect(0,0,W*prog,5);
-  // slide-in
-  const hook=r.hook?.text||'';
-  const slide=elapsed<600?(elapsed/600):1;
+  ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(0,5,W,5);
+  ctx.fillStyle=P.acc+'dd';ctx.fillRect(0,5,W*prog,5);
+
+  // ── TOP BAR — JOAF badge ──
   ctx.save();
-  ctx.globalAlpha=slide;
-  ctx.translate(0,(1-slide)*25);
-  // badge
-  ctx.fillStyle='#f05252';
-  rrv(ctx,40,80,200,38,6); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font='bold 16px sans-serif';
-  ctx.fillText('🔴 BREAKING NEWS',52,106);
-  // hook
-  ctx.fillStyle='#fff'; ctx.font='bold 24px sans-serif';
-  wrapTxt(ctx,hook,40,160,W-80,32);
-  // segments
-  const segs=[
-    {label:'HOOK',text:r.script?.hook_segment||'',color:'#f05252',delay:0},
-    {label:'BODY',text:r.script?.body_segment||'',color:'#60a5fa',delay:0.3},
-    {label:'CTA', text:r.script?.cta_segment||'', color:'#34d399',delay:0.6},
-  ];
-  let yy=330;
-  segs.forEach(seg=>{
-    const sp=Math.max(0,Math.min(1,(prog-seg.delay)/0.35));
-    ctx.globalAlpha=slide*sp;
-    ctx.fillStyle=seg.color; ctx.font='bold 12px sans-serif';
-    ctx.fillText('['+seg.label+']',40,yy);
-    ctx.fillStyle='rgba(255,255,255,.85)'; ctx.font='13px sans-serif';
-    const lines=wrapTxt(ctx,seg.text,40,yy+18,W-80,18,true);
-    yy+=40+lines*18;
-  });
+  ctx.fillStyle='rgba(6,0,0,0.90)';
+  ctx.beginPath();ctx.roundRect(14,16,180,52,12);ctx.fill();
+  ctx.strokeStyle='#8a6d3b';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.roundRect(14,16,180,52,12);ctx.stroke();
+  const fcG=ctx.createRadialGradient(38,42,0,38,42,17);
+  fcG.addColorStop(0,'#dd2222');fcG.addColorStop(1,'#880000');
+  ctx.fillStyle=fcG;ctx.beginPath();ctx.arc(38,42,17,0,Math.PI*2);ctx.fill();
+  ctx.font='bold 14px Arial';ctx.fillStyle='#fff';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✊',38,42);
+  ctx.textBaseline='alphabetic';
+  ctx.font="bold 20px 'Noto Sans Bengali',Arial";
+  ctx.fillStyle='#f0ad4e';ctx.shadowColor='#f0ad4e';ctx.shadowBlur=6;
+  ctx.textAlign='left';ctx.fillText('JOAF ⚡',62,54);
+  ctx.shadowBlur=0;
   ctx.restore();
-  // footer
-  ctx.fillStyle='#90161f'; ctx.fillRect(0,H-64,W,64);
-  ctx.fillStyle='#fff'; ctx.font='bold 15px sans-serif';
-  ctx.fillText('JOAF • দেশ আগে, দল পরে',40,H-34);
-  ctx.fillStyle='rgba(255,255,255,.6)'; ctx.font='12px sans-serif';
-  ctx.fillText('www.julyforum.com',40,H-14);
+
+  // BREAKING badge (right)
+  ctx.save();
+  ctx.fillStyle='rgba(6,0,0,0.90)';
+  ctx.beginPath();ctx.roundRect(W-144,16,130,52,12);ctx.fill();
+  ctx.strokeStyle='#800000';ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.roundRect(W-144,16,130,52,12);ctx.stroke();
+  ctx.shadowColor='#ff0000';ctx.shadowBlur=10;
+  ctx.fillStyle='#ff1a1a';ctx.beginPath();ctx.arc(W-124,42,7,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.font="bold 18px 'Noto Sans Bengali',Arial";
+  ctx.fillStyle='#ff5555';ctx.textAlign='left';
+  ctx.fillText('জরুরি',W-108,54);
+  ctx.restore();
+
+  // ── hook text (slide-in animation) ──
+  const hook=r.hook?.text||'';
+  const slideIn=elapsed<500?(elapsed/500):1;
+  const fadeIn=Math.min(elapsed/300,1);
+  ctx.save();
+  ctx.globalAlpha=fadeIn;
+  ctx.translate(0,(1-slideIn)*20);
+
+  // hook headline
+  let hfs=hook.length<12?42:hook.length<20?36:hook.length<32?30:24;
+  ctx.font="900 "+hfs+"px 'Noto Sans Bengali',Arial";
+  ctx.fillStyle='#ffffff';ctx.textAlign='center';
+  ctx.shadowColor=P.acc;ctx.shadowBlur=30;
+  wrapTxtReel(ctx,hook,W/2,Math.round(H*0.15),W-60,hfs*1.25,4,'center');
+  ctx.shadowBlur=0;
+
+  ctx.restore();
+
+  // ── Script segments ──
+  const segs=[
+    {label:'HOOK',text:r.script?.hook_segment||'',color:P.acc,delay:0},
+    {label:'BODY',text:r.script?.body_segment||'',color:'#60a5fa',delay:0.28},
+    {label:'CTA', text:r.script?.cta_segment||'', color:'#34d399',delay:0.56},
+  ];
+
+  let yy=Math.round(H*0.35);
+  segs.forEach(seg=>{
+    const sp=Math.max(0,Math.min(1,(prog-seg.delay)/0.3));
+    if(sp<=0) return;
+    ctx.save();
+    ctx.globalAlpha=sp;
+    // segment card
+    ctx.fillStyle='rgba(8,0,0,0.82)';
+    const cardH=Math.round(H*0.12);
+    ctx.beginPath();ctx.roundRect(20,yy,W-40,cardH,10);ctx.fill();
+    ctx.strokeStyle=seg.color+'55';ctx.lineWidth=1;
+    ctx.beginPath();ctx.roundRect(20,yy,W-40,cardH,10);ctx.stroke();
+    ctx.fillStyle=seg.color;ctx.fillRect(20,yy,3,cardH);
+
+    ctx.font='700 11px monospace';ctx.fillStyle=seg.color+'99';ctx.textAlign='left';
+    ctx.fillText('['+seg.label+']',30,yy+16);
+
+    ctx.font="500 17px 'Noto Sans Bengali',Arial";ctx.fillStyle='rgba(255,255,255,0.88)';
+    wrapTxtReel(ctx,seg.text,30,yy+32,W-60,22,2,'left');
+    ctx.restore();
+    yy+=Math.round(H*0.14);
+  });
+
+  // ── BOTTOM BRAND BAR ──
+  ctx.save();
+  const bmG=ctx.createLinearGradient(0,H-100,0,H);
+  bmG.addColorStop(0,'rgba(0,0,0,0)');bmG.addColorStop(0.3,'rgba(0,0,0,0.94)');bmG.addColorStop(1,'rgba(0,0,0,0.98)');
+  ctx.fillStyle=bmG;ctx.fillRect(0,H-100,W,100);
+
+  const lcx=44,lcy=H-38,lr=24;
+  const lcG=ctx.createRadialGradient(lcx,lcy,0,lcx,lcy,lr);
+  lcG.addColorStop(0,P.acc);lcG.addColorStop(1,'#880000');
+  ctx.fillStyle=lcG;ctx.beginPath();ctx.arc(lcx,lcy,lr,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(lcx,lcy,lr,0,Math.PI*2);ctx.stroke();
+  ctx.font='900 15px Arial';ctx.fillStyle='#fff';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⚡',lcx,lcy);
+  ctx.textBaseline='alphabetic';
+
+  ctx.font="900 24px 'Noto Sans Bengali',Arial";ctx.fillStyle='#fff';ctx.textAlign='left';
+  ctx.shadowColor=P.acc;ctx.shadowBlur=10;ctx.fillText('JOAF',76,H-42);ctx.shadowBlur=0;
+  ctx.font="500 15px 'Noto Sans Bengali',Arial";ctx.fillStyle=P.sec+'cc';
+  ctx.fillText('www.julyforum.com',76,H-18);
+  ctx.restore();
+
+  ctx.fillStyle=barG;ctx.fillRect(0,H-5,W,5);
+}
+
+function wrapTxtReel(ctx,text,x,y,maxW,lh,maxLines,align){
+  if(!text)return;
+  const oldAlign=ctx.textAlign;
+  ctx.textAlign=align||'left';
+  const words=text.split(' ');let line='';let count=0;
+  for(const w of words){
+    const t=line?line+' '+w:w;
+    if(ctx.measureText(t).width>maxW&&line){
+      ctx.fillText(line,x,y+count*lh);line=w;count++;
+      if(maxLines&&count>=maxLines){ctx.fillText(line+'...',x,y+count*lh);ctx.textAlign=oldAlign;return;}
+    }else line=t;
+  }
+  if(line)ctx.fillText(line,x,y+count*lh);
+  ctx.textAlign=oldAlign;
 }
 
 function rrv(ctx,x,y,w,h,r){
