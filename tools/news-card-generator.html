@@ -37,6 +37,220 @@ async function captureReelBlob(meta){
     requestAnimationFrame(tick);
   });
 }
+
+function sendReelToFBAutoPost(){
+  const r=window._lastReelR, meta=window._lastReelMeta;
+  if(!r){showT('আগে Generate করুন','er');return;}
+  const allHashtags=[...(r.hashtags?.tier1_trending||[]),...(r.hashtags?.tier2_niche||[]),...(r.hashtags?.tier3_brand||[])].join(' ');
+  const caption=(r.caption?.main||'')+'
+
+'+allHashtags;
+  showT('⏳ Video capture হচ্ছে...','am');
+  captureReelBlob(meta).then(blob=>{
+    // Convert blob to base64 to send via postMessage
+    const reader=new FileReader();
+    reader.onload=e=>{
+      window.parent.postMessage({
+        type:'JOAF_REEL_TO_FBPOST',
+        caption:caption,
+        videoBase64:e.target.result,
+        mimeType:'video/webm',
+        filename:'joaf-reel-'+Date.now()+'.webm'
+      },'*');
+      showT('✅ FB Auto Post এ পাঠানো হয়েছে!','ok');
+    };
+    reader.readAsDataURL(blob);
+  }).catch(()=>{
+    // No canvas/video — just send caption
+    window.parent.postMessage({type:'JOAF_REEL_TO_FBPOST',caption:caption,videoBase64:null},'*');
+    showT('✅ Caption FB Auto Post এ পাঠানো হয়েছে','ok');
+  });
+}
+
+// ── Reel Batch System ──────────────────────────────────────
+function rCountTopics(ta){
+  const lines=ta.value.split('\n').map(l=>l.trim()).filter(l=>l.length>3);
+  const el=document.getElementById('rTopicLineCount');
+  if(el) el.textContent=lines.length+' topic';
+  const bc=document.getElementById('rBatchCount');
+  if(bc) bc.textContent=lines.length>1?'('+lines.length+'x batch)':'';
+}
+
+function rPasteTopics(){
+  navigator.clipboard.readText().then(t=>{
+    const ta=document.getElementById('rtopic');
+    if(ta){ta.value=t;rCountTopics(ta);}
+  }).catch(()=>showT('Clipboard access নেই','er'));
+}
+
+async function reelBatchGenerate(){
+  const ta=document.getElementById('rtopic');
+  const raw=ta?ta.value:'';
+  const topics=raw.split('\n').map(l=>l.trim()).filter(l=>l.length>3);
+  if(!topics.length){showT('কমপক্ষে একটা topic লিখুন','er');return;}
+
+  const btn=document.getElementById('rgenBtn');
+  const progWrap=document.getElementById('rBatchProgress');
+  const progBar=document.getElementById('rBatchBar');
+  const statusEl=document.getElementById('rBatchStatus');
+
+  btn.disabled=true;
+  if(progWrap) progWrap.style.display='block';
+  if(statusEl) statusEl.style.display='block';
+
+  // Single topic — original flow
+  if(topics.length===1){
+    ta.value=topics[0];
+    if(statusEl) statusEl.textContent='⏳ Generating...';
+    if(progBar) progBar.style.width='50%';
+    await reelGenerate();
+    if(progBar) progBar.style.width='100%';
+    if(statusEl) statusEl.textContent='✅ Done!';
+    btn.disabled=false;
+    setTimeout(()=>{if(progWrap)progWrap.style.display='none';if(statusEl)statusEl.style.display='none';},2000);
+    return;
+  }
+
+  // Batch mode — show batch output panel
+  const out=document.getElementById('reelOutput');
+  out.innerHTML=`<div style="padding:14px;">
+    <div style="font-size:13px;font-weight:800;color:var(--amber);margin-bottom:12px;">⚡ Batch Generate: ${topics.length}টি Reel</div>
+    <div id="reelBatchList" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>`;
+
+  const listEl=()=>document.getElementById('reelBatchList');
+  const results=[];
+
+  for(let i=0;i<topics.length;i++){
+    const pct=Math.round((i/topics.length)*100);
+    if(progBar) progBar.style.width=pct+'%';
+    if(statusEl) statusEl.textContent=`⏳ ${i+1}/${topics.length} — Generate হচ্ছে...`;
+
+    // Add placeholder card
+    const cardId='rbcard_'+i;
+    const ph=document.createElement('div');
+    ph.id=cardId;
+    ph.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;';
+    ph.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">📰 ${i+1}. ${topics[i].substring(0,60)}${topics[i].length>60?'...':''}</div><div style="font-size:11px;color:var(--amber);">⏳ Generating...</div>`;
+    if(listEl()) listEl().appendChild(ph);
+
+    try{
+      const result=await reelGenerateSingle(topics[i]);
+      results.push({topic:topics[i],result});
+      const allHashtags=[...(result.hashtags?.tier1_trending||[]),...(result.hashtags?.tier2_niche||[]),...(result.hashtags?.tier3_brand||[])].join(' ');
+      const caption=(result.caption?.main||'')+'\n\n'+allHashtags;
+      const score=result.viral_score||70;
+      const scoreColor=score>=80?'var(--green)':score>=65?'var(--amber)':'var(--red)';
+      ph.innerHTML=`
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text);">${i+1}. ${topics[i].substring(0,70)}</div>
+          <div style="font-size:18px;font-weight:900;color:${scoreColor};min-width:32px;text-align:right;">${score}</div>
+        </div>
+        <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:6px;line-height:1.4;">${result.hook?.text||''}</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.5;">${(result.caption?.main||'').substring(0,120)}...</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-amber btn-sm" onclick="reelBatchAddToQueue(${i})" style="font-size:10px;padding:4px 10px;">⚡ Queue</button>
+          <button class="btn btn-sm" onclick="reelBatchViewFull(${i})" style="font-size:10px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border2);">👁 Full View</button>
+          <button class="btn btn-sm" onclick="navigator.clipboard.writeText(window._reelBatchResults[${i}].caption||'').then(()=>showT('✅ Copied','ok'))" style="font-size:10px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border2);">📋 Caption</button>
+        </div>`;
+      results[i].caption=caption;
+    }catch(err){
+      ph.innerHTML=`<div style="font-size:11px;color:var(--text2);margin-bottom:4px;">${i+1}. ${topics[i].substring(0,60)}</div><div style="font-size:11px;color:var(--red);">❌ ${err.message||'Error'}</div><button class="btn btn-g btn-sm" onclick="reelBatchRetry(${i})" style="margin-top:6px;font-size:10px;">🔄 Retry</button>`;
+      results.push({topic:topics[i],result:null,error:err.message});
+    }
+
+    if(i<topics.length-1) await new Promise(r=>setTimeout(r,1500));
+  }
+
+  window._reelBatchResults=results;
+  if(progBar) progBar.style.width='100%';
+  if(statusEl) statusEl.textContent=`✅ ${results.filter(r=>r.result).length}/${topics.length} সফল`;
+  btn.disabled=false;
+
+  // Add "Queue All" button at bottom
+  const allDone=results.filter(r=>r.result).length;
+  if(allDone>0 && listEl()){
+    const footer=document.createElement('div');
+    footer.style.cssText='display:flex;gap:8px;justify-content:center;padding:10px 0;flex-wrap:wrap;';
+    footer.innerHTML=`
+      <button class="btn btn-amber" onclick="reelBatchQueueAll()" style="font-size:12px;padding:8px 18px;">⚡ সব ${allDone}টা Queue তে</button>
+      <button class="btn" onclick="reelBatchFBPostAll()" style="font-size:12px;padding:8px 18px;background:#1877f2;color:#fff;border:1px solid rgba(24,119,242,.4);">📤 সব FB তে পাঠাও</button>`;
+    listEl().appendChild(footer);
+  }
+}
+
+async function reelGenerateSingle(topicText){
+  const type=document.querySelector('#typeRow .rtag.on')?.dataset.val||'reel';
+  const tone=document.querySelector('#toneRow .rtag.on-red, #toneRow .rtag.on')?.dataset.val||'urgent';
+  const category=document.getElementById('rcategory')?.value||'breaking';
+  const duration=parseInt(document.getElementById('rduration')?.value||'30');
+  const cta=document.getElementById('rcta')?.value||'share';
+  const audience=document.querySelector('#audRow .rtag.on')?.dataset.val||'general';
+
+  const prompt=`তুমি একজন viral Bangla social media content expert। নিচের topic এর জন্য একটি ${duration} সেকেন্ডের ${type} এর জন্য content তৈরি করো।
+
+Topic: ${topicText}
+Category: ${category} | Tone: ${tone} | Audience: ${audience} | CTA: ${cta}
+
+JSON format এ return করো (শুধু JSON, কোনো markdown নয়):
+{"viral_score":85,"viral_reason":"কারণ","hook":{"text":"hook text","why":"কারণ"},"ab_variants":{"variant_a":"","variant_b":""},"script":{"hook_segment":"","body_segment":"","cta_segment":""},"caption":{"main":"","first_comment":""},"hashtags":{"tier1_trending":[],"tier2_niche":[],"tier3_brand":[]},"best_times":[{"time":"","engagement":"Peak","reason":""}],"engagement_tips":[{"tip":"","impact":"High"}]}`;
+
+  const res=await fetch(getProxy(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
+  if(!res.ok) throw new Error('API error '+res.status);
+  const d=await res.json();
+  const txt=(d.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
+  const json=JSON.parse(txt);
+  return json;
+}
+
+function reelBatchAddToQueue(idx){
+  const item=window._reelBatchResults?.[idx];
+  if(!item?.result) return;
+  const caption=item.caption||'';
+  queue.push({id:uid(),name:'Reel: '+item.topic.substring(0,30)+'...',imgSrc:null,imgB64:null,imgMime:null,videoBlob:null,caption:caption,platform:'reel',status:'ready',selected:false});
+  updateQueueUI();
+  showT('✅ Queue তে যোগ হয়েছে','ok');
+}
+
+function reelBatchQueueAll(){
+  const results=window._reelBatchResults||[];
+  let added=0;
+  results.forEach(item=>{
+    if(item.result){
+      queue.push({id:uid(),name:'Reel: '+item.topic.substring(0,30)+'...',imgSrc:null,imgB64:null,imgMime:null,videoBlob:null,caption:item.caption||'',platform:'reel',status:'ready',selected:false});
+      added++;
+    }
+  });
+  updateQueueUI();
+  showT('✅ '+added+'টা Reel Queue তে যোগ হয়েছে','ok');
+  setTimeout(()=>switchTab(3),1200);
+}
+
+function reelBatchFBPostAll(){
+  const results=window._reelBatchResults||[];
+  results.forEach(item=>{
+    if(item.result){
+      window.parent.postMessage({type:'JOAF_REEL_TO_FBPOST',caption:item.caption||'',videoBase64:null},'*');
+    }
+  });
+  showT('✅ সব caption FB Auto Post এ পাঠানো হয়েছে','ok');
+}
+
+function reelBatchViewFull(idx){
+  const item=window._reelBatchResults?.[idx];
+  if(!item?.result) return;
+  window._lastReelR=item.result;
+  window._lastReelMeta={duration:parseInt(document.getElementById('rduration')?.value||'30')};
+  renderReelOutput(item.result,window._lastReelMeta);
+}
+
+function reelBatchRetry(idx){
+  const item=window._reelBatchResults?.[idx];
+  if(!item) return;
+  const ta=document.getElementById('rtopic');
+  if(ta) ta.value=item.topic;
+  reelGenerate();
+}
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;900&family=Noto+Sans+Bengali:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -531,11 +745,17 @@ button{
       </div>
     </div>
     <div class="r-sec">
-      <div class="r-sec-h">📰 Topic</div>
+      <div class="r-sec-h">📰 Topics <span id="rBatchCount" style="font-size:10px;color:var(--amber);font-weight:700;margin-left:6px;"></span></div>
       <div class="r-f">
-        <label>মূল বিষয় বা খবর</label>
-        <textarea class="r-fta" id="rtopic" placeholder="যেমন: আজকের বাজারে চালের দাম বেড়েছে..." oninput="rCountChars(this,'rtopicCount',300)"></textarea>
-        <div class="char-count" id="rtopicCount">0 / 300</div>
+        <label style="display:flex;align-items:center;justify-content:space-between;">
+          <span>প্রতিটা line = একটা topic</span>
+          <span id="rTopicLineCount" style="font-size:10px;color:var(--text3);">0 topic</span>
+        </label>
+        <textarea class="r-fta" id="rtopic" rows="6" placeholder="১. আজকের বাজারে চালের দাম বেড়েছে&#10;২. ঢাকায় যানজট চরম আকার নিয়েছে&#10;৩. নতুন বাজেট ঘোষণা হলো&#10;&#10;প্রতিটা line আলাদা reel হবে" oninput="rCountTopics(this)" style="min-height:110px;"></textarea>
+        <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;">
+          <button class="btn btn-g btn-sm" onclick="rPasteTopics()" style="font-size:10px;">📋 Paste করুন</button>
+          <button class="btn btn-g btn-sm" onclick="document.getElementById('rtopic').value='';rCountTopics(document.getElementById('rtopic'))" style="font-size:10px;">🗑 Clear</button>
+        </div>
       </div>
       <div class="r-f">
         <label>Category</label>
@@ -589,10 +809,12 @@ button{
       </div>
     </div>
     <div class="gen-area">
-      <button class="btn btn-reel" id="rgenBtn" onclick="reelGenerate()" style="width:100%;justify-content:center;font-size:13px;padding:11px;">
+      <button class="btn btn-reel" id="rgenBtn" onclick="reelBatchGenerate()" style="width:100%;justify-content:center;font-size:13px;padding:11px;">
         🤖 Generate করুন
       </button>
-      <div class="gen-tip">Groq AI · সম্পূর্ণ বাংলায় · Free</div>
+      <div id="rBatchProgress" style="display:none;margin-top:8px;background:var(--bg3);border-radius:6px;overflow:hidden;height:5px;"><div id="rBatchBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--brand),var(--gold));transition:width .3s;border-radius:6px;"></div></div>
+      <div id="rBatchStatus" style="display:none;font-size:10px;color:var(--amber);margin-top:5px;text-align:center;font-weight:700;"></div>
+      <div class="gen-tip">Groq AI · Batch Mode · একসাথে অনেক topic</div>
     </div>
   </div>
 
@@ -1291,6 +1513,7 @@ function renderReelOutput(r,meta){
     </div>
     <div style="text-align:center;padding:14px 0 8px;">
       <button class="btn btn-amber" onclick="addReelToQueue()" style="font-size:12px;padding:8px 16px;">⚡ Queue তে যোগ করুন</button>
+      <button class="btn" onclick="sendReelToFBAutoPost()" style="font-size:12px;padding:8px 16px;background:#1877f2;color:#fff;border:1px solid rgba(24,119,242,.4);">📤 FB Auto Post এ পাঠাও</button>
       <button class="btn btn-reel" onclick="reelGenerate()" style="margin:0;">🔄 আবার Generate</button>
     </div>`;
   setTimeout(()=>initReelCanvas(r,meta),100);

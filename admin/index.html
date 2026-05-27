@@ -3186,6 +3186,46 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="/js/data.js"></script>
 <script src="/js/fb-draft-queue.js" type="module"></script>
+
+// ── Reel Studio → FB Auto Post bridge ──────────────────────
+window.addEventListener('message', async function(e) {
+  if (!e.data || e.data.type !== 'JOAF_REEL_TO_FBPOST') return;
+  const {caption, videoBase64, mimeType, filename} = e.data;
+
+  // 1. Fill caption
+  const capEl = document.getElementById('sa-caption');
+  if (capEl) capEl.value = caption || '';
+
+  // 2. Set video file if available
+  if (videoBase64) {
+    try {
+      const res = await fetch(videoBase64);
+      const blob = await res.blob();
+      const file = new File([blob], filename || 'joaf-reel.webm', {type: mimeType || 'video/webm'});
+      window._saImgFile = file;
+      // Show preview label
+      const lbl = document.getElementById('sa-img-label');
+      const prev = document.getElementById('sa-img-preview');
+      if (lbl) lbl.textContent = '🎬 ' + (filename || 'joaf-reel.webm') + ' — ready';
+      if (prev) prev.style.display = 'none';
+      const drop = document.getElementById('sa-drop');
+      if (drop) { drop.style.borderColor='var(--green)'; drop.style.background='rgba(34,197,94,.08)'; }
+    } catch(err) { console.warn('Reel blob error', err); }
+  }
+
+  // 3. Navigate to FB Auto Post tab
+  if (typeof goPage === 'function') {
+    const ni = document.querySelector('[onclick*="goPage(\'fbpost\'"]');
+    goPage('fbpost', ni);
+  }
+
+  // 4. Toast
+  setTimeout(() => {
+    const log = document.getElementById('sa-post-log');
+    if (log) { log.style.display='block'; log.innerHTML='<div style="color:var(--green);font-weight:700">✅ Reel Studio থেকে video + caption এসেছে — Post করুন</div>'; }
+  }, 500);
+});
+
 </body>
 </body>
 </html><script>
