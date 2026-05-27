@@ -1210,7 +1210,8 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
       <div class="card">
         <div class="card-header"><div class="card-title">🔧 System Tools</div></div>
         <div class="btn-row">
-          <button class="btn btn-ghost" onclick="runMigration()">⬆️ Subscription Migration</button>
+          <button class="btn btn-ghost" id="btn-migrate-start" onclick="migrationStart()">⬆️ Subscription Migration</button>
+          <button class="btn btn-ghost" id="btn-migrate-resume" style="display:none" onclick="migrationResume()">▶️ Resume</button>
           <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
           <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
           <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">🔥 Appwrite Console</a>
@@ -2710,12 +2711,99 @@ window.changePassword = function() {
 
 window.saveSettings = function() { toast('Settings saved (UI only)','success'); };
 
-window.runMigration = async function() {
+// ── Chunked Subscription Migration ───────────────────────────────────────────
+const _mig = { totalBatches: 0, current: 0, created: 0, updated: 0, failed: 0, running: false };
+
+function _migToast(msg, type) { toast(msg, type); }
+
+function _migSetButtons(running) {
+  const start  = document.getElementById('btn-migrate-start');
+  const resume = document.getElementById('btn-migrate-resume');
+  if (!start || !resume) return;
+  if (running) {
+    start.disabled  = true;
+    start.textContent = '⏳ Migrating…';
+    resume.style.display = 'none';
+  } else {
+    start.disabled  = false;
+    start.textContent = '⬆️ Subscription Migration';
+  }
+}
+
+async function _migRunBatch() {
+  _mig.running = true;
   try {
-    const res = await fetch('/.netlify/functions/migrate-subscriptions?key='+ADMIN_KEY);
+    const res  = await fetch(`/.netlify/functions/migrate-to-appwrite?key=${ADMIN_KEY}&action=batch&batchIndex=${_mig.current}`);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ error: 'HTTP ' + res.status }));
+      throw new Error(errData.error || 'HTTP ' + res.status);
+    }
     const data = await res.json();
-    toast('✅ '+data.message,'success');
-  } catch(e) { toast('❌ Error','error'); }
+    if (data.error) throw new Error(data.error);
+
+    _mig.created += data.created || 0;
+    _mig.updated += data.updated || 0;
+    _mig.failed  += data.failed  || 0;
+
+    const pct = Math.round(((_mig.current + 1) / _mig.totalBatches) * 100);
+    _migToast(`⏳ Batch ${_mig.current + 1}/${_mig.totalBatches} (${pct}%) — ✅${_mig.created} নতুন, 🔄${_mig.updated} আপডেট, ❌${_mig.failed} ব্যর্থ`, 'info');
+
+    if (data.done) {
+      _mig.running = false;
+      _migSetButtons(false);
+      document.getElementById('btn-migrate-resume').style.display = 'none';
+      _migToast(`✅ Migration সম্পন্ন! ${_mig.created} নতুন, ${_mig.updated} আপডেট, ${_mig.failed} ব্যর্থ`, 'success');
+    } else {
+      _mig.current++;
+      setTimeout(_migRunBatch, 300);
+    }
+  } catch (e) {
+    _mig.running = false;
+    _migSetButtons(false);
+    const resume = document.getElementById('btn-migrate-resume');
+    if (resume) resume.style.display = 'inline-block';
+    _migToast('❌ Batch ' + (_mig.current + 1) + ' ব্যর্থ: ' + e.message + ' — Resume চাপুন', 'error');
+  }
+}
+
+window.migrationStart = async function() {
+  if (_mig.running) return;
+  _migSetButtons(true);
+  try {
+    const res  = await fetch(`/.netlify/functions/migrate-to-appwrite?key=${ADMIN_KEY}&action=count`);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({ error: 'HTTP ' + res.status }));
+      throw new Error(errData.error || 'HTTP ' + res.status);
+    }
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    if (!data.total) {
+      _migSetButtons(false);
+      return _migToast('ℹ️ Firebase-এ কোনো subscription নেই', 'info');
+    }
+
+    _mig.totalBatches = data.totalBatches;
+    _mig.current      = 0;
+    _mig.created      = 0;
+    _mig.updated      = 0;
+    _mig.failed       = 0;
+
+    _migToast(`🚀 Migration শুরু — ${data.total} records, ${data.totalBatches} batches`, 'info');
+    await _migRunBatch();
+  } catch (e) {
+    _migSetButtons(false);
+    _migToast('❌ Migration শুরু হয়নি: ' + e.message, 'error');
+  }
+};
+
+window.migrationResume = async function() {
+  if (_mig.running) return;
+  const resume = document.getElementById('btn-migrate-resume');
+  if (resume) resume.style.display = 'none';
+  _migSetButtons(true);
+  _mig.current++;
+  await _migRunBatch();
 };
 
 window.clearCache = function() { toast('Cache cleared','success'); };
