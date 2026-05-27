@@ -56,9 +56,17 @@ exports.handler = async (event) => {
       return json(400, { error: 'No eligible Facebook pages found' });
     }
 
-    const publishTime = body.scheduled_at
-      ? Math.floor(new Date(body.scheduled_at).getTime() / 1000)
-      : null;
+    let publishTime = null;
+
+    if (body.scheduled_at) {
+      const scheduledDate = new Date(body.scheduled_at);
+
+      if (Number.isNaN(scheduledDate.getTime())) {
+        return json(400, { error: 'Invalid scheduled_at datetime' });
+      }
+
+      publishTime = Math.floor(scheduledDate.getTime() / 1000);
+    }
 
     const results = await Promise.allSettled(
       pages.map(page => postToPage({
@@ -84,7 +92,7 @@ exports.handler = async (event) => {
         pageId: pages[index].id,
         pageName: pages[index].name,
         ok: false,
-        error: result.reason.message,
+        error: result.reason?.message || 'Unknown Facebook publish failure',
       };
     });
 

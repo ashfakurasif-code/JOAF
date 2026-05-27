@@ -4,6 +4,7 @@ const {
   awCreate,
   awUpdate,
   qEqual,
+  sanitizeQueries,
 } = require('./aw-utils');
 
 const COL_SUBS = process.env.APPWRITE_SUBSCRIPTIONS_COLLECTION || 'push_subscriptions';
@@ -75,12 +76,21 @@ exports.handler = async (event) => {
       tag: `joaf-${payload.type || 'custom'}-${Date.now()}`,
     };
 
-    const queries = [qEqual('active', true)];
-    if (payload.district && ['blood', 'alert', 'weather'].includes(payload.type)) {
-      queries.push(qEqual('district', payload.district));
+    const queries = [];
+
+    queries.push(qEqual('active', true));
+
+    if (['blood', 'alert', 'weather'].includes(payload.type)) {
+      const district = typeof payload.district === 'string' ? payload.district.trim() : '';
+
+      if (!district) {
+        return response(400, { error: 'district is required for localized notifications' });
+      }
+
+      queries.push(qEqual('district', district));
     }
 
-    const docs = await awListAll(COL_SUBS, queries);
+    const docs = await awListAll(COL_SUBS, sanitizeQueries(queries));
 
     if (!docs.length) {
       return response(200, { success: true, sent: 0, failed: 0, total: 0 });
