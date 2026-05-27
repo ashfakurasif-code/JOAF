@@ -10,10 +10,6 @@ const BASE_HEADERS = {
   'X-Appwrite-Key': AW_KEY,
 };
 
-function isNil(value) {
-  return value === undefined || value === null;
-}
-
 function encodeValue(value) {
   if (value === undefined) return undefined;
   if (value instanceof Date) return value.toISOString();
@@ -68,64 +64,44 @@ function safeDocId(id) {
   return sanitizeId(id);
 }
 
-function assertValidField(field) {
-  if (!field || typeof field !== 'string') {
-    throw new Error('Appwrite query field must be a non-empty string');
-  }
+function isValidQuery(query) {
+  return typeof query === 'string' && query.trim().length > 0 && !/undefined|null/.test(query);
 }
 
-function normalizeQueryValue(value) {
-  if (isNil(value)) {
-    throw new Error('Appwrite query value cannot be null or undefined');
-  }
+function sanitizeQueries(queries = []) {
+  if (!Array.isArray(queries)) return [];
 
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      throw new Error('Appwrite query string value cannot be empty');
-    }
-    return trimmed;
-  }
-
-  return value;
-}
-
-function buildQuery(method, field, value) {
-  assertValidField(field);
-  const values = Array.isArray(value) ? value : [value];
-  const normalized = values.map(normalizeQueryValue);
-
-  return `${method}("${field}", ${JSON.stringify(normalized)})`;
+  return queries
+    .flat(Infinity)
+    .filter(isValidQuery)
+    .map(q => q.trim());
 }
 
 function qEqual(field, value) {
-  return buildQuery('equal', field, value);
+  if (!field || value === undefined || value === null || value === '') return null;
+  return `equal("${field}", [${JSON.stringify(value)}])`;
 }
 
 function qOrderDesc(field) {
-  assertValidField(field);
+  if (!field) return null;
   return `orderDesc("${field}")`;
 }
 
 function qOrderAsc(field) {
-  assertValidField(field);
+  if (!field) return null;
   return `orderAsc("${field}")`;
 }
 
 function qLimit(n) {
   const limit = Number(n);
-  if (!Number.isFinite(limit) || limit <= 0) {
-    throw new Error('Appwrite limit query must be a positive number');
-  }
-  return `limit(${Math.floor(limit)})`;
+  if (!Number.isFinite(limit) || limit <= 0) return null;
+  return `limit(${Math.min(limit, 5000)})`;
 }
 
-function sanitizeQueries(queries = []) {
-  if (!Array.isArray(queries)) {
-    throw new Error('Appwrite queries must be an array');
-  }
-
-  return queries.filter(q => typeof q === 'string' && q.trim().length > 0);
+function qCursorAfter(cursor) {
+  const id = safeDocId(cursor);
+  if (!id) return null;
+  return `cursorAfter("${id}")`;
 }
 
 async function awRequest(path, options = {}) {
@@ -136,7 +112,7 @@ async function awRequest(path, options = {}) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Appwrite ${res.status}: ${text.slice(0, 500)}`);
+    throw new Error(`Appwrite ${res.status}: ${text.slice(0, 200)}`);
   }
 
   return res.json();
@@ -155,7 +131,9 @@ async function awGet(collection, docId) {
 async function awList(collection, queries = [], limit = 200) {
   const params = new URLSearchParams();
   params.set('limit', String(limit));
+
   sanitizeQueries(queries).forEach(q => params.append('queries[]', q));
+
   const data = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`, { method: 'GET' });
   return (data.documents || []).map(doc => ({ id: doc.$id, data: normalizeDoc(doc) }));
 }
@@ -163,21 +141,35 @@ async function awList(collection, queries = [], limit = 200) {
 async function awListAll(collection, queries = [], limit = 200) {
   let cursor = null;
   let all = [];
-  const safeQueries = sanitizeQueries(queries);
+  const baseQueries = sanitizeQueries(queries);
 
   while (true) {
     const params = new URLSearchParams();
-    params.set('limit', String(limit));
-    if (cursor) params.set('cursor', cursor);
-    safeQueries.forEach(q => params.append('queries[]', q));
+    const pageQueries = [...baseQueries];
 
-    const data = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`, { method: 'GET' });
-    const docs = data.documents || [];
+    if (cursor) {
+      const cursorQuery = qCursorAfter(cursor);
+      if (cursorQuery) pageQueries.push(cursorQuery);
+    }
+
+    sanitizeQueries(pageQueries).forEach(q => params.append('queries[]', q));
+
+    const safeLimit = Number.isFinite(Number(limit)) ? Math.min(Math.max(Number(limit), 1), 5000) : 200;
+    params.set('limit', String(safeLimit));
+
+    const data = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`, {
+      method: 'GET',
+    });
+
+    const docs = Array.isArray(data.documents) ? data.documents : [];
 
     all = all.concat(docs.map(doc => ({ id: doc.$id, data: normalizeDoc(doc) })));
 
-    if (docs.length < limit) break;
-    cursor = docs[docs.length - 1].$id;
+    if (docs.length < safeLimit) break;
+
+    cursor = docs[docs.length - 1]?.$id || null;
+
+    if (!cursor) break;
   }
 
   return all;
@@ -220,6 +212,7 @@ module.exports = {
   qOrderAsc,
   qOrderDesc,
   qLimit,
+  qCursorAfter,
   awGet,
   awList,
   awListAll,
