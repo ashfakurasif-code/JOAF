@@ -1,32 +1,46 @@
 const webpush = require('web-push');
 const {
-  awUpsert,
-  initDatabase,
+  awList,
+  awUpdate,
+  awCreate,
   sanitizeId,
   COLLECTION_ID,
+  qEqual,
+  DEFAULT_DOC_PERMISSIONS,
 } = require('./aw-utils');
 
-// TASK 1: Strip literal \n that Netlify injects into env var values for VAPID keys.
-// VAPID keys are base64url strings and must never contain newline characters.
-function getSanitizedVapidKeys() {
-  const publicKey  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/\\n/g, '').replace(/\n/g, '');
-  const privateKey = (process.env.VAPID_PRIVATE_KEY || '').replace(/\\n/g, '').replace(/\n/g, '');
-  const contact    =  process.env.VAPID_SUBJECT || 'mailto:admin@joaf.local';
-  return { publicKey, privateKey, contact };
+// Strip literal \n that Netlify injects into env var string values.
+// VAPID keys are base64url — no newlines allowed.
+function getVapidKeys() {
+  const pub  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/\\n/g, '').replace(/\n/g, '').trim();
+  const priv = (process.env.VAPID_PRIVATE_KEY || '').replace(/\\n/g, '').replace(/\n/g, '').trim();
+  const sub  =  process.env.VAPID_SUBJECT || 'mailto:admin@joaf.local';
+  return { pub, priv, sub };
 }
 
-function validateVapidKeys() {
-  const { publicKey, privateKey, contact } = getSanitizedVapidKeys();
-
-  if (!publicKey || !privateKey) {
-    throw new Error('Missing VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY environment variables');
-  }
-
+function validateVapid() {
+  const { pub, priv, sub } = getVapidKeys();
+  if (!pub || !priv) throw new Error('Missing VAPID keys');
   try {
-    webpush.setVapidDetails(contact, publicKey, privateKey);
-    return { publicKey, contact };
-  } catch (error) {
-    throw new Error(`Invalid VAPID configuration: ${error.message}`);
+    webpush.setVapidDetails(sub, pub, priv);
+  } catch (e) {
+    throw new Error('Invalid VAPID config: ' + e.message);
+  }
+}
+
+// Find an existing doc in Appwrite by endpoint field value.
+// Returns { docId, data } or null.
+async function findByEndpoint(endpoint) {
+  try {
+    const query = qEqual('endpoint', endpoint);
+    if (!query) return null;
+    const docs = await awList(COLLECTION_ID, [query], 1);
+    if (docs && docs.length > 0) {
+      return { docId: docs[0].id, data: docs[0].data };
+    }
+    return null;
+  } catch (_) {
+    return null;
   }
 }
 
@@ -37,124 +51,89 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
-
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' }),
-    };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   try {
-    validateVapidKeys();
-    await initDatabase();
+    validateVapid();
+    // NOTE: initDatabase() removed from hot path — it has a 3-second sleep and
+    // should only be called once during setup, not on every subscription save.
 
-    // TASK 3: Robustly parse ANY incoming payload shape.
-    // The sw.js Background Sync sends the raw PushSubscription object directly
-    // (body = JSON.stringify(sub)), while components.js sends the wrapped shape
-    // { subscription, district, deviceInfo }. We handle both.
     let rawBody;
-    try {
-      rawBody = JSON.parse(event.body || '{}');
-    } catch (_) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Invalid JSON body' }),
-      };
-    }
+    try { rawBody = JSON.parse(event.body || '{}'); }
+    catch (_) { return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
-    // Detect shape: if the body itself looks like a PushSubscription (has .endpoint at root)
-    // then it was sent raw (sw.js sync path). Otherwise expect the wrapped shape.
+    // Accept both shapes:
+    // Shape A (sw.js): raw PushSubscription at root  -> { endpoint, keys, ... }
+    // Shape B (components.js): wrapped              -> { subscription: {...}, district, deviceInfo }
     let subscription, district, deviceInfo;
-
     if (rawBody && rawBody.endpoint) {
-      // Raw PushSubscription object (sw.js syncSubscription path)
-      subscription = rawBody;
-      district     = '';
-      deviceInfo   = {};
+      subscription = rawBody; district = ''; deviceInfo = {};
     } else {
-      // Wrapped payload from components.js joafSaveSubscription
       subscription = rawBody.subscription || null;
       district     = rawBody.district     || '';
       deviceInfo   = rawBody.deviceInfo   || {};
     }
 
-    // Normalise: if subscription is a JSON string, parse it
     if (typeof subscription === 'string') {
-      try {
-        subscription = JSON.parse(subscription);
-      } catch (_) {
-        subscription = null;
-      }
+      try { subscription = JSON.parse(subscription); } catch (_) { subscription = null; }
     }
 
     if (!subscription || !subscription.endpoint) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Invalid subscription payload — endpoint missing' }),
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing endpoint' }) };
     }
 
-    // Guarantee keys are present and not empty strings
     const keys = subscription.keys || {};
     if (!keys.p256dh || !keys.auth) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Invalid subscription payload — missing p256dh/auth keys' }),
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing push keys' }) };
     }
 
-    // Build a clean, canonical subscription object before stringifying
-    const cleanSubscription = {
+    // Canonical subscription object
+    const cleanSub = {
       endpoint: subscription.endpoint,
-      keys: {
-        p256dh: keys.p256dh,
-        auth:   keys.auth,
-      },
-      ...(subscription.expirationTime !== undefined
-        ? { expirationTime: subscription.expirationTime }
-        : {}),
+      keys: { p256dh: keys.p256dh, auth: keys.auth },
+      ...(subscription.expirationTime !== undefined ? { expirationTime: subscription.expirationTime } : {}),
     };
 
-    const id = sanitizeId(
-      Buffer.from(cleanSubscription.endpoint).toString('base64url').slice(-32)
-    );
-
-    // TASK 3: Forcefully upsert with active:true and updatedAt regardless of prior state
-    await awUpsert(COLLECTION_ID, id, {
-      endpoint:         cleanSubscription.endpoint,
-      subscriptionJson: JSON.stringify(cleanSubscription),
-      district:         typeof district === 'string' ? district : '',
-      deviceInfo:       deviceInfo && typeof deviceInfo === 'object' ? deviceInfo : {},
+    const upsertData = {
+      endpoint:         cleanSub.endpoint,
+      subscriptionJson: JSON.stringify(cleanSub),
+      district:         typeof district === 'string' ? district.slice(0, 255) : '',
       active:           true,
       updatedAt:        new Date().toISOString(),
-    });
+    };
+
+    // Step 1: search Appwrite for existing doc by endpoint (handles both random IDs
+    // from the original migration AND deterministic IDs from new saves).
+    const existing = await findByEndpoint(cleanSub.endpoint);
+
+    let savedId;
+    if (existing) {
+      // Update the existing doc — force active:true
+      await awUpdate(COLLECTION_ID, existing.docId, upsertData);
+      savedId = existing.docId;
+    } else {
+      // New subscription — create with deterministic ID derived from endpoint
+      const newId = sanitizeId(
+        Buffer.from(cleanSub.endpoint).toString('base64url').slice(-32)
+      );
+      await awCreate(COLLECTION_ID, upsertData, newId, DEFAULT_DOC_PERMISSIONS);
+      savedId = newId;
+    }
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        success: true,
-        id,
-        active: true,
-      }),
+      body: JSON.stringify({ success: true, id: savedId, active: true }),
     };
-  } catch (error) {
-    console.error('save-subscription failure', error);
+  } catch (err) {
+    console.error('save-subscription error:', err);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({
-        success: false,
-        error: error.message,
-      }),
+      body: JSON.stringify({ success: false, error: err.message }),
     };
   }
 };
