@@ -1730,12 +1730,19 @@ window.goPage = function(id, el) {
   document.getElementById('pageTitle').textContent = titles[id] || id;
   // Lazy load page data
   const loaders = {
+    dashboard: initDashboard,
     notification: loadNotifPage, 'alert-page': loadAlerts,
     blood: loadDonors, press: loadPress, leader: loadLeaders,
     warrior: loadWarriors, bajar: loadBajar, medicine: loadMedicines,
     members: loadMembers, polls: loadPolls, forum: loadForum, analytics: loadAnalytics
   };
-  if (loaders[id] && !_pageLoaded.has(id)) { _pageLoaded.add(id); loaders[id](); } else if (id === 'analytics') { loaders[id] && loaders[id](); }
+
+  // Always refresh live views when tab becomes visible again.
+  const shouldReload = ['dashboard','analytics'].includes(id);
+  if (loaders[id] && (!_pageLoaded.has(id) || shouldReload)) {
+    _pageLoaded.add(id);
+    requestAnimationFrame(() => loaders[id]());
+  }
   if(window.innerWidth <= 768) closeSidebar();
   // Stop analytics real-time listener when leaving that page
   if(id !== 'analytics' && typeof stopAnalyticsListener === 'function') stopAnalyticsListener();
@@ -1875,7 +1882,21 @@ async function initDashboard() {
     // Blood preview
     const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
     renderBloodPreview(bDocs);
-  } catch(e) { console.log('dashboard error', e); }
+  } catch(e) {
+    console.error('dashboard error', e);
+    const dash = document.getElementById('page-dashboard');
+    if(dash){
+      const existing = document.getElementById('dashboard-error-banner');
+      if(!existing){
+        const div = document.createElement('div');
+        div.id='dashboard-error-banner';
+        div.className='card';
+        div.style.border='1px solid rgba(248,113,113,.25)';
+        div.innerHTML='<div style="color:var(--red);font-weight:700">⚠ Dashboard sync failed. Check Firebase/Appwrite permissions or collection availability.</div>';
+        dash.prepend(div);
+      }
+    }
+  }
 
   // Pageview sparkline (today hourly)
   try {
@@ -3014,9 +3035,25 @@ function stopAnalyticsListener(){
 }
 
 async function loadAnalytics(){
-  if(typeof Chart==='undefined') return setTimeout(loadAnalytics,400);
+  // Prevent hidden-tab hydration race conditions.
+  if(typeof Chart==='undefined') {
+    return window.setTimeout(() => {
+      if(document.getElementById('page-analytics')?.classList.contains('active')) loadAnalytics();
+    }, 400);
+  }
+
+  const page = document.getElementById('page-analytics');
+  if(!page) return;
+
   startAnalyticsListener();
-  renderAnalytics();
+
+  // Force a fresh render after the tab has painted.
+  requestAnimationFrame(() => {
+    renderAnalytics();
+    if(anChartInst) anChartInst.resize();
+    if(anCatInst) anCatInst.resize();
+    if(anDevInst) anDevInst.resize();
+  });
 }
 
 // ── MAIN RENDER (pure function) ────────────────────────────────────────
