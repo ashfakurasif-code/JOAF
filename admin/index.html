@@ -1822,7 +1822,7 @@ async function initDashboard() {
     }
   };
   const HEALTH_ITEMS = [
-    { label: 'Appwrite',        check: async () => { const s=await getDocs(collection(db,'push_subscriptions')); return {ok:true,val:'Connected'}; } },
+    { label: 'Appwrite',        check: async () => { try{ const r=await fetch('/.netlify/functions/get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Error'}; }catch(e){return{ok:false,val:'Offline'};} } },
     { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
     { label: 'Notifications Fn',check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
   ];
@@ -1840,16 +1840,19 @@ async function initDashboard() {
   }
 
   try {
-    // Parallel load: subscribers + donors + alerts + notifications
-    const [subSnap, donorSnap, alertSnap, histSnap] = await Promise.all([
-      getDocs(collection(db,'push_subscriptions')),
+    // Parallel load: Appwrite stats (subs + notif history) + Firestore (donors + alerts)
+    // push_subscriptions and notification_history have migrated to Appwrite;
+    // donors/alerts remain in Firestore.
+    const [statsRes, donorSnap, alertSnap] = await Promise.all([
+      fetch('/.netlify/functions/get-stats', {
+        headers: { 'X-Admin-Key': ADMIN_KEY }
+      }).then(r => r.ok ? r.json() : Promise.reject(new Error('get-stats ' + r.status))),
       getDocs(collection(db,'donors')),
       getDocs(collection(db,'alerts')),
-      getDocs(collection(db,'notification_history'))
     ]);
 
-    const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
-    const donors = donorSnap.size, alerts = alertSnap.size, notifs = histSnap.size;
+    const activeCount = statsRes.activeSubs || 0;
+    const donors = donorSnap.size, alerts = alertSnap.size, notifs = statsRes.totalNotifs || 0;
 
     // Set KPIs
     setEl('ds-sub', activeCount); setEl('b-notif', activeCount); setEl('n-sub', activeCount); setEl('an-subs', activeCount); setEl('an-kpi-subs', activeCount); anCachedSubs = activeCount;
@@ -1857,20 +1860,16 @@ async function initDashboard() {
     setEl('b-blood', donors); setEl('n-total', notifs); setEl('an-notifs', notifs); setEl('an-kpi-notif', notifs); anCachedNotifs = notifs;
 
     const subSubEl = document.getElementById('ds-sub-sub');
-    if(subSubEl){ subSubEl.textContent = `${subSnap.size-activeCount} inactive`; }
+    if(subSubEl){ subSubEl.textContent = `${(statsRes.totalSubs||0) - activeCount} inactive`; }
 
-    // Today notifications
-    const today = new Date(); today.setHours(0,0,0,0);
-    let todayNotifs = 0;
-    histSnap.forEach(d=>{const t=d.data().sentAt?.toDate?.();if(t&&t>=today)todayNotifs++;});
+    // Today notifications — computed server-side in get-stats
+    const todayNotifs = statsRes.todayNotifs || 0;
     setEl('n-today', todayNotifs);
     const todaySubEl = document.getElementById('ds-notif-today');
     if(todaySubEl) todaySubEl.textContent = `আজ ${todayNotifs}টি পাঠানো`;
 
-    // Recent history
-    const hDocs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
-      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0))).slice(0,5);
-    renderHistory('dash-history', hDocs);
+    // Recent history (already sorted newest-first by get-stats)
+    renderHistory('dash-history', (statsRes.history || []).slice(0, 5));
 
     // Blood preview
     const bDocs = donorSnap.docs.slice(0,5).map(d=>({...d.data(),id:d.id}));
@@ -1990,19 +1989,15 @@ async function callSendNotif(payload) {
 
 async function loadNotifPage() {
   try {
-    const [histSnap, subSnap] = await Promise.all([
-      getDocs(collection(db,'notification_history')),
-      getDocs(collection(db,'push_subscriptions'))
-    ]);
-    const docs = histSnap.docs.map(d=>({...d.data(),id:d.id}))
-      .sort((a,b)=>((b.sentAt?.seconds||0)-(a.sentAt?.seconds||0)));
-    setEl('n-total', histSnap.size);
-    const activeCount = subSnap.docs.filter(d=>d.data().active!==false).length;
-    setEl('n-sub', activeCount);
-    const today = new Date(); today.setHours(0,0,0,0);
-    const todayCount = docs.filter(d=>{ const t=d.sentAt?.toDate?.(); return t&&t>=today; }).length;
-    setEl('n-today', todayCount);
-    renderHistory('notif-history', docs.slice(0,10));
+    // push_subscriptions and notification_history live in Appwrite — use get-stats
+    const statsRes = await fetch('/.netlify/functions/get-stats', {
+      headers: { 'X-Admin-Key': ADMIN_KEY }
+    }).then(r => r.ok ? r.json() : Promise.reject(new Error('get-stats ' + r.status)));
+
+    setEl('n-total', statsRes.totalNotifs || 0);
+    setEl('n-sub',   statsRes.activeSubs  || 0);
+    setEl('n-today', statsRes.todayNotifs || 0);
+    renderHistory('notif-history', (statsRes.history || []).slice(0, 10));
   } catch(e) { console.log(e); }
 }
 
@@ -2012,7 +2007,20 @@ function renderHistory(elId, docs) {
   const colors = {bajar:'#fbbf24',weather:'#60a5fa',streak:'#f05252',blood:'#f05252',alert:'#f05252',live:'#a78bfa',default:'#34d399'};
   el.innerHTML = docs.map(d => {
     const color = colors[d.type]||colors.default;
-    const time = d.sentAt?.toDate?.()?.toLocaleString('bn-BD') || (d.sentAt?.seconds ? new Date(d.sentAt.seconds*1000).toLocaleString('bn-BD') : '—');
+    // Handle all three date formats: Appwrite ISO string, Firestore Timestamp object, Firestore seconds
+    let time = '—';
+    if (d.sentAt) {
+      if (typeof d.sentAt === 'string') {
+        // Appwrite stores as ISO string
+        const dt = new Date(d.sentAt);
+        if (!isNaN(dt)) time = dt.toLocaleString('bn-BD');
+      } else if (typeof d.sentAt.toDate === 'function') {
+        // Firestore Timestamp
+        time = d.sentAt.toDate().toLocaleString('bn-BD');
+      } else if (typeof d.sentAt.seconds === 'number') {
+        time = new Date(d.sentAt.seconds * 1000).toLocaleString('bn-BD');
+      }
+    }
     return `<div class="hist-item">
       <div class="hist-dot" style="background:${color}"></div>
       <div class="hist-info"><div class="hist-title">${d.title||'—'}</div><div class="hist-time">${time}</div></div>
