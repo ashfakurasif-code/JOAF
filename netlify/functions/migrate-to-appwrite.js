@@ -1,221 +1,415 @@
 // netlify/functions/migrate-to-appwrite.js
-// Firebase REST → Appwrite upsert migration
-// Chunked (8 records/batch), no firebase-admin, pure JSON responses
+// Full Firestore → Appwrite Mirror Migration
+// Covers ALL collections. Chunked 8/batch. Upsert. active:true forced. Pure JSON.
+
+'use strict';
 
 const { Client, Databases, Query, ID } = require('node-appwrite');
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const FB_API_KEY  = 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk';
-const FB_PROJECT  = 'joaf-app-45753';
-const FB_BASE     = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents`;
+const FB_API_KEY = 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk';
+const FB_PROJECT = 'joaf-app-45753';
+const FB_BASE    = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents`;
 
 const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
 const AW_PROJECT  = '6a11b6cd000b59f318eb';
 const AW_DB       = 'joaf';
-const AW_COL      = 'push_subscriptions';
 
 const BATCH_SIZE  = 8;
 
+// All collections to mirror. Schema defines which fields get written and how.
+// Fields not in schema are serialised to JSON strings automatically.
+// 'active' is always forced to true. 'updatedAt' always set.
+const COLLECTIONS = {
+  push_subscriptions: {
+    idField:    'endpoint',         // field used to build deterministic ID
+    idBuilder:  endpointDocId,
+    normalize:  normalizePushSub,
+  },
+  notification_history: {
+    idField:    null,               // use Firestore document ID
+    normalize:  normalizeGeneric,
+  },
+  donors: {
+    idField:    null,
+    normalize:  normalizeGeneric,
+  },
+  alerts: {
+    idField:    null,
+    normalize:  normalizeGeneric,
+  },
+  leaders: {
+    idField:    null,
+    normalize:  normalizeGeneric,
+  },
+  warriors: {
+    idField:    null,
+    normalize:  normalizeGeneric,
+  },
+  members: {
+    idField:    null,
+    normalize:  normalizeGeneric,
+  },
+  medicines: {
+    idField:    null,
+    normalize:  normalizeGeneric,
+  },
+  press_releases: {
+    idField:    null,
+    normalize:  normalizeGeneric,
+  },
+  poll_users: {
+    idField:    null,
+    normalize:  normalizeGeneric,
+  },
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function headers() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json',
-  };
-}
+const H = {
+  'Access-Control-Allow-Origin': '*',
+  'Content-Type': 'application/json',
+};
 
-function ok(body) {
-  return { statusCode: 200, headers: headers(), body: JSON.stringify(body) };
-}
+const ok  = (b) => ({ statusCode: 200, headers: H, body: JSON.stringify(b) });
+const bad = (s, m) => ({ statusCode: s,   headers: H, body: JSON.stringify({ error: String(m) }) });
 
-function err(status, message) {
-  return { statusCode: status, headers: headers(), body: JSON.stringify({ error: String(message) }) };
-}
-
-// ── Firebase REST fetch (all docs, one collection) ────────────────────────────
-async function fetchFirebaseDocs(collection) {
-  let allDocs = [];
-  let pageToken = null;
-
-  do {
-    let url = `${FB_BASE}/${collection}?key=${FB_API_KEY}&pageSize=300`;
-    if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
-
-    const res = await fetch(url);
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Firebase fetch failed (${res.status}): ${text.slice(0, 200)}`);
-    }
-
-    const data = await res.json();
-    const docs  = data.documents || [];
-    pageToken   = data.nextPageToken || null;
-
-    for (const doc of docs) {
-      const id     = doc.name.split('/').pop();
-      const fields = doc.fields || {};
-      const obj    = { _fbId: id };
-
-      for (const [k, v] of Object.entries(fields)) {
-        if (v.stringValue  !== undefined) obj[k] = v.stringValue;
-        else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-        else if (v.integerValue !== undefined) obj[k] = String(v.integerValue);
-        else if (v.mapValue) {
-          const m = {};
-          for (const [mk, mv] of Object.entries(v.mapValue.fields || {})) {
-            m[mk] = mv.stringValue ?? mv.booleanValue ?? mv.integerValue ?? '';
-          }
-          obj[k] = m;
-        }
-      }
-      allDocs.push(obj);
-    }
-  } while (pageToken);
-
-  return allDocs;
-}
-
-// ── Appwrite client ───────────────────────────────────────────────────────────
-function getAppwrite() {
-  const apiKey = process.env.APPWRITE_API_KEY;
-  if (!apiKey) throw new Error('APPWRITE_API_KEY env var is missing');
-
-  const client = new Client()
-    .setEndpoint(AW_ENDPOINT)
-    .setProject(AW_PROJECT)
-    .setKey(apiKey);
-
-  return new Databases(client);
-}
-
-// ── Normalize a Firebase doc into Appwrite payload ────────────────────────────
-function normalizePayload(doc) {
-  let subscription = doc.subscription || doc.pushSubscription || doc.subscriptionJson || doc.subscription_data;
-
-  if (typeof subscription === 'string') {
-    try { subscription = JSON.parse(subscription); } catch (_) { subscription = null; }
+// ── Appwrite ID sanitiser ─────────────────────────────────────────────────────
+function safeId(raw) {
+  if (!raw) return null;
+  let s = String(raw).replace(/[^a-zA-Z0-9]/g, '_').slice(0, 36);
+  if (!s || /^_+$/.test(s) || !/^[a-zA-Z0-9]/.test(s)) {
+    s = 'doc_' + String(raw).replace(/[^a-zA-Z0-9]/g, '').slice(0, 28);
   }
-
-  const endpoint = (subscription && subscription.endpoint) || doc.endpoint || null;
-  if (!endpoint) return null;
-
-  return {
-    endpoint,
-    subscriptionJson: JSON.stringify(subscription || { endpoint }),
-    district:   doc.district   || 'unknown',
-    active:     true,
-    updatedAt:  new Date().toISOString(),
-  };
+  if (!s || s.length < 4) s = 'doc_' + Math.random().toString(36).slice(2, 12);
+  return s.slice(0, 36);
 }
 
-// ── Deterministic Appwrite doc ID from endpoint ───────────────────────────────
-function docIdFromEndpoint(endpoint) {
-  // Appwrite IDs: 1-36 chars, alphanumeric + underscore, must start with letter/digit
+function endpointDocId(endpoint) {
+  if (!endpoint) return null;
   const b64 = Buffer.from(endpoint).toString('base64url').replace(/[^a-zA-Z0-9]/g, '').slice(-32);
   return b64.length >= 4 ? b64 : 'sub_' + b64;
 }
 
-// ── Upsert one record ─────────────────────────────────────────────────────────
-async function upsertOne(databases, payload) {
-  // Try to find by endpoint first (idempotency key)
-  const existing = await databases.listDocuments(AW_DB, AW_COL, [
-    Query.equal('endpoint', payload.endpoint),
-    Query.limit(1),
-  ]);
-
-  if (existing.documents.length > 0) {
-    await databases.updateDocument(AW_DB, AW_COL, existing.documents[0].$id, payload);
-    return 'updated';
+// ── Firebase field decoder ────────────────────────────────────────────────────
+function decodeField(v) {
+  if (v === undefined || v === null) return null;
+  if (v.nullValue  !== undefined) return null;
+  if (v.booleanValue !== undefined) return v.booleanValue;
+  if (v.integerValue !== undefined) return String(v.integerValue);
+  if (v.doubleValue  !== undefined) return v.doubleValue;
+  if (v.stringValue  !== undefined) return v.stringValue;
+  if (v.timestampValue !== undefined) return v.timestampValue; // ISO string
+  if (v.arrayValue) {
+    return (v.arrayValue.values || []).map(decodeField);
   }
-
-  const docId = docIdFromEndpoint(payload.endpoint);
-  try {
-    await databases.createDocument(AW_DB, AW_COL, docId, payload);
-  } catch (e) {
-    if (e.code === 409) {
-      // ID collision — update instead
-      await databases.updateDocument(AW_DB, AW_COL, docId, payload);
-    } else {
-      throw e;
+  if (v.mapValue) {
+    const m = {};
+    for (const [mk, mv] of Object.entries(v.mapValue.fields || {})) {
+      m[mk] = decodeField(mv);
     }
+    return m;
   }
-  return 'created';
+  return null;
 }
 
-// ── Handler ───────────────────────────────────────────────────────────────────
-exports.handler = async (event) => {
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: headers(), body: '' };
-  }
+// ── Firebase REST fetcher (full paginated collection) ─────────────────────────
+async function fetchFirebaseDocs(colName) {
+  const all = [];
+  let pageToken = null;
 
-  // Auth
-  const adminKey = (event.headers && event.headers['x-admin-key'])
-    || (event.queryStringParameters && event.queryStringParameters.key)
-    || '';
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return err(401, 'Unauthorized');
-  }
+  do {
+    let url = `${FB_BASE}/${colName}?key=${FB_API_KEY}&pageSize=300`;
+    if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
 
-  try {
-    const params = event.queryStringParameters || {};
-    const action = params.action || 'count';
+    const res = await fetch(url);
 
-    // ── action=count : fetch all Firebase docs, return total & batch info ─────
-    if (action === 'count') {
-      const docs = await fetchFirebaseDocs('push_subscriptions');
-      const valid = docs.filter(d => normalizePayload(d) !== null);
-      const totalBatches = Math.ceil(valid.length / BATCH_SIZE);
-      return ok({ total: valid.length, totalBatches, batchSize: BATCH_SIZE });
+    if (res.status === 404) return []; // collection doesn't exist in Firestore
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Firebase GET /${colName} → ${res.status}: ${txt.slice(0, 300)}`);
     }
 
-    // ── action=batch : migrate one batch ─────────────────────────────────────
-    if (action === 'batch') {
-      const batchIndex = parseInt(params.batchIndex || '0', 10);
+    const data = await res.json();
 
-      const docs  = await fetchFirebaseDocs('push_subscriptions');
-      const valid = docs.map(d => normalizePayload(d)).filter(Boolean);
+    for (const doc of (data.documents || [])) {
+      const fbId   = doc.name.split('/').pop();
+      const fields = doc.fields || {};
+      const obj    = { _fbId: fbId };
+      for (const [k, v] of Object.entries(fields)) {
+        obj[k] = decodeField(v);
+      }
+      all.push(obj);
+    }
+
+    pageToken = data.nextPageToken || null;
+  } while (pageToken);
+
+  return all;
+}
+
+// ── Appwrite client ───────────────────────────────────────────────────────────
+function getAppwrite() {
+  const key = process.env.APPWRITE_API_KEY;
+  if (!key) throw new Error('APPWRITE_API_KEY env var missing');
+  const client = new Client().setEndpoint(AW_ENDPOINT).setProject(AW_PROJECT).setKey(key);
+  return new Databases(client);
+}
+
+// ── Value encoder for Appwrite (no nested objects; convert to JSON string) ────
+function encodeForAppwrite(v) {
+  if (v === undefined || v === null) return '';
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'number') return String(v);
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v) || typeof v === 'object') return JSON.stringify(v);
+  return String(v);
+}
+
+function encodePayload(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (k.startsWith('_')) continue; // skip internal fields like _fbId
+    const enc = encodeForAppwrite(v);
+    if (enc !== undefined) out[k] = enc;
+  }
+  return out;
+}
+
+// ── Collection-specific normalisers ──────────────────────────────────────────
+function normalizePushSub(doc) {
+  let sub = doc.subscription || doc.pushSubscription || doc.subscriptionJson || doc.subscription_data;
+  if (typeof sub === 'string') {
+    try { sub = JSON.parse(sub); } catch (_) { sub = null; }
+  }
+  const endpoint = (sub && sub.endpoint) || doc.endpoint || null;
+  if (!endpoint) return null; // unpersistable without endpoint
+
+  return {
+    endpoint,
+    subscriptionJson: JSON.stringify(sub || { endpoint }),
+    district:  typeof doc.district === 'string' ? doc.district : 'unknown',
+    active:    true,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function normalizeGeneric(doc) {
+  const payload = {};
+  for (const [k, v] of Object.entries(doc)) {
+    if (k === '_fbId') continue;
+    if (k === 'active') { payload.active = true; continue; } // always force true
+    payload[k] = encodeForAppwrite(v);
+  }
+  // ensure active is always set
+  payload.active    = true;
+  payload.updatedAt = new Date().toISOString();
+  return payload;
+}
+
+// ── Appwrite upsert ───────────────────────────────────────────────────────────
+async function upsertDoc(databases, colId, docId, payload) {
+  try {
+    await databases.updateDocument(AW_DB, colId, docId, payload);
+    return 'updated';
+  } catch (e) {
+    if (e.code === 404) {
+      await databases.createDocument(AW_DB, colId, docId, payload);
+      return 'created';
+    }
+    throw e;
+  }
+}
+
+// ── Ensure Appwrite collection exists (best-effort) ───────────────────────────
+async function ensureCollection(databases, colId) {
+  try {
+    await databases.getCollection(AW_DB, colId);
+  } catch (e) {
+    if (e.code === 404) {
+      try {
+        await databases.createCollection(
+          AW_DB, colId, colId,
+          ['read("any")', 'create("any")', 'update("any")', 'delete("any")'],
+          true, true
+        );
+      } catch (ce) {
+        if (ce.code !== 409) console.error('createCollection failed:', colId, ce.message);
+      }
+    }
+  }
+}
+
+// ── Count documents in Appwrite collection ────────────────────────────────────
+async function countAppwriteDocs(databases, colId) {
+  let total = 0, offset = 0;
+  const PAGE = 100;
+  while (true) {
+    try {
+      const res = await databases.listDocuments(AW_DB, colId, [Query.limit(PAGE), Query.offset(offset)]);
+      const docs = res.documents || [];
+      total += docs.length;
+      if (docs.length < PAGE) break;
+      offset += PAGE;
+    } catch (e) {
+      break; // collection may not exist yet
+    }
+  }
+  return total;
+}
+
+// ── HANDLER ───────────────────────────────────────────────────────────────────
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: H, body: '' };
+
+  const adminKey = (event.headers?.['x-admin-key'])
+    || (event.queryStringParameters?.key)
+    || '';
+  if (adminKey !== process.env.ADMIN_SECRET_KEY) return bad(401, 'Unauthorized');
+
+  try {
+    const p      = event.queryStringParameters || {};
+    const action = p.action || 'count';
+
+    // ── action=scan : discover all FB collections + their doc counts ──────────
+    if (action === 'scan') {
+      const report = {};
+      for (const colName of Object.keys(COLLECTIONS)) {
+        try {
+          const docs = await fetchFirebaseDocs(colName);
+          report[colName] = { firebase: docs.length };
+        } catch (e) {
+          report[colName] = { firebase: 0, error: e.message };
+        }
+      }
+      return ok({ report });
+    }
+
+    // ── action=count : count valid documents across all collections ───────────
+    if (action === 'count') {
+      const totals = {};
+      let grandTotal = 0;
+
+      for (const [colName, def] of Object.entries(COLLECTIONS)) {
+        const docs  = await fetchFirebaseDocs(colName);
+        const valid = docs.map(d => def.normalize(d)).filter(Boolean);
+        totals[colName] = valid.length;
+        grandTotal += valid.length;
+      }
+
+      const totalBatches = Math.ceil(grandTotal / BATCH_SIZE);
+      return ok({ totals, grandTotal, totalBatches, batchSize: BATCH_SIZE });
+    }
+
+    // ── action=batch : migrate one COLLECTION batch ──────────────────────────
+    if (action === 'batch') {
+      const colName    = p.col;
+      const batchIndex = parseInt(p.batchIndex || '0', 10);
+
+      if (!colName || !COLLECTIONS[colName]) {
+        return bad(400, `Unknown collection: ${colName}. Valid: ${Object.keys(COLLECTIONS).join(', ')}`);
+      }
+
+      const def  = COLLECTIONS[colName];
+      const docs = await fetchFirebaseDocs(colName);
+
+      // Normalise valid payloads
+      const valid = docs.map((d, i) => {
+        const payload = def.normalize(d);
+        if (!payload) return null;
+        // Determine document ID
+        let docId;
+        if (def.idBuilder) {
+          docId = def.idBuilder(payload[def.idField]);
+        } else {
+          docId = safeId(d._fbId);
+        }
+        return { docId, payload };
+      }).filter(Boolean);
 
       const totalBatches = Math.ceil(valid.length / BATCH_SIZE);
       const start        = batchIndex * BATCH_SIZE;
       const slice        = valid.slice(start, start + BATCH_SIZE);
 
       if (slice.length === 0) {
-        return ok({ batchIndex, processed: 0, created: 0, updated: 0, failed: 0, done: true, totalBatches });
+        return ok({ col: colName, batchIndex, processed: 0, created: 0, updated: 0, failed: 0, done: true, totalBatches, totalValid: valid.length });
       }
 
       const databases = getAppwrite();
+      await ensureCollection(databases, colName);
+
       let created = 0, updated = 0, failed = 0;
       const errors = [];
 
-      for (const payload of slice) {
+      for (const { docId, payload } of slice) {
         try {
-          const result = await upsertOne(databases, payload);
-          if (result === 'created') created++;
-          else updated++;
+          const result = await upsertDoc(databases, colName, docId, payload);
+          if (result === 'created') created++; else updated++;
         } catch (e) {
           failed++;
-          errors.push(e.message);
+          errors.push(`${docId}: ${e.message}`);
         }
       }
 
       const done = (start + slice.length) >= valid.length;
-      return ok({
-        batchIndex,
-        processed: slice.length,
-        created,
-        updated,
-        failed,
-        errors: errors.slice(0, 5),
-        done,
-        totalBatches,
-        totalValid: valid.length,
-      });
+      return ok({ col: colName, batchIndex, processed: slice.length, created, updated, failed, errors: errors.slice(0, 5), done, totalBatches, totalValid: valid.length });
     }
 
-    return err(400, 'Unknown action. Use action=count or action=batch&batchIndex=N');
+    // ── action=verify : sync report — Firebase count vs Appwrite count ────────
+    if (action === 'verify') {
+      const databases = getAppwrite();
+      const report    = {};
+      let totalFB = 0, totalAW = 0, mismatches = 0;
+
+      for (const colName of Object.keys(COLLECTIONS)) {
+        const [fbDocs, awCount] = await Promise.all([
+          fetchFirebaseDocs(colName),
+          countAppwriteDocs(databases, colName),
+        ]);
+        const fbCount = fbDocs.length;
+        const match   = awCount >= fbCount; // AW can have MORE (existing data) but never less
+        if (!match) mismatches++;
+        totalFB += fbCount;
+        totalAW += awCount;
+        report[colName] = { firebase: fbCount, appwrite: awCount, status: match ? '✅ OK' : '⚠️ MISMATCH' };
+      }
+
+      return ok({ report, totalFB, totalAW, mismatches, synced: mismatches === 0 });
+    }
+
+    // ── action=fix-active : force active:true on all Appwrite docs ────────────
+    if (action === 'fix-active') {
+      const databases = getAppwrite();
+      let fixed = 0, total = 0;
+
+      for (const colName of Object.keys(COLLECTIONS)) {
+        let offset = 0;
+        const PAGE = 100;
+        while (true) {
+          let docs;
+          try {
+            const res = await databases.listDocuments(AW_DB, colName, [Query.limit(PAGE), Query.offset(offset)]);
+            docs = res.documents || [];
+          } catch (_) { break; }
+
+          total += docs.length;
+          for (const doc of docs) {
+            if (doc.active !== true) {
+              await databases.updateDocument(AW_DB, colName, doc.$id, { active: true, updatedAt: new Date().toISOString() }).catch(() => {});
+              fixed++;
+            }
+          }
+          if (docs.length < PAGE) break;
+          offset += PAGE;
+        }
+      }
+
+      return ok({ fixed, total, message: `${fixed}/${total} documents forced to active:true across all collections` });
+    }
+
+    return bad(400, 'Unknown action. Use: scan | count | batch | verify | fix-active');
 
   } catch (e) {
     console.error('migrate-to-appwrite crash:', e);
-    return err(500, e.message || 'Internal server error');
+    return bad(500, e.message || 'Internal server error');
   }
 };

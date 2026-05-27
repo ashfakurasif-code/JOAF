@@ -64,11 +64,10 @@ exports.handler = async (event) => {
   }
 
   try {
-    webpush.setVapidDetails(
-      'mailto:admin@julyforum.com',
-      process.env.VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    );
+    // Sanitize VAPID keys — Netlify env vars can inject literal \n strings
+    const vapidPublic  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/\\n/g, '').trim();
+    const vapidPrivate = (process.env.VAPID_PRIVATE_KEY || '').replace(/\\n/g, '').trim();
+    webpush.setVapidDetails('mailto:admin@julyforum.com', vapidPublic, vapidPrivate);
 
     const requestBody = JSON.parse(event.body || '{}');
 
@@ -143,18 +142,18 @@ exports.handler = async (event) => {
     await Promise.allSettled(
       docs.map(async (doc) => {
         try {
-          const sub = typeof doc.subscriptionJson === 'string'
+          let sub = typeof doc.subscriptionJson === 'string'
             ? safeJsonParse(doc.subscriptionJson)
             : doc.subscriptionJson;
 
+          // If JSON parse failed but we have a raw endpoint, reconstruct minimal sub
+          if ((!sub || !sub?.endpoint) && doc.endpoint) {
+            sub = { endpoint: doc.endpoint };
+          }
+
           if (!sub || !sub?.endpoint) {
-            console.warn('Skipping corrupted subscriber ID: ' + (doc.$id || doc.id));
-
-            await awUpdate(COL_SUBS, doc.$id || doc.id, {
-              active: false,
-              updatedAt: new Date().toISOString(),
-            }).catch(() => {});
-
+            console.warn('Skipping truly corrupted subscriber ID: ' + (doc.$id || doc.id));
+            // Do NOT mark inactive — may be a transient parse issue; just skip this send
             failed += 1;
             return;
           }

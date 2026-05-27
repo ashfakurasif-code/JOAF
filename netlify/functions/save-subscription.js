@@ -16,7 +16,7 @@ function validateVapidKeys() {
   }
 
   try {
-    webpush.setVapidDetails(contact, publicKey, privateKey);
+    webpush.setVapidDetails(contact, publicKey.replace(/\\n/g,'').trim(), privateKey.replace(/\\n/g,'').trim());
     return { publicKey, contact };
   } catch (error) {
     throw new Error(`Invalid VAPID configuration: ${error.message}`);
