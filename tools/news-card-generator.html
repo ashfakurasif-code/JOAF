@@ -1735,5 +1735,19 @@ window.addReelToQueue = async function(){
 }
 </script>
 
+
+<script id="runtime-hotfix-stubs">
+window.switchTab = window.switchTab || function(tab){
+  document.querySelectorAll('.tab-pane').forEach(el=>{
+    el.style.display='none';
+  });
+  const target=document.getElementById(tab);
+  if(target) target.style.display='block';
+};
+
+window.draw = window.draw || function(){};
+window.saveSetting = window.saveSetting || function(){};
+</script>
+
 </body>
 </html>
