@@ -1,55 +1,25 @@
-// netlify/functions/save-subscription.js
-// Appwrite Database এ push subscription save করে (Firestore বাদ)
+const webpush = require('web-push');
+const {
+  awUpsert,
+  initDatabase,
+  sanitizeId,
+  COLLECTION_ID,
+} = require('./aw-utils');
 
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT  = '6a11b6cd000b59f318eb';
-const AW_KEY      = process.env.APPWRITE_API_KEY;
-const DB_ID       = 'joaf';
-const COL_ID      = 'push_subscriptions';
+function validateVapidKeys() {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  const contact = process.env.VAPID_SUBJECT || 'mailto:admin@joaf.local';
 
-const BASE = `${AW_ENDPOINT}/databases/${DB_ID}/collections/${COL_ID}/documents`;
+  if (!publicKey || !privateKey) {
+    throw new Error('Missing VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY environment variables');
+  }
 
-async function awGet(docId) {
-  const r = await fetch(`${BASE}/${docId}`, {
-    headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY }
-  });
-  if (r.status === 404) return null;
-  if (!r.ok) throw new Error('AW GET failed: ' + r.status);
-  return await r.json();
-}
-
-async function awUpsert(docId, data) {
-  // Try update first, then create
-  const existing = await awGet(docId);
-  if (existing) {
-    // PATCH (update)
-    const r = await fetch(`${BASE}/${docId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Appwrite-Project': AW_PROJECT,
-        'X-Appwrite-Key': AW_KEY
-      },
-      body: JSON.stringify({ data })
-    });
-    if (!r.ok) throw new Error('AW PATCH failed: ' + r.status);
-    return await r.json();
-  } else {
-    // POST (create)
-    const r = await fetch(BASE, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Appwrite-Project': AW_PROJECT,
-        'X-Appwrite-Key': AW_KEY
-      },
-      body: JSON.stringify({ documentId: docId, data, permissions: [] })
-    });
-    if (!r.ok) {
-      const err = await r.text();
-      throw new Error('AW POST failed: ' + r.status + ' ' + err);
-    }
-    return await r.json();
+  try {
+    webpush.setVapidDetails(contact, publicKey, privateKey);
+    return { publicKey, contact };
+  } catch (error) {
+    throw new Error(`Invalid VAPID configuration: ${error.message}`);
   }
 }
 
@@ -59,32 +29,68 @@ exports.handler = async (event) => {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
   };
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
-  if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    };
+  }
 
   try {
-    const body = JSON.parse(event.body);
-    const { subscription, deviceInfo, district } = body;
+    validateVapidKeys();
+    await initDatabase();
 
-    if (!subscription || !subscription.endpoint) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid subscription' }) };
+    const body = JSON.parse(event.body || '{}');
+    const { subscription, district = '', deviceInfo = {} } = body;
+
+    if (!subscription?.endpoint) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid subscription payload' }),
+      };
     }
 
-    // endpoint দিয়ে unique ID বানাও (safe characters only)
-    const id = Buffer.from(subscription.endpoint).toString('base64')
-      .replace(/[^a-zA-Z0-9]/g, '').slice(-20);
+    const id = sanitizeId(
+      Buffer.from(subscription.endpoint)
+        .toString('base64url')
+        .slice(-32)
+    );
 
-    await awUpsert(id, {
-      endpoint:         subscription.endpoint,
+    await awUpsert(COLLECTION_ID, id, {
+      endpoint: subscription.endpoint,
       subscriptionJson: JSON.stringify(subscription),
-      district:         district || '',
-      active:           true,
-      updatedAt:        new Date().toISOString(),
+      district,
+      deviceInfo,
+      active: true,
+      updatedAt: new Date().toISOString(),
     });
 
-    return { statusCode: 200, headers, body: JSON.stringify({ success: true, id }) };
-  } catch (err) {
-    console.error('save-subscription error:', err);
-    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        id,
+        active: true,
+      }),
+    };
+  } catch (error) {
+    console.error('save-subscription failure', error);
+
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
+    };
   }
 };

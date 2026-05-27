@@ -1,8 +1,18 @@
+const sdk = require('node-appwrite');
+
 const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
 const AW_PROJECT = '6a11b6cd000b59f318eb';
 const AW_KEY = process.env.APPWRITE_API_KEY;
 const DB_ID = 'joaf';
+const COLLECTION_ID = 'push_subscriptions';
 const DEFAULT_DOC_PERMISSIONS = ['read("any")', 'update("any")', 'delete("any")'];
+
+const client = new sdk.Client()
+  .setEndpoint(AW_ENDPOINT)
+  .setProject(AW_PROJECT)
+  .setKey(AW_KEY);
+
+const databases = new sdk.Databases(client);
 
 const BASE_HEADERS = {
   'Content-Type': 'application/json',
@@ -29,6 +39,7 @@ function encodeData(data) {
 function parseValue(value) {
   if (typeof value !== 'string') return value;
   const t = value.trim();
+
   if (!t) return value;
 
   if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
@@ -269,10 +280,118 @@ async function awUpsert(collection, docId, data, permissions = DEFAULT_DOC_PERMI
   return awCreate(collection, data, docId, permissions);
 }
 
+async function ensureCollection() {
+  try {
+    return await databases.getCollection(DB_ID, COLLECTION_ID);
+  } catch (error) {
+    if (error.code !== 404) throw error;
+
+    return databases.createCollection(
+      DB_ID,
+      COLLECTION_ID,
+      'Push Subscriptions',
+      ['read("any")', 'create("any")', 'update("any")', 'delete("any")'],
+      true,
+      true
+    );
+  }
+}
+
+async function ensureAttribute(key, type, options = {}) {
+  try {
+    const existing = await databases.listAttributes(DB_ID, COLLECTION_ID);
+    if ((existing.attributes || []).some((attr) => attr.key === key)) return;
+
+    switch (type) {
+      case 'boolean':
+        return databases.createBooleanAttribute(DB_ID, COLLECTION_ID, key, true, options.default ?? false);
+      case 'string':
+        return databases.createStringAttribute(DB_ID, COLLECTION_ID, key, options.size || 65535, false, options.default || '', false);
+      case 'datetime':
+        return databases.createDatetimeAttribute(DB_ID, COLLECTION_ID, key, false, options.default || null);
+      default:
+        throw new Error(`Unsupported attribute type: ${type}`);
+    }
+  } catch (error) {
+    if (error.code !== 409) {
+      console.error(`ensureAttribute(${key}) failed`, error.message);
+    }
+  }
+}
+
+async function ensureIndex(key, fields, orders) {
+  try {
+    const existing = await databases.listIndexes(DB_ID, COLLECTION_ID);
+    if ((existing.indexes || []).some((idx) => idx.key === key)) return;
+
+    await databases.createIndex(DB_ID, COLLECTION_ID, key, 'key', fields, orders);
+  } catch (error) {
+    if (error.code !== 409) {
+      console.error(`ensureIndex(${key}) failed`, error.message);
+    }
+  }
+}
+
+async function repairSubscriptions() {
+  const docs = await awListAll(COLLECTION_ID, [], 5000);
+  const repaired = [];
+
+  for (const doc of docs) {
+    const payload = doc.data || {};
+    const hasEndpoint = Boolean(payload.endpoint || payload.subscriptionJson);
+
+    if (!hasEndpoint) continue;
+
+    if (payload.active !== true) {
+      await awUpdate(COLLECTION_ID, doc.id, {
+        ...payload,
+        active: true,
+        updatedAt: new Date().toISOString(),
+      });
+
+      repaired.push(doc.id);
+    }
+  }
+
+  return repaired;
+}
+
+async function initDatabase() {
+  const startedAt = Date.now();
+
+  await ensureCollection();
+
+  await Promise.all([
+    ensureAttribute('active', 'boolean', { default: true }),
+    ensureAttribute('subscriptionJson', 'string', { size: 65535 }),
+    ensureAttribute('district', 'string', { size: 255 }),
+    ensureAttribute('updatedAt', 'datetime'),
+  ]);
+
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+
+  await Promise.all([
+    ensureIndex('active_index', ['active'], ['ASC']),
+    ensureIndex('district_index', ['district'], ['ASC']),
+    ensureIndex('updatedAt_index', ['updatedAt'], ['DESC']),
+  ]);
+
+  const repaired = await repairSubscriptions();
+
+  return {
+    ok: true,
+    repairedDocuments: repaired.length,
+    repairedIds: repaired,
+    durationMs: Date.now() - startedAt,
+  };
+}
+
 module.exports = {
   AW_ENDPOINT,
   AW_PROJECT,
   DB_ID,
+  COLLECTION_ID,
+  databases,
   encodeData,
   normalizeDoc,
   sanitizeId,
@@ -289,5 +408,7 @@ module.exports = {
   awCreate,
   awUpdate,
   awUpsert,
+  initDatabase,
+  repairSubscriptions,
   DEFAULT_DOC_PERMISSIONS,
 };
