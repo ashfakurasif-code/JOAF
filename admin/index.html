@@ -529,43 +529,7 @@ body  { overflow-x:hidden; }
 })();
 })();
 </script>
-\n
-<style id="cinematic-overflow-fix">
-.fb-cinematic-card,
-.fb-cinematic-card *{
-  box-sizing:border-box;
-}
-
-.fb-hook,
-.fb-caption,
-.fb-tags,
-.fb-slide-text{
-  overflow-wrap:break-word !important;
-  word-break:break-word !important;
-  white-space:pre-wrap !important;
-  max-width:100% !important;
-}
-
-.fb-hook{
-  font-size:clamp(18px,2vw,32px)!important;
-  line-height:1.2!important;
-}
-
-.fb-caption{
-  line-height:1.45!important;
-}
-
-.fb-tags{
-  font-size:12px!important;
-  opacity:.9!important;
-}
-
-canvas{
-  max-width:100%!important;
-}
-</style>
-
-</head>
+\n</head>
 <body>
 <script>
 function seededRand(seed) {
@@ -630,7 +594,9 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
       <div class="ni" onclick="goPage('blood',this)"><span class="ic">🩸</span>রক্তদাতা <span class="nbadge green" id="b-blood">—</span></div>
       <div class="ni" onclick="goPage('press',this)"><span class="ic">📰</span>Press Release</div>
       <div class="ni" onclick="goPage('newscard',this)" style="color:var(--amber)"><span class="ic">🎨</span>News Card Generator</div>
-<div class="nsec">Data</div>
+      <div class="ni" onclick="goPage('fbpost',this)"><span class="ic">📢</span>FB Auto Post</div>
+
+      <div class="nsec">Data</div>
       <div class="ni" onclick="goPage('leader',this)"><span class="ic">🏛️</span>নেতা ট্র্যাকার</div>
       <div class="ni" onclick="goPage('warrior',this)"><span class="ic">✊</span>জুলাই যোদ্ধা</div>
       <div class="ni" onclick="goPage('bajar',this)"><span class="ic">🛒</span>বাজার দর</div>
@@ -1241,7 +1207,227 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
     </div>
     <!-- FB AUTO POST -->
     <!-- FB AUTO POST -->
+    <div class="page" id="page-fbpost">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;height:100%;overflow:hidden;">
+        <!-- LEFT: Input Panel -->
+        <div style="overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px;">
+          <div class="card" style="margin:0;">
+            <div class="card-header"><div class="card-title">📢 FB Reel & Post Maker</div></div>
+            <!-- Image Upload -->
+            <div style="margin-bottom:10px;">
+              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">🖼️ Image Upload করুন (optional)</label>
+              <div id="img-upload-zone" style="border:2px dashed var(--border2);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:.15s;position:relative;"
+                   onmouseover="this.style.borderColor='var(--accent)'"
+                   onmouseout="this.style.borderColor='var(--border2)'"
+                   ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+                   ondragleave="this.style.borderColor='var(--border2)'"
+                   ondrop="event.preventDefault();fbHandleDrop(event)">
+                <input type="file" id="fb-img-input" accept="image/*,video/*" multiple
+                       style="position:absolute;left:0;top:0;opacity:0;cursor:pointer;width:100%;height:100%; inset:0;"
+                       onchange="if(typeof fbAnalyzeImage==='function'){fbAnalyzeImage(this)}else{setTimeout(()=>fbAnalyzeImage(this),500)}">
+                <div id="img-upload-preview" style="display:none;margin-bottom:5px">
+                  <img id="img-preview-thumb" style="max-height:70px;border-radius:6px;border:1px solid var(--border)">
+                </div>
+                <div id="img-upload-label" style="font-size:11px;color:var(--text2)">
+                  📸 Click বা drag করুন<br><span style="font-size:10px;color:var(--text3)">সব image একসাথে drop করুন → সব কার্ড তৈরি হবে</span>
+                </div>
+                <div id="img-analyze-status" style="font-size:11px;color:var(--amber);margin-top:4px;display:none">⏳ Analyze হচ্ছে...</div>
+                <div id="img-batch-count" style="display:none;font-size:10px;color:var(--accent);margin-top:3px;font-weight:700"></div>
+                <!-- Select-all / Deselect row -->
+                <div id="img-select-row" style="display:none;gap:5px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
+                  <button onclick="fbSelectAllImages(true)"  style="padding:3px 10px;border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">✅ All</button>
+                  <button onclick="fbSelectAllImages(false)" style="padding:3px 10px;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">❌ Deselect</button>
+                </div>
+                <!-- Thumbnail strip -->
+                <div id="img-thumb-strip" style="display:none;flex-wrap:wrap;gap:4px;margin-top:6px;justify-content:center;"></div>
+              </div>
+            </div>
+            <!-- News Text -->
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;">✍️ News / Topic</label>
+            <div id="fb-image-texts-container">
+              <textarea id="fb-news-input" rows="4" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;" placeholder="সংবাদের মূল বিষয় লিখুন..."></textarea>
+            </div>
+            <!-- Tone Selector -->
+            <div style="margin-top:10px;">
+              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;">🎭 Tone</label>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;" id="fb-tone-row">
+                <button class="fb-tone-btn active" data-tone="urgent" onclick="fbSetTone(this)">⚡ Urgent</button>
+                <button class="fb-tone-btn" data-tone="emotional" onclick="fbSetTone(this)">❤️ Emotional</button>
+                <button class="fb-tone-btn" data-tone="informative" onclick="fbSetTone(this)">📊 Info</button>
+                <button class="fb-tone-btn" data-tone="motivational" onclick="fbSetTone(this)">💪 Motivational</button>
+                <button class="fb-tone-btn" data-tone="alert" onclick="fbSetTone(this)">🚨 Alert</button>
+              </div>
+            </div>
+            <!-- Output Mode -->
+            <div style="margin-top:10px;">
+              <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;">📦 Output</label>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;" id="fb-mode-row">
+                <button class="fb-tone-btn active" data-mode="card" onclick="fbSetMode(this)">🖼️ Card (instant)</button>
+                <button class="fb-tone-btn" data-mode="video" onclick="fbSetMode(this)">🎬 Video (5-15 min)</button>
+              </div>
+            </div>
+            <!-- Action Buttons -->
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+              <button onclick="fbGenerateAll()" id="fb-gen-btn" style="flex:1;padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🚀 Generate করুন</button>
+            </div>
+            <div id="fb-mode-notice" style="margin-top:7px;padding:7px 10px;border-radius:6px;font-size:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber);">
+              🖼️ <b>Card mode:</b> ৩-৫ সেকেন্ডে JPG ready — সাথে caption ও hashtags
+            </div>
+          </div>
+          <!-- Caption Output -->
+          <div class="card" id="fb-caption-card" style="margin:0;display:none;">
+            <div class="card-header" style="padding-bottom:8px;">
+              <div class="card-title" style="font-size:13px;">📝 Caption & Tags</div>
+            </div>
+            <label style="font-size:10px;font-weight:700;color:var(--text2);">Hook Line</label>
+            <div id="fb-hook-line" style="font-size:14px;font-weight:900;color:#fff;padding:10px;background:rgba(144,22,31,.15);border:1px solid rgba(144,22,31,.3);border-radius:7px;margin:4px 0 10px;line-height:1.5;"></div>
+            <label style="font-size:10px;font-weight:700;color:var(--text2);">Full Caption</label>
+            <textarea id="fb-caption" rows="5" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical;font-family:inherit;"></textarea>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('fb-caption').value).then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Caption Copy',1500)})" style="margin-top:5px;padding:5px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Caption Copy</button>
+            <span id="fb-draft-indicator" style="font-size:10px;color:var(--green);margin-left:8px;opacity:0;transition:opacity 0.5s;">Draft saved ✓</span>
+            <div style="margin-top:10px;">
+              <label style="font-size:10px;font-weight:700;color:var(--text2);">🏷️ Hashtags</label>
+              <textarea id="fb-tags-display" rows="2" readonly style="width:100%;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg2);color:var(--text2);margin-top:4px;resize:none;font-family:inherit;"></textarea>
+              <button onclick="const v=document.getElementById('fb-tags-display').value;if(v)navigator.clipboard.writeText(v).then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Tags Copy',1500)})" style="margin-top:4px;padding:5px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Tags Copy</button>
+            </div>
+            <div style="margin-top:10px;">
+              <label style="font-size:10px;font-weight:700;color:var(--text2);">⏰ Best Post Time</label>
+              <div id="fb-best-time" style="font-size:12px;color:var(--amber);padding:6px 10px;background:rgba(251,191,36,.08);border-radius:6px;margin-top:4px;"></div>
+            </div>
+          </div>
+        </div>
+        <!-- RIGHT: Preview Panel -->
+        <div style="overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+          <div class="card" style="margin:0;flex:1;">
+            <div class="card-header" style="padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+              <div class="card-title" style="font-size:13px;">🎬 Preview</div>
+              <div style="display:flex;gap:6px;">
+                <button onclick="fbDownloadCard()" id="fb-download-card-btn" style="display:none;padding:5px 12px;background:#25d366;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ Card JPG</button>
+                <button onclick="fbDownloadReel()" id="fb-download-btn" style="display:none;padding:5px 12px;background:#25d366;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ Video</button>
+                <button onclick="fbPostToReels()" id="fb-post-reels-btn" style="display:none;padding:5px 12px;background:#1877f2;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📤 FB Reels</button>
+              </div>
+            </div>
+            <div id="fb-preview-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:8px;opacity:.4;">
+              <div style="font-size:48px;">🎬</div>
+              <div style="font-size:13px;font-weight:700;">Preview এখানে আসবে</div>
+            </div>
+            <div id="fb-preview" style="display:none;text-align:center;">
+              <canvas id="fb-card-canvas" width="1080" height="1080" style="width:100%;max-width:280px;border-radius:12px;display:block;margin:0 auto;box-shadow:0 8px 32px rgba(0,0,0,.5);"></canvas>
+              <video id="fb-reel-video" controls style="width:100%;max-width:280px;border-radius:12px;margin-top:8px;display:none;"></video>
+              <div id="fb-preview-strip" style="display:none;margin-top:10px;padding:6px 0;border-top:1px solid var(--border);"></div>
+              <div id="fb-preview-strip-label" style="display:none;font-size:10px;color:var(--text3);margin-top:4px;">👆 thumbnail click করলে বড় preview দেখাবে</div>
+            </div>
+            <div id="fb-post-log" style="margin-top:10px;font-size:11px;max-height:180px;overflow-y:auto;"></div>
+          </div>
+          <!-- BATCH CARDS RESULT STRIP -->
+          <!-- ── BATCH PUBLISH QUEUE ─────────────────────────────────
+     _fbBatchQueue  = [{blob, name, caption, selected}]
+     Rendered by  renderBatchQueue()
+     Post logic   in  batchPostSelected() / batchPostSingle(idx)
+──────────────────────────────────────────────────────────── -->
+<div class="card" id="fb-batch-results-card" style="margin:0;display:none;">
+  <div class="card-header" style="padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+    <div class="card-title" style="font-size:13px;">🗂️ Batch Publish Queue</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;">
+      <!-- select helpers -->
+      <button onclick="batchSelectAll(true)"  style="padding:3px 9px;border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">✅ সব Select</button>
+      <button onclick="batchSelectAll(false)" style="padding:3px 9px;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">❌ Deselect</button>
+      <!-- bulk actions -->
+      <button onclick="fbDownloadAllCards()" style="padding:3px 9px;border-radius:12px;border:none;background:#25d366;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">⬇️ সব Download</button>
+      <button onclick="batchPostSelected()" id="batch-post-all-btn" style="padding:3px 9px;border-radius:12px;border:none;background:#1877f2;color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;">📤 Selected post করুন</button>
+    </div>
+  </div>
+  <!-- queue status — updated by renderBatchQueue() -->
+  <div id="batch-queue-status" style="font-size:10px;color:var(--text2);margin-bottom:8px;"></div>
+  <!-- card rows injected here by renderBatchQueue() -->
+  <div id="fb-batch-strip" style="display:flex;flex-direction:column;gap:10px;"></div>
+  <!-- bulk post log -->
+  <div id="batch-post-log" style="display:none;margin-top:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;max-height:260px;overflow-y:auto;"></div>
+</div>
+          <!-- STANDALONE FB POST CARD -->
+          <div class="card" style="margin:0;padding:0;overflow:hidden;">
 
+            <!-- ── Step 1: Media ── -->
+            <div style="padding:14px 16px 0;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">① Media</div>
+              <div id="sa-drop"
+                onclick="document.getElementById('sa-img-input').click()"
+                ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--bg4)'"
+                ondragleave="this.style.borderColor='var(--border2)';this.style.background='var(--bg3)'"
+                ondrop="event.preventDefault();this.style.borderColor='var(--border2)';this.style.background='var(--bg3)';const f=event.dataTransfer.files[0];if(f){const dt=new DataTransfer();dt.items.add(f);document.getElementById('sa-img-input').files=dt.files;saPreviewImg(document.getElementById('sa-img-input'));}"
+                style="border:2px dashed var(--border2);border-radius:9px;padding:10px 12px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg3);"
+                onmouseover="this.style.borderColor='var(--accent)'"
+                onmouseout="this.style.borderColor='var(--border2)'">
+                <input type="file" id="sa-img-input" accept="image/*,video/*" style="display:none" onchange="saPreviewImg(this)">
+                <div id="sa-img-preview" style="display:none;margin-bottom:6px;"></div>
+                <div id="sa-img-label" style="font-size:11px;color:var(--text2);">📸 Image &nbsp;/&nbsp; 🎬 Video — Click বা Drag করুন</div>
+              </div>
+              <!-- Feature 10: upload progress -->
+              <div id="sa-upload-progress" style="display:none;margin-top:8px;">
+                <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+                  <div id="sa-upload-bar" style="width:0%;height:100%;background:var(--accent);transition:width .2s;border-radius:4px;"></div>
+                </div>
+                <div id="sa-upload-txt" style="font-size:10px;color:var(--text2);margin-top:4px;text-align:center;"></div>
+              </div>
+            </div>
+
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 2: Caption ── -->
+            <div style="padding:0 16px;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">② Caption</div>
+              <textarea id="sa-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:9px 11px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;line-height:1.6;box-sizing:border-box;" placeholder="Caption লিখুন... অথবা বাম দিক থেকে Generate করুন"></textarea>
+              <div id="sa-token-status" style="display:none;"></div>
+            </div>
+
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 3: Token (collapsible) ── -->
+            <div style="padding:0 16px;">
+              <button onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('sa-token-box'))" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">🔑 FB Token</div>
+                <div id="sa-token-saved-badge" style="font-size:10px;color:var(--green);font-weight:700;">✓ Saved</div>
+              </button>
+              <div id="sa-token-box" style="display:none;margin-top:8px;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <input id="sa-fb-token-input" type="password" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:monospace;" placeholder="EAAj... paste করুন">
+                  <button onclick="saveFbToken()" style="padding:7px 14px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">Save</button>
+                </div>
+                <div style="font-size:10px;color:var(--text3);margin-top:5px;">Graph API Explorer থেকে নিন। ৬০ দিনে expire হয়।</div>
+              </div>
+            </div>
+
+            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+
+            <!-- ── Step 4: Schedule + Carousel ── -->
+            <div style="padding:0 16px;">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">③ Timing &amp; Format</div>
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                <span style="font-size:11px;color:var(--text2);white-space:nowrap;">⏰</span>
+                <input type="datetime-local" id="fb-schedule-time" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:inherit;">
+                <button onclick="document.getElementById('fb-schedule-time').value=''" style="padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;font-size:11px;color:var(--text2);cursor:pointer;font-family:inherit;">✕</button>
+              </div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:6px;">🎠 Carousel URLs <span style="opacity:.6;">(min 2 line হলে carousel হবে)</span></div>
+              <textarea id="fb-carousel-urls" rows="2" placeholder="https://cdn.../img1.jpg&#10;https://cdn.../img2.jpg" style="width:100%;font-size:10px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);resize:none;font-family:monospace;box-sizing:border-box;line-height:1.7;"></textarea>
+            </div>
+
+            <!-- ── Action buttons ── -->
+            <div style="padding:14px 16px;display:grid;grid-template-columns:3fr 2fr;gap:8px;">
+              <button onclick="saOpenPostHelper()" style="padding:13px;background:#1877f2;border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📤 এখনই Post</button>
+              <button onclick="fbQueueFromUI()" style="padding:13px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">📅 Queue</button>
+            </div>
+
+            <div id="sa-post-log" style="display:none;margin:0 16px 16px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;"></div>
+          </div>
+        </div>
+      </div>
+      <style>
+      .fb-tone-btn{padding:5px 11px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text2);transition:.12s;}
+      .fb-tone-btn:hover,.fb-tone-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+      #page-fbpost{overflow:hidden;}
+      </style>
+    </div>
+  </div><!-- /main -->
 </div><!-- /app -->
 
 <!-- ══ MODALS ══ -->
@@ -1527,7 +1713,7 @@ window.goPage = function(id, el) {
     'alert-page':'🚨 সতর্কতা',blood:'🩸 রক্তদাতা',press:'📰 Press Release',
     leader:'🏛️ নেতা ট্র্যাকার',warrior:'✊ জুলাই যোদ্ধা',bajar:'🛒 বাজার দর',
     medicine:'💊 ওষুধের দাম',members:'👥 Members',polls:'🗳️ Polls',
-    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',newscard:'🎨 News Card Generator'};
+    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',fbpost:'📢 FB Auto Post',newscard:'🎨 News Card Generator'};
   document.getElementById('pageTitle').textContent = titles[id] || id;
   // Lazy load page data
   const loaders = {
@@ -3000,52 +3186,9 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="/js/data.js"></script>
 <script src="/js/fb-draft-queue.js" type="module"></script>
-
-<script>
-// ── Reel Studio → Smart Studio bridge ──────────────────────
-window.addEventListener('message', async function(e) {
-  if (!e.data || e.data.type !== 'JOAF_REEL_TO_FBPOST') return;
-  const {caption, videoBase64, mimeType, filename} = e.data;
-
-  // 1. Fill caption
-  const capEl = document.getElementById('sa-caption');
-  if (capEl) capEl.value = caption || '';
-
-  // 2. Set video file if available
-  if (videoBase64) {
-    try {
-      const res = await fetch(videoBase64);
-      const blob = await res.blob();
-      const file = new File([blob], filename || 'joaf-reel.webm', {type: mimeType || 'video/webm'});
-      window._saImgFile = file;
-      // Show preview label
-      const lbl = document.getElementById('sa-img-label');
-      const prev = document.getElementById('sa-img-preview');
-      if (lbl) lbl.textContent = '🎬 ' + (filename || 'joaf-reel.webm') + ' — ready';
-      if (prev) prev.style.display = 'none';
-      const drop = document.getElementById('sa-drop');
-      if (drop) { drop.style.borderColor='var(--green)'; drop.style.background='rgba(34,197,94,.08)'; }
-    } catch(err) { console.warn('Reel blob error', err); }
-  }
-
-  // 3. Navigate to Smart Studio
-  if (typeof goPage === 'function') {
-    
-    const ni = document.querySelector("[onclick*=\"goPage('smartstudio')\"]");
-    if (ni) goPage('smartstudio', ni);
-    
-  }
-
-  // 4. Toast
-  setTimeout(() => {
-    const log = document.getElementById('sa-post-log');
-    if (log) { log.style.display='block'; log.innerHTML='<div style="color:var(--green);font-weight:700">✅ Reel Studio cinematic design ready — Smart Studio queue updated</div>'; }
-  }, 500);
-});
-</script>
-
-<script>
-
+</body>
+</body>
+</html><script>
 // ── FB Reel Generator ─────────────────────────────────────────
 let reelBlob = null;
 let _fbCurrentTone = 'urgent';
@@ -3378,10 +3521,7 @@ window.fbGenerateSingle = async function(idx) {
       const panels = slideTexts.slice(0,3).map(t2 => ({ type:'text', title:'', content:t2 }));
       window._fbCurrentBatchFile = file;
       window._fbImgBase64 = imgBase64;
-      
-window._fbCurrentMode = 'card';
-const blob = await drawInstantCard(panels, mood, parsed.hook || '', text);
-
+      const blob = await drawInstantCard(panels, mood, parsed.hook || '', text);
       if (blob) {
         if (!window._fbBatchBlobs) window._fbBatchBlobs = [];
         if (!window._fbBatchQueue) window._fbBatchQueue = [];
@@ -3636,13 +3776,12 @@ News: ${text}` });
         // Override so drawInstantCard uses this image
         window._fbCurrentBatchFile = bFile || null;
 
-        
-window._fbCurrentMode = 'card';
-const blob = await drawInstantCard(cardPanels, cardMood, cardHook, text);
-
+        await drawInstantCard(cardPanels, cardMood, cardHook, text);
 
         // Capture this card as blob
-        if (true) {
+        const cardCanvas2 = document.getElementById('fb-card-canvas');
+        if (cardCanvas2) {
+          const blob = await new Promise(res => cardCanvas2.toBlob(res, 'image/jpeg', 0.95));
           if (blob) {
             // ── Push into unified batch queue — use per-card caption ──
             const capText = (cardParsed.caption || document.getElementById('fb-caption')?.value||'')
@@ -4151,11 +4290,6 @@ async function drawInstantCard(panels, mood, hook, rawText) {
   ctx.fillText(dateStr, W-36, H-34);
   ctx.restore();
   ctx.fillStyle = barG; ctx.fillRect(0, H-7, W, 7);
-
-  // Return blob so callers can capture this card
-  return new Promise(function(resolve) {
-    canvas.toBlob(function(blob) { resolve(blob); }, 'image/jpeg', 0.95);
-  });
 }
 // ── Status Logger ──────────────────────────────────────────────
 function t2vLog(logEl, stage, msg, type) {
@@ -5114,7 +5248,4 @@ function startCinematic() {
     sceneIndex++;
   }, 10000);
 }
-
 </script>
-</body>
-</html>
