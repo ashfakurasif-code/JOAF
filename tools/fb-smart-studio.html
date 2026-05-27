@@ -528,10 +528,32 @@ function applySettings(){
 // TABS
 // ═══════════════════════════════════════════════
 function switchTab(n){
-  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('on',i+1===n);});
-  document.querySelectorAll('.panel').forEach((p,i)=>{p.classList.toggle('on',i+1===n);});
-  if(n===2){fitZ();draw();}
-  if(n===3){renderQueueManager();}
+  console.log('📌 switchTab called with n =', n);
+  
+  // Switch tabs
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const shouldBeActive = (i+1===n);
+    t.classList.toggle('on', shouldBeActive);
+    console.log(`Tab ${i+1}: ${shouldBeActive ? '✅ ON' : '❌ OFF'}`);
+  });
+  
+  // Switch panels
+  document.querySelectorAll('.panel').forEach((p,i)=>{
+    const shouldBeActive = (i+1===n);
+    p.classList.toggle('on', shouldBeActive);
+    console.log(`Panel ${i+1}: ${shouldBeActive ? '✅ ON' : '❌ OFF'}`);
+  });
+  
+  // Panel-specific actions
+  if(n===2){
+    console.log('⚙️ Panel 2 - Running fitZ() and draw()');
+    if(typeof fitZ === 'function') fitZ();
+    if(typeof draw === 'function') draw();
+  }
+  if(n===3){
+    console.log('📊 Panel 3 - Running renderQueueManager()');
+    if(typeof renderQueueManager === 'function') renderQueueManager();
+  }
 }
 
 // ═══════════════════════════════════════════════
