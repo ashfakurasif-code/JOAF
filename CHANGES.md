@@ -113,3 +113,36 @@ checked `if (upsertResult === 'created')` — always false, so `created` count w
 **Files changed:**
 - `admin/index.html` — enhanced state management block
 
+---
+
+## Phase 2 (Viral Growth Build) — Initial Delivery
+
+**Warriors archive migration path**
+- Added `netlify/functions/migrate-warriors.js` (admin-key protected).
+- Supports idempotent upserts into Appwrite `warriors`.
+- Uses chunked processing with `Promise.allSettled` + exponential backoff (`withRetryBackoff` in `aw-utils.js`).
+
+**Warriors directory runtime**
+- `july-warriors.html` now loads Appwrite warriors first.
+- Falls back to embedded `WARRIORS` array when Appwrite is unavailable.
+- Caches Appwrite result in IndexedDB for offline usage.
+- Search now covers name, district, type, and date.
+
+**Hyperlocal discovery**
+- `alert.html` now includes a Leaflet map with real-time alert pins.
+- District filter added for list/map views.
+- Alerts are cached in IndexedDB for offline fallback.
+
+**Retention engine placeholders**
+- Extended push message templates for unity/community support (`unity`, `support`, `prayer`).
+- Added scheduled placeholder function: `netlify/functions/prayer-retention-placeholder.js`.
+- Added Netlify schedule in `netlify.toml`.
+
+**New config placeholders (no secrets committed)**
+- `JOAF_CONFIG_PRAYER_LAT`
+- `JOAF_CONFIG_PRAYER_LNG`
+- `JOAF_CONFIG_PRAYER_TZ`
+
+**Ops**
+- Metro-Line health dashboard now includes `Warrior Mig` node.
+- Daily notification workflow now follows redirects (`curl -L`) to avoid 308 CI failures.

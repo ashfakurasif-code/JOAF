@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Warriors Migration Tool</title>
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;max-width:720px;margin:32px auto;padding:0 16px}
+    .card{border:1px solid #ddd;border-radius:12px;padding:16px}
+    input,button{width:100%;padding:10px 12px;margin:8px 0;border-radius:8px;border:1px solid #ccc;font:inherit}
+    button{cursor:pointer;background:#111;color:#fff;border-color:#111}
+    pre{background:#f6f6f6;border-radius:10px;padding:12px;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <h1>Warriors → Appwrite Migration</h1>
+  <div class="card">
+    <p>Loads <code>const WARRIORS=[...]</code> from <code>/july-warriors.html</code> and calls <code>/.netlify/functions/migrate-warriors</code>.</p>
+    <input id="adminKey" type="password" placeholder="ADMIN_SECRET_KEY">
+    <button id="runBtn">Run Migration</button>
+    <pre id="log">Ready.</pre>
+  </div>
+  <script>
+    const log = (msg) => { document.getElementById('log').textContent = msg; };
+
+    async function loadInlineWarriors() {
+      const html = await fetch('/july-warriors.html', { cache: 'no-store' }).then(r => r.text());
+      const match = html.match(/const WARRIORS=(\[.*?\]);\nlet wPage/s);
+      if (!match) throw new Error('Inline WARRIORS not found');
+      return JSON.parse(match[1]);
+    }
+
+    document.getElementById('runBtn').addEventListener('click', async () => {
+      const key = document.getElementById('adminKey').value.trim();
+      if (!key) { log('Admin key required.'); return; }
+
+      try {
+        log('Loading inline warriors from july-warriors.html ...');
+        const warriors = await loadInlineWarriors();
+        log(`Loaded ${warriors.length} warriors. Migrating ...`);
+
+        const res = await fetch('/.netlify/functions/migrate-warriors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+          body: JSON.stringify({ warriors }),
+        });
+        const json = await res.json();
+        log(JSON.stringify(json, null, 2));
+      } catch (error) {
+        log('Migration failed: ' + (error.message || error));
+      }
+    });
+  </script>
+</body>
+</html>

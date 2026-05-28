@@ -74,7 +74,7 @@
   </div>
   <div id="tab-directory">
     <div class="search-row">
-      <input id="wSearch" placeholder="নাম বা জেলা..." oninput="filterWarriors()">
+      <input id="wSearch" placeholder="নাম, জেলা বা তারিখ..." oninput="filterWarriors()">
       <select id="wFilter" onchange="filterWarriors()">
         <option value="">সব</option>
         <option value="shahid">শহীদ</option>
@@ -195,8 +195,167 @@ function setTab(tab,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
+window.__warriorsInline = WARRIORS;
 renderWarriors();
-</script><script src="/js/rainbow-swirl-cursor.js" defer></script>
+</script>
+<script type="module">
+import { initializeApp, getApps, getFirestore, collection, getDocs, query, orderBy } from '/js/aw-firestore.js';
+
+const inlineWarriors = Array.isArray(window.__warriorsInline) ? window.__warriorsInline : [];
+let page = 1;
+const perPage = 25;
+let filtered = [...inlineWarriors];
+
+const DB_NAME = 'joaf-offline-cache';
+const STORE = 'warriors';
+
+function openDb(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function cacheGet(key){
+  try{
+    const db=await openDb();
+    return await new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,'readonly');
+      const rq=tx.objectStore(STORE).get(key);
+      rq.onsuccess=()=>resolve(rq.result||null);
+      rq.onerror=()=>reject(rq.error);
+    });
+  }catch{return null;}
+}
+async function cacheSet(key,val){
+  try{
+    const db=await openDb();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put(val,key);
+      tx.oncomplete=()=>resolve();
+      tx.onerror=()=>reject(tx.error);
+    });
+  }catch{}
+}
+
+function normalizeWarrior(w={}){
+  return {
+    name: String(w.name||'').trim(),
+    role: String(w.role||'').trim(),
+    dist: String(w.dist||w.district||'').trim(),
+    icon: String(w.icon||'👤').trim() || '👤',
+    type: String(w.type||'active').trim(),
+    date: String(w.date||'').trim(),
+    story: String(w.story||w.bio||'').trim(),
+  };
+}
+
+async function withRetry(task, attempts=3){
+  let error;
+  for(let i=0;i<attempts;i++){
+    try { return await task(); }
+    catch(e){
+      error=e;
+      await new Promise(r=>setTimeout(r, 250 * (2**i)));
+    }
+  }
+  throw error;
+}
+
+function setData(list){
+  const normalized=(Array.isArray(list)?list:[]).map(normalizeWarrior).filter(w=>w.name);
+  inlineWarriors.splice(0, inlineWarriors.length, ...normalized);
+  if (typeof window.filterWarriors === 'function') window.filterWarriors();
+}
+
+function renderPager(){
+  const totalPages=Math.max(1,Math.ceil(filtered.length/perPage));
+  ['wPag1','wPag2'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    let html='<div style="text-align:center;margin:14px 0;display:flex;align-items:center;justify-content:center;gap:8px;">';
+    if(page>1) html += `<button class="pg-btn" onclick="wGo(${page-1})">◀ আগে</button>`;
+    html += `<span style="font-size:13px;color:#6b7280;padding:0 10px;">${page} / ${totalPages} (${filtered.length} জন)</span>`;
+    if(page<totalPages) html += `<button class="pg-btn" onclick="wGo(${page+1})">পরে ▶</button>`;
+    html += '</div>';
+    el.innerHTML=html;
+  });
+}
+
+function render(){
+  const list=document.getElementById('warriorList');
+  const start=(page-1)*perPage;
+  const rows=filtered.slice(start,start+perPage);
+  if(!rows.length){
+    list.innerHTML='<div style="text-align:center;padding:40px;color:#9ca3af;">কোনো তথ্য পাওয়া যায়নি</div>';
+    renderPager();
+    return;
+  }
+  list.innerHTML=rows.map(w=>`
+    <div class="warrior-card">
+      <div class="warrior-avatar">${w.icon}</div>
+      <div style="flex:1">
+        <div class="warrior-name">${w.name}</div>
+        <div class="warrior-role">${w.role}</div>
+        <div class="warrior-dist">📍 ${w.dist} &nbsp;📅 ${w.date||''}</div>
+        <div class="warrior-story">${w.story}</div>
+        <span class="warrior-badge ${w.type==='shahid'?'badge-shahid':w.type==='ahat'?'badge-ahat':'badge-active'}">${w.type==='shahid'?'🩸 শহীদ':w.type==='ahat'?'🩹 আহত':'✊ সক্রিয়'}</span>
+      </div>
+    </div>`).join('');
+  renderPager();
+}
+
+window.wGo = (p)=>{ page=Math.max(1,p|0); render(); document.getElementById('tab-directory').scrollIntoView({behavior:'smooth'}); };
+window.filterWarriors = ()=>{
+  const queryText=(document.getElementById('wSearch')?.value||'').toLowerCase().trim();
+  const typeFilter=(document.getElementById('wFilter')?.value||'').trim();
+  filtered=inlineWarriors.filter(w=>{
+    const matchText = !queryText || [w.name,w.dist,w.date,w.type,w.story].some(v=>String(v||'').toLowerCase().includes(queryText));
+    const matchType = !typeFilter || w.type===typeFilter;
+    return matchText && matchType;
+  });
+  page=1;
+  render();
+};
+window.renderWarriors = render;
+window.updatePag = renderPager;
+
+async function loadFromAppwrite(){
+  const app=getApps().length?getApps()[0]:initializeApp({});
+  const db=getFirestore(app);
+  const docs = await withRetry(async ()=>{
+    try {
+      return await getDocs(query(collection(db,'warriors'), orderBy('updatedAt','desc')));
+    } catch {
+      return await getDocs(collection(db,'warriors'));
+    }
+  }, 3);
+  return docs.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+(async ()=>{
+  const cached = await cacheGet('list');
+  if(Array.isArray(cached) && cached.length){
+    setData(cached);
+  }
+  try{
+    const remote = await loadFromAppwrite();
+    if(Array.isArray(remote) && remote.length){
+      setData(remote);
+      await cacheSet('list', remote);
+      return;
+    }
+  }catch{}
+  if(!cached || !cached.length){
+    setData(inlineWarriors);
+  }
+})();
+</script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';

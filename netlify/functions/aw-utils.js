@@ -154,6 +154,30 @@ function qCursorAfter(cursor) {
   return `cursorAfter("${id}")`;
 }
 
+async function withRetryBackoff(task, {
+  maxAttempts = 4,
+  baseDelayMs = 300,
+  shouldRetry = (error) => {
+    const msg = String(error?.message || '');
+    return /429|503|rate limit|Too Many|ECONNRESET|ETIMEDOUT/i.test(msg);
+  },
+} = {}) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await task();
+    } catch (error) {
+      lastError = error;
+      if (attempt >= maxAttempts || !shouldRetry(error)) break;
+      const waitMs = baseDelayMs * (2 ** (attempt - 1)) + Math.floor(Math.random() * 120);
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+  }
+
+  throw lastError || new Error('Retry failed');
+}
+
 async function awRequest(path, options = {}) {
   const res = await fetch(`${AW_ENDPOINT}${path}`, {
     ...options,
@@ -418,6 +442,7 @@ module.exports = {
   qOrderDesc,
   qLimit,
   qCursorAfter,
+  withRetryBackoff,
   awGet,
   awList,
   awListAll,

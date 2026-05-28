@@ -30,6 +30,9 @@ const NOTIFICATION_TYPES = {
   breaking:   { title: '🚨 ব্রেকিং নিউজ',          body: 'এইমাত্র গুরুত্বপূর্ণ খবর।',                    url: '/news.html' },
   reward:     { title: '🎉 পুরস্কার অর্জন!',       body: 'অভিনন্দন! streak সম্পন্ন।',                     url: '/joaf-polls.html' },
   welcome:    { title: '🔥 JOAF-এ স্বাগতম!',       body: 'বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চে যোগ দিন।',    url: '/' },
+  unity:      { title: '🤝 একসাথে থাকি',           body: 'আপনার এলাকায় কমিউনিটি সাপোর্ট চলছে — পাশে থাকুন।', url: '/community.html' },
+  support:    { title: '🫶 সহায়তা সমন্বয়',        body: 'এলাকাভিত্তিক সহায়তার নতুন অনুরোধ আপডেট হয়েছে।',    url: '/alert.html' },
+  prayer:     { title: '🕌 দোয়া ও সংহতি',          body: 'নামাজের পর কমিউনিটির জন্য দোয়া ও সহায়তায় যুক্ত হোন।', url: '/community.html' },
 };
 
 function safeJsonParse(str) {

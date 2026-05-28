@@ -24,6 +24,11 @@
 [functions.update-leaders]
   schedule = "30 20 * * *"
 
+# Phase 2 placeholder — server-side BD prayer-time retention orchestrator.
+# Keeps logic server-side (no secrets in browser); function currently validates JOAF_CONFIG_* env vars only.
+[functions.prayer-retention-placeholder]
+  schedule = "*/30 * * * *"
+
 # ── Headers ──
 [[headers]]
   for = "/*.html"
@@ -63,4 +68,3 @@
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://fra.cloud.appwrite.io https://api.anthropic.com https://graph.facebook.com https://cdn.jsdelivr.net; worker-src 'self' blob:; frame-src 'self'"
-
