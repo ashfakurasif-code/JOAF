@@ -236,6 +236,7 @@ const db = getFirestore(app);
 const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',accident:'🚗',other:'📢'};
 const TYPE_LABELS = {fire:'আগুন',flood:'বন্যা',crime:'অপরাধ',medical:'মেডিকেল',accident:'দুর্ঘটনা',other:'অন্যান্য'};
 const DISTRICTS = ['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ'];
+const BD_CENTER = [23.685, 90.3563];
 
 let activeType = 'all';
 let activeDistrict = '';
@@ -289,7 +290,7 @@ function initDistrictOptions(){
 
 function initMap(){
   if (!window.L || map) return;
-  map = L.map('alertsMap', { zoomControl: true }).setView([23.685, 90.3563], 7);
+  map = L.map('alertsMap', { zoomControl: true, keyboard: true, dragging: true }).setView(BD_CENTER, 7);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: '&copy; OpenStreetMap contributors'
@@ -298,9 +299,10 @@ function initMap(){
 }
 
 function deriveDistrict(a){
-  if (a?.district) return a.district;
-  const loc = String(a?.location || a?.area || '').toLowerCase();
-  const found = DISTRICTS.find(d => loc.includes(d.toLowerCase()));
+  const explicit = String(a?.district || a?.dist || '').trim();
+  if (explicit && DISTRICTS.includes(explicit)) return explicit;
+  const loc = String(a?.location || a?.area || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ');
+  const found = DISTRICTS.find(d => new RegExp(`(^|\\s)${d.toLowerCase()}(\\s|$)`, 'u').test(loc));
   return found || '';
 }
 
@@ -320,11 +322,20 @@ function renderMap(alerts){
     const lng = Number(a.lng);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
     const marker = L.marker([lat, lng]);
-    marker.bindPopup(`<b>${a.title || 'জরুরি সতর্কতা'}</b><br>${a.location || a.area || 'অজানা এলাকা'}<br>${TYPE_ICONS[a.type] || '📢'} ${TYPE_LABELS[a.type] || 'অন্যান্য'}`);
+    const popupRoot = document.createElement('div');
+    const title = document.createElement('b');
+    title.textContent = a.title || 'জরুরি সতর্কতা';
+    popupRoot.appendChild(title);
+    popupRoot.appendChild(document.createElement('br'));
+    popupRoot.appendChild(document.createTextNode(a.location || a.area || 'অজানা এলাকা'));
+    popupRoot.appendChild(document.createElement('br'));
+    popupRoot.appendChild(document.createTextNode(`${TYPE_ICONS[a.type] || '📢'} ${TYPE_LABELS[a.type] || 'অন্যান্য'}`));
+    marker.bindPopup(popupRoot);
     marker.addTo(markerLayer);
     points.push([lat, lng]);
   });
   if (points.length) map.fitBounds(points, { padding: [25, 25], maxZoom: 12 });
+  else map.setView(BD_CENTER, 7);
 }
 
 // Real-time listener

@@ -25,7 +25,7 @@
 
     async function loadInlineWarriors() {
       const html = await fetch('/july-warriors.html', { cache: 'no-store' }).then(r => r.text());
-      const match = html.match(/const WARRIORS=(\\[.*?\\]);\\nlet wPage/s);
+      const match = html.match(/const WARRIORS=(\[.*?\]);\nlet wPage/s);
       if (!match) throw new Error('Inline WARRIORS not found');
       return JSON.parse(match[1]);
     }

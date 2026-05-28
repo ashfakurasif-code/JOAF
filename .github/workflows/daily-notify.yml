@@ -91,6 +91,10 @@ jobs:
 
           BASE_URL="${{ secrets.NETLIFY_FUNCTION_URL }}"
           BASE_URL="${BASE_URL%/}"
+          if [ -z "$BASE_URL" ]; then
+            echo "ERROR: NETLIFY_FUNCTION_URL is empty"
+            exit 1
+          fi
           RESPONSE=$(curl -L -s -w "\n%{http_code}" -X POST \
             "${BASE_URL}/send-notification" \
             -H "Content-Type: application/json" \

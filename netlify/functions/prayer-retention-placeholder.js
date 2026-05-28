@@ -19,7 +19,7 @@ exports.handler = async (event) => {
   const missing = REQUIRED.filter((name) => !process.env[name]);
   if (missing.length) {
     return {
-      statusCode: 200,
+      statusCode: 503,
       headers,
       body: JSON.stringify({
         ok: false,

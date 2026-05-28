@@ -8,17 +8,27 @@ const COLLECTION = 'warriors';
 const CHUNK_SIZE = 20;
 const CONCURRENCY = 6;
 
-const ss = (v, max = 65535) => (v == null ? '' : String(v).slice(0, max));
+const sanitizeString = (v, max = 65535) => (v == null ? '' : String(v).slice(0, max));
+
+function hashString(value = '') {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash).toString(36);
+}
 
 function normalizeWarrior(item = {}) {
-  const name = ss(item.name, 255);
-  const dist = ss(item.dist || item.district, 255);
-  const type = ss(item.type, 40);
-  const date = ss(item.date, 120);
-  const role = ss(item.role, 255);
-  const story = ss(item.story, 5000);
-  const icon = ss(item.icon || '👤', 8);
-  const docId = sanitizeId(`${name}-${dist}-${date}` || item.id || Math.random().toString(36).slice(2));
+  const name = sanitizeString(item.name, 255);
+  const dist = sanitizeString(item.dist || item.district, 255);
+  const type = sanitizeString(item.type, 40);
+  const date = sanitizeString(item.date, 120);
+  const role = sanitizeString(item.role, 255);
+  const story = sanitizeString(item.story, 5000);
+  const icon = sanitizeString(item.icon || '👤', 8);
+  const preferredId = `${name}|${dist}|${date}|${hashString(story).slice(0, 8)}`.replace(/^\|+|\|+$/g, '');
+  const fallbackId = sanitizeString(item.id, 64) || Math.random().toString(36).slice(2);
+  const docId = sanitizeId(preferredId || fallbackId);
 
   if (!name) return null;
 
@@ -33,7 +43,7 @@ function normalizeWarrior(item = {}) {
       date,
       story,
       icon,
-      source: ss(item.source || 'july-warriors-inline', 100),
+      source: sanitizeString(item.source || 'july-warriors-inline', 100),
       updatedAt: new Date().toISOString(),
     },
   };
