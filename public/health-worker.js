@@ -6,7 +6,8 @@
 
 const HEALTH_CHECK_INTERVAL = 30000; // 30 seconds
 const HEALTH_TIMEOUT = 5000; // 5 second timeout per check
-const SERVICES = [
+
+let SERVICES = [
   {
     id: 'appwrite_db',
     name: 'Appwrite Database',
@@ -20,8 +21,30 @@ const SERVICES = [
     headers: {},
   },
 ];
-
 let checkInterval = null;
+
+/**
+ * Initialize services from config
+ */
+function initializeServices(config) {
+  if (config?.APPWRITE) {
+    const { ENDPOINT, PROJECT_ID } = config.APPWRITE;
+    SERVICES = [
+      {
+        id: 'appwrite_db',
+        name: 'Appwrite Database',
+        url: `${ENDPOINT}/health/db`,
+        headers: { 'X-Appwrite-Project': PROJECT_ID },
+      },
+      {
+        id: 'appwrite_api',
+        name: 'Appwrite API',
+        url: `${ENDPOINT}/health`,
+        headers: {},
+      },
+    ];
+  }
+}
 
 /**
  * Check a single service
@@ -103,9 +126,12 @@ function stopMonitoring() {
  * Handle messages from main thread
  */
 self.addEventListener('message', (event) => {
-  const { command } = event.data;
+  const { command, config } = event.data;
 
   switch (command) {
+    case 'config':
+      initializeServices(config);
+      break;
     case 'start':
       startMonitoring();
       break;

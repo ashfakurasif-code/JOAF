@@ -141,10 +141,10 @@ class HealthService {
   async checkAppwriteDB() {
     const start = Date.now();
     try {
-      const config = window.JOAF_CONFIG?.APPWRITE || {
-        ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
-        PROJECT_ID: '6a11b6cd000b59f318eb',
-      };
+      if (!window.JOAF_CONFIG?.APPWRITE) {
+        throw new Error('JOAF_CONFIG not initialized. Ensure constants.js is loaded before health-service.js');
+      }
+      const config = window.JOAF_CONFIG.APPWRITE;
       
       const response = await fetch(
         `${config.ENDPOINT}/health/db`,
@@ -180,10 +180,10 @@ class HealthService {
   async checkAppwriteAPI() {
     const start = Date.now();
     try {
-      const config = window.JOAF_CONFIG?.APPWRITE || {
-        ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
-        PROJECT_ID: '6a11b6cd000b59f318eb',
-      };
+      if (!window.JOAF_CONFIG?.APPWRITE) {
+        throw new Error('JOAF_CONFIG not initialized. Ensure constants.js is loaded before health-service.js');
+      }
+      const config = window.JOAF_CONFIG.APPWRITE;
       
       const response = await fetch(`${config.ENDPOINT}/health`, {
         method: 'GET',
@@ -213,11 +213,10 @@ class HealthService {
   async checkPushService() {
     const start = Date.now();
     try {
-      const config = window.JOAF_CONFIG?.APPWRITE || {
-        ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
-        PROJECT_ID: '6a11b6cd000b59f318eb',
-        DB_ID: 'joaf',
-      };
+      if (!window.JOAF_CONFIG?.APPWRITE) {
+        throw new Error('JOAF_CONFIG not initialized. Ensure constants.js is loaded before health-service.js');
+      }
+      const config = window.JOAF_CONFIG.APPWRITE;
       
       const response = await fetch(
         `${config.ENDPOINT}/databases/${config.DB_ID}/collections/push_subscriptions`,
@@ -388,3 +387,4 @@ class HealthService {
 
 // Export singleton instance
 const healthService = new HealthService();
+window.healthService = healthService;

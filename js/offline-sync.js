@@ -132,17 +132,17 @@ class OfflineSyncManager {
 
       console.log(`🔄 Syncing ${collection}: ${pendingDocs.length} items`);
 
+      if (!window.JOAF_CONFIG?.APPWRITE) {
+        throw new Error('JOAF_CONFIG not initialized. Ensure constants.js is loaded before offline-sync.js');
+      }
+      const config = window.JOAF_CONFIG.APPWRITE;
+
       for (const doc of pendingDocs) {
         try {
-          const config = window.JOAF_CONFIG?.APPWRITE || {
-            ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
-            PROJECT_ID: '6a11b6cd000b59f318eb',
-          };
-          
           if (doc.action === 'delete') {
             // Delete from Appwrite
             await fetch(
-              `${config.ENDPOINT}/databases/joaf/collections/${collection}/documents/${doc.$id}`,
+              `${config.ENDPOINT}/databases/${config.DB_ID}/collections/${collection}/documents/${doc.$id}`,
               {
                 method: 'DELETE',
                 headers: {
@@ -158,7 +158,7 @@ class OfflineSyncManager {
             try {
               // Try PUT first (update)
               const response = await fetch(
-                `${config.ENDPOINT}/databases/joaf/collections/${collection}/documents/${doc.$id}`,
+                `${config.ENDPOINT}/databases/${config.DB_ID}/collections/${collection}/documents/${doc.$id}`,
                 {
                   method: 'PUT',
                   headers: {
@@ -177,7 +177,7 @@ class OfflineSyncManager {
               } else if (response.status === 404) {
                 // Document doesn't exist, try POST (create)
                 const createResponse = await fetch(
-                  `${config.ENDPOINT}/databases/joaf/collections/${collection}/documents/${doc.$id}`,
+                  `${config.ENDPOINT}/databases/${config.DB_ID}/collections/${collection}/documents/${doc.$id}`,
                   {
                     method: 'POST',
                     headers: {
@@ -309,3 +309,4 @@ class OfflineSyncManager {
 
 // Export singleton instance
 const offlineSyncManager = new OfflineSyncManager();
+window.offlineSyncManager = offlineSyncManager;

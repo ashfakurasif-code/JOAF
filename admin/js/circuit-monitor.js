@@ -259,3 +259,4 @@ class CircuitMonitor {
 
 // Create and export singleton
 const circuitMonitor = new CircuitMonitor('circuit-container');
+window.circuitMonitor = circuitMonitor;

@@ -234,3 +234,4 @@ class IndexedDBStore {
 
 // Export singleton
 const indexedDBStore = new IndexedDBStore();
+window.indexedDBStore = indexedDBStore;
