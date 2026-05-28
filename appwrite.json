@@ -1,11 +1,11 @@
 {
-  "projectId": "6a1b6cd000b59f318eb",
+  "projectId": "6a11b6cd000b59f318eb",
   "projectName": "JOAF-Push",
   "functions": [
     {
       "$id": "vote",
       "name": "Vote",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -22,7 +22,7 @@
     {
       "$id": "discover-leaders",
       "name": "Discover Leaders",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": [],
       "events": [],
       "schedule": "0 6 * * *",
@@ -39,7 +39,7 @@
     {
       "$id": "generate-timeline",
       "name": "Generate Timeline",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": [],
       "events": [],
       "schedule": "0 8 * * *",
@@ -56,7 +56,7 @@
     {
       "$id": "update-leaders",
       "name": "Update Leaders",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": [],
       "events": [],
       "schedule": "0 10 * * *",
@@ -73,7 +73,7 @@
     {
       "$id": "fb-autopost",
       "name": "FB Autopost",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -90,7 +90,7 @@
     {
       "$id": "send-notification",
       "name": "Send Notification",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -107,7 +107,7 @@
     {
       "$id": "fb-config",
       "name": "FB Config",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -124,7 +124,7 @@
     {
       "$id": "fetch-rss",
       "name": "Fetch RSS",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -141,7 +141,7 @@
     {
       "$id": "get-stats",
       "name": "Get Stats",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -158,7 +158,7 @@
     {
       "$id": "groq-proxy",
       "name": "Groq Proxy",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -175,7 +175,7 @@
     {
       "$id": "hf-video-proxy",
       "name": "HF Video Proxy",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -190,9 +190,9 @@
       "path": "appwrite-functions/hf-video-proxy"
     },
     {
-      "$id": "fb-scheduler",
+      "$id": "6a1520b8002f61b828e2",
       "name": "FB Scheduler",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -209,7 +209,7 @@
     {
       "$id": "github-upload",
       "name": "GitHub Upload",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -226,7 +226,7 @@
     {
       "$id": "save-subscription",
       "name": "Save Subscription",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
@@ -243,7 +243,7 @@
     {
       "$id": "press-release-og",
       "name": "Press Release OG",
-      "runtime": "node-22.0",
+      "runtime": "node-22",
       "execute": ["any"],
       "events": [],
       "schedule": "",
