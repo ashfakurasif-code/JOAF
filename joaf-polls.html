@@ -1177,7 +1177,7 @@ window.addEventListener('load', async () => {
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, addDoc, setDoc, getDoc, doc, collection, serverTimestamp } from '/js/aw-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 
 // ── Pageview tracking ──

@@ -274,10 +274,12 @@ async function awUpsert(collection, docId, data, permissions = DEFAULT_DOC_PERMI
   const existing = await awGet(collection, docId);
 
   if (existing) {
-    return awUpdate(collection, docId, data);
+    await awUpdate(collection, docId, data);
+    return 'updated';
   }
 
-  return awCreate(collection, data, docId, permissions);
+  await awCreate(collection, data, docId, permissions);
+  return 'created';
 }
 
 async function ensureCollection() {
@@ -361,14 +363,28 @@ async function initDatabase() {
 
   await ensureCollection();
 
+  // Track if any new attributes were actually created (need a brief settle wait before indexing)
+  const existingAttrs = await databases.listAttributes(DB_ID, COLLECTION_ID).then(
+    r => new Set((r.attributes || []).map(a => a.key)),
+    () => new Set()
+  );
+
   await Promise.all([
     ensureAttribute('active', 'boolean', { default: true }),
+    ensureAttribute('endpoint', 'string', { size: 65535 }),
     ensureAttribute('subscriptionJson', 'string', { size: 65535 }),
     ensureAttribute('district', 'string', { size: 255 }),
     ensureAttribute('updatedAt', 'datetime'),
   ]);
 
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  const newAttrsCreated = ['active', 'endpoint', 'subscriptionJson', 'district', 'updatedAt']
+    .some(k => !existingAttrs.has(k));
+
+  // Only wait if we just created new attributes — Appwrite needs them to be 'available'
+  // before indexes can reference them. 800ms is enough; 3000ms was way too conservative.
+  if (newAttrsCreated) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
 
   await Promise.all([
     ensureIndex('active_index', ['active'], ['ASC']),

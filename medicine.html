@@ -99,18 +99,10 @@
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from '/js/aw-firestore.js';
 
-const FB_CONFIG = {
-  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
-  authDomain: "joaf-app-45753.firebaseapp.com",
-  projectId: "joaf-app-45753",
-  storageBucket: "joaf-app-45753.firebasestorage.app",
-  messagingSenderId: "472362223214",
-  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
-};
-
+const FB_CONFIG = {}; // Firebase config removed
 const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
 
-const fbApp = getApps().length ? getApps()[0] : initializeApp(FB_CONFIG);
+const fbApp = getApps().length ? getApps()[0] : initializeApp({});
 const db = getFirestore(fbApp);
 
 function bn(n) { return String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]); }
@@ -278,7 +270,7 @@ loadMeds();
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';

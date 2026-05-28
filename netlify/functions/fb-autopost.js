@@ -169,9 +169,36 @@ async function postToPage({ page, caption, imageUrl, videoUrl, publishTime }) {
   let res, body;
 
   if (videoUrl) {
+    // FB Video scheduling: requires published:false + scheduled_publish_time together
     body = { file_url: videoUrl, description: caption, access_token: page.access_token };
-    if (publishTime) body.scheduled_publish_time = publishTime;
+    if (publishTime) {
+      body.scheduled_publish_time = publishTime;
+      body.published = false; // Required by FB Graph API for scheduled video posts
+    }
     res = await fetch(`${BASE}/${page.id}/videos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } else if (imageUrl && publishTime) {
+    // Scheduled image post: /photos endpoint doesn't support scheduling.
+    // Upload image as unpublished, then post to /feed with attached_media.
+    const photoRes = await fetch(`${BASE}/${page.id}/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: imageUrl, published: false, access_token: page.access_token }),
+    });
+    const photoData = await photoRes.json();
+    if (photoData.error) throw new Error(`Photo upload: ${photoData.error.message} (code ${photoData.error.code})`);
+
+    body = {
+      message: caption,
+      attached_media: [{ media_fbid: photoData.id }],
+      scheduled_publish_time: publishTime,
+      published: false,
+      access_token: page.access_token,
+    };
+    res = await fetch(`${BASE}/${page.id}/feed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -185,7 +212,10 @@ async function postToPage({ page, caption, imageUrl, videoUrl, publishTime }) {
     });
   } else {
     body = { message: caption, access_token: page.access_token };
-    if (publishTime) body.scheduled_publish_time = publishTime;
+    if (publishTime) {
+      body.scheduled_publish_time = publishTime;
+      body.published = false; // Required for feed scheduling
+    }
     res = await fetch(`${BASE}/${page.id}/feed`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -194,6 +224,6 @@ async function postToPage({ page, caption, imageUrl, videoUrl, publishTime }) {
   }
 
   const d = await res.json();
-  if (d.error) throw new Error(d.error.message);
+  if (d.error) throw new Error(`${d.error.message} (type: ${d.error.type}, code: ${d.error.code})`);
   return d;
 }

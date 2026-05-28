@@ -582,7 +582,7 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
 
 
 <!-- ══ LOGIN ══════════════════════════════════════ -->
-<script>if(localStorage.getItem('joaf_admin_key')){document.documentElement.style.setProperty('--ls-display','none');}else{document.documentElement.style.setProperty('--ls-display','flex');}</script>
+<script src="/admin/js/admin-init.js"></script>
 <div id="loginScreen">
   <div class="lcard">
     <div class="lcard-top">
@@ -1206,7 +1206,7 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
         <code style="display:block;background:var(--bg);padding:12px;border-radius:8px;font-size:10px;white-space:pre-wrap;border:1px solid var(--border);line-height:1.6">&lt;script type="module"&gt;
 import{initializeApp,getApps}from'/js/aw-firestore.js';
 import{getFirestore,addDoc,collection,serverTimestamp}from'/js/aw-firestore.js';
-const app=getApps().length?getApps()[0]:initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',projectId:'joaf-app-45753'});
+const app=getApps().length?getApps()[0]:initializeApp({});
 const db=getFirestore(app);
 const ua=navigator.userAgent,dev=/Mobile|Android|iPhone/i.test(ua)?'mobile':'desktop';
 const ref=document.referrer;
@@ -1542,7 +1542,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
     <div class="field" id="nm-district-row" style="display:none">
       <label>জেলা ফিল্টার <small style="color:#9ca3af">(শুধু এই জেলার subscriber রা পাবেন — ফাঁকা রাখলে সবাই পাবেন)</small></label>
       <select id="nm-district" style="width:100%;padding:10px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;"><option value="">সব জেলা (সকল subscriber)</option></select>
-      <script>(function(){if(document.getElementById('nm-district').options.length>1)return;const D=['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ','কুমিল্লা','নারায়ণগঞ্জ','গাজীপুর','টাঙ্গাইল','ফরিদপুর','যশোর','নোয়াখালী','বগুড়া','দিনাজপুর','পাবনা','নরসিংদী','মানিকগঞ্জ','মুন্সীগঞ্জ','শরীয়তপুর','মাদারীপুর','গোপালগঞ্জ','কিশোরগঞ্জ','নেত্রকোনা','জামালপুর','শেরপুর','ব্রাহ্মণবাড়িয়া','চাঁদপুর','ফেনী','লক্ষ্মীপুর','কক্সবাজার','বান্দরবান','রাঙ্গামাটি','খাগড়াছড়ি','হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','নওগাঁ','চাঁপাইনবাবগঞ্জ','নাটোর','সিরাজগঞ্জ','জয়পুরহাট','সাতক্ষীরা','ঝিনাইদহ','মাগুরা','নড়াইল','বাগেরহাট','মেহেরপুর','চুয়াডাঙ্গা','কুষ্টিয়া','ঝালকাঠি','পটুয়াখালী','পিরোজপুর','ভোলা','বরগুনা','লালমনিরহাট','নীলফামারী','গাইবান্ধা','কুড়িগ্রাম','পঞ্চগড়','ঠাকুরগাঁও'].sort();const s=document.getElementById('nm-district');D.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;s.appendChild(o);});})();</script>
+      <!-- district options populated by /admin/js/admin-init.js -->
     </div>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeModal('notifModal')">বাতিল</button>
@@ -1719,9 +1719,9 @@ import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, q
 // exclusively to Appwrite. Firebase Firestore is NEVER written to from this panel.
 // This config object is passed to the shim's initializeApp() only for API compat;
 // the shim ignores it and uses the Appwrite endpoint/project hardcoded in aw-firestore.js.
-const FB = { apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk', authDomain:'joaf-app-45753.firebaseapp.com', projectId:'joaf-app-45753', storageBucket:'joaf-app-45753.firebasestorage.app', messagingSenderId:'472362223214', appId:'1:472362223214:web:9186a4f90dc608bae4487f' };
+const FB = {}; // Firebase config removed — shim uses Appwrite
 // ─────────────────────────────────────────────────────────────────────────────
-const app = getApps().length ? getApps()[0] : initializeApp(FB);
+const app = getApps().length ? getApps()[0] : initializeApp({});
 const db  = getFirestore(app);
 
 // ── Auth ────────────────────────────────────────────────
@@ -2072,7 +2072,7 @@ async function callSendNotif(payload) {
     });
     const data = await res.json();
     if (!res.ok) { toast('❌ Error: '+(data.error||'Unknown'),'error'); }
-    else { toast(`✅ ${data.sent} জনের কাছে পাঠানো হয়েছে!`,'success'); loadNotifPage(); }
+    else { toast(`✅ ${data.sent} জনের কাছে পাঠানো হয়েছে!`,'success'); loadNotifPage(); if(typeof window.__joafBroadcast==='function') window.__joafBroadcast('notification_sent',{sent:data.sent}); }
   } catch(e) { toast('❌ Network error','error'); }
   finally { if(btn){btn.disabled=false;btn.textContent='📤 সবার কাছে পাঠান';} }
 }
@@ -3009,30 +3009,29 @@ window.clearCache = function() { toast('Cache cleared','success'); };
       let colsDone = 0;
 
       for (let ci = 0; ci < activeCols.length; ci++) {
-        const colName = activeCols[ci];
-        let offset    = 0;
-        let colTotal  = null;
-        let colDone   = false;
+        const colName  = activeCols[ci];
+        let pageToken  = null; // native Firestore cursor — avoids full re-fetch each call
+        let pageNum    = 0;
+        let colDone    = false;
 
         while (!colDone) {
-          // Progress: 20% → 95% across all collections + offsets
+          // Progress: 20% → 95% across all collections
           const overallPct = 20 + Math.round(
-            ((ci / activeCols.length) + (offset / Math.max(colTotal||1, 1) / activeCols.length)) * 75
+            ((ci / activeCols.length) + (pageNum > 0 ? 0.5 / activeCols.length : 0)) * 75
           );
           setProgress(Math.min(overallPct, 94), 'upsert',
             '🔄 [' + (ci+1) + '/' + activeCols.length + '] ' + colName +
-            (colTotal ? ' (' + offset + '/' + colTotal + ')' : '') + '…'
+            (pageNum > 0 ? ' (page ' + pageNum + ')' : '') + '…'
           );
 
           const chunk = await apiFetch({
             action:     'migrate-collection',
             collection: colName,
-            offset:     offset,
+            pageToken:  pageToken,  // native cursor — O(1) fetch per page
             limit:      CHUNK_SIZE,
           });
 
-          if (colTotal === null) colTotal = chunk.total || 0;
-          totals[colName].total    = colTotal;
+          pageNum++;
           totals[colName].created += chunk.created  || 0;
           totals[colName].updated += chunk.updated  || 0;
           totals[colName].skipped += chunk.skipped  || 0;
@@ -3049,7 +3048,7 @@ window.clearCache = function() { toast('Cache cleared','success'); };
           if (chunk.done || chunk.processed === 0) {
             colDone = true;
           } else {
-            offset = chunk.nextOffset;
+            pageToken = chunk.nextPageToken; // advance cursor
           }
 
           // Tiny gap between calls to avoid hammering Appwrite rate limit
@@ -5804,13 +5803,58 @@ function joafSyncBar(msg, ok=true) {
     }
   };
 })();
-// Auto-refresh dashboard every 90s
+// ── Auto-refresh: every 60s when dashboard is active ──────────────────────
 setInterval(()=>{
   const dp = document.getElementById('page-dashboard');
   if (dp && dp.classList.contains('active')) {
     __joafState.invalidate('tab_dashboard');
     typeof initDashboard==='function' && initDashboard();
   }
-}, 90_000);
+}, 60_000);
+
+// ── Page Visibility API: refresh stale data when tab re-focuses ────────────
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState !== 'visible') return;
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  const pageId = activePage.id?.replace('page-', '');
+  if (!pageId) return;
+  // Only refresh if data is stale (>30s since last load when hidden)
+  __joafState.STALE_MS = 30_000;
+  if (__joafState.isStale('tab_' + pageId)) {
+    __joafState.invalidate('tab_' + pageId);
+    switch(pageId) {
+      case 'dashboard': typeof initDashboard==='function' && initDashboard(); break;
+      case 'blood':     typeof loadDonors==='function'    && loadDonors();    break;
+      case 'notif': case 'notification': typeof loadNotifPage==='function' && loadNotifPage(); break;
+      case 'press':     typeof loadPress==='function'     && loadPress();     break;
+      case 'leader':    typeof loadLeaders==='function'   && loadLeaders();   break;
+      case 'alert-page':typeof loadAlerts==='function'    && loadAlerts();    break;
+    }
+  }
+  __joafState.STALE_MS = 60_000; // restore default
+});
+
+// ── BroadcastChannel: sync state across admin tabs ────────────────────────
+try {
+  const _adminChannel = new BroadcastChannel('joaf_admin_sync');
+  // Listen for events from other tabs
+  _adminChannel.onmessage = function(e) {
+    const { event, payload } = e.data || {};
+    if (event === 'notification_sent') {
+      // Another tab sent a notification — refresh notif page if active
+      __joafState.invalidate('tab_notif');
+      __joafState.invalidate('tab_notification');
+      joafSyncBar('Notification synced from other tab');
+    } else if (event === 'data_changed') {
+      // Generic data change — invalidate affected collection
+      if (payload?.collection) __joafState.invalidate('tab_' + (payload.section || 'dashboard'));
+    }
+  };
+  // Expose for other parts of the app to broadcast
+  window.__joafBroadcast = function(event, payload) {
+    try { _adminChannel.postMessage({ event, payload, ts: Date.now() }); } catch(_) {}
+  };
+} catch(_) { window.__joafBroadcast = function() {}; }
 // ════════════════════════════════════════════════════════════
 </script>

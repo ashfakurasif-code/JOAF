@@ -121,7 +121,7 @@ const img = imgRaw.split('/').map((seg, i) => i < 3 ? seg : encodeURIComponent(s
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, getDocs, collection, query, orderBy, limit } from '/js/aw-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 (async () => {
   try {

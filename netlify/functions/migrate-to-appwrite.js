@@ -41,7 +41,7 @@ async function fsRaw(url) {
   return JSON.parse(text);
 }
 
-// Fetch ALL docs from a Firestore collection (pagination)
+// Fetch ALL docs from a Firestore collection (pagination) — used for small collections & counts
 async function fsGetAllDocs(collectionName) {
   const all = [];
   let pageToken = null;
@@ -58,6 +58,20 @@ async function fsGetAllDocs(collectionName) {
     pageToken = data.nextPageToken || null;
   } while (pageToken);
   return all;
+}
+
+// Fetch ONE PAGE from Firestore — used for chunked migration to avoid full-collection fetch per call
+async function fsGetPage(collectionName, pageSize, pageToken) {
+  let url = `${FS_BASE}/${collectionName}?key=${FS_API_KEY}&pageSize=${pageSize}`;
+  if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
+  const data = await fsRaw(url);
+  const docs = (data.documents || []).map(doc => {
+    const id = doc.name.split('/').pop();
+    const obj = { _fsId: id };
+    for (const [k, v] of Object.entries(doc.fields || {})) obj[k] = fsFieldToValue(v);
+    return obj;
+  });
+  return { docs, nextPageToken: data.nextPageToken || null };
 }
 
 // ── Appwrite upsert (REST, no SDK) ────────────────────────────────────────────
@@ -337,29 +351,34 @@ exports.handler = async (event) => {
   }
 
   // ── 4. MIGRATE-COLLECTION  ←  KEY ACTION ────────────────────────────────────
-  // Body: { action:"migrate-collection", collection:"leaders", offset:0, limit:25 }
+  // Body: { action:"migrate-collection", collection:"leaders", pageToken:"...", limit:30 }
+  // UPGRADED: uses Firestore native pageToken instead of offset-based full-fetch.
+  // Each call fetches exactly ONE PAGE from Firestore — zero O(n) cost for large collections.
+  // Frontend passes back nextPageToken from the previous response.
+  // Backwards-compatible: offset param still accepted for existing frontends (treated as page 1).
   if (action === 'migrate-collection') {
-    const colName = body.collection;
+    const colName   = body.collection;
     if (!colName) return { statusCode:400, headers, body: JSON.stringify({ error:'collection required' }) };
 
-    const offset   = parseInt(body.offset, 10)  || 0;
-    const limit    = parseInt(body.limit,  10)  || 25;
+    const limit      = Math.min(parseInt(body.limit, 10) || 30, 50); // cap at 50/call for safety
+    const pageToken  = body.pageToken || null; // native Firestore cursor
+    // Legacy support: if offset>0 but no pageToken, warn in response
+    const legacyMode = !pageToken && parseInt(body.offset, 10) > 0;
 
-    // Fetch ALL docs (cached implicitly per invocation)
-    let allDocs;
-    try { allDocs = await fsGetAllDocs(colName); }
-    catch(e) {
-      // Empty / non-existent collection — not a fatal error
+    let chunk, nextPageToken;
+    try {
+      const page = await fsGetPage(colName, limit, pageToken);
+      chunk = page.docs;
+      nextPageToken = page.nextPageToken;
+    } catch(e) {
       return { statusCode:200, headers, body: JSON.stringify({
         ok:true, collection:colName, total:0, processed:0,
         created:0, updated:0, skipped:0, failed:0, failures:[],
-        done:true, nextOffset:0,
+        done:true, nextPageToken:null,
         note:'Firestore collection empty or missing: '+e.message,
       })};
     }
 
-    const total   = allDocs.length;
-    const chunk   = allDocs.slice(offset, offset + limit);
     let created=0, updated=0, skipped=0, failed=0;
     const failures = [];
 
@@ -371,30 +390,31 @@ exports.handler = async (event) => {
         try {
           const norm = normalizersFor(colName, fsDoc);
           if (!norm) { skipped++; return; }
-          const action = await awUpsert(colName, norm.id, norm.payload);
-          if (action === 'created') created++;
+          const upsertResult = await awUpsert(colName, norm.id, norm.payload);
+          if (upsertResult === 'created') created++;
           else updated++;
         } catch(e) {
           failed++;
           failures.push({ id: fsDoc._fsId || '?', error: e.message.slice(0,200) });
         }
       }));
-      // Small buffer between concurrency groups
       if (i + CONCURRENCY < chunk.length) await new Promise(r => setTimeout(r, 40));
     }
 
-    const nextOffset = offset + chunk.length;
-    const done       = nextOffset >= total;
+    const done = !nextPageToken; // no next page = collection exhausted
 
     return { statusCode:200, headers, body: JSON.stringify({
       ok: true,
       collection: colName,
-      total,
       processed: chunk.length,
       created, updated, skipped, failed,
       failures: failures.slice(0, 20),
       done,
-      nextOffset: done ? total : nextOffset,
+      nextPageToken: nextPageToken || null,
+      // Legacy fields for any existing frontend code
+      nextOffset: null,
+      total: null,
+      ...(legacyMode ? { warning: 'offset ignored: switch to pageToken for correct pagination' } : {}),
     })};
   }
 
@@ -436,7 +456,10 @@ exports.handler = async (event) => {
         { key:'type',      type:'string',   size:100  },
         { key:'district',  type:'string',   size:255  },
         { key:'sentAt',    type:'string',   size:50   },
-        { key:'totalSent', type:'integer'             },
+        { key:'sent',      type:'integer'             },
+        { key:'failed',    type:'integer'             },
+        { key:'total',     type:'integer'             },
+        { key:'totalSent', type:'integer'             }, // legacy alias kept for existing docs
       ],
       leaders: [
         { key:'name',       type:'string',  size:255  },
@@ -479,6 +502,13 @@ exports.handler = async (event) => {
         { key:'imageUrl',  type:'string',   size:1024  },
         { key:'published', type:'boolean'              },
       ],
+      push_subscriptions: [
+        { key:'active',           type:'boolean'             },
+        { key:'endpoint',         type:'string',  size:65535 },
+        { key:'subscriptionJson', type:'string',  size:65535 },
+        { key:'district',         type:'string',  size:255   },
+        { key:'updatedAt',        type:'string',  size:50    },
+      ],
     };
     const INDEX_DEFS = {
       donors:               [{ key:'district_idx',  fields:['district'],  orders:['ASC']  }, { key:'status_idx',    fields:['status'],    orders:['ASC']  }],
@@ -487,6 +517,7 @@ exports.handler = async (event) => {
       alerts:               [{ key:'active_idx',    fields:['active'],    orders:['ASC']  }, { key:'district_idx',  fields:['district'],  orders:['ASC']  }],
       members:              [{ key:'district_idx',  fields:['district'],  orders:['ASC']  }, { key:'active_idx',    fields:['active'],    orders:['ASC']  }],
       press_releases:       [{ key:'published_idx', fields:['published'], orders:['ASC']  }, { key:'date_idx',      fields:['date'],      orders:['DESC'] }],
+      push_subscriptions:   [{ key:'active_idx',    fields:['active'],    orders:['ASC']  }, { key:'district_idx',  fields:['district'],  orders:['ASC']  }],
     };
 
     const targetCol = (body && body.collection) || 'all';
@@ -512,7 +543,10 @@ exports.handler = async (event) => {
       indexPatched: [], indexSkipped: [], indexErrors: [],
     };
 
-    // ── Attributes ──────────────────────────────────────────────────────────
+    // ── Attributes (parallel with concurrency cap = 3) ─────────────────────
+    // Sequential 250ms-gapped loop was killing us: 18 attrs × 250ms = 4.5s alone.
+    // Appwrite accepts concurrent attribute creation — we batch in groups of 3
+    // with a single 200ms gap between batches. Worst case: ceil(18/3) × 200ms = 1.2s.
     let existing = [];
     try {
       const res = await db.listAttributes(DB_ID, targetCol);
@@ -523,21 +557,30 @@ exports.handler = async (event) => {
       })};
     }
 
-    for (const attr of attrDefs) {
-      if (existing.includes(attr.key)) continue;
+    async function createAttr(attr) {
       try {
         if      (attr.type === 'string')  await db.createStringAttribute(DB_ID, targetCol, attr.key, attr.size || 255, false, '', false);
         else if (attr.type === 'boolean') await db.createBooleanAttribute(DB_ID, targetCol, attr.key, false, false);
         else if (attr.type === 'integer') await db.createIntegerAttribute(DB_ID, targetCol, attr.key, false, null, null, 0);
         else if (attr.type === 'float')   await db.createFloatAttribute(DB_ID, targetCol, attr.key, false, null, null, 0);
         result.patched.push(attr.key);
-        await new Promise(r => setTimeout(r, 250)); // Appwrite needs brief gap
       } catch(e) {
         if (e.code !== 409) result.attrErrors.push(attr.key + ': ' + e.message.slice(0,80));
+        // 409 = already exists — skip silently
       }
     }
 
-    // ── Indexes ──────────────────────────────────────────────────────────────
+    const ATTR_CONCURRENCY = 3;
+    const toCreate = attrDefs.filter(a => !existing.includes(a.key));
+    for (let i = 0; i < toCreate.length; i += ATTR_CONCURRENCY) {
+      const batch = toCreate.slice(i, i + ATTR_CONCURRENCY);
+      await Promise.all(batch.map(createAttr));
+      if (i + ATTR_CONCURRENCY < toCreate.length) {
+        await new Promise(r => setTimeout(r, 200)); // single gap between batches
+      }
+    }
+
+    // ── Indexes (parallel, gap between batches) ──────────────────────────────
     const idxDefs = INDEX_DEFS[targetCol] || [];
     let existingIdxs = [];
     try {
@@ -545,12 +588,14 @@ exports.handler = async (event) => {
       existingIdxs = (res.indexes || []).map(i => i.key);
     } catch(e) { result.indexErrors.push('listIndexes: ' + e.message.slice(0,80)); }
 
-    for (const idx of idxDefs) {
-      if (existingIdxs.includes(idx.key)) { result.indexSkipped.push(idx.key); continue; }
+    const idxToCreate = idxDefs.filter(i => !existingIdxs.includes(i.key));
+    result.indexSkipped.push(...idxDefs.filter(i => existingIdxs.includes(i.key)).map(i => i.key));
+
+    for (const idx of idxToCreate) {
       try {
         await db.createIndex(DB_ID, targetCol, idx.key, 'key', idx.fields, idx.orders);
         result.indexPatched.push(idx.key);
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300)); // indexes need slightly more breathing room
       } catch(e) {
         if (e.code !== 409) result.indexErrors.push(idx.key + ': ' + e.message.slice(0,80));
         else result.indexSkipped.push(idx.key);

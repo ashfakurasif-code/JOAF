@@ -757,7 +757,7 @@ const JOAFComponents = {
         try {
           const {initializeApp,getApps} = await import('/js/aw-firestore.js');
           const {getFirestore,collection,addDoc,serverTimestamp} = await import('/js/aw-firestore.js');
-          const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753',storageBucket:'joaf-app-45753.firebasestorage.app',messagingSenderId:'472362223214',appId:'1:472362223214:web:9186a4f90dc608bae4487f'});
+          const fbApp = getApps().length ? getApps()[0] : initializeApp({});
           const db = getFirestore(fbApp);
           const lat = document.getElementById('jbr-lat').value;
           const lng = document.getElementById('jbr-lng').value;
@@ -877,14 +877,7 @@ const JOAFComponents = {
 
           const {initializeApp, getApps} = await import('/js/aw-firestore.js');
           const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/aw-firestore.js');
-          const fbApp = getApps().length ? getApps()[0] : initializeApp({
-            apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-            authDomain:'joaf-app-45753.firebaseapp.com',
-            projectId:'joaf-app-45753',
-            storageBucket:'joaf-app-45753.firebasestorage.app',
-            messagingSenderId:'472362223214',
-            appId:'1:472362223214:web:9186a4f90dc608bae4487f'
-          });
+          const fbApp = getApps().length ? getApps()[0] : initializeApp({});
           const db = getFirestore(fbApp);
           await addDoc(collection(db,'alerts'), {title, description:desc, location, reporter, type:_selType, imageUrl, lat:_gps?.lat||null, lng:_gps?.lng||null, createdAt:serverTimestamp()});
 
@@ -1329,7 +1322,7 @@ async function joafSendAlertNotification(data) {
   try {
     const {getApps, initializeApp} = await import('/js/aw-firestore.js');
     const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/aw-firestore.js');
-    const fbApp = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({});
     const db = getFirestore(fbApp);
     await addDoc(collection(db, 'notifications'), {
       ...data,
@@ -1701,11 +1694,7 @@ setTimeout(() => {
   try {
     const { getApps, initializeApp } = await import('/js/aw-firestore.js');
     const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('/js/aw-firestore.js');
-    const fbApp = getApps().length ? getApps()[0] : initializeApp({
-      apiKey: 'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',
-      authDomain: 'joaf-app-45753.firebaseapp.com',
-      projectId: 'joaf-app-45753'
-    });
+    const fbApp = getApps().length ? getApps()[0] : initializeApp({});
     const db = getFirestore(fbApp);
     const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
     if (snap.empty) return;

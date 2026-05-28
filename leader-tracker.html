@@ -367,7 +367,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:var(--
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from '/js/aw-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/iPad/i.test(_ua)?'tablet':'desktop',_ref=document.referrer,_src=_ref.includes('google')?'Google':_ref.includes('facebook')?'Facebook':_ref?'Referral':'Direct';
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});

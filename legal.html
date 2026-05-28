@@ -104,7 +104,7 @@ function submitReport(){alert('আপনার রিপোর্ট গ্র�
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';

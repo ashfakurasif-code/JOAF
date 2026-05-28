@@ -62,3 +62,5 @@
     Cache-Control = "public, max-age=300, stale-while-revalidate=600"
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://fra.cloud.appwrite.io https://api.anthropic.com https://graph.facebook.com https://cdn.jsdelivr.net; worker-src 'self' blob:; frame-src 'self'"
+

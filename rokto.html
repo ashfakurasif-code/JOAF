@@ -155,16 +155,9 @@ body { font-family: 'BenSen Handwriting','Noto Sans Bengali', sans-serif; backgr
 import { initializeApp } from "/js/aw-firestore.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, where, serverTimestamp } from "/js/aw-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
-  authDomain: "joaf-app-45753.firebaseapp.com",
-  projectId: "joaf-app-45753",
-  storageBucket: "joaf-app-45753.firebasestorage.app",
-  messagingSenderId: "472362223214",
-  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
-};
+const firebaseConfig = {}; // Firebase config removed — shim uses Appwrite
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp({});
 const db = getFirestore(app);
 
 const DISTRICTS = ["ঢাকা","চট্টগ্রাম","রাজশাহী","খুলনা","বরিশাল","সিলেট","রংপুর","ময়মনসিংহ","কুমিল্লা","নারায়ণগঞ্জ","গাজীপুর","টাঙ্গাইল","ফরিদপুর","যশোর","নোয়াখালী","বগুড়া","দিনাজপুর","রংপুর","পাবনা","নরসিংদী","মানিকগঞ্জ","মুন্সীগঞ্জ","শরীয়তপুর","মাদারীপুর","গোপালগঞ্জ","কিশোরগঞ্জ","নেত্রকোনা","জামালপুর","শেরপুর","ব্রাহ্মণবাড়িয়া","চাঁদপুর","ফেনী","লক্ষ্মীপুর","কক্সবাজার","বান্দরবান","রাঙ্গামাটি","খাগড়াছড়ি","হবিগঞ্জ","মৌলভীবাজার","সুনামগঞ্জ","নওগাঁ","চাঁপাইনবাবগঞ্জ","নাটোর","সিরাজগঞ্জ","জয়পুরহাট","সাতক্ষীরা","ঝিনাইদহ","মাগুরা","নড়াইল","বাগেরহাট","মেহেরপুর","চুয়াডাঙ্গা","কুষ্টিয়া","ঝালকাঠি","পটুয়াখালী","পিরোজপুর","ভোলা","বরগুনা","লালমনিরহাট","নীলফামারী","গাইবান্ধা","কুড়িগ্রাম","পঞ্চগড়","ঠাকুরগাঁও"];
@@ -977,7 +970,7 @@ setTimeout(() => { document.getElementById('joaf-preloader').style.display = 'no
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';

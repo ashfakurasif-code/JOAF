@@ -210,14 +210,7 @@ import { initializeApp } from "/js/aw-firestore.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from "/js/aw-firestore.js";
 
 
-const app = initializeApp({
-  apiKey: "AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk",
-  authDomain: "joaf-app-45753.firebaseapp.com",
-  projectId: "joaf-app-45753",
-  storageBucket: "joaf-app-45753.firebasestorage.app",
-  messagingSenderId: "472362223214",
-  appId: "1:472362223214:web:9186a4f90dc608bae4487f"
-});
+const app = initializeApp({});
 const db = getFirestore(app);
 
 
@@ -390,7 +383,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';

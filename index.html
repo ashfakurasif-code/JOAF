@@ -891,7 +891,7 @@ function initFilter() {
   try {
     const { initializeApp, getApps } = await import('/js/aw-firestore.js');
     const { getFirestore, getDocs, query, orderBy, limit, collection } = await import('/js/aw-firestore.js');
-    const _fa2 = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+    const _fa2 = getApps().length ? getApps()[0] : initializeApp({});
     const _db2 = getFirestore(_fa2);
     const snap = await getDocs(query(collection(_db2,'press_releases'), orderBy('date','desc'), limit(4)));
     if (!snap.empty) {
@@ -996,7 +996,7 @@ setTimeout(function(){
 <script type="module">
 import { initializeApp, getApps } from '/js/aw-firestore.js';
 import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
