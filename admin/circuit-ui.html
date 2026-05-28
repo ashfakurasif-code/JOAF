@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JOAF Health Circuit Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .circuit-monitor {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .circuit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .circuit-header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .circuit-controls {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .btn-refresh {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-refresh:hover {
+      background: white;
+      color: #667eea;
+      transform: scale(1.05);
+    }
+
+    .last-check {
+      font-size: 14px;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    .circuit-line {
+      padding: 40px 30px;
+      background: #f8f9fa;
+      min-height: 250px;
+      position: relative;
+    }
+
+    .circuit-svg {
+      width: 100%;
+      height: 200px;
+      position: absolute;
+      top: 20px;
+      left: 0;
+    }
+
+    .nodes-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+      margin-top: 80px;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .circuit-node {
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      width: 120px;
+    }
+
+    .circuit-node:hover {
+      transform: translateY(-10px);
+    }
+
+    .node-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+      display: inline-block;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 3px solid #ccc;
+      transition: all 0.3s ease;
+    }
+
+    /* Status colors */
+    .status-green .node-icon {
+      border-color: #4CAF50;
+      background: rgba(76, 175, 80, 0.1);
+      box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+    }
+
+    .status-yellow .node-icon {
+      border-color: #FFC107;
+      background: rgba(255, 193, 7, 0.1);
+      box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
+    }
+
+    .status-red .node-icon {
+      border-color: #f44336;
+      background: rgba(244, 67, 54, 0.1);
+      box-shadow: 0 0 20px rgba(244, 67, 54, 0.4);
+    }
+
+    .status-gray .node-icon {
+      border-color: #999;
+      background: rgba(153, 153, 153, 0.1);
+    }
+
+    .node-label {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+      word-break: break-word;
+    }
+
+    .node-latency {
+      font-size: 11px;
+      color: #666;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+
+    .node-status-pulse {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      top: 5px;
+      right: 5px;
+      animation: pulse 2s infinite;
+    }
+
+    .status-green .node-status-pulse {
+      background: #4CAF50;
+      box-shadow: 0 0 10px #4CAF50;
+    }
+
+    .status-yellow .node-status-pulse {
+      background: #FFC107;
+      box-shadow: 0 0 10px #FFC107;
+      animation: pulse-slow 2s infinite;
+    }
+
+    .status-red .node-status-pulse {
+      background: #f44336;
+      box-shadow: 0 0 10px #f44336;
+      animation: pulse-fast 1s infinite;
+    }
+
+    .status-gray .node-status-pulse {
+      background: #999;
+      opacity: 0.3;
+    }
+
+    .critical::after {
+      content: '⭐';
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes pulse-slow {
+      0% { opacity: 0.7; }
+      50% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    @keyframes pulse-fast {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .circuit-legend {
+      display: flex;
+      gap: 20px;
+      padding: 20px 30px;
+      background: #fff;
+      border-top: 1px solid #eee;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-dot.green { background: #4CAF50; }
+    .status-dot.yellow { background: #FFC107; }
+    .status-dot.red { background: #f44336; }
+    .status-dot.gray { background: #999; opacity: 0.5; }
+
+    .circuit-details {
+      padding: 20px 30px;
+      background: #fff;
+      border-top: 1px solid #eee;
+      min-height: 0;
+    }
+
+    /* Modal styles */
+    .circuit-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .circuit-modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 90%;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      background: #f8f9fa;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal-header button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      transition: color 0.3s ease;
+    }
+
+    .modal-header button:hover {
+      color: #f44336;
+    }
+
+    .modal-body {
+      padding: 30px;
+    }
+
+    .diagnostic-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .diagnostic-row label {
+      font-weight: 600;
+      color: #666;
+    }
+
+    .diagnostic-row span {
+      color: #333;
+      word-break: break-all;
+      text-align: right;
+      max-width: 60%;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .status-badge.status-green {
+      background: #4CAF50;
+    }
+
+    .status-badge.status-yellow {
+      background: #FFC107;
+      color: #333;
+    }
+
+    .status-badge.status-red {
+      background: #f44336;
+    }
+
+    .status-badge.status-unknown {
+      background: #999;
+    }
+
+    .error-message {
+      color: #f44336;
+      font-family: monospace;
+      font-size: 12px;
+      background: rgba(244, 67, 54, 0.1);
+      padding: 8px;
+      border-radius: 4px;
+      display: block;
+      word-break: break-all;
+    }
+
+    .modal-footer {
+      padding: 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn-retry, .btn-close {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-retry {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-retry:hover {
+      background: #5568d3;
+      transform: scale(1.05);
+    }
+
+    .btn-close {
+      background: #eee;
+      color: #333;
+    }
+
+    .btn-close:hover {
+      background: #ddd;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .circuit-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+
+      .circuit-controls {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .nodes-container {
+        margin-top: 0;
+      }
+
+      .circuit-node {
+        flex: 0 0 calc(50% - 10px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="circuit-container"></div>
+
+  <script src="../js/health-service.js"></script>
+  <script src="../js/circuit-monitor.js"></script>
+  <script>
+    // Initialize and start monitoring on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.circuitMonitor && window.healthService) {
+        window.healthService.start();
+        window.circuitMonitor.start();
+        console.log('🚉 Circuit UI dashboard loaded');
+      }
+    });
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', () => {
+      if (window.healthService) {
+        window.healthService.stop();
+      }
+    });
+  </script>
+</body>
+</html>
