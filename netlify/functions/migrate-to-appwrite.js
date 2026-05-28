@@ -74,6 +74,24 @@ async function fsGetPage(collectionName, pageSize, pageToken) {
   return { docs, nextPageToken: data.nextPageToken || null };
 }
 
+
+// ── Retry with exponential backoff ─────────────────────────
+async function withRetry(fn, maxAttempts = 4, baseDelay = 300) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isRateLimit = err.message && (
+        err.message.includes('429') || err.message.includes('503') ||
+        err.message.includes('Too Many') || err.message.includes('rate limit')
+      );
+      if (attempt === maxAttempts || !isRateLimit) throw err;
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100;
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
 // ── Appwrite upsert (REST, no SDK) ────────────────────────────────────────────
 const AW_HEADERS = () => ({
   'Content-Type': 'application/json',
@@ -390,7 +408,7 @@ exports.handler = async (event) => {
         try {
           const norm = normalizersFor(colName, fsDoc);
           if (!norm) { skipped++; return; }
-          const upsertResult = await awUpsert(colName, norm.id, norm.payload);
+          const upsertResult = await withRetry(() => awUpsert(colName, norm.id, norm.payload));
           if (upsertResult === 'created') created++;
           else updated++;
         } catch(e) {

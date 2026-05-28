@@ -5,6 +5,12 @@
 const API_VER = process.env.FB_API_VER || 'v22.0';
 const BASE    = `https://graph.facebook.com/${API_VER}`;
 
+
+function isValidUrl(str) {
+  try { const u = new URL(str); return u.protocol === 'http:' || u.protocol === 'https:'; }
+  catch { return false; }
+}
+
 exports.handler = async (event) => {
   const headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers };
@@ -33,6 +39,8 @@ exports.handler = async (event) => {
   if (action === 'post') {
     const { caption, imageUrl, videoUrl, excludeIds, scheduled_at } = body;
     if (!caption) return { statusCode: 400, headers, body: JSON.stringify({ error: 'caption required' }) };
+    if (imageUrl && !isValidUrl(imageUrl)) return { statusCode: 400, headers, body: JSON.stringify({ error: 'imageUrl must be a valid http/https URL' }) };
+    if (videoUrl && !isValidUrl(videoUrl)) return { statusCode: 400, headers, body: JSON.stringify({ error: 'videoUrl must be a valid http/https URL' }) };
 
     try {
       let pages = await fetchAllPages(TOKEN);

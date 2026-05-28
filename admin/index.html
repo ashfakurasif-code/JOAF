@@ -716,10 +716,31 @@ JOAF_LOGO_IMG.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAYAA
           </div>
         </div>
 
-        <!-- System health -->
+        <!-- Metro-Line System Health -->
         <div class="card" style="padding:14px">
-          <div class="card-header" style="margin-bottom:10px"><div class="card-title">🟢 System Health</div></div>
-          <div id="ds-health" style="display:flex;flex-direction:column;gap:7px"></div>
+          <div class="card-header" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+            <div class="card-title">⬤ Metro-Line Health</div>
+            <button onclick="window.runHealthCheck&&window.runHealthCheck()" style="font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:inherit">↻ Refresh</button>
+          </div>
+          <style>
+            .metro-track{position:relative;display:flex;align-items:center;gap:0;margin-bottom:16px;}
+            .metro-node{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+            .metro-dot{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;z-index:2;border:2px solid transparent;transition:all .3s;}
+            .metro-dot.green{background:rgba(52,211,153,.2);border-color:#34d399;color:#34d399;}
+            .metro-dot.red{background:rgba(248,113,113,.2);border-color:#f87171;color:#f87171;animation:metro-blink .8s ease-in-out infinite;}
+            .metro-dot.loading{background:var(--bg3);border-color:var(--border);color:var(--text2);}
+            .metro-line{flex:1;height:2px;background:var(--border);position:relative;top:-10px;margin:0 -1px;z-index:1;transition:background .4s;}
+            .metro-line.green{background:#34d399;}
+            .metro-line.red{background:#f87171;}
+            .metro-label{font-size:9px;color:var(--text2);text-align:center;max-width:60px;line-height:1.2;}
+            .metro-val{font-size:8px;font-weight:700;text-align:center;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+            .metro-val.green{color:#34d399;} .metro-val.red{color:#f87171;} .metro-val.loading{color:var(--text2);}
+            @keyframes metro-blink{0%,100%{opacity:1;box-shadow:0 0 6px rgba(248,113,113,.6);}50%{opacity:.4;box-shadow:none;}}
+          </style>
+          <div class="metro-track" id="metro-track">
+            <!-- nodes injected by JS -->
+          </div>
+          <div id="ds-health" style="display:none"></div>
         </div><!-- AI Provider Health -->
 <div id="ai-health-section" style="margin-top:12px">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -1905,20 +1926,48 @@ async function initDashboard() {
     }
   };
   const HEALTH_ITEMS = [
-    { label: 'Appwrite',        check: async () => { try{ const r=await fetch('/.netlify/functions/get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Error'}; }catch(e){return{ok:false,val:'Offline'};} } },
-    { label: 'Push SW',         check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Deployed':'404'};}catch{return{ok:false,val:'Error'};} } },
-    { label: 'Notifications Fn',check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
+    { label: 'Appwrite DB',  icon:'🗄', check: async () => { try{ const r=await fetch('/.netlify/functions/get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Err'}; }catch(e){return{ok:false,val:'Offline'};} } },
+    { label: 'Push SW',      icon:'📡', check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Active':'404'};}catch{return{ok:false,val:'Err'};} } },
+    { label: 'Notif Fn',     icon:'🔔', check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
+    { label: 'Groq AI',      icon:'🤖', check: async () => { try{const r=await fetch('/.netlify/functions/groq-proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({_ping:true})});return {ok:r.status!==500,val:r.status<400?'Online':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
+    { label: 'FB Autopost',  icon:'📘', check: async () => { try{const r=await fetch('/.netlify/functions/fb-autopost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'check-token'})});return {ok:r.status<500,val:r.status===200?'Token OK':r.status===401?'No Token':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
   ];
-  const healthEl = document.getElementById('ds-health');
-  if(healthEl){
-    healthEl.innerHTML = HEALTH_ITEMS.map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">${i.label}</span><span class="badge badge-loading" id="dsh-${i.label.replace(/[^a-z]/gi,'')}" style="font-size:10px;padding:2px 8px;border-radius:50px;background:var(--bg3)">...</span></div>`).join('');
-    HEALTH_ITEMS.forEach(async item => {
-      const el = document.getElementById('dsh-'+item.label.replace(/[^a-z]/gi,''));
-      try {
-        const {ok, val} = await item.check();
-        if(el) { el.textContent=val; el.style.background=ok?'rgba(52,211,153,.12)':'rgba(248,113,113,.12)'; el.style.color=ok?'var(--green)':'var(--red)'; }
-      } catch(e) { if(el){el.textContent='Error';el.style.color='var(--red)';} }
+
+  function buildMetroTrack() {
+    const track = document.getElementById('metro-track');
+    if (!track) return;
+    let html = '';
+    HEALTH_ITEMS.forEach((item, i) => {
+      const id = 'metro-'+i;
+      html += `<div class="metro-node"><div class="metro-dot loading" id="${id}-dot">?</div><div class="metro-label">${item.icon} ${item.label}</div><div class="metro-val loading" id="${id}-val">...</div></div>`;
+      if (i < HEALTH_ITEMS.length - 1) html += `<div class="metro-line" id="metro-line-${i}"></div>`;
     });
+    track.innerHTML = html;
+  }
+
+  async function runHealthCheck() {
+    buildMetroTrack();
+    await Promise.allSettled(HEALTH_ITEMS.map(async (item, i) => {
+      const dot = document.getElementById('metro-'+i+'-dot');
+      const val = document.getElementById('metro-'+i+'-val');
+      const line = document.getElementById('metro-line-'+(i-1));
+      try {
+        const {ok, val: v} = await item.check();
+        const cls = ok ? 'green' : 'red';
+        if (dot) { dot.className='metro-dot '+cls; dot.textContent=ok?'✓':'✕'; }
+        if (val) { val.className='metro-val '+cls; val.textContent=v; }
+        if (line) line.className = 'metro-line '+cls;
+      } catch(e) {
+        if (dot) { dot.className='metro-dot red'; dot.textContent='✕'; }
+        if (val) { val.className='metro-val red'; val.textContent='Err'; }
+      }
+    }));
+  }
+  window.runHealthCheck = runHealthCheck;
+
+  const healthEl = document.getElementById('metro-track');
+  if(healthEl){
+    runHealthCheck();
     window.runAIHealthCheck();
   }
 
