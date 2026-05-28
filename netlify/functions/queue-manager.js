@@ -29,7 +29,7 @@ class QueueTask {
           ? result.rateLimitRemaining 
           : 1;
         const rateLimitTotal = result.rateLimitTotal || 1;
-        const utilization = 1 - (rateLimitRemaining / rateLimitTotal);
+        const utilization = rateLimitTotal > 0 ? 1 - (rateLimitRemaining / rateLimitTotal) : 0;
         
         if (utilization > RATE_LIMIT_THRESHOLD) {
           // Pause queue if utilization exceeds 80% threshold

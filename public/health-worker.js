@@ -145,6 +145,3 @@ self.addEventListener('message', (event) => {
       console.warn('Unknown command:', command);
   }
 });
-
-// Start monitoring automatically
-startMonitoring();

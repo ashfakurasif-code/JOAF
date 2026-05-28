@@ -36,6 +36,11 @@ const JOAF_CONFIG = {
 };
 
 // Export for use in modules
+// Export to window for browser environments
+if (typeof window !== 'undefined') {
+  window.JOAF_CONFIG = JOAF_CONFIG;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = JOAF_CONFIG;
 }

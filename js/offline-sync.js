@@ -177,7 +177,7 @@ class OfflineSyncManager {
               } else if (response.status === 404) {
                 // Document doesn't exist, try POST (create)
                 const createResponse = await fetch(
-                  `${config.ENDPOINT}/databases/${config.DB_ID}/collections/${collection}/documents/${doc.$id}`,
+                  `${config.ENDPOINT}/databases/${config.DB_ID}/collections/${collection}/documents`,
                   {
                     method: 'POST',
                     headers: {
@@ -185,7 +185,7 @@ class OfflineSyncManager {
                       'X-Appwrite-Project': config.PROJECT_ID,
                       'X-Appwrite-Key': localStorage.getItem('aw_api_key'),
                     },
-                    body: JSON.stringify(docData),
+                    body: JSON.stringify({ ...docData, $id: doc.$id }),
                   }
                 );
                 
