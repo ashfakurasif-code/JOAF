@@ -134,14 +134,19 @@ class OfflineSyncManager {
 
       for (const doc of pendingDocs) {
         try {
+          const config = window.JOAF_CONFIG?.APPWRITE || {
+            ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
+            PROJECT_ID: '6a11b6cd000b59f318eb',
+          };
+          
           if (doc.action === 'delete') {
             // Delete from Appwrite
             await fetch(
-              `https://fra.cloud.appwrite.io/v1/databases/joaf/collections/${collection}/documents/${doc.$id}`,
+              `${config.ENDPOINT}/databases/joaf/collections/${collection}/documents/${doc.$id}`,
               {
                 method: 'DELETE',
                 headers: {
-                  'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+                  'X-Appwrite-Project': config.PROJECT_ID,
                   'X-Appwrite-Key': localStorage.getItem('aw_api_key'),
                 },
               }
@@ -150,25 +155,51 @@ class OfflineSyncManager {
           } else {
             // Upsert to Appwrite
             const { action, syncPending, storedAt, ...docData } = doc;
-            const response = await fetch(
-              `https://fra.cloud.appwrite.io/v1/databases/joaf/collections/${collection}/documents/${doc.$id}`,
-              {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-Appwrite-Project': '6a11b6cd000b59f318eb',
-                  'X-Appwrite-Key': localStorage.getItem('aw_api_key'),
-                },
-                body: JSON.stringify(docData),
-              }
-            );
+            try {
+              // Try PUT first (update)
+              const response = await fetch(
+                `${config.ENDPOINT}/databases/joaf/collections/${collection}/documents/${doc.$id}`,
+                {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Appwrite-Project': config.PROJECT_ID,
+                    'X-Appwrite-Key': localStorage.getItem('aw_api_key'),
+                  },
+                  body: JSON.stringify(docData),
+                }
+              );
 
-            if (response.ok) {
-              console.log(`✅ Synced upsert: ${collection}/${doc.$id}`);
-              // Mark as synced
-              await window.indexedDBStore.put(collection, { ...doc, syncPending: false });
-            } else {
-              console.error(`Failed to sync: ${response.status}`);
+              if (response.ok) {
+                console.log(`✅ Synced upsert: ${collection}/${doc.$id}`);
+                // Mark as synced and remove from local store
+                await window.indexedDBStore.delete(collection, doc.$id);
+              } else if (response.status === 404) {
+                // Document doesn't exist, try POST (create)
+                const createResponse = await fetch(
+                  `${config.ENDPOINT}/databases/joaf/collections/${collection}/documents/${doc.$id}`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-Appwrite-Project': config.PROJECT_ID,
+                      'X-Appwrite-Key': localStorage.getItem('aw_api_key'),
+                    },
+                    body: JSON.stringify(docData),
+                  }
+                );
+                
+                if (createResponse.ok) {
+                  console.log(`✅ Synced create: ${collection}/${doc.$id}`);
+                  await window.indexedDBStore.delete(collection, doc.$id);
+                } else {
+                  console.error(`Failed to create: ${createResponse.status}`);
+                }
+              } else {
+                console.error(`Failed to sync: ${response.status}`);
+              }
+            } catch (err) {
+              console.error(`Sync error for ${collection}/${doc.$id}:`, err.message);
             }
           }
         } catch (err) {

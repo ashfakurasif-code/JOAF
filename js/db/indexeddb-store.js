@@ -142,7 +142,17 @@ class IndexedDBStore {
    * Get pending sync items
    */
   async getPendingSyncs(storeName) {
-    return this.query(storeName, 'syncPending', true);
+    if (!this.db) throw new Error('IndexedDB not initialized');
+
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction([storeName], 'readonly');
+      const store = tx.objectStore(storeName);
+      const index = store.index('syncPending');
+      const request = index.getAll(true);  // Only get docs where syncPending === true
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
   }
 
   /**

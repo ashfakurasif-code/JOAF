@@ -141,12 +141,17 @@ class HealthService {
   async checkAppwriteDB() {
     const start = Date.now();
     try {
+      const config = window.JOAF_CONFIG?.APPWRITE || {
+        ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
+        PROJECT_ID: '6a11b6cd000b59f318eb',
+      };
+      
       const response = await fetch(
-        'https://fra.cloud.appwrite.io/v1/health/db',
+        `${config.ENDPOINT}/health/db`,
         {
           method: 'GET',
           headers: {
-            'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+            'X-Appwrite-Project': config.PROJECT_ID,
           },
         }
       );
@@ -175,7 +180,12 @@ class HealthService {
   async checkAppwriteAPI() {
     const start = Date.now();
     try {
-      const response = await fetch('https://fra.cloud.appwrite.io/v1/health', {
+      const config = window.JOAF_CONFIG?.APPWRITE || {
+        ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
+        PROJECT_ID: '6a11b6cd000b59f318eb',
+      };
+      
+      const response = await fetch(`${config.ENDPOINT}/health`, {
         method: 'GET',
       });
       const latency = Date.now() - start;
@@ -203,12 +213,18 @@ class HealthService {
   async checkPushService() {
     const start = Date.now();
     try {
+      const config = window.JOAF_CONFIG?.APPWRITE || {
+        ENDPOINT: 'https://fra.cloud.appwrite.io/v1',
+        PROJECT_ID: '6a11b6cd000b59f318eb',
+        DB_ID: 'joaf',
+      };
+      
       const response = await fetch(
-        'https://fra.cloud.appwrite.io/v1/databases/joaf/collections/push_subscriptions',
+        `${config.ENDPOINT}/databases/${config.DB_ID}/collections/push_subscriptions`,
         {
           method: 'GET',
           headers: {
-            'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+            'X-Appwrite-Project': config.PROJECT_ID,
             'X-Appwrite-Key': localStorage.getItem('aw_api_key') || 'missing',
           },
         }
