@@ -89,8 +89,10 @@ jobs:
 
           echo "Sending: $PAYLOAD"
 
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.NETLIFY_FUNCTION_URL }}/send-notification" \
+          BASE_URL="${{ secrets.NETLIFY_FUNCTION_URL }}"
+          BASE_URL="${BASE_URL%/}"
+          RESPONSE=$(curl -L -s -w "\n%{http_code}" -X POST \
+            "${BASE_URL}/send-notification" \
             -H "Content-Type: application/json" \
             -H "X-Admin-Key: ${{ secrets.ADMIN_SECRET_KEY }}" \
             -d "$PAYLOAD")

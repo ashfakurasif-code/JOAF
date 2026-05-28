@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap">
 <link rel="stylesheet" href="/css/joaf.css?v=8.1">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
 :root{--red:#90161f;--green:#075e55;--gold:#c9a227;}
 body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:#f8f9fa;color:#1a1a2e;}
@@ -76,6 +77,9 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
 .empty{text-align:center;padding:40px 20px;color:#9ca3af;}
 .live-badge{display:inline-flex;align-items:center;gap:4px;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:800;}
 .live-dot{width:6px;height:6px;border-radius:50%;background:#ef4444;animation:pulse 1s infinite;}
+#districtFilter{width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:12px;font-family:inherit;font-size:13px;background:#fff;outline:none}
+#districtFilter:focus{border-color:var(--red);}
+#alertsMap{height:280px;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;margin:0 16px 16px;background:#f3f4f6}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 </style>
 </head>
@@ -106,6 +110,14 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
   <button class="at" data-type="medical">🏥 মেডিকেল</button>
   <button class="at" data-type="other">📢 অন্যান্য</button>
 </div>
+
+<div class="section" style="padding-top:0">
+  <select id="districtFilter">
+    <option value="">সব জেলা/বিভাগ</option>
+  </select>
+</div>
+
+<div id="alertsMap" aria-label="Real-time alerts map"></div>
 
 <div class="section" id="alertsList"></div>
 
@@ -139,6 +151,12 @@ body{font-family:'BenSen Handwriting','Noto Sans Bengali',sans-serif;background:
     <div class="form-group">
       <label>এলাকা *</label>
       <input type="text" id="f_location" placeholder="গ্রাম/মহল্লা, উপজেলা, জেলা">
+    </div>
+    <div class="form-group">
+      <label>জেলা/বিভাগ (ফিল্টারের জন্য)</label>
+      <select id="f_district">
+        <option value="">এলাকা থেকে সনাক্ত হবে</option>
+      </select>
     </div>
     <div class="form-group">
       <label>আপনার নাম (ঐচ্ছিক)</label>
@@ -203,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="/js/components.js?v=6.6"></script>
 <script src="/js/main.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
 
 <script type="module">
@@ -216,16 +235,103 @@ const db = getFirestore(app);
 
 const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',accident:'🚗',other:'📢'};
 const TYPE_LABELS = {fire:'আগুন',flood:'বন্যা',crime:'অপরাধ',medical:'মেডিকেল',accident:'দুর্ঘটনা',other:'অন্যান্য'};
+const DISTRICTS = ['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ'];
 
 let activeType = 'all';
+let activeDistrict = '';
 let selectedType = 'other';
 let gpsData = null;
 let photoFile = null;
+let map = null;
+let markerLayer = null;
+
+const DB_NAME = 'joaf-offline-cache';
+const STORE = 'alerts';
+
+function openDb(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE); };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function cacheGet(key){
+  try{
+    const dbh=await openDb();
+    return await new Promise((resolve,reject)=>{
+      const tx=dbh.transaction(STORE,'readonly');
+      const rq=tx.objectStore(STORE).get(key);
+      rq.onsuccess=()=>resolve(rq.result||null);
+      rq.onerror=()=>reject(rq.error);
+    });
+  }catch{return null;}
+}
+async function cacheSet(key,val){
+  try{
+    const dbh=await openDb();
+    await new Promise((resolve,reject)=>{
+      const tx=dbh.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put(val,key);
+      tx.oncomplete=()=>resolve();
+      tx.onerror=()=>reject(tx.error);
+    });
+  }catch{}
+}
+
+function initDistrictOptions(){
+  const districtSelect = document.getElementById('districtFilter');
+  const formSelect = document.getElementById('f_district');
+  const options = DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
+  if (districtSelect) districtSelect.insertAdjacentHTML('beforeend', options);
+  if (formSelect) formSelect.insertAdjacentHTML('beforeend', options);
+}
+
+function initMap(){
+  if (!window.L || map) return;
+  map = L.map('alertsMap', { zoomControl: true }).setView([23.685, 90.3563], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  markerLayer = L.layerGroup().addTo(map);
+}
+
+function deriveDistrict(a){
+  if (a?.district) return a.district;
+  const loc = String(a?.location || a?.area || '').toLowerCase();
+  const found = DISTRICTS.find(d => loc.includes(d.toLowerCase()));
+  return found || '';
+}
+
+function matchesFilters(a){
+  const typeMatch = activeType === 'all' || a.type === activeType;
+  const district = deriveDistrict(a);
+  const districtMatch = !activeDistrict || district === activeDistrict;
+  return typeMatch && districtMatch;
+}
+
+function renderMap(alerts){
+  if (!markerLayer) return;
+  markerLayer.clearLayers();
+  const points = [];
+  alerts.forEach(a => {
+    const lat = Number(a.lat);
+    const lng = Number(a.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const marker = L.marker([lat, lng]);
+    marker.bindPopup(`<b>${a.title || 'জরুরি সতর্কতা'}</b><br>${a.location || a.area || 'অজানা এলাকা'}<br>${TYPE_ICONS[a.type] || '📢'} ${TYPE_LABELS[a.type] || 'অন্যান্য'}`);
+    marker.addTo(markerLayer);
+    points.push([lat, lng]);
+  });
+  if (points.length) map.fitBounds(points, { padding: [25, 25], maxZoom: 12 });
+}
 
 // Real-time listener
 const q = query(collection(db, 'alerts'), orderBy('createdAt', 'desc'));
 onSnapshot(q, snap => {
   window._alerts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  cacheSet('list', window._alerts);
   renderAlerts();
   document.getElementById('joaf-preloader').style.display = 'none';
 });
@@ -243,9 +349,10 @@ function timeAgo(ts) {
 function renderAlerts() {
   const list = document.getElementById('alertsList');
   let alerts = window._alerts || [];
-  if (activeType !== 'all') alerts = alerts.filter(a => a.type === activeType);
+  alerts = alerts.filter(matchesFilters);
   if (!alerts.length) {
     list.innerHTML = `<div class="empty"><p style="font-size:40px">✅</p><p>এই মুহূর্তে কোনো সতর্কতা নেই<br><small>আপনার এলাকায় কিছু হলে জানান</small></p></div>`;
+    renderMap(alerts);
     return;
   }
   list.innerHTML = alerts.map(a => `
@@ -260,10 +367,12 @@ function renderAlerts() {
       <div class="alert-meta">
         <span>📍 ${a.location||a.area||'অজানা স্থান'}</span>
         ${a.reporter ? `<span>👤 ${a.reporter}</span>` : ''}
+        ${deriveDistrict(a) ? `<span>🧭 ${deriveDistrict(a)}</span>` : ''}
         <span>🕐 ${timeAgo(a.createdAt)}</span>
         ${a.lat ? `<a href="https://maps.google.com/?q=${a.lat},${a.lng}" target="_blank" style="color:var(--red);font-weight:700">🗺️ মানচিত্রে দেখুন</a>` : ''}
       </div>
     </div>`).join('');
+  renderMap(alerts);
 }
 
 // Filter
@@ -273,6 +382,10 @@ document.getElementById('alertFilter').addEventListener('click', e => {
   document.querySelectorAll('.at').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   activeType = btn.dataset.type;
+  renderAlerts();
+});
+document.getElementById('districtFilter').addEventListener('change', e => {
+  activeDistrict = e.target.value || '';
   renderAlerts();
 });
 
@@ -322,6 +435,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   const title = document.getElementById('f_title').value.trim();
   const description = document.getElementById('f_desc').value.trim();
   const location = document.getElementById('f_location').value.trim();
+  const districtInput = document.getElementById('f_district').value.trim();
   const reporter = document.getElementById('f_reporter').value.trim();
 
   if (!title || !description || !location) {
@@ -351,6 +465,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     await addDoc(collection(db, 'alerts'), {
       title, description, location, reporter,
       type: selectedType, imageUrl,
+      district: districtInput || deriveDistrict({ location }) || '',
       lat: gpsData?.lat || null,
       lng: gpsData?.lng || null,
       createdAt: serverTimestamp()
@@ -361,6 +476,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     document.getElementById('f_title').value = '';
     document.getElementById('f_desc').value = '';
     document.getElementById('f_location').value = '';
+    document.getElementById('f_district').value = '';
     document.getElementById('f_reporter').value = '';
     document.getElementById('photoPreview').style.display = 'none';
     gpsData = null;
@@ -374,6 +490,14 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   btn.disabled = false;
 });
 
+initDistrictOptions();
+initMap();
+cacheGet('list').then(cached => {
+  if (Array.isArray(cached) && cached.length) {
+    window._alerts = cached;
+    renderAlerts();
+  }
+});
 setTimeout(() => { document.getElementById('joaf-preloader').style.display = 'none'; }, 3000);
 </script>
 
