@@ -503,7 +503,39 @@ exports.handler = async (event) => {
       }
     }
 
-    return { statusCode:200, headers, body: JSON.stringify({ ok:true, schemaValidation: report }) };
+    // ── Also create missing indexes for key collections ─────────────────────────
+    const INDEX_DEFS = {
+      donors:               [{ key:'district_idx', fields:['district'], orders:['ASC'] }, { key:'status_idx', fields:['status'], orders:['ASC'] }],
+      notification_history: [{ key:'sentAt_idx',   fields:['sentAt'],   orders:['DESC'] }],
+      leaders:              [{ key:'active_idx',   fields:['active'],   orders:['ASC'] }, { key:'slug_idx', fields:['slug'], orders:['ASC'] }],
+      alerts:               [{ key:'active_idx',   fields:['active'],   orders:['ASC'] }, { key:'district_idx', fields:['district'], orders:['ASC'] }],
+      members:              [{ key:'district_idx', fields:['district'], orders:['ASC'] }, { key:'active_idx', fields:['active'], orders:['ASC'] }],
+      press_releases:       [{ key:'published_idx',fields:['published'],orders:['ASC'] }, { key:'date_idx',  fields:['date'],   orders:['DESC'] }],
+    };
+
+    const indexReport = {};
+    for (const [colName, idxDefs] of Object.entries(INDEX_DEFS)) {
+      indexReport[colName] = { created: [], skipped: [], errors: [] };
+      let existingIdxs = [];
+      try {
+        const res = await db.listIndexes(DB_ID, colName);
+        existingIdxs = (res.indexes || []).map(i => i.key);
+      } catch(e) { indexReport[colName].errors.push('listIndexes: ' + e.message.slice(0,80)); continue; }
+
+      for (const idx of idxDefs) {
+        if (existingIdxs.includes(idx.key)) { indexReport[colName].skipped.push(idx.key); continue; }
+        try {
+          await db.createIndex(DB_ID, colName, idx.key, 'key', idx.fields, idx.orders);
+          indexReport[colName].created.push(idx.key);
+          await new Promise(r => setTimeout(r, 500)); // Appwrite needs gap between index creations
+        } catch(e) {
+          if (e.code !== 409) indexReport[colName].errors.push(idx.key + ': ' + e.message.slice(0,80));
+          else indexReport[colName].skipped.push(idx.key);
+        }
+      }
+    }
+
+    return { statusCode:200, headers, body: JSON.stringify({ ok:true, schemaValidation: report, indexReport }) };
   }
 
   return { statusCode:400, headers, body: JSON.stringify({ error:'Unknown action. Use: validate | dry-run | fetch-counts | migrate-collection | validate-schema' }) };

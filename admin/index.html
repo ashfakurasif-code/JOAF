@@ -3073,18 +3073,22 @@ window.clearCache = function() { toast('Cache cleared','success'); };
     setStatus('🧬 Validating Appwrite schema and auto-patching missing attributes…');
     try {
       const res = await apiFetch({ action: 'validate-schema' });
-      const report = res.schemaValidation || {};
+      const report    = res.schemaValidation || {};
+      const idxReport = res.indexReport || {};
       const lines = Object.entries(report).map(([col, r]) => {
-        const patched = r.patched && r.patched.length ? ` (+patched: ${r.patched.join(', ')})` : '';
+        const patched = r.patched && r.patched.length ? ` (+attrs: ${r.patched.join(', ')})` : '';
         const errs    = r.errors  && r.errors.length  ? ` ⚠️ ${r.errors.join('; ')}` : '';
-        return `✅ ${col}: ${r.checked} attrs checked${patched}${errs}`;
+        const idata   = idxReport[col] || {};
+        const iCreated = idata.created && idata.created.length ? ` 📇+idx:${idata.created.join(',')}` : '';
+        const iSkip    = idata.skipped && idata.skipped.length ? ` (idx exists:${idata.skipped.length})` : '';
+        return `✅ ${col}: ${r.checked} attrs${patched}${iCreated}${iSkip}${errs}`;
       });
-      setStatus('🧬 Schema OK:\n' + lines.join('\n'));
+      setStatus('🧬 Schema + Indexes OK!');
       const rb = document.getElementById('mig-result-box');
       const rt = document.getElementById('mig-result-text');
       if (rb && rt) {
         rb.style.display = 'block';
-        rt.innerHTML = '<strong>Schema Validation Report</strong><pre style="font-size:10px;margin-top:6px;white-space:pre-wrap;color:var(--green)">' + lines.join('\n') + '</pre>';
+        rt.innerHTML = '<strong>Schema + Index Validation Report</strong><pre style="font-size:10px;margin-top:6px;white-space:pre-wrap;color:var(--green)">' + lines.join('\n') + '</pre>';
       }
     } catch(e) {
       showError('Schema validation failed: ' + e.message);

@@ -229,12 +229,42 @@ export async function getDoc(docRef) {
 }
 
 export async function getDocs(ref) {
-  const { db } = await getSdk();
+  const { db, Query } = await getSdk();
   const { collection, constraints } = buildQuery(ref);
-  const queries = await buildQueries(constraints);
-  const result = await db.listDocuments(AW_DB, collection, queries);
-  const docs = (result.documents || []).map(makeDoc);
-  return makeSnapshot(docs);
+  const baseQueries = await buildQueries(constraints);
+
+  // If caller explicitly set a limit(), honour it (single page fetch)
+  const hasLimit = baseQueries.some(q => typeof q === 'string' && q.startsWith('limit('));
+  if (hasLimit) {
+    const result = await db.listDocuments(AW_DB, collection, baseQueries);
+    const docs = (result.documents || []).map(makeDoc);
+    return makeSnapshot(docs);
+  }
+
+  // No explicit limit → paginate through ALL documents (Appwrite default cap is 25)
+  const PAGE_SIZE = 100;
+  const allDocs = [];
+  let cursor = null;
+
+  while (true) {
+    const pageQueries = [...baseQueries, Query.limit(PAGE_SIZE)];
+    if (cursor) pageQueries.push(Query.cursorAfter(cursor));
+
+    let result;
+    try {
+      result = await db.listDocuments(AW_DB, collection, pageQueries);
+    } catch (err) {
+      break; // collection empty or cursor invalid — stop gracefully
+    }
+
+    const page = result.documents || [];
+    allDocs.push(...page.map(makeDoc));
+
+    if (page.length < PAGE_SIZE) break; // last page reached
+    cursor = page[page.length - 1].$id;
+  }
+
+  return makeSnapshot(allDocs);
 }
 
 export async function addDoc(colRef, data) {
