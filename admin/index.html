@@ -477,6 +477,38 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .main { overflow-x:hidden; }
 body  { overflow-x:hidden; }
 
+
+/* ══ SKELETON LOADERS ══════════════════════════════════════ */
+@keyframes joaf-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--bg3,#1a1a2e) 25%, var(--bg4,#252545) 50%, var(--bg3,#1a1a2e) 75%);
+  background-size: 200% 100%;
+  animation: joaf-shimmer 1.4s ease infinite;
+  border-radius: 6px;
+  display: inline-block;
+  min-width: 40px;
+}
+.skeleton-text  { height: 13px; width: 80%; margin: 4px 0; }
+.skeleton-num   { height: 26px; width: 60px; }
+.skeleton-row   { height: 36px; width: 100%; margin: 4px 0; border-radius: 8px; }
+/* ══ TAB FADE ═══════════════════════════════════════════════ */
+.page { transition: opacity .15s ease; }
+.page.page-loading { opacity: 0.4; pointer-events: none; }
+/* ══ SYNC BAR ═══════════════════════════════════════════════ */
+.joaf-sync-bar {
+  position: fixed; bottom: 0; left: var(--sidebar-w, 220px); right: 0;
+  height: 26px; background: var(--bg2,#0d0d1a); border-top: 1px solid var(--border,#2a2a4a);
+  display: flex; align-items: center; padding: 0 14px; gap: 10px;
+  font-size: 10px; color: var(--text3,#6b7280); z-index: 50; transition: left .25s;
+}
+@media(max-width:768px){ .joaf-sync-bar { left:0; } }
+.joaf-live-dot {
+  width:7px; height:7px; border-radius:50%; background:var(--green,#22c55e);
+  display:inline-block; animation: pulse 2s ease infinite; margin-right:4px; vertical-align:middle;
+}
 </style>
 
 <script id="joaf-safe-ai-patch">
@@ -3070,32 +3102,45 @@ window.clearCache = function() { toast('Cache cleared','success'); };
     clearError();
     const btn = document.getElementById('mig-btn-schema');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
-    setStatus('🧬 Validating Appwrite schema and auto-patching missing attributes…');
+    const rb = document.getElementById('mig-result-box');
+    const rt = document.getElementById('mig-result-text');
+    if (rb && rt) { rb.style.display='block'; rt.innerHTML='<strong>🧬 Schema Validation — Running per-collection…</strong>'; }
     try {
-      const res = await apiFetch({ action: 'validate-schema' });
-      const report    = res.schemaValidation || {};
-      const idxReport = res.indexReport || {};
-      const lines = Object.entries(report).map(([col, r]) => {
-        const patched = r.patched && r.patched.length ? ` (+attrs: ${r.patched.join(', ')})` : '';
-        const errs    = r.errors  && r.errors.length  ? ` ⚠️ ${r.errors.join('; ')}` : '';
-        const idata   = idxReport[col] || {};
-        const iCreated = idata.created && idata.created.length ? ` 📇+idx:${idata.created.join(',')}` : '';
-        const iSkip    = idata.skipped && idata.skipped.length ? ` (idx exists:${idata.skipped.length})` : '';
-        return `✅ ${col}: ${r.checked} attrs${patched}${iCreated}${iSkip}${errs}`;
-      });
-      setStatus('🧬 Schema + Indexes OK!');
-      const rb = document.getElementById('mig-result-box');
-      const rt = document.getElementById('mig-result-text');
-      if (rb && rt) {
-        rb.style.display = 'block';
-        rt.innerHTML = '<strong>Schema + Index Validation Report</strong><pre style="font-size:10px;margin-top:6px;white-space:pre-wrap;color:var(--green)">' + lines.join('\n') + '</pre>';
+      // Step 1: get collection list (no Appwrite SDK calls — instant)
+      const listRes = await apiFetch({ action:'validate-schema', collection:'all' });
+      const cols = listRes.collections || [];
+      const lines = [];
+      let totalPatched = 0;
+      // Step 2: process each collection sequentially (each call < 8s)
+      for (let idx=0; idx<cols.length; idx++) {
+        const col = cols[idx];
+        setStatus(`🧬 [${idx+1}/${cols.length}] Checking ${col}…`);
+        if (btn) btn.textContent = `⏳ ${col}…`;
+        try {
+          const r = await apiFetch({ action:'validate-schema', collection:col });
+          const patchedAttrs = r.patched&&r.patched.length ? ` ✏️ attrs: ${r.patched.join(', ')}` : '';
+          const patchedIdx   = r.indexPatched&&r.indexPatched.length ? ` 📇 idx: ${r.indexPatched.join(', ')}` : '';
+          const skippedIdx   = r.indexSkipped&&r.indexSkipped.length ? ` (${r.indexSkipped.length} idx ok)` : '';
+          const errs = [...(r.attrErrors||[]), ...(r.indexErrors||[])];
+          const errStr = errs.length ? ` ⚠️ ${errs.join('; ')}` : '';
+          lines.push(`✅ ${col}: ${r.checked} attrs checked${patchedAttrs}${patchedIdx}${skippedIdx}${errStr}`);
+          totalPatched += (r.patched||[]).length;
+          if (rb&&rt) rt.innerHTML = '<strong>🧬 Schema Validation Report</strong>'
+            + '<pre style="font-size:10px;margin-top:6px;white-space:pre-wrap;color:var(--green)">'
+            + lines.join('\n') + (idx<cols.length-1?'\n⏳ …':'') + '</pre>';
+        } catch(e) { lines.push(`⚠️ ${col}: ERROR — ${e.message.slice(0,80)}`); }
+        if (idx < cols.length-1) await new Promise(r=>setTimeout(r,200));
       }
+      setStatus(`✅ Schema OK! ${totalPatched} attributes patched across ${cols.length} collections.`);
+      if (rb&&rt) rt.innerHTML = '<strong>🧬 Schema + Index Validation Complete</strong>'
+        + '<pre style="font-size:10px;margin-top:6px;white-space:pre-wrap;color:var(--green)">'
+        + lines.join('\n') + '</pre>';
     } catch(e) {
       showError('Schema validation failed: ' + e.message);
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = '🧬 Validate Schema'; }
+      if (btn) { btn.disabled=false; btn.textContent='🧬 Validate Schema'; }
     }
-  };
+  };;
 })();
 
 // ── Helpers ──────────────────────────────────────────────
@@ -5715,4 +5760,57 @@ function startCinematic() {
     sceneIndex++;
   }, 10000);
 }
+
+// ══ JOAF STATE MANAGEMENT — Tab refresh + skeleton loaders ══
+const __joafState = {
+  cache: {},
+  STALE_MS: 60_000,
+  set(key, data) { this.cache[key] = { data, ts: Date.now() }; },
+  isStale(key)   { const e = this.cache[key]; return !e || (Date.now()-e.ts) > this.STALE_MS; },
+  invalidate(key){ delete this.cache[key]; },
+};
+function joafSkeletonNums(...ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<span class="skeleton skeleton-num"></span>';
+  });
+}
+function joafSyncBar(msg, ok=true) {
+  const el = document.getElementById('joaf-sb-sync');
+  const aw = document.getElementById('joaf-sb-aw');
+  if (el) el.textContent = 'Sync: ' + new Date().toLocaleTimeString('bn-BD');
+  if (aw) { aw.textContent = ok ? '✅ Appwrite' : '⚠️ Appwrite'; aw.style.color = ok ? 'var(--green)' : 'var(--amber)'; }
+}
+// Wrap goPage for tab-switch refresh
+(function() {
+  const _orig = window.goPage;
+  window.goPage = function(id, el) {
+    _orig && _orig(id, el);
+    const page = document.getElementById('page-' + id);
+    if (page) { page.classList.add('page-loading'); setTimeout(()=>page.classList.remove('page-loading'),150); }
+    if (__joafState.isStale('tab_'+id)) {
+      __joafState.set('tab_'+id, true);
+      setTimeout(()=>{
+        switch(id) {
+          case 'dashboard': typeof initDashboard==='function' && initDashboard(); break;
+          case 'blood':     typeof loadDonors==='function'    && loadDonors();    break;
+          case 'notif': case 'notification': typeof loadNotifPage==='function' && loadNotifPage(); break;
+          case 'press':     typeof loadPress==='function'     && loadPress();     break;
+          case 'leader':    typeof loadLeaders==='function'   && loadLeaders();   break;
+          case 'alert-page':typeof loadAlerts==='function'    && loadAlerts();    break;
+          case 'analytics': typeof initAnalytics==='function' && initAnalytics(); break;
+        }
+      }, 50);
+    }
+  };
+})();
+// Auto-refresh dashboard every 90s
+setInterval(()=>{
+  const dp = document.getElementById('page-dashboard');
+  if (dp && dp.classList.contains('active')) {
+    __joafState.invalidate('tab_dashboard');
+    typeof initDashboard==='function' && initDashboard();
+  }
+}, 90_000);
+// ════════════════════════════════════════════════════════════
 </script>

@@ -374,7 +374,6 @@ addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_s
 
 // ── GROQ CONFIG ──
 const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
-const GROQ_MODELS = ['llama-3.3-70b-versatile','llama-3.1-8b-instant'];
 const BD_TODAY = () => new Date(Date.now()+6*3600000).toISOString().slice(0,10);
 
 // ── Cache: localStorage per day ──
@@ -386,21 +385,30 @@ const cSet = (k,v) => { try{ if(v==null){localStorage.removeItem(CP+k);}else{loc
 let ISSUES = [];
 
 async function groqCall(prompt, maxTokens=4000) {
-  for (const model of GROQ_MODELS) {
-    try {
-      const r = await fetch('/.netlify/functions/groq-proxy',{
-        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-        body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.3,max_tokens:maxTokens})
-      });
-      if(!r.ok) continue;
-      const d = await r.json();
-      let txt = d.choices?.[0]?.message?.content||'';
-      txt = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
-      const am = txt.match(/\[[\s\S]*\]/); if(am){try{return JSON.parse(am[0]);}catch(e){}}
-      const om = txt.match(/\{[\s\S]*\}/); if(om){try{return JSON.parse(om[0]);}catch(e){}}
-    } catch(e){continue;}
+  // AI priority chain: OpenRouter → Gemini → Groq (enforced server-side in groq-proxy.js)
+  try {
+    const r = await fetch('/.netlify/functions/groq-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: maxTokens
+      })
+    });
+    if (!r.ok) throw new Error('AI proxy ' + r.status);
+    const text = await r.text();
+    if (text.trimStart().startsWith('<')) throw new Error('AI proxy returned HTML');
+    const d = JSON.parse(text);
+    let txt = d.choices?.[0]?.message?.content || '';
+    txt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    const am = txt.match(/\[[\s\S]*\]/); if (am) { try { return JSON.parse(am[0]); } catch(e) {} }
+    const om = txt.match(/\{[\s\S]*\}/); if (om) { try { return JSON.parse(om[0]); } catch(e) {} }
+    return null;
+  } catch(e) {
+    console.warn('[AI] groqCall failed:', e.message);
+    return null;
   }
-  return null;
 }
 
 async function generateIssues() {

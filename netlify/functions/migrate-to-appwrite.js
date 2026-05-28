@@ -398,29 +398,36 @@ exports.handler = async (event) => {
     })};
   }
 
-  // ── 5. VALIDATE-SCHEMA  — check & auto-patch Appwrite collection attributes ─
+  // ── 5. VALIDATE-SCHEMA (chunked, timeout-safe) ─────────────────────────────
+  // Each call handles ONE collection so we stay well under Netlify's 10s limit.
+  // Frontend calls: { action:'validate-schema', collection:'all' }  → get list
+  //                 { action:'validate-schema', collection:'donors' } → patch that col
   if (action === 'validate-schema') {
     const SDK = require('node-appwrite');
     const client = new SDK.Client()
-      .setEndpoint(AW_ENDPOINT)
-      .setProject(AW_PROJECT)
-      .setKey(process.env.APPWRITE_API_KEY);
+      .setEndpoint(AW_ENDPOINT).setProject(AW_PROJECT).setKey(process.env.APPWRITE_API_KEY);
     const db = new SDK.Databases(client);
 
-    // Schema definitions per collection
     const SCHEMAS = {
       donors: [
         { key:'name',      type:'string',   size:255  },
         { key:'email',     type:'string',   size:512  },
         { key:'phone',     type:'string',   size:50   },
+        { key:'blood',     type:'string',   size:10   },
         { key:'amount',    type:'float'               },
         { key:'currency',  type:'string',   size:10   },
         { key:'district',  type:'string',   size:255  },
+        { key:'area',      type:'string',   size:255  },
         { key:'message',   type:'string',   size:2000 },
         { key:'method',    type:'string',   size:100  },
         { key:'status',    type:'string',   size:50   },
         { key:'donatedAt', type:'string',   size:50   },
         { key:'anonymous', type:'boolean'             },
+        { key:'available', type:'boolean'             },
+        { key:'lastDonate',type:'string',   size:50   },
+        { key:'lat',       type:'float'               },
+        { key:'lng',       type:'float'               },
+        { key:'createdAt', type:'string',   size:50   },
       ],
       notification_history: [
         { key:'title',     type:'string',   size:512  },
@@ -459,7 +466,7 @@ exports.handler = async (event) => {
         { key:'phone',    type:'string',    size:50   },
         { key:'district', type:'string',    size:255  },
         { key:'role',     type:'string',    size:100  },
-        { key:'active',   type:'boolean'             },
+        { key:'active',   type:'boolean'              },
         { key:'joinedAt', type:'string',    size:50   },
         { key:'photoUrl', type:'string',    size:1024 },
       ],
@@ -473,69 +480,84 @@ exports.handler = async (event) => {
         { key:'published', type:'boolean'              },
       ],
     };
-
-    const report = {};
-
-    for (const [colName, attrs] of Object.entries(SCHEMAS)) {
-      report[colName] = { checked: attrs.length, patched: [], errors: [] };
-      let existing = [];
-      try {
-        const res = await db.listAttributes(DB_ID, colName);
-        existing = (res.attributes || []).map(a => a.key);
-      } catch(e) {
-        report[colName].errors.push('listAttributes: ' + e.message.slice(0,100));
-        continue;
-      }
-
-      for (const attr of attrs) {
-        if (existing.includes(attr.key)) continue;
-        try {
-          if (attr.type === 'string')  await db.createStringAttribute(DB_ID, colName, attr.key, attr.size || 255, false, '', false);
-          else if (attr.type === 'boolean') await db.createBooleanAttribute(DB_ID, colName, attr.key, false, false);
-          else if (attr.type === 'integer') await db.createIntegerAttribute(DB_ID, colName, attr.key, false, null, null, 0);
-          else if (attr.type === 'float')   await db.createFloatAttribute(DB_ID, colName, attr.key, false, null, null, 0);
-          report[colName].patched.push(attr.key);
-          // Appwrite needs a brief pause between attribute creations
-          await new Promise(r => setTimeout(r, 350));
-        } catch(e) {
-          if (e.code !== 409) report[colName].errors.push(attr.key + ': ' + e.message.slice(0,100));
-        }
-      }
-    }
-
-    // ── Also create missing indexes for key collections ─────────────────────────
     const INDEX_DEFS = {
-      donors:               [{ key:'district_idx', fields:['district'], orders:['ASC'] }, { key:'status_idx', fields:['status'], orders:['ASC'] }],
-      notification_history: [{ key:'sentAt_idx',   fields:['sentAt'],   orders:['DESC'] }],
-      leaders:              [{ key:'active_idx',   fields:['active'],   orders:['ASC'] }, { key:'slug_idx', fields:['slug'], orders:['ASC'] }],
-      alerts:               [{ key:'active_idx',   fields:['active'],   orders:['ASC'] }, { key:'district_idx', fields:['district'], orders:['ASC'] }],
-      members:              [{ key:'district_idx', fields:['district'], orders:['ASC'] }, { key:'active_idx', fields:['active'], orders:['ASC'] }],
-      press_releases:       [{ key:'published_idx',fields:['published'],orders:['ASC'] }, { key:'date_idx',  fields:['date'],   orders:['DESC'] }],
+      donors:               [{ key:'district_idx',  fields:['district'],  orders:['ASC']  }, { key:'status_idx',    fields:['status'],    orders:['ASC']  }],
+      notification_history: [{ key:'sentAt_idx',    fields:['sentAt'],    orders:['DESC'] }],
+      leaders:              [{ key:'active_idx',    fields:['active'],    orders:['ASC']  }, { key:'slug_idx',      fields:['slug'],      orders:['ASC']  }],
+      alerts:               [{ key:'active_idx',    fields:['active'],    orders:['ASC']  }, { key:'district_idx',  fields:['district'],  orders:['ASC']  }],
+      members:              [{ key:'district_idx',  fields:['district'],  orders:['ASC']  }, { key:'active_idx',    fields:['active'],    orders:['ASC']  }],
+      press_releases:       [{ key:'published_idx', fields:['published'], orders:['ASC']  }, { key:'date_idx',      fields:['date'],      orders:['DESC'] }],
     };
 
-    const indexReport = {};
-    for (const [colName, idxDefs] of Object.entries(INDEX_DEFS)) {
-      indexReport[colName] = { created: [], skipped: [], errors: [] };
-      let existingIdxs = [];
-      try {
-        const res = await db.listIndexes(DB_ID, colName);
-        existingIdxs = (res.indexes || []).map(i => i.key);
-      } catch(e) { indexReport[colName].errors.push('listIndexes: ' + e.message.slice(0,80)); continue; }
+    const targetCol = (body && body.collection) || 'all';
 
-      for (const idx of idxDefs) {
-        if (existingIdxs.includes(idx.key)) { indexReport[colName].skipped.push(idx.key); continue; }
-        try {
-          await db.createIndex(DB_ID, colName, idx.key, 'key', idx.fields, idx.orders);
-          indexReport[colName].created.push(idx.key);
-          await new Promise(r => setTimeout(r, 500)); // Appwrite needs gap between index creations
-        } catch(e) {
-          if (e.code !== 409) indexReport[colName].errors.push(idx.key + ': ' + e.message.slice(0,80));
-          else indexReport[colName].skipped.push(idx.key);
-        }
+    // "all" mode — return collection list only, no SDK calls (instant response)
+    if (targetCol === 'all') {
+      return { statusCode:200, headers, body: JSON.stringify({
+        ok: true,
+        collections: Object.keys(SCHEMAS),
+        message: 'Call validate-schema with each collection name to patch attributes + indexes',
+      })};
+    }
+
+    const attrDefs = SCHEMAS[targetCol];
+    if (!attrDefs) {
+      return { statusCode:400, headers, body: JSON.stringify({ error: 'Unknown collection: ' + targetCol }) };
+    }
+
+    const result = {
+      collection: targetCol,
+      checked: attrDefs.length,
+      patched: [], attrErrors: [],
+      indexPatched: [], indexSkipped: [], indexErrors: [],
+    };
+
+    // ── Attributes ──────────────────────────────────────────────────────────
+    let existing = [];
+    try {
+      const res = await db.listAttributes(DB_ID, targetCol);
+      existing = (res.attributes || []).map(a => a.key);
+    } catch(e) {
+      return { statusCode:200, headers, body: JSON.stringify({
+        ok:false, ...result, attrErrors: ['listAttributes: ' + e.message.slice(0,100)]
+      })};
+    }
+
+    for (const attr of attrDefs) {
+      if (existing.includes(attr.key)) continue;
+      try {
+        if      (attr.type === 'string')  await db.createStringAttribute(DB_ID, targetCol, attr.key, attr.size || 255, false, '', false);
+        else if (attr.type === 'boolean') await db.createBooleanAttribute(DB_ID, targetCol, attr.key, false, false);
+        else if (attr.type === 'integer') await db.createIntegerAttribute(DB_ID, targetCol, attr.key, false, null, null, 0);
+        else if (attr.type === 'float')   await db.createFloatAttribute(DB_ID, targetCol, attr.key, false, null, null, 0);
+        result.patched.push(attr.key);
+        await new Promise(r => setTimeout(r, 250)); // Appwrite needs brief gap
+      } catch(e) {
+        if (e.code !== 409) result.attrErrors.push(attr.key + ': ' + e.message.slice(0,80));
       }
     }
 
-    return { statusCode:200, headers, body: JSON.stringify({ ok:true, schemaValidation: report, indexReport }) };
+    // ── Indexes ──────────────────────────────────────────────────────────────
+    const idxDefs = INDEX_DEFS[targetCol] || [];
+    let existingIdxs = [];
+    try {
+      const res = await db.listIndexes(DB_ID, targetCol);
+      existingIdxs = (res.indexes || []).map(i => i.key);
+    } catch(e) { result.indexErrors.push('listIndexes: ' + e.message.slice(0,80)); }
+
+    for (const idx of idxDefs) {
+      if (existingIdxs.includes(idx.key)) { result.indexSkipped.push(idx.key); continue; }
+      try {
+        await db.createIndex(DB_ID, targetCol, idx.key, 'key', idx.fields, idx.orders);
+        result.indexPatched.push(idx.key);
+        await new Promise(r => setTimeout(r, 400));
+      } catch(e) {
+        if (e.code !== 409) result.indexErrors.push(idx.key + ': ' + e.message.slice(0,80));
+        else result.indexSkipped.push(idx.key);
+      }
+    }
+
+    return { statusCode:200, headers, body: JSON.stringify({ ok:true, ...result }) };
   }
 
   return { statusCode:400, headers, body: JSON.stringify({ error:'Unknown action. Use: validate | dry-run | fetch-counts | migrate-collection | validate-schema' }) };
