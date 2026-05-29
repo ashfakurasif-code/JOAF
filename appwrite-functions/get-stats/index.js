@@ -15,9 +15,7 @@ export default async ({ req, res, log, error }) => {
 
   let _sb = {};
   try { _sb = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); } catch(_) {}
-  const adminKey = req.headers['x-admin-key'] || _sb._adminKey || '';
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) return res.json({ error: 'Unauthorized' }, 401);
-
+  
   try {
     const [subDocs, histDocs, donorDocs, alertDocs] = await Promise.all([
       awListAll(COL_SUBS,   [], 500).catch(() => []),
