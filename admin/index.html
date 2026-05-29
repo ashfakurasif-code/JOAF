@@ -1897,7 +1897,7 @@ async function initDashboard() {
     const listEl = document.getElementById('ai-health-list');
     const alertEl = document.getElementById('ai-rate-limit-alert');
     if (!listEl) return;
-    const AI_PROXY = '/.netlify/functions/groq-proxy';
+    const AI_PROXY = 'groq-proxy';
     // groq-proxy নিজেই Gemini→OpenRouter→Groq চেইন করে।
     // তাই একটাই call দিয়ে যে model respond করে সেটা দেখে কোন provider active বোঝা যায়।
     const PROVIDER_MAP = [
@@ -1919,7 +1919,7 @@ async function initDashboard() {
     PROVIDER_MAP.forEach(p=>setBadge(p.id,'Checking…','var(--bg3)','var(--text2)'));
     const t0 = performance.now();
     try {
-      const res = await fetch(AI_PROXY,{
+      const res = await join_aw_exec(AI_PROXY,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({messages:[{role:'user',content:'Reply with exactly: OK'}],max_tokens:5,temperature:0})
@@ -2955,7 +2955,7 @@ window.clearCache = function() { toast('Cache cleared','success'); };
 // ── Migration Engine v4 — Chunked Sequential (beats 10s Netlify timeout) ──────
 (function() {
   const DONE_KEY    = 'joaf_migration_done';
-  const FN_URL      = '/.netlify/functions/migrate-to-appwrite';
+  const FN_URL      = 'migrate-to-appwrite';
   const CHUNK_SIZE  = 25;   // docs per function call
   const ALL_COLS    = [
     'push_subscriptions','notification_history','leaders','donors',
@@ -3044,7 +3044,7 @@ window.clearCache = function() { toast('Cache cleared','success'); };
 
   // ── Safe fetch with HTML guard ─────────────────────────────────────────────
   async function apiFetch(body) {
-    const res  = await fetch(FN_URL, {
+    const res  = await join_aw_exec(FN_URL, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'X-Admin-Key': ADMIN_KEY },
       body: JSON.stringify(body),
