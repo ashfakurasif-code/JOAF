@@ -578,12 +578,14 @@ async function join_aw_exec(fnId, options = {}) {
     'X-Appwrite-Project': window.AW_PROJECT
   };
 
+  // Custom headers (e.g. X-Admin-Key) must be forwarded inside the body's headers field.
+  // Appwrite Execution API passes these to the function as req.headers.
   const reqBody = JSON.stringify({
     async: false,
     path: '/',
     method: method,
-    headers: headers,
-    body: body
+    headers: { ...headers },
+    body: typeof body === 'string' ? body : JSON.stringify(body)
   });
 
   const res = await fetch(`${window.AW_EXEC_BASE}/${fnId}/executions`, {
