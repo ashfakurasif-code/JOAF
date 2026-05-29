@@ -313,7 +313,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 <div class="toast" id="toast"></div>
 
 <script>
-const PROXY = '/.netlify/functions/groq-proxy';
+const PROXY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions';
 
 // ── Tag selections ──
 function initTags(rowId, multiSelect=false) {
@@ -503,7 +503,7 @@ async function generate() {
     document.getElementById('output').innerHTML = `
       <div class="err-box">
         <strong>❌ Error:</strong> ${err.message}<br><br>
-        <small>Groq API key check করুন netlify.toml এ। অথবা আবার try করুন।</small>
+        <small>Groq API key check করুন Appwrite Console → fb-scheduler env এ। অথবা আবার try করুন।</small>
       </div>`;
   }
 
@@ -962,7 +962,7 @@ let pageTokenMap = {}; // Map pageId to pageToken (not stored in DOM)
 // Load Facebook App ID from backend config
 async function loadFbConfig() {
   try {
-    const res = await fetch('/.netlify/functions/fb-config');
+    const res = await fetch('https://fra.cloud.appwrite.io/v1/functions/fb-config/executions');
     if (!res.ok) throw new Error('Config service unavailable');
     const config = await res.json();
     fbAppId = config.appId;

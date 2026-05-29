@@ -1,14 +1,13 @@
 // Appwrite Function: fb-scheduler
 // Trigger: CRON — "0 * * * *" (every hour)
-// Purpose: fetch pending fb_queue posts where scheduled_at <= now, then publish via Netlify proxy
+// Purpose: fetch pending fb_queue posts where scheduled_at <= now, then trigger fb-autopost via Appwrite SDK
 //
 // Appwrite Function Environment Variables needed:
-//   NETLIFY_BASE_URL   — e.g. https://your-site.netlify.app
 //   APPWRITE_ENDPOINT  — e.g. https://fra.cloud.appwrite.io/v1
 //   APPWRITE_PROJECT   — your project ID
 //   APPWRITE_API_KEY   — server API key (has db read/write permission)
 
-import { Client, Databases, Query } from 'node-appwrite';
+import { Client, Databases, Functions, Query } from 'node-appwrite';
 
 const AW_DB      = 'joaf';
 const COL_QUEUE  = 'fb_queue';
@@ -21,8 +20,6 @@ export default async ({ req, res, log, error }) => {
 
   const db   = new Databases(client);
   const now  = new Date().toISOString();
-  const base = process.env.NETLIFY_BASE_URL;
-
   log(`[fb-scheduler] running at ${now}`);
 
   // 1. Fetch all pending posts due now or earlier
@@ -49,7 +46,7 @@ export default async ({ req, res, log, error }) => {
     await db.updateDocument(AW_DB, COL_QUEUE, doc.$id, { status: 'processing' }).catch(() => {});
   }
 
-  // 3. Publish each post via Netlify proxy
+  // 3. Publish each post via Appwrite Functions SDK
   const summary = [];
 
   for (const doc of docs) {
@@ -72,12 +69,16 @@ export default async ({ req, res, log, error }) => {
 
     let publishResult;
     try {
-      const r = await fetch(`${base}/.netlify/functions/fb-autopost`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-      });
-      publishResult = await r.json();
+      const functions = new Functions(client);
+      const execution = await functions.createExecution(
+        'fb-autopost',
+        JSON.stringify(payload),
+        false,
+        '/',
+        'POST',
+        { 'Content-Type': 'application/json' }
+      );
+      publishResult = JSON.parse(execution.responseBody || '{}');
     } catch (e) {
       publishResult = { error: e.message };
     }

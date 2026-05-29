@@ -1184,7 +1184,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
           <div class="field"><label>নিশ্চিত করুন</label><input type="password" id="set-confirm" placeholder="••••••••"></div>
           <button class="btn btn-primary mt12" onclick="changePassword()">🔐 পরিবর্তন করুন</button>
           <div class="card mt16" style="background:var(--amber-bg);border-color:var(--amber-border)">
-            <div style="font-size:11px;color:var(--amber)">⚠️ Password পরিবর্তন করলে Netlify এবং GitHub Secrets এও update করতে হবে।</div>
+            <div style="font-size:11px;color:var(--amber)">⚠️ Password পরিবর্তন করলে Appwrite এবং GitHub Secrets এও update করতে হবে।</div>
           </div>
         </div>
 
@@ -1203,7 +1203,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
           <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
           <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
           <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">🔥 Appwrite Console</a>
-          <a href="https://app.netlify.com/projects/joaf" target="_blank" class="btn btn-ghost">🌐 Netlify Dashboard</a>
+          <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">☁️ Appwrite Console</a>
         </div>
       </div>
 
@@ -2533,7 +2533,7 @@ window.runLeaderAiUpdate = async function() {
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
         const text = await res.text();
-        throw new Error('Function error — Netlify env variables সেট আছে কিনা চেক করুন। Details: ' + text.substring(0, 200));
+        throw new Error('Function error — Appwrite env variables সেট আছে কিনা চেক করুন। Details: ' + text.substring(0, 200));
       }
 
       const data = await res.json();
@@ -2842,14 +2842,14 @@ window.changePassword = function() {
   if (oldPass !== ADMIN_KEY) return toast('বর্তমান password ভুল','error');
   if (newPass !== confirm) return toast('নতুন password মিলছে না','error');
   if (newPass.length < 6) return toast('কমপক্ষে ৬ অক্ষর দিন','error');
-  toast('⚠️ Netlify এবং GitHub Secrets এও ADMIN_SECRET_KEY update করুন','info');
+  toast('⚠️ Appwrite এবং GitHub Secrets এও ADMIN_SECRET_KEY update করুন','info');
 };
 
 window.saveSettings = function() { toast('Settings saved (UI only)','success'); };
 
 window.clearCache = function() { toast('Cache cleared','success'); };
 
-// ── Migration Engine v4 — Chunked Sequential (beats 10s Netlify timeout) ──────
+// ── Migration Engine v4 — Chunked Sequential (Appwrite 10s limit safe) ──────
 (function() {
   const DONE_KEY    = 'joaf_migration_done';
   const FN_URL      = 'migrate-to-appwrite';
@@ -2948,7 +2948,7 @@ window.clearCache = function() { toast('Cache cleared','success'); };
     });
     const text = await res.text();
     if (text.trimStart().startsWith('<'))
-      throw new Error('Function returned HTML (HTTP ' + res.status + ') — check Netlify Functions log.\nTip: deploy/redeploy to Netlify first.');
+      throw new Error('Function returned HTML (HTTP ' + res.status + ') — check Appwrite Function logs in Console.');
     let data;
     try { data = JSON.parse(text); } catch(_) { throw new Error('Bad JSON: ' + text.slice(0,200)); }
     if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
@@ -3260,7 +3260,7 @@ window.doUpload = async function() {
     document.getElementById('up-url-val').value = data.url;
     document.getElementById('up-url-copy').style.display = 'block';
 
-    toast('✅ Upload successful! Netlify deploy শুরু হয়েছে...','success');
+    toast('✅ Upload successful! Appwrite function triggered...','success');
   } catch(e) {
     const resultEl = document.getElementById('up-result');
     resultEl.textContent = '❌ ' + e.message;
@@ -5352,7 +5352,7 @@ window.fbCheckTokenExpiry = async function() {
     } else {
       if (badge) { badge.textContent = '✓ ' + daysLeft + ' দিন বাকি'; badge.style.color = 'var(--green)'; }
     }
-  } catch(e) { /* silent fail — Netlify may not have token yet */ }
+  } catch(e) { /* silent fail — Appwrite function may not have token yet */ }
 };
 
 window.saAddExclude = function() {
@@ -5562,7 +5562,7 @@ window.batchSelectAll = function(val) {
 };
 
 // Shared: fetch + filter pages once
-// ── _fbGetPages: token stays server-side, routed via netlify function ──
+// ── _fbGetPages: token stays server-side, routed via Appwrite function ──
 window._fbGetPages = async function() {
   const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
   const res = await join_aw_exec('fb-autopost', {
@@ -5578,7 +5578,7 @@ window._fbGetPages = async function() {
   return pages;
 };
 
-// Shared: post one file+caption to one page — routed via Netlify proxy (token stays server-side)
+// Shared: post one file+caption to one page — routed via Appwrite proxy (token stays server-side)
 window._fbPostOneFileToPage = async function(file, caption, page, scheduledAt) {
   let imageUrl = null, videoUrl = null;
 

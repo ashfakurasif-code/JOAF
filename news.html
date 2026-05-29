@@ -150,7 +150,7 @@ function renderNews(){
     `<button class="load-more" onclick="loadMore()">আরো সংবাদ দেখুন ▼</button>`;
 }
 
-// Netlify function দিয়ে server-side RSS fetch — CORS/block সমস্যা নেই
+// Appwrite function দিয়ে server-side RSS fetch — CORS/block সমস্যা নেই
 async function fetchAllRSS() {
   const res = await fetch('https://fra.cloud.appwrite.io/v1/functions/fetch-rss/executions', {
     signal: AbortSignal.timeout(15000)

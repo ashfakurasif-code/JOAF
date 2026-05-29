@@ -430,12 +430,12 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
       </div>
     </div>
     <div class="scard">
-      <div class="scard-h">🌐 Netlify Function URL</div>
+      <div class="scard-h">☁️ Appwrite Function URL</div>
       <div class="sf"><span class="sfl">FB Autopost Endpoint</span>
-        <input class="sfi" id="fbEndpoint" placeholder="/.netlify/functions/fb-autopost" oninput="saveSetting('fbEndpoint',this.value)">
+        <input class="sfi" id="fbEndpoint" placeholder="https://fra.cloud.appwrite.io/v1/functions/fb-autopost/executions" oninput="saveSetting('fbEndpoint',this.value)">
       </div>
       <div class="sf"><span class="sfl">Image Upload (GitHub/CDN) Endpoint</span>
-        <input class="sfi" id="imgEndpoint" placeholder="/.netlify/functions/github-upload" oninput="saveSetting('imgEndpoint',this.value)">
+        <input class="sfi" id="imgEndpoint" placeholder="https://fra.cloud.appwrite.io/v1/functions/github-upload/executions" oninput="saveSetting('imgEndpoint',this.value)">
       </div>
     </div>
     <div class="scard">
@@ -500,8 +500,8 @@ let SRC=null; // current canvas image
 
 // Settings
 let cfg={
-  fbToken:'',fbEndpoint:'/.netlify/functions/fb-autopost',
-  imgEndpoint:'/.netlify/functions/github-upload',
+  fbToken:'',fbEndpoint:'https://fra.cloud.appwrite.io/v1/functions/fb-autopost/executions',
+  imgEndpoint:'https://fra.cloud.appwrite.io/v1/functions/github-upload/executions',
   ocrModel:'mistral-ocr',footerText:'JOAF • দেশ আগে, দল পরে',
   footerUrl:'www.julyforum.com',pages:[],selectedPages:[]
 };
@@ -761,7 +761,7 @@ async function runOCR(item){
 // Vision fallback via groq-proxy (Gemini Flash free tier)
 async function runVisionOCR(item){
   const b64=item.imgSrc.includes(',')? item.imgSrc : item.imgSrc;
-  const resp=await fetch('/.netlify/functions/groq-proxy',{
+  const resp=await fetch('https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       messages:[{role:'user',content:[
@@ -786,7 +786,7 @@ ${text.substring(0,1500)}
 {"headline":"মূল headline বাংলায় সর্বোচ্চ ৮০ অক্ষর","sub":"sub-headline বা খালি string","category":"breaking|exclusive|update|analysis|alert|positive","source":"চ্যানেল/সূত্র নাম শুধু text","location":"স্থান বা খালি string","style":0,"overlay":55}
 style = 0-5 (preset index); overlay = 0-95`;
 
-  const resp=await fetch('/.netlify/functions/groq-proxy',{
+  const resp=await fetch('https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:400,temperature:0.3})
   });
@@ -819,7 +819,7 @@ Caption টি হবে:
 
 শুধু caption text দাও, কোনো explanation নয়।`;
 
-  const resp=await fetch('/.netlify/functions/groq-proxy',{
+  const resp=await fetch('https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:500,temperature:0.7})
   });
@@ -1192,7 +1192,7 @@ async function postSingleItem(idx){
   try{
     // Upload image if exists
     let imageUrl=null;
-    if(item.canvasData&&cfg.imgEndpoint&&cfg.imgEndpoint!=='/.netlify/functions/github-upload'){
+    if(item.canvasData&&cfg.imgEndpoint&&cfg.imgEndpoint!=='https://fra.cloud.appwrite.io/v1/functions/github-upload/executions'){
       imageUrl=await uploadImage(item.canvasData,item.id);
     } else if(item.canvasData){
       // Use imgBB free API or similar, fallback to no image

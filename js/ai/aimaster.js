@@ -4,7 +4,7 @@
  * Supports: text topic, OCR image, URL scrape
  */
 
-const AI_PROXY = '/.netlify/functions/groq-proxy';
+const AI_PROXY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions';
 
 /** Build full prompt from topic/OCR text */
 function buildMasterPrompt(input, tone = 'urgent') {

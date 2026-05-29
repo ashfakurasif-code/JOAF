@@ -864,15 +864,15 @@ button{
       </div>
     </div>
     <div class="scard">
-      <div class="scard-h">🌐 Netlify Endpoints</div>
+      <div class="scard-h">☁️ Appwrite Endpoints</div>
       <div class="sf"><span class="sfl">FB Autopost Endpoint</span>
-        <input class="sfi" id="fbEndpoint" placeholder="/.netlify/functions/fb-autopost" oninput="saveSetting('fbEndpoint',this.value)">
+        <input class="sfi" id="fbEndpoint" placeholder="https://fra.cloud.appwrite.io/v1/functions/fb-autopost/executions" oninput="saveSetting('fbEndpoint',this.value)">
       </div>
       <div class="sf"><span class="sfl">Image Upload Endpoint</span>
-        <input class="sfi" id="imgEndpoint" placeholder="/.netlify/functions/github-upload" oninput="saveSetting('imgEndpoint',this.value)">
+        <input class="sfi" id="imgEndpoint" placeholder="https://fra.cloud.appwrite.io/v1/functions/github-upload/executions" oninput="saveSetting('imgEndpoint',this.value)">
       </div>
       <div class="sf"><span class="sfl">Groq Proxy Endpoint</span>
-        <input class="sfi" id="groqEndpoint" value="/.netlify/functions/groq-proxy" oninput="saveSetting('groqEndpoint',this.value)">
+        <input class="sfi" id="groqEndpoint" value="https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions" oninput="saveSetting('groqEndpoint',this.value)">
       </div>
     </div>
     <div class="scard">
@@ -918,10 +918,10 @@ button{
 // ══════════════════════════════════════════
 // SHARED CONFIG
 // ══════════════════════════════════════════
-const PROXY_DEFAULT = '/.netlify/functions/groq-proxy';
+const PROXY_DEFAULT = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions';
 let cfg = {
-  fbToken:'', fbEndpoint:'/.netlify/functions/fb-autopost',
-  imgEndpoint:'/.netlify/functions/github-upload',
+  fbToken:'', fbEndpoint:'https://fra.cloud.appwrite.io/v1/functions/fb-autopost/executions',
+  imgEndpoint:'https://fra.cloud.appwrite.io/v1/functions/github-upload/executions',
   groqEndpoint: PROXY_DEFAULT,
   footerText:'JOAF • দেশ আগে, দল পরে',
   footerUrl:'www.julyforum.com',
