@@ -561,41 +561,48 @@ body  { overflow-x:hidden; }
 })();
 })();
 </script>
-<script id="joaf-appwrite-fn-shim">
-(function() {
-  const _origFetch = window.fetch;
-  const AW_EXEC_BASE = 'https://fra.cloud.appwrite.io/v1/functions';
-  const AW_PROJECT   = '6a11b6cd000b59f318eb';
-  window.fetch = async function(url, opts) {
-    if (typeof url === 'string' && url.startsWith('/.netlify/functions/')) {
-      const fnId        = url.replace('/.netlify/functions/', '').split('?')[0];
-      const origMethod  = (opts && opts.method)  ? opts.method.toUpperCase() : 'GET';
-      const origHeaders = (opts && opts.headers) ? opts.headers : {};
-      const origBody    = (opts && opts.body)    ? opts.body    : '';
-      try {
-        const execRes = await _origFetch(
-          AW_EXEC_BASE + '/' + fnId + '/executions',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT },
-            body: JSON.stringify({ async: false, path: '/', method: origMethod, headers: origHeaders, body: origBody })
-          }
-        );
-        if (!execRes.ok) {
-          const errText = await execRes.text().catch(() => '{}');
-          return new Response(errText, { status: execRes.status, headers: { 'Content-Type': 'application/json' } });
-        }
-        const exec = await execRes.json();
-        const bodyStr    = exec.responseBody        != null ? exec.responseBody        : '{}';
-        const statusCode = exec.responseStatusCode  != null ? exec.responseStatusCode  : 200;
-        return new Response(bodyStr, { status: statusCode, headers: { 'Content-Type': 'application/json' } });
-      } catch(e) {
-        return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-      }
-    }
-    return _origFetch(url, opts);
+<script id="joaf-appwrite-config">
+window.AW_EXEC_BASE = 'https://fra.cloud.appwrite.io/v1/functions';
+window.AW_PROJECT   = '6a11b6cd000b59f318eb';
+
+// সরাসরি অ্যাপরাইট ফাংশন এক্সিকিউট করার জন্য একটি ক্লিন গ্লোবাল হেল্পার ফাংশন
+async join_aw_exec(fnId, options = {}) {
+  const method  = (options.method || 'GET').toUpperCase();
+  const headers = options.headers || {};
+  const body    = options.body || '';
+
+  // X-Admin-Key যদি হেডারে থাকে, সেটাকে আমরা বডির ভেতরে বা কাস্টম হেডারে পাস করতে পারি
+  // অ্যাপরাইট রিকোয়েস্ট ফরম্যাট ঠিক রাখা
+  const reqHeaders = {
+    'Content-Type': 'application/json',
+    'X-Appwrite-Project': window.AW_PROJECT
   };
-})();
+
+  const reqBody = JSON.stringify({
+    async: false,
+    path: '/',
+    method: method,
+    headers: headers,
+    body: body
+  });
+
+  const res = await fetch(`${window.AW_EXEC_BASE}/${fnId}/executions`, {
+    method: 'POST',
+    headers: reqHeaders,
+    body: reqBody
+  });
+
+  if (!res.ok) return res; // রিটার্ন এরর রেসপন্স
+
+  const exec = await res.json();
+  const bodyStr = exec.responseBody != null ? exec.responseBody : '{}';
+  const statusCode = exec.responseStatusCode != null ? exec.responseStatusCode : 200;
+
+  return new Response(bodyStr, {
+    status: statusCode,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
 </script>
 </head>
 <body>
@@ -1793,7 +1800,7 @@ window.doLogin = async function() {
   btn.disabled = true; btn.textContent = '⏳ Checking...';
 
   try {
-    const res = await fetch('/.netlify/functions/send-notification', {
+    const res = await join_aw_exec('send-notification', {
       method:'POST',
       headers:{'Content-Type':'application/json','X-Admin-Key':pass},
       body: JSON.stringify({_verify:true})
@@ -1822,7 +1829,7 @@ window.doLogout = function() {
   const saved = localStorage.getItem('joaf_admin_key');
   if(!saved) return;
   try {
-    const res = await fetch('/.netlify/functions/send-notification',{
+    const res = await join_aw_exec('send-notification',{
       method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':saved},
       body:JSON.stringify({_verify:true})
     });
@@ -1962,11 +1969,11 @@ async function initDashboard() {
     }
   };
   const HEALTH_ITEMS = [
-    { label: 'Appwrite DB',  icon:'🗄', check: async () => { try{ const r=await fetch('/.netlify/functions/get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Err'}; }catch(e){return{ok:false,val:'Offline'};} } },
+    { label: 'Appwrite DB',  icon:'🗄', check: async () => { try{ const r=await join_aw_exec('get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Err'}; }catch(e){return{ok:false,val:'Offline'};} } },
     { label: 'Push SW',      icon:'📡', check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Active':'404'};}catch{return{ok:false,val:'Err'};} } },
-    { label: 'Notif Fn',     icon:'🔔', check: async () => { try{const r=await fetch('/.netlify/functions/send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
-    { label: 'Groq AI',      icon:'🤖', check: async () => { try{const r=await fetch('/.netlify/functions/groq-proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({_ping:true})});return {ok:r.status!==500,val:r.status<400?'Online':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
-    { label: 'FB Autopost',  icon:'📘', check: async () => { try{const r=await fetch('/.netlify/functions/fb-autopost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'check-token'})});return {ok:r.status<500,val:r.status===200?'Token OK':r.status===401?'No Token':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
+    { label: 'Notif Fn',     icon:'🔔', check: async () => { try{const r=await join_aw_exec('send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
+    { label: 'Groq AI',      icon:'🤖', check: async () => { try{const r=await join_aw_exec('groq-proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({_ping:true})});return {ok:r.status!==500,val:r.status<400?'Online':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
+    { label: 'FB Autopost',  icon:'📘', check: async () => { try{const r=await join_aw_exec('fb-autopost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'check-token'})});return {ok:r.status<500,val:r.status===200?'Token OK':r.status===401?'No Token':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
   ];
 
   function buildMetroTrack() {
@@ -2010,7 +2017,7 @@ async function initDashboard() {
   try {
     // ── Appwrite-only dashboard load ──────────────────────────────────────────
     // get-stats v2 returns donor/alert counts from Appwrite (no Firebase reads)
-    const statsRes = await fetch('/.netlify/functions/get-stats', {
+    const statsRes = await join_aw_exec('get-stats', {
       headers: { 'X-Admin-Key': ADMIN_KEY }
     }).then(async r => {
       const text = await r.text();
@@ -2150,7 +2157,7 @@ async function callSendNotif(payload) {
   const btn = document.getElementById('cn-btn');
   if (btn) { btn.disabled=true; btn.textContent='⏳ পাঠানো হচ্ছে...'; }
   try {
-    const res = await fetch('/.netlify/functions/send-notification', {
+    const res = await join_aw_exec('send-notification', {
       method:'POST',
       headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},
       body: JSON.stringify(payload)
@@ -2165,7 +2172,7 @@ async function callSendNotif(payload) {
 async function loadNotifPage() {
   try {
     // push_subscriptions and notification_history live in Appwrite — use get-stats
-    const statsRes = await fetch('/.netlify/functions/get-stats', {
+    const statsRes = await join_aw_exec('get-stats', {
       headers: { 'X-Admin-Key': ADMIN_KEY }
     }).then(r => r.ok ? r.json() : Promise.reject(new Error('get-stats ' + r.status)));
 
@@ -2547,7 +2554,7 @@ window.runDiscoverLeaders = async function() {
   status.style.color = 'var(--amber)';
   status.textContent = 'RSS পড়ছে...';
   try {
-    const res = await fetch('/.netlify/functions/discover-leaders', {
+    const res = await join_aw_exec('discover-leaders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
       body: JSON.stringify({}),
@@ -2580,7 +2587,7 @@ window.runGenerateTimeline = async function() {
   status.style.color = 'var(--amber)';
   status.textContent = 'News পড়ছে...';
   try {
-    const res = await fetch('/.netlify/functions/generate-timeline', {
+    const res = await join_aw_exec('generate-timeline', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
       body: JSON.stringify({ force: true }),
@@ -2619,7 +2626,7 @@ window.runLeaderAiUpdate = async function() {
       btn.textContent = `⏳ ${batchStart+1}-${batchStart+10} analyze করছে...`;
       status.textContent = `${totalUpdated} জন updated, চলছে...`;
 
-      const res = await fetch('/.netlify/functions/update-leaders', {
+      const res = await join_aw_exec('update-leaders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
         body: JSON.stringify({ batchStart }),
@@ -3275,7 +3282,7 @@ window.inlineUpload = async function(input, targetFieldId, folder) {
 
     if(barEl) barEl.style.width='60%';
 
-    const res = await fetch('/.netlify/functions/github-upload', {
+    const res = await join_aw_exec('github-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
       body: JSON.stringify({ filename: file.name, content: base64, folder, message: `Admin upload: ${file.name}` })
@@ -3335,7 +3342,7 @@ window.doUpload = async function() {
 
     document.getElementById('up-progress-bar').style.width = '60%';
 
-    const res = await fetch('/.netlify/functions/github-upload', {
+    const res = await join_aw_exec('github-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY },
       body: JSON.stringify({ filename: file.name, content: base64, folder, message })
@@ -3966,7 +3973,7 @@ window.fbAnalyzeOneFile = async function(file) {
         status.textContent = '⏳ Rate limit — ' + (RETRY_DELAYS[attempt-1]/1000) + 's পর retry ' + attempt + '/2...';
         await new Promise(r => setTimeout(r, RETRY_DELAYS[attempt-1]));
       }
-      const res = await fetch('/.netlify/functions/groq-proxy', {
+      const res = await join_aw_exec('groq-proxy', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'meta-llama/llama-4-scout-17b-16e-instruct',
@@ -4090,7 +4097,7 @@ window.fbGenerateSingle = async function(idx) {
     if (file && imgBase64) content.push({ type: 'image_url', image_url: { url: 'data:' + (file.type||'image/jpeg') + ';base64,' + imgBase64 } });
     content.push({ type: 'text', text: FB_CONFIG.systemPrompt(toneDesc, text) });
 
-    const aiRes = await fetch('/.netlify/functions/groq-proxy', {
+    const aiRes = await join_aw_exec('groq-proxy', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: file ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile', max_tokens: 1000, messages: [{ role: 'user', content }] })
     });
@@ -4237,7 +4244,7 @@ window.fbGenerateReel = async function() {
     // AI caption + hook + slides
     const toneDesc = (FB_CONFIG.tones[_fbCurrentTone] || FB_CONFIG.tones.urgent);
 
-    const aiRes = await fetch('/.netlify/functions/groq-proxy', {
+    const aiRes = await join_aw_exec('groq-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -4337,7 +4344,7 @@ News: ${text}` });
             });
             fbSyncImageTexts();
             const _perText = (window._fbImageTexts && window._fbImageTexts[bi]) ? window._fbImageTexts[bi] : text;
-            const cardAiRes = await fetch('/.netlify/functions/groq-proxy', {
+            const cardAiRes = await join_aw_exec('groq-proxy', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -4432,7 +4439,7 @@ News: ${text}` });
               rd.onerror = () => res('');
               rd.readAsDataURL(vFile);
             });
-            const vAiRes = await fetch('/.netlify/functions/groq-proxy', {
+            const vAiRes = await join_aw_exec('groq-proxy', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -5361,7 +5368,7 @@ window.saOpenPostHelper = async function() {
       if (scheduledAt) payload.scheduled_at = scheduledAt;
     }
 
-    const res  = await fetch('/.netlify/functions/fb-autopost', {
+    const res  = await join_aw_exec('fb-autopost', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -5428,7 +5435,7 @@ window.saveFbToken = function() {
 // ── Feature 6: Token expiry check ─────────────────────────────
 window.fbCheckTokenExpiry = async function() {
   try {
-    const res  = await fetch('/.netlify/functions/fb-autopost', {
+    const res  = await join_aw_exec('fb-autopost', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'check-token' }),
@@ -5661,7 +5668,7 @@ window.batchSelectAll = function(val) {
 // ── _fbGetPages: token stays server-side, routed via netlify function ──
 window._fbGetPages = async function() {
   const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  const res = await fetch('/.netlify/functions/fb-autopost', {
+  const res = await join_aw_exec('fb-autopost', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'get-pages' }),
@@ -5706,7 +5713,7 @@ window._fbPostOneFileToPage = async function(file, caption, page, scheduledAt) {
   };
   if (scheduledAt) payload.scheduled_at = scheduledAt;
 
-  const res = await fetch('/.netlify/functions/fb-autopost', {
+  const res = await join_aw_exec('fb-autopost', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -5749,7 +5756,7 @@ window.fbQueueFromUI = async function() {
 // ── Carousel post direct (bypasses queue, posts immediately) ──
 window.fbPostCarousel = async function(imageUrls, caption) {
   const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
-  const res = await fetch('/.netlify/functions/fb-autopost', {
+  const res = await join_aw_exec('fb-autopost', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'carousel', caption, imageUrls, excludeIds }),
