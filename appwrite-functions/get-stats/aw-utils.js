@@ -1,9 +1,9 @@
-// aw-utils.js — Shared Appwrite utility (ESM, copied into functions that need it)
-import { Client, Databases } from 'node-appwrite';
+// aw-utils.js — Appwrite 1.9.5 compatible
+import { Client, Databases, Query, ID } from 'node-appwrite';
 
-export const AW_ENDPOINT  = 'https://fra.cloud.appwrite.io/v1';
-export const AW_PROJECT   = '6a11b6cd000b59f318eb';
-export const DB_ID        = 'joaf';
+export const AW_ENDPOINT   = 'https://fra.cloud.appwrite.io/v1';
+export const AW_PROJECT    = '6a11b6cd000b59f318eb';
+export const DB_ID         = 'joaf';
 export const COLLECTION_ID = 'push_subscriptions';
 export const DEFAULT_DOC_PERMISSIONS = ['read("any")', 'update("any")', 'delete("any")'];
 
@@ -13,28 +13,6 @@ const getClient = () => new Client()
   .setKey(process.env.APPWRITE_API_KEY);
 
 export const getDatabases = () => new Databases(getClient());
-
-const BASE_HEADERS = () => ({
-  'Content-Type': 'application/json',
-  'X-Appwrite-Project': AW_PROJECT,
-  'X-Appwrite-Key': process.env.APPWRITE_API_KEY,
-});
-
-function encodeValue(value) {
-  if (value === undefined) return undefined;
-  if (value instanceof Date) return value.toISOString();
-  if (value && typeof value === 'object') return JSON.stringify(value);
-  return value;
-}
-
-export function encodeData(data) {
-  const out = {};
-  Object.entries(data || {}).forEach(([k, v]) => {
-    const encoded = encodeValue(v);
-    if (encoded !== undefined) out[k] = encoded;
-  });
-  return out;
-}
 
 function parseValue(value) {
   if (typeof value !== 'string') return value;
@@ -48,7 +26,8 @@ function parseValue(value) {
 
 export function normalizeDoc(doc) {
   const data = { ...doc };
-  delete data.$id; delete data.$createdAt; delete data.$updatedAt; delete data.$permissions;
+  delete data.$id; delete data.$createdAt; delete data.$updatedAt;
+  delete data.$permissions; delete data.$collectionId; delete data.$databaseId;
   Object.keys(data).forEach(k => { data[k] = parseValue(data[k]); });
   return data;
 }
@@ -65,92 +44,71 @@ export function safeDocId(id) {
   return sanitizeId(id);
 }
 
-function isValidQuery(query) {
-  if (typeof query !== 'string') return false;
-  const trimmed = query.trim();
-  return trimmed.length > 0 && !trimmed.includes('undefined') && !trimmed.includes('null') && /^[a-zA-Z]+\(.+\)$/.test(trimmed);
+export function encodeData(data) {
+  const out = {};
+  Object.entries(data || {}).forEach(([k, v]) => {
+    if (v === undefined) return;
+    if (v instanceof Date) { out[k] = v.toISOString(); return; }
+    if (v && typeof v === 'object') { out[k] = JSON.stringify(v); return; }
+    out[k] = v;
+  });
+  return out;
 }
 
-export function sanitizeQueries(queries = []) {
-  if (!Array.isArray(queries)) return [];
-  return [...new Set(queries.flat(Infinity).filter(Boolean).map(q => (typeof q === 'string' ? q.trim() : '')).filter(isValidQuery))];
-}
-
-function buildQueryParams(queries = [], limit = 200) {
-  const params = new URLSearchParams();
-  const safeQueries = sanitizeQueries(queries);
-  const safeLimit = Number.isFinite(Number(limit)) ? Math.min(Math.max(Number(limit), 1), 5000) : 200;
-  // Appwrite 1.4+: limit must live in queries[], not as a bare URL param
-  const allQueries = [...safeQueries, `limit(${safeLimit})`];
-  allQueries.forEach(query => { params.append('queries[]', query); });
-  return { params, safeLimit, safeQueries };
-}
-
+// Query helpers using node-appwrite SDK Query class
 export function qEqual(field, value) {
   if (!field || value === undefined || value === null || value === '') return null;
-  return `equal("${field}", [${JSON.stringify(value)}])`;
+  return Query.equal(field, value);
 }
-export function qOrderDesc(field) { return field ? `orderDesc("${field}")` : null; }
-export function qOrderAsc(field)  { return field ? `orderAsc("${field}")` : null; }
-export function qLimit(n) { const limit = Number(n); if (!Number.isFinite(limit) || limit <= 0) return null; return `limit(${Math.min(limit, 5000)})`; }
-export function qCursorAfter(cursor) { const id = safeDocId(cursor); return id ? `cursorAfter("${id}")` : null; }
-
-async function awRequest(path, options = {}) {
-  const res = await fetch(`${AW_ENDPOINT}${path}`, { ...options, headers: { ...BASE_HEADERS(), ...(options.headers || {}) } });
-  if (!res.ok) { const text = await res.text(); throw new Error(`Appwrite ${res.status}: ${text.slice(0, 500)}`); }
-  return res.json();
-}
+export function qOrderDesc(field) { return field ? Query.orderDesc(field) : null; }
+export function qOrderAsc(field)  { return field ? Query.orderAsc(field)  : null; }
+export function qLimit(n)         { const l = Number(n); return (Number.isFinite(l) && l > 0) ? Query.limit(Math.min(l, 5000)) : null; }
+export function qCursorAfter(id)  { const s = safeDocId(id); return s ? Query.cursorAfter(s) : null; }
 
 export async function awGet(collection, docId) {
-  const id = safeDocId(docId);
   try {
-    const doc = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents/${id}`, { method: 'GET' });
+    const db  = getDatabases();
+    const doc = await db.getDocument(DB_ID, collection, safeDocId(docId));
     return { id: doc.$id, data: normalizeDoc(doc) };
   } catch (_) { return null; }
 }
 
 export async function awList(collection, queries = [], limit = 200) {
-  const { params } = buildQueryParams(queries, limit);
-  const data = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`, { method: 'GET' });
+  const db = getDatabases();
+  const q  = [Query.limit(Math.min(limit, 5000)), ...queries.filter(Boolean)];
+  const data = await db.listDocuments(DB_ID, collection, q);
   return (data.documents || []).map(doc => ({ id: doc.$id, data: normalizeDoc(doc) }));
 }
 
 export async function awListAll(collection, queries = [], limit = 200) {
-  const baseQueries = sanitizeQueries(queries);
+  const db  = getDatabases();
   const all = [];
   let cursor = null;
-  let keepPaging = true;
-  while (keepPaging) {
-    try {
-      const pageQueries = [...baseQueries];
-      if (cursor) { const cq = qCursorAfter(cursor); if (cq) pageQueries.push(cq); }
-      const { params, safeLimit } = buildQueryParams(pageQueries, limit);
-      const data = await awRequest(`/databases/${DB_ID}/collections/${collection}/documents?${params.toString()}`, { method: 'GET' });
-      const docs = Array.isArray(data.documents) ? data.documents : [];
-      all.push(...docs.map(doc => ({ id: doc.$id, data: normalizeDoc(doc) })));
-      if (docs.length < safeLimit) { keepPaging = false; break; }
-      cursor = docs[docs.length - 1]?.$id || null;
-      if (!cursor) keepPaging = false;
-    } catch (fetchError) {
-      if (baseQueries.length > 0) {
-        // retry without filters
-        return awListAll(collection, [], limit);
-      }
-      // Re-throw so caller can log the real error
-      throw fetchError;
-    }
+
+  while (true) {
+    const q = [Query.limit(Math.min(limit, 5000)), ...queries.filter(Boolean)];
+    if (cursor) q.push(Query.cursorAfter(cursor));
+
+    const data = await db.listDocuments(DB_ID, collection, q);
+    const docs = data.documents || [];
+    all.push(...docs.map(doc => ({ id: doc.$id, data: normalizeDoc(doc) })));
+
+    if (docs.length < limit) break;
+    cursor = docs[docs.length - 1]?.$id || null;
+    if (!cursor) break;
   }
   return all;
 }
 
 export async function awCreate(collection, data, docId = 'unique()', permissions = DEFAULT_DOC_PERMISSIONS) {
-  const payload = { documentId: safeDocId(docId) || 'unique()', data: encodeData(data), permissions };
-  return awRequest(`/databases/${DB_ID}/collections/${collection}/documents`, { method: 'POST', body: JSON.stringify(payload) });
+  const db = getDatabases();
+  const id = docId === 'unique()' ? ID.unique() : safeDocId(docId);
+  return db.createDocument(DB_ID, collection, id, encodeData(data), permissions);
 }
 
 export async function awUpdate(collection, docId, data) {
-  const id = safeDocId(docId);
-  return awRequest(`/databases/${DB_ID}/collections/${collection}/documents/${id}`, { method: 'PATCH', body: JSON.stringify({ data: encodeData(data) }) });
+  const db = getDatabases();
+  return db.updateDocument(DB_ID, collection, safeDocId(docId), encodeData(data));
 }
 
 export async function awUpsert(collection, docId, data, permissions = DEFAULT_DOC_PERMISSIONS) {
