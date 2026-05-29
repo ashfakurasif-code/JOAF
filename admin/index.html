@@ -1864,7 +1864,7 @@ async function initDashboard() {
   };
   const HEALTH_ITEMS = [
     { label: 'Appwrite DB',  icon:'🗄', check: async () => { try{ const r=await join_aw_exec('get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Err'}; }catch(e){return{ok:false,val:'Offline'};} } },
-    { label: 'Push SW',      icon:'📡', check: async () => { try{const r=await fetch('/firebase-messaging-sw.js');return {ok:r.ok,val:r.ok?'Active':'404'};}catch{return{ok:false,val:'Err'};} } },
+    { label: 'Push SW',      icon:'📡', check: async () => { try{const r=await fetch('/sw.js');return {ok:r.ok,val:r.ok?'Active':'404'};}catch{return{ok:false,val:'Err'};} } },
     { label: 'Notif Fn',     icon:'🔔', check: async () => { try{const r=await join_aw_exec('send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
     { label: 'Groq AI',      icon:'🤖', check: async () => { try{const r=await join_aw_exec('groq-proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({_ping:true})});return {ok:r.status!==500,val:r.status<400?'Online':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
     { label: 'FB Autopost',  icon:'📘', check: async () => { try{const r=await join_aw_exec('fb-autopost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'check-token'})});return {ok:r.status<500,val:r.status===200?'Token OK':r.status===401?'No Token':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },

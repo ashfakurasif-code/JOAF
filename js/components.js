@@ -765,7 +765,7 @@ const JOAFComponents = {
           // 🔔 Push notification — same district subscribers কে জানাও
           try {
             const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
-            await fetch('/.netlify/functions/send-notification', {
+            await fetch('https://fra.cloud.appwrite.io/v1/functions/send-notification/executions', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'X-Admin-Key': _adminKey },
               body: JSON.stringify({

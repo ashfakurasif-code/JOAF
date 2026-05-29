@@ -133,7 +133,7 @@ async function syncSubscription() {
       },
     };
 
-    const res = await fetch('/api/save-subscription', {
+    const res = await fetch('https://fra.cloud.appwrite.io/v1/functions/save-subscription/executions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
