@@ -2,25 +2,35 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>JOAF Studio - Unified Admin</title>
+    <title>JOAF Studio - Control Center</title>
     <style>
         body { background: #06060a; color: #f0f0f8; font-family: sans-serif; margin: 0; }
         .nav { display: flex; gap: 10px; padding: 15px; background: #0d0d14; border-bottom: 1px solid #2a2a44; }
         .tab-btn { background: #131320; border: 1px solid #2a2a44; color: #a0a0c0; padding: 10px 15px; border-radius: 8px; cursor: pointer; }
         .tab-btn:hover { border-color: #7c3aed; }
+        .tab-btn.active { border-color: #7c3aed; background: #1a1a2e; color: #fff; }
         #view { padding: 20px; }
     </style>
 </head>
 <body>
     <div class="nav">
-        <button class="tab-btn" onclick="loadView('newscard')">🗞️ NewsCard</button>
-        <button class="tab-btn" onclick="loadView('fbpost')">📘 FB Post</button>
-        <button class="tab-btn" onclick="loadView('queue')">📋 Queue</button>
+        <button class="tab-btn active" onclick="loadView('newscard', this)">🗞️ NewsCard</button>
+        <button class="tab-btn" onclick="loadView('fbpost', this)">📘 FB Post</button>
+        <button class="tab-btn" onclick="loadView('queue', this)">📋 Queue</button>
     </div>
-    <div id="view">এখানে টুল লোড হবে...</div>
+    <div id="view">
+        <iframe id="tool-frame" src="about:blank" style="width:100%; height:80vh; border:none;"></iframe>
+    </div>
     <script>
-        function loadView(view) {
-            document.getElementById('view').innerHTML = 'Loading ' + view + '...';
+        const tools = {
+            'newscard': '/admin/newscard.html',
+            'fbpost': '/admin/fbpost-panel.html',
+            'queue': '/admin/queue-panel.html'
+        };
+        function loadView(view, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tool-frame').src = tools[view] || 'about:blank';
         }
     </script>
 </body>
