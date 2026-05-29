@@ -4,7 +4,7 @@
  * Supports: single, selected, batch, scheduled publish
  */
 
-import { publishToFacebook } from './fbPublisher.js';
+import { publishToFacebook } from './fbpublisher.js';
 
 /** Queue item status */
 export const STATUS = {
