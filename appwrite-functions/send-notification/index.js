@@ -242,9 +242,9 @@ export default async ({ req, res, log, error }) => {
       title:  notifData.title,
       body:   notifData.body,
       url:    notifUrl,
-      sent,
-      failed,
-      total:  activeDocs.length,
+      sent: String(sent),
+      failed: String(failed),
+      total:  String(activeDocs.length),
       sentAt: new Date().toISOString(),
     }).catch(histErr =>
       error(`COL_HIST write failed: ${histErr.message}`)
