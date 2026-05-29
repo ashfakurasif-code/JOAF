@@ -146,11 +146,11 @@
                 },
                 {
                     "name": "VAPID_PUBLIC_KEY",
-                    "value": "BCSwlS-ZLtznZGUGaDil3TQzT5GMmqeIAVyDNmimf5Z7IokRwk1xWDtatjALnGNhufdgq9UVZNnHcbnzXq7JcXE"
+                    "value": "BDt2WuNPaZ4ma4poCOYolUBkD9a25cXnn5isx8jriEljaSOwVseTiMrqB2cjMki7gy-1HiRxll7RHfdVtbKbr2M"
                 },
                 {
                     "name": "VAPID_PRIVATE_KEY",
-                    "value": "YOUR_PRIVATE_KEY_ONE_LINE"
+                    "value": "5Az4ywJ0sZrFNZ0ajt5kvPLF-cJ8sZwevZ6MOPr_VNI"
                 },
                 {
                     "name": "VAPID_SUBJECT",
