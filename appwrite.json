@@ -146,11 +146,15 @@
                 },
                 {
                     "name": "VAPID_PUBLIC_KEY",
-                    "value": ""
+                    "value": "BCSwlS-ZLtznZGUGaDil3TQzT5GMmqeIAVyDNmimf5Z7IokRwk1xWDtatjALnGNhufdgq9UVZNnHcbnzXq7JcXE"
                 },
                 {
                     "name": "VAPID_PRIVATE_KEY",
-                    "value": ""
+                    "value": "YOUR_PRIVATE_KEY_ONE_LINE"
+                },
+                {
+                    "name": "VAPID_SUBJECT",
+                    "value": "mailto:admin@julyforum.com"
                 }
             ],
             "ignore": [],
