@@ -222,7 +222,7 @@ export default async ({ req, res, log, error }) => {
         log(`FAIL docId=${docId} status=${err.statusCode} msg=${err.message}`);
 
         // 404 / 410 → subscription is permanently gone; deactivate immediately.
-        if (err.statusCode === 404 || err.statusCode === 410) {
+        if (err.statusCode === 404 || err.statusCode === 410 || !err.statusCode) {
           await awUpdate(COL_SUBS, docId, {
             active:    false,
             updatedAt: new Date().toISOString(),
