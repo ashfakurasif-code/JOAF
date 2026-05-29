@@ -1934,7 +1934,7 @@ async function initDashboard() {
     setEl('bl-opos', statsRes.bloodOPos || 0);
 
     const subSubEl = document.getElementById('ds-sub-sub');
-    if(subSubEl){ subSubEl.textContent = `${(statsRes.totalSubs||0) - activeCount} inactive`; }
+    if(subSubEl){ subSubEl.textContent = `${statsRes.inactiveSubs||0} inactive`; }
 
     // Today notifications — computed server-side in get-stats
     const todayNotifs = statsRes.todayNotifs || 0;
