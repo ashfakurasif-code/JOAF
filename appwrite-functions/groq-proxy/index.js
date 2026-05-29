@@ -13,6 +13,8 @@ export default async ({ req, res, log, error }) => {
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
   catch { return res.json({ error: 'Invalid JSON' }, 400); }
 
+  if (body && body._ping) return res.json({ ok: true, pong: true });
+
   // ── LAYER 1: OpenRouter (primary) ──
   if (OPENROUTER_KEY) {
     try {

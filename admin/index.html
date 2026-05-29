@@ -561,6 +561,42 @@ body  { overflow-x:hidden; }
 })();
 })();
 </script>
+<script id="joaf-appwrite-fn-shim">
+(function() {
+  const _origFetch = window.fetch;
+  const AW_EXEC_BASE = 'https://fra.cloud.appwrite.io/v1/functions';
+  const AW_PROJECT   = '6a11b6cd000b59f318eb';
+  window.fetch = async function(url, opts) {
+    if (typeof url === 'string' && url.startsWith('/.netlify/functions/')) {
+      const fnId        = url.replace('/.netlify/functions/', '').split('?')[0];
+      const origMethod  = (opts && opts.method)  ? opts.method.toUpperCase() : 'GET';
+      const origHeaders = (opts && opts.headers) ? opts.headers : {};
+      const origBody    = (opts && opts.body)    ? opts.body    : '';
+      try {
+        const execRes = await _origFetch(
+          AW_EXEC_BASE + '/' + fnId + '/executions',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': AW_PROJECT },
+            body: JSON.stringify({ async: false, path: '/', method: origMethod, headers: origHeaders, body: origBody })
+          }
+        );
+        if (!execRes.ok) {
+          const errText = await execRes.text().catch(() => '{}');
+          return new Response(errText, { status: execRes.status, headers: { 'Content-Type': 'application/json' } });
+        }
+        const exec = await execRes.json();
+        const bodyStr    = exec.responseBody        != null ? exec.responseBody        : '{}';
+        const statusCode = exec.responseStatusCode  != null ? exec.responseStatusCode  : 200;
+        return new Response(bodyStr, { status: statusCode, headers: { 'Content-Type': 'application/json' } });
+      } catch(e) {
+        return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
+    return _origFetch(url, opts);
+  };
+})();
+</script>
 </head>
 <body>
 <script>
