@@ -33,7 +33,9 @@ export default async ({ req, res, log, error }) => {
   if (req.method === 'OPTIONS') return res.empty();
   if (req.method !== 'POST') return res.json({ error: 'Method not allowed' }, 405);
 
-  const adminKey = req.headers['x-admin-key'] || '';
+  let _pb = {};
+  try { _pb = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); } catch(_) {}
+  const adminKey = req.headers['x-admin-key'] || _pb._adminKey || '';
   if (adminKey !== process.env.ADMIN_SECRET_KEY) return res.json({ error: 'Unauthorized' }, 401);
 
   try {
@@ -41,7 +43,7 @@ export default async ({ req, res, log, error }) => {
     const vapidPub  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/\\n/g, '').replace(/\n/g, '');
     webpush.setVapidDetails('mailto:admin@julyforum.com', vapidPub, vapidPriv);
 
-    const requestBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const requestBody = _pb;
     const { type, title: customTitle, body: customBody, url: customUrl, _verify, district: filterDistrict } = requestBody;
 
     if (_verify) return res.json({ verified: true });

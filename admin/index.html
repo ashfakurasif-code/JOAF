@@ -569,7 +569,15 @@ window.AW_PROJECT   = '6a11b6cd000b59f318eb';
 async function join_aw_exec(fnId, options = {}) {
   const method  = (options.method || 'GET').toUpperCase();
   const headers = options.headers || {};
-  const body    = options.body || '';
+  const rawBody = options.body || '';
+
+  // Appwrite Execution API-তে nested headers function-এ পৌঁছায় না।
+  // তাই X-Admin-Key কে body-র ভেতরে _adminKey হিসেবে inject করা হচ্ছে।
+  let bodyObj = {};
+  try { bodyObj = typeof rawBody === 'string' ? (rawBody ? JSON.parse(rawBody) : {}) : rawBody; } catch(_) {}
+
+  const adminKeyVal = headers['X-Admin-Key'] || headers['x-admin-key'] || '';
+  if (adminKeyVal) bodyObj._adminKey = adminKeyVal;
 
   // X-Admin-Key যদি হেডারে থাকে, সেটাকে আমরা বডির ভেতরে বা কাস্টম হেডারে পাস করতে পারি
   // অ্যাপরাইট রিকোয়েস্ট ফরম্যাট ঠিক রাখা
