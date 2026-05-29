@@ -3,7 +3,7 @@
 // Provider order: OpenRouter (primary) → Gemini (fallback) → Groq (last resort)
 
 export default async ({ req, res, log, error }) => {
-  if (req.method !== 'POST') return res.json({ error: 'Method Not Allowed' }, 405);
+  if (req.method === 'OPTIONS') return res.empty();
 
   const GEMINI_KEY     = process.env.GEMINI_API_KEY;
   const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
