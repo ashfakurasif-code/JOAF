@@ -74,12 +74,12 @@ export default async ({ req, res, log, error }) => {
       .map(doc => ({ id: doc.id, $id: doc.id, ...doc.data }))
       .filter(doc => doc.active !== false && !!doc.subscriptionJson);
 
-    // FCM endpoint গুলো skip করো — VAPID only
+    // VAPID check — keys থাকলেই valid (Chrome uses fcm endpoint for VAPID too)
     activeDocs = activeDocs.filter(doc => {
       const sub = typeof doc.subscriptionJson === 'string'
         ? safeJsonParse(doc.subscriptionJson)
         : doc.subscriptionJson;
-      return sub && sub.endpoint && !sub.endpoint.includes('fcm.googleapis.com');
+      return sub && sub.endpoint && sub.keys?.p256dh && sub.keys?.auth;
     });
 
     if (filterDistrict && ['blood', 'alert', 'weather'].includes(type)) {

@@ -135,7 +135,10 @@ async function syncSubscription() {
 
     const res = await fetch('https://fra.cloud.appwrite.io/v1/functions/save-subscription/executions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+      },
       body: JSON.stringify(payload),
     });
 

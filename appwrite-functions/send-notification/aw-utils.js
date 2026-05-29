@@ -80,8 +80,9 @@ function buildQueryParams(queries = [], limit = 200) {
   const params = new URLSearchParams();
   const safeQueries = sanitizeQueries(queries);
   const safeLimit = Number.isFinite(Number(limit)) ? Math.min(Math.max(Number(limit), 1), 5000) : 200;
-  safeQueries.forEach(query => { params.append('queries[]', query); });
-  params.set('limit', String(safeLimit));
+  // Appwrite 1.4+: limit must live in queries[], not as a bare URL param
+  const allQueries = [...safeQueries, `limit(${safeLimit})`];
+  allQueries.forEach(query => { params.append('queries[]', query); });
   return { params, safeLimit, safeQueries };
 }
 
