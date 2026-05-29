@@ -1,12 +1,5 @@
 node_modules/
 .env
-echo ".DS_Store" >> .gitignore
-git rm --cached .DS_Store 2>/dev/null
-git add .gitignore
-git commit -m "ignore DS_Store"
-git push origin main.DS_Store
-
-# Local Netlify folder
+.DS_Store
 .netlify
 Archive.zip
-.DS_Store
