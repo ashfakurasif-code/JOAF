@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JOAF FB AutoPost Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg0:#06060a;--bg1:#0d0d14;--bg2:#131320;--bg3:#1a1a2e;--bg4:#1e1e35;
+--border:#2a2a44;--border2:#3d3d5c;--text:#f0f0f8;--text2:#a0a0c0;--text3:#606080;
+--accent:#1877f2;--accent2:#4299e1;--fb:#1877f2;--red:#ef4444;--green:#22c55e;
+--gold:#f59e0b;--orange:#f97316;--radius:10px;--radius-lg:16px;
+font-family:'Hind Siliguri',Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg0);color:var(--text);min-height:100vh}
+.layout{display:grid;grid-template-columns:320px 1fr 300px;grid-template-rows:52px 1fr;min-height:100vh}
+.topbar{grid-column:1/-1;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 20px}
+.logo{font-size:18px;font-weight:700;color:var(--fb)}.logo span{color:var(--text2)}
+.col-left{background:var(--bg1);border-right:1px solid var(--border);overflow-y:auto;padding:16px}
+.col-center{background:var(--bg0);overflow-y:auto;padding:20px}
+.col-right{background:var(--bg1);border-left:1px solid var(--border);overflow-y:auto;padding:16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px}
+.card-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.badge{padding:2px 7px;border-radius:20px;font-size:10px;background:var(--fb);color:#fff}
+textarea,input[type=text],input[type=url],input[type=datetime-local],select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;padding:9px 11px;transition:.15s;outline:none}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+textarea:focus,input:focus,select:focus{border-color:var(--fb);box-shadow:0 0 0 3px rgba(24,119,242,.15)}
+label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px;font-weight:500}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.btn:active{transform:scale(.97)}
+.btn-fb{background:var(--fb);color:#fff}.btn-fb:hover{background:var(--accent2)}
+.btn-green{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.btn-red{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.btn-gold{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}.btn-ghost:hover{background:var(--bg3)}
+.btn-block{width:100%;justify-content:center}
+.btn-sm{padding:5px 11px;font-size:12px}
+.post-type-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.pt-btn{padding:8px 14px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:600;transition:.15s}
+.pt-btn.active{border-color:var(--fb);background:rgba(24,119,242,.12);color:var(--accent2)}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:.2s;background:var(--bg3)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--fb);background:rgba(24,119,242,.07)}
+.upload-zone .hint{font-size:11px;color:var(--text2)}
+.img-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 0;min-height:80px;align-items:center}
+.img-thumb{position:relative;flex-shrink:0;width:72px;height:72px;border-radius:8px;overflow:hidden;border:2px solid transparent}
+.img-thumb.main{border-color:var(--fb)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.85);border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
+.page-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border-radius:8px;margin-bottom:6px;border:1px solid var(--border)}
+.page-avatar{width:36px;height:36px;border-radius:50%;background:var(--fb);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.page-info{flex:1;min-width:0}
+.page-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-status{font-size:10px;color:var(--text2);margin-top:2px}
+.page-toggle{flex-shrink:0}
+.toggle{position:relative;width:36px;height:20px;display:inline-block}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-track{position:absolute;inset:0;background:var(--bg4);border-radius:20px;cursor:pointer;transition:.2s}
+.toggle input:checked+.toggle-track{background:var(--fb)}
+.toggle-track::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-track::before{transform:translateX(16px)}
+.q-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.q-thumb{width:52px;height:52px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:20px}
+.q-info{flex:1;min-width:0}
+.q-name{font-size:12px;font-weight:700}
+.q-cap{font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.q-badge.pending{background:rgba(245,158,11,.15);color:var(--gold)}
+.q-badge.done{background:rgba(34,197,94,.15);color:var(--green)}
+.q-badge.failed{background:rgba(239,68,68,.15);color:var(--red)}
+.q-badge.scheduled{background:rgba(24,119,242,.15);color:var(--fb)}
+.result-item{background:var(--bg3);border-radius:8px;padding:10px;margin-bottom:6px;font-size:12px}
+.log-area{background:var(--bg3);border-radius:8px;padding:10px;font-size:11px;color:var(--text2);min-height:60px;max-height:120px;overflow-y:auto;line-height:1.7}
+.progress-bar{height:4px;background:var(--bg4);border-radius:4px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:var(--fb);border-radius:4px;transition:width .4s;width:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+@media(max-width:1100px){.layout{grid-template-columns:280px 1fr 260px}}
+@media(max-width:860px){.layout{grid-template-columns:1fr;grid-template-rows:auto}.col-left,.col-right{border:none;border-bottom:1px solid var(--border)}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">📘 FB <span>AutoPost</span></div>
+  <div style="flex:1;font-size:12px;color:var(--text3)">Facebook Page Manager — Multi-Page | Carousel | Scheduler</div>
+  <div id="token-pill" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(245,158,11,.15);color:var(--gold)">⏳ Token চেক...</div>
+  <a href="/admin/" class="btn btn-ghost btn-sm">← Admin</a>
+</header>
+
+<!-- LEFT: COMPOSER -->
+<aside class="col-left">
+  <div class="card">
+    <div class="card-title">📝 Post Composer <span class="badge" id="post-type-badge">Image</span></div>
+    <div class="post-type-row">
+      <button class="pt-btn active" data-pt="image" onclick="setPostType('image')">🖼️ Image</button>
+      <button class="pt-btn" data-pt="carousel" onclick="setPostType('carousel')">🎠 Carousel</button>
+      <button class="pt-btn" data-pt="video" onclick="setPostType('video')">🎬 Video</button>
+      <button class="pt-btn" data-pt="text" onclick="setPostType('text')">📝 Text Only</button>
+    </div>
+
+    <!-- Image / Carousel upload -->
+    <div id="img-upload-area">
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('post-images').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondrop="handleDrop(event)"
+           ondragleave="this.classList.remove('drag')">
+        <div style="font-size:28px;margin-bottom:6px">📸</div>
+        <div class="hint">Click বা drag করে ছবি upload করুন<br>Carousel-এ multiple images select করুন</div>
+      </div>
+      <input type="file" id="post-images" accept="image/*" multiple style="display:none" onchange="handleImageSelect(this)">
+      <div class="img-strip" id="img-strip"><div style="font-size:11px;color:var(--text3)">ছবি নেই</div></div>
+    </div>
+
+    <!-- Video URL -->
+    <div id="video-area" style="display:none">
+      <label>Video URL (public)</label>
+      <input type="url" id="video-url" placeholder="https://...">
+    </div>
+
+    <div style="height:10px"></div>
+    <label>Caption / Message</label>
+    <textarea id="post-caption" rows="6" placeholder="Caption লিখুন... (বাংলা বা ইংরেজি)"></textarea>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="appendEmoji('👉')">👉</button>
+      <button class="btn btn-ghost btn-sm" onclick="appendEmoji('✅')">✅</button>
+      <button class="btn btn-ghost btn-sm" onclick="appendEmoji('🔥')">🔥</button>
+      <button class="btn btn-ghost btn-sm" onclick="appendEmoji('⚡')">⚡</button>
+      <button class="btn btn-ghost btn-sm" onclick="appendEmoji('📢')">📢</button>
+      <button class="btn btn-ghost btn-sm" onclick="appendHashtags()">##</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⏰ Schedule</div>
+    <label>Schedule Time (blank = post now)</label>
+    <input type="datetime-local" id="schedule-time">
+    <div style="height:8px"></div>
+    <label>Repeat</label>
+    <select id="repeat-select">
+      <option value="none">One-time</option>
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+    </select>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <button class="btn btn-fb btn-block" id="post-btn" onclick="doPost()">📘 Post Now</button>
+    <button class="btn btn-gold btn-block" id="schedule-btn" onclick="doSchedule()">⏰ Schedule</button>
+    <button class="btn btn-green btn-block" id="queue-btn" onclick="addToQueue()">📋 Add to Queue</button>
+  </div>
+</aside>
+
+<!-- CENTER: PAGES + RESULTS -->
+<main class="col-center">
+  <div class="card">
+    <div class="card-title">📄 Facebook Pages <span class="badge" id="page-count">0</span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadPages()">🔄 Refresh</button>
+    </div>
+    <div id="pages-container">
+      <div style="font-size:12px;color:var(--text3);padding:12px">Loading pages...</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="selectAllPages(true)">✅ Select All</button>
+      <button class="btn btn-ghost btn-sm" onclick="selectAllPages(false)">⬜ Deselect All</button>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+
+  <div class="card" id="results-card" style="display:none">
+    <div class="card-title">📊 Post Results</div>
+    <div id="results-container"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Queue <span class="badge" id="q-count">0</span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="publishQueue()">📤 Publish All</button>
+      <button class="btn btn-red btn-sm" onclick="clearQueue()">🗑️ Clear</button>
+    </div>
+    <div id="queue-list"><div style="font-size:12px;color:var(--text3);padding:8px">Queue empty</div></div>
+  </div>
+</main>
+
+<!-- RIGHT: TOKEN + LOG -->
+<aside class="col-right">
+  <div class="card">
+    <div class="card-title">🔑 Token Status</div>
+    <div id="token-detail" style="font-size:12px;line-height:1.8;color:var(--text2)">Checking...</div>
+    <button class="btn btn-ghost btn-block btn-sm" style="margin-top:10px" onclick="checkToken()">🔄 Re-check Token</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Post Stats</div>
+    <div id="post-stats" style="font-size:12px;color:var(--text2)">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span>Total Posts</span><span id="stat-total" style="font-weight:700">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span>Successful</span><span id="stat-ok" style="color:var(--green);font-weight:700">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0">
+        <span>Failed</span><span id="stat-fail" style="color:var(--red);font-weight:700">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📜 Activity Log</div>
+    <div class="log-area" id="log-area">Ready...</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔗 Quick Links</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <a href="/admin/" class="btn btn-ghost btn-sm btn-block">← Admin Dashboard</a>
+      <a href="/admin/newscard.html" class="btn btn-ghost btn-sm btn-block">🗞️ NewsCard Generator</a>
+      <a href="/admin/studio.html" class="btn btn-ghost btn-sm btn-block">🎬 AI Studio</a>
+    </div>
+  </div>
+</aside>
+</div>
+
+<script>
+const FB_API = '/api/fb-autopost';
+let postImages = [];
+let postType = 'image';
+let fbPages = [];
+let queue = [];
+let stats = { total:0, ok:0, fail:0 };
+
+async function init() {
+  await loadPages();
+  await checkToken();
+}
+init();
+
+function setPostType(t) {
+  postType = t;
+  document.querySelectorAll('.pt-btn').forEach(b => b.classList.toggle('active', b.dataset.pt===t));
+  document.getElementById('post-type-badge').textContent = t.charAt(0).toUpperCase()+t.slice(1);
+  document.getElementById('img-upload-area').style.display = t==='text'||t==='video' ? 'none' : 'block';
+  document.getElementById('video-area').style.display = t==='video' ? 'block' : 'none';
+}
+
+function handleImageSelect(input) {
+  Array.from(input.files).forEach(f => { if (f.type.startsWith('image/')) addImage(f); });
+  input.value = '';
+}
+function handleDrop(ev) {
+  ev.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  Array.from(ev.dataTransfer.files).forEach(f => { if (f.type.startsWith('image/')) addImage(f); });
+}
+function addImage(file) {
+  const id = Date.now()+'-'+Math.random().toString(36).slice(2,6);
+  postImages.push({ id, file, url: URL.createObjectURL(file) });
+  renderStrip();
+  if (postImages.length > 1) setPostType('carousel');
+}
+function removeImage(id) {
+  postImages = postImages.filter(i => i.id !== id);
+  renderStrip();
+  if (postImages.length <= 1 && postType === 'carousel') setPostType('image');
+}
+function renderStrip() {
+  const strip = document.getElementById('img-strip');
+  if (!postImages.length) { strip.innerHTML = '<div style="font-size:11px;color:var(--text3)">ছবি নেই</div>'; return; }
+  strip.innerHTML = postImages.map((img, i) =>
+    '<div class="img-thumb'+(i===0?' main':'')+'"><img src="'+img.url+'" alt=""><div class="rm" onclick="removeImage(''+img.id+'')">✕</div></div>'
+  ).join('');
+}
+
+async function loadPages() {
+  try {
+    const r = await fetch(FB_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'get-pages'}) });
+    const d = await r.json();
+    fbPages = d.pages || [];
+    document.getElementById('page-count').textContent = fbPages.length;
+    const c = document.getElementById('pages-container');
+    c.innerHTML = fbPages.length
+      ? fbPages.map(p => '<div class="page-item"><div class="page-avatar">📘</div><div class="page-info"><div class="page-name">'+p.name+'</div><div class="page-status">ID: '+p.id+'</div></div><div class="page-toggle"><label class="toggle"><input type="checkbox" id="pg-'+p.id+'" checked><span class="toggle-track"></span></label></div></div>').join('')
+      : '<div style="font-size:12px;color:var(--text3);padding:12px">FB_PAGE_ACCESS_TOKENS not set</div>';
+  } catch(e) { log('❌ Pages load error: '+e.message,'error'); }
+}
+
+function selectAllPages(v) {
+  document.querySelectorAll('[id^="pg-"]').forEach(cb => cb.checked = v);
+}
+
+async function checkToken() {
+  const pill = document.getElementById('token-pill');
+  const detail = document.getElementById('token-detail');
+  try {
+    const r = await fetch(FB_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'check-token'}) });
+    const d = await r.json();
+    if (d.ok) {
+      const exp = d.expires_at ? new Date(d.expires_at*1000).toLocaleDateString('bn-BD') : 'Never expires';
+      pill.style.background = 'rgba(34,197,94,.15)'; pill.style.color = 'var(--green)';
+      pill.textContent = '✅ Token Valid';
+      detail.innerHTML = 'Status: <strong style="color:var(--green)">Valid</strong><br>Pages: <strong>'+d.pages+'</strong><br>Expires: <strong>'+exp+'</strong>';
+    } else {
+      pill.style.background = 'rgba(239,68,68,.15)'; pill.style.color = 'var(--red)';
+      pill.textContent = '❌ Token Invalid';
+      detail.innerHTML = 'Status: <strong style="color:var(--red)">Invalid / Expired</strong><br>FB_PAGE_ACCESS_TOKENS update করুন।';
+    }
+  } catch(e) { log('Token check error: '+e.message,'error'); }
+}
+
+function getActivePageExcludes() {
+  const excludeIds = [];
+  fbPages.forEach(p => { const cb = document.getElementById('pg-'+p.id); if (cb && !cb.checked) excludeIds.push(p.id); });
+  return excludeIds;
+}
+
+async function doPost() {
+  const btn = document.getElementById('post-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin">⏳</span> Posting...';
+  setProgress(10);
+  try {
+    const result = await executePost();
+    showResults(result);
+    stats.total++; stats.ok += result.ok; stats.fail += result.fail;
+    updateStats();
+    log('✅ Posted: '+result.ok+'/'+result.total+' pages', result.ok > 0 ? 'ok' : 'error');
+  } catch(e) { log('❌ '+e.message,'error'); }
+  finally { btn.disabled=false; btn.innerHTML='📘 Post Now'; setProgress(100); }
+}
+
+async function executePost(schedulePayload={}) {
+  const caption = document.getElementById('post-caption').value;
+  const excludeIds = getActivePageExcludes();
+  let body = { action:'post', caption, excludeIds, ...schedulePayload };
+
+  if (postType === 'video') {
+    body.videoUrl = document.getElementById('video-url').value;
+  } else if (postType === 'carousel' && postImages.length >= 2) {
+    // Upload all images first
+    const imageUrls = await Promise.all(postImages.map(uploadImage));
+    body.action = 'carousel';
+    body.imageUrls = imageUrls;
+  } else if (postImages.length > 0) {
+    body.imageUrl = await uploadImage(postImages[0]);
+  }
+
+  setProgress(50);
+  const r = await fetch(FB_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error);
+  setProgress(80);
+  return d;
+}
+
+async function uploadImage(imgObj) {
+  const fd = new FormData(); fd.append('file', imgObj.file, imgObj.file.name);
+  const r = await fetch('/api/github-upload', { method:'POST', body: fd });
+  const d = await r.json();
+  if (!d.url) throw new Error('Image upload failed: '+imgObj.file.name);
+  return d.url;
+}
+
+async function doSchedule() {
+  const schedVal = document.getElementById('schedule-time').value;
+  if (!schedVal) { alert('Schedule time দিন'); return; }
+  const item = {
+    id: Date.now()+'-'+Math.random().toString(36).slice(2,6),
+    caption: document.getElementById('post-caption').value,
+    images: [...postImages], postType,
+    scheduledAt: new Date(schedVal).toISOString(),
+    status: 'scheduled'
+  };
+  queue.push(item);
+  renderQueue();
+  log('⏰ Scheduled: '+new Date(schedVal).toLocaleString('bn-BD'));
+}
+
+function addToQueue() {
+  if (!document.getElementById('post-caption').value && postImages.length === 0) { alert('Caption বা image দিন'); return; }
+  const item = {
+    id: Date.now()+'-'+Math.random().toString(36).slice(2,6),
+    caption: document.getElementById('post-caption').value,
+    images: [...postImages], postType,
+    scheduledAt: null, status: 'pending'
+  };
+  queue.push(item);
+  renderQueue();
+  log('📋 Queue-এ add হয়েছে');
+}
+
+async function publishQueue() {
+  const pending = queue.filter(i => i.status === 'pending');
+  if (!pending.length) { log('Queue empty'); return; }
+  for (const item of pending) {
+    item.status = 'publishing';
+    renderQueue();
+    try {
+      // Set up postImages from item
+      postImages = item.images;
+      postType = item.postType;
+      document.getElementById('post-caption').value = item.caption;
+      const r = await executePost();
+      item.status = r.ok > 0 ? 'done' : 'failed';
+      item.postIds = r.results?.filter(x=>x.ok).map(x=>x.postId);
+      stats.total++; stats.ok += r.ok; stats.fail += r.fail;
+    } catch(e) { item.status = 'failed'; item.error = e.message; }
+    renderQueue();
+    updateStats();
+  }
+  log('✅ Queue published');
+}
+
+function clearQueue() {
+  if (!confirm('Queue clear করবেন?')) return;
+  queue = []; renderQueue(); log('🗑️ Queue cleared');
+}
+
+function renderQueue() {
+  const el = document.getElementById('queue-list');
+  document.getElementById('q-count').textContent = queue.length;
+  el.innerHTML = queue.length
+    ? queue.map(item => '<div class="q-item"><div class="q-thumb">'+(item.images[0]?'<img src="'+item.images[0].url+'" style="width:100%;height:100%;object-fit:cover;border-radius:6px">':'📝')+'</div><div class="q-info"><div class="q-name">'+(item.postType)+' — '+(item.images.length||0)+' image(s)</div><div class="q-cap">'+(item.caption||'').slice(0,60)+'</div><div style="display:flex;gap:6px;margin-top:4px;align-items:center"><span class="q-badge '+item.status+'">'+item.status+'</span>'+(item.scheduledAt?'<span style="font-size:10px;color:var(--text2)">'+new Date(item.scheduledAt).toLocaleString('bn-BD')+'</span>':'')+'</div>'+(item.error?'<div style="font-size:10px;color:var(--red)">'+item.error+'</div>':'')+'<div style="margin-top:4px"><button class="btn btn-red btn-sm" style="padding:2px 8px;font-size:10px" onclick="removeQueueItem(''+item.id+'')">🗑️ Remove</button></div></div></div>').join('')
+    : '<div style="font-size:12px;color:var(--text3);padding:8px">Queue empty</div>';
+}
+
+function removeQueueItem(id) { queue = queue.filter(i => i.id !== id); renderQueue(); }
+
+function showResults(d) {
+  const card = document.getElementById('results-card');
+  card.style.display = 'block';
+  document.getElementById('results-container').innerHTML = (d.results||[]).map(r =>
+    '<div class="result-item" style="border-left:3px solid '+(r.ok?'var(--green)':'var(--red)')+'">'+
+    '<strong>'+r.name+'</strong> — '+(r.ok?'✅ Post ID: '+r.postId:'❌ '+r.error)+'</div>'
+  ).join('');
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = stats.total;
+  document.getElementById('stat-ok').textContent = stats.ok;
+  document.getElementById('stat-fail').textContent = stats.fail;
+}
+
+window.appendEmoji = function(e) {
+  const ta = document.getElementById('post-caption');
+  ta.value += e; ta.focus();
+};
+window.appendHashtags = function() {
+  const defaults = '#JOAF #বাংলাদেশ #JulyRevolution #জুলাই';
+  const ta = document.getElementById('post-caption');
+  if (!ta.value.includes('#JOAF')) ta.value += (ta.value ? '
+
+' : '') + defaults;
+};
+
+function setProgress(p) { document.getElementById('prog-fill').style.width = p+'%'; }
+function log(msg, type='info') {
+  const a = document.getElementById('log-area');
+  const c = type==='error'?'var(--red)':type==='ok'?'var(--green)':'var(--text2)';
+  const t = new Date().toLocaleTimeString('bn-BD');
+  a.innerHTML += '<div style="color:'+c+'">['+t+'] '+msg+'</div>';
+  a.scrollTop = a.scrollHeight;
+}
+</script>
+</body>
+</html>
