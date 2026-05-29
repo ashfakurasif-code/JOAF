@@ -767,7 +767,10 @@ const JOAFComponents = {
             const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
             await fetch('https://fra.cloud.appwrite.io/v1/functions/send-notification/executions', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-Admin-Key': _adminKey },
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+              },
               body: JSON.stringify({
                 type: 'blood',
                 title: `🩸 ${district} এ ${blood} রক্তদাতা যোগ দিয়েছেন!`,
@@ -1494,39 +1497,22 @@ async function joafSaveSubscription(sub) {
       }
     };
 
-    const endpoints = [
-      '/.netlify/functions/save-subscription',
-      '/api/save-subscription',
-      `${window.location.origin}/.netlify/functions/save-subscription`
-    ];
+    const res = await fetch('https://fra.cloud.appwrite.io/v1/functions/save-subscription/executions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+      },
+      body: JSON.stringify(payload)
+    });
 
-    let lastError = null;
-
-    for (const endpoint of endpoints) {
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          console.info('[JOAF] Push subscription synced:', endpoint);
-          return true;
-        }
-
-        if (res.status !== 404) {
-          const errText = await res.text().catch(() => 'Unknown server error');
-          throw new Error(`Push sync failed (${res.status}): ${errText}`);
-        }
-
-        lastError = new Error(`404 on ${endpoint}`);
-      } catch (err) {
-        lastError = err;
-      }
+    if (res.ok) {
+      console.info('[JOAF] Push subscription synced via Appwrite');
+      return true;
     }
 
-    throw lastError || new Error('No valid push subscription endpoint found');
+    const errText = await res.text().catch(() => String(res.status));
+    throw new Error(`Push sync failed (${res.status}): ${errText}`);
   } catch(e) {
     console.error('[JOAF] Save subscription failed:', e);
   }
