@@ -18,7 +18,7 @@ export default async ({ req, res, log, error }) => {
   
   try {
     const [subDocs, histDocs, donorDocs, alertDocs] = await Promise.all([
-      awListAll(COL_SUBS,   [], 500).catch(() => []),
+      awListAll(COL_SUBS,   [], 2000).catch(() => []),
       awListAll(COL_HIST,   [], 50 ).catch(() => []),
       awListAll(COL_DONORS, [], 500).catch(() => []),
       awListAll(COL_ALERTS, [], 200).catch(() => []),
