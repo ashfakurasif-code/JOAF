@@ -24,7 +24,8 @@ export default async ({ req, res, log, error }) => {
       awListAll(COL_ALERTS, [], 200).catch(() => []),
     ]);
 
-    const activeSubs   = subDocs.filter(d => d.data && d.data.active !== false).length;
+    const activeSubs   = subDocs.filter(d => d.data && d.data.active === true).length;
+    const inactiveSubs = subDocs.filter(d => d.data && d.data.active === false).length;
     const totalDonors  = donorDocs.length;
     const totalAlerts  = alertDocs.length;
     const activeAlerts = alertDocs.filter(d => d.data && d.data.active !== false).length;
@@ -40,7 +41,7 @@ export default async ({ req, res, log, error }) => {
     log(`get-stats: ${activeSubs} active subs, ${histDocs.length} notifs, ${totalDonors} donors`);
 
     return res.json({
-      ok: true, activeSubs, totalSubs: subDocs.length,
+      ok: true, activeSubs, inactiveSubs, totalSubs: subDocs.length,
       totalNotifs: histDocs.length, todayNotifs: todayCount,
       totalDonors, totalAlerts, activeAlerts,
       bloodAPos: donorDocs.filter(d => d.data && (d.data.blood === 'A+' || d.data.bloodGroup === 'A+')).length,
