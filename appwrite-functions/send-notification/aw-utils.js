@@ -130,9 +130,13 @@ export async function awListAll(collection, queries = [], limit = 200) {
       if (docs.length < safeLimit) { keepPaging = false; break; }
       cursor = docs[docs.length - 1]?.$id || null;
       if (!cursor) keepPaging = false;
-    } catch (error) {
-      if (baseQueries.length > 0) return awListAll(collection, [], limit);
-      return [];
+    } catch (fetchError) {
+      if (baseQueries.length > 0) {
+        // retry without filters
+        return awListAll(collection, [], limit);
+      }
+      // Re-throw so caller can log the real error
+      throw fetchError;
     }
   }
   return all;

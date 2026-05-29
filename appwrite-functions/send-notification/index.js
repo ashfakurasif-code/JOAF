@@ -50,7 +50,14 @@ export default async ({ req, res, log, error }) => {
       ? { ...NOTIFICATION_TYPES[type], ...(customTitle ? { title: customTitle } : {}), ...(customBody ? { body: customBody } : {}), ...(customUrl ? { url: customUrl } : {}) }
       : { title: customTitle || '🔥 JOAF', body: customBody || 'নতুন আপডেট এসেছে', url: customUrl || '/' };
 
-    let docs = await awListAll(COL_SUBS, [], 500);
+    let docs;
+    try {
+      docs = await awListAll(COL_SUBS, [], 500);
+      log(`send-notification: awListAll returned ${(docs||[]).length} raw docs`);
+    } catch (fetchErr) {
+      error('send-notification: awListAll FAILED — ' + fetchErr.message);
+      return res.json({ success: false, error: 'DB fetch failed: ' + fetchErr.message }, 500);
+    }
     let activeDocs = (docs || [])
       .map(doc => ({ id: doc.id, ...doc.data }))
       .filter(doc => doc.active !== false && !!(doc.endpoint || doc.subscriptionJson));

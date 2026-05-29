@@ -426,7 +426,7 @@
 
 // 🔑 ──────────────────────────────────────────────────────────
 // GROQ_KEY এখানে বসাও (console.groq.com থেকে নাও)
-const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
+const GROQ_KEY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions'; // key moved to server
 // ─────────────────────────────────────────────────────────────
 
 const GROQ_MODELS = [
@@ -883,7 +883,7 @@ async function genPolls() {
     let data = null;
     for (const model of GROQ_MODELS) {
       try {
-        const r = await fetch('/.netlify/functions/groq-proxy', {
+        const r = await fetch('https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions', {
           method:  'POST',
           headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_KEY },
           body: JSON.stringify({

@@ -1,8 +1,0 @@
-{
-  "name": "joaf-netlify-functions",
-  "version": "1.0.0",
-  "dependencies": {
-    "web-push": "^3.6.7",
-    "node-appwrite": "^15.0.1"
-  }
-}

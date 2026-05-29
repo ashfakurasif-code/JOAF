@@ -2163,8 +2163,11 @@ async function callSendNotif(payload) {
       body: JSON.stringify(payload)
     });
     const data = await res.json();
-    if (!res.ok) { toast('❌ Error: '+(data.error||'Unknown'),'error'); }
-    else { toast(`✅ ${data.sent} জনের কাছে পাঠানো হয়েছে!`,'success'); loadNotifPage(); if(typeof window.__joafBroadcast==='function') window.__joafBroadcast('notification_sent',{sent:data.sent}); }
+    if (!res.ok) { toast('❌ Error: '+(data.error||'Unknown')+' (HTTP '+res.status+')','error'); console.error('[JOAF] send-notification error:', data); }
+    else if (data.total === 0) {
+      toast('⚠️ সাবস্ক্রাইবার পাওয়া যায়নি! Appwrite env var চেক করুন।','error');
+      console.warn('[JOAF] send-notification: total=0 — APPWRITE_API_KEY not set in Appwrite console?');
+    } else { toast(`✅ ${data.sent} জনের কাছে পাঠানো হয়েছে! (${data.failed} failed)`,'success'); loadNotifPage(); if(typeof window.__joafBroadcast==='function') window.__joafBroadcast('notification_sent',{sent:data.sent}); }
   } catch(e) { toast('❌ Network error','error'); }
   finally { if(btn){btn.disabled=false;btn.textContent='📤 সবার কাছে পাঠান';} }
 }

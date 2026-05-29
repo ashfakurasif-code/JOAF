@@ -373,7 +373,7 @@ const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 
 // ── GROQ CONFIG ──
-const GROQ_KEY = '/.netlify/functions/groq-proxy'; // key moved to server
+const GROQ_KEY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions'; // key moved to server
 const BD_TODAY = () => new Date(Date.now()+6*3600000).toISOString().slice(0,10);
 
 // ── Cache: localStorage per day ──
@@ -387,7 +387,7 @@ let ISSUES = [];
 async function groqCall(prompt, maxTokens=4000) {
   // AI priority chain: OpenRouter → Gemini → Groq (enforced server-side in groq-proxy.js)
   try {
-    const r = await fetch('/.netlify/functions/groq-proxy', {
+    const r = await fetch('https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
