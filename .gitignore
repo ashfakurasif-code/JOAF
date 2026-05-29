@@ -4,3 +4,9 @@ node_modules/
 .netlify
 Archive.zip
 .netlify/
+
+# JOAF secrets — never commit
+*.env
+.env.*
+vapid-keys.json
+appwrite-secrets.json

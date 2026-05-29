@@ -90,11 +90,11 @@
       "vars": [
         {
           "name": "APPWRITE_API_KEY",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -130,11 +130,11 @@
       "vars": [
         {
           "name": "APPWRITE_API_KEY",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -146,15 +146,15 @@
         },
         {
           "name": "VAPID_PUBLIC_KEY",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "VAPID_PRIVATE_KEY",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "VAPID_SUBJECT",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         }
       ],
       "ignore": [],
@@ -216,11 +216,11 @@
       "vars": [
         {
           "name": "APPWRITE_API_KEY",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -299,11 +299,11 @@
         },
         {
           "name": "APPWRITE_API_KEY",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -350,11 +350,11 @@
       "vars": [
         {
           "name": "APPWRITE_API_KEY",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "REDACTED_SECURE_VAULT"
+          "value": ""
         },
         {
           "name": "APPWRITE_PROJECT",

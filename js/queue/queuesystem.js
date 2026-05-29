@@ -169,6 +169,7 @@ class QueueStore {
   }
 
   async _publishItem(item) {
+    await this._persistToQueue(item);
     this.update(item.id, { status: STATUS.PUBLISHING });
 
     try {
@@ -204,6 +205,23 @@ class QueueStore {
     }
   }
 }
+
+
+  // ── Appwrite persistence bridge ──────────────────────────────────────────
+  async _persistToQueue(item) {
+    if (typeof window !== 'undefined' && typeof window.fbQueueAdd === 'function') {
+      try {
+        const qId = await window.fbQueueAdd({
+          caption: item.caption,
+          imageUrl: item.blobUrl || null,
+          scheduledAt: item.scheduledAt || new Date().toISOString(),
+        });
+        this.update(item.id, { appwriteQueueId: qId });
+      } catch (e) {
+        console.warn('[QueueStore] Appwrite persist failed (non-blocking):', e.message);
+      }
+    }
+  }
 
 // Singleton export
 export const queueStore = new QueueStore();
