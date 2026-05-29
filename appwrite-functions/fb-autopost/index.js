@@ -1,126 +1,152 @@
-// Appwrite Function: send-notification
-// Pure VAPID — FCM filtering logic removed to support all browsers/endpoints
+// Appwrite Function: fb-autopost
+// HTTP trigger — POST only
+// Posts to Facebook Pages via Graph API (token stored server-side as env var)
+//
+// Required env vars:
+//   FB_PAGE_ACCESS_TOKENS  — JSON array: [{"id":"PAGE_ID","name":"Page Name","token":"EAAj..."},...]
+//   FB_API_VERSION         — e.g. "v22.0" (default if omitted)
+//
+// Accepted actions (req.body.action):
+//   "post"        — single image/video/text post to all pages
+//   "carousel"    — multi-image carousel post
+//   "check-token" — verify token validity, return expiry
+//   "get-pages"   — return list of configured pages (no tokens exposed)
 
-import webpush from 'web-push';
-import { awListAll, awCreate, awUpdate } from './aw-utils.js';
+const FB_BASE = 'https://graph.facebook.com';
 
-const COL_SUBS = 'push_subscriptions';
-const COL_HIST = 'notification_history';
+function getApiVersion() {
+  return (process.env.FB_API_VERSION || 'v22.0').trim();
+}
 
-const NOTIFICATION_TYPES = {
-  bajar:      { title: '🛒 আজকের বাজার দর',       body: 'চাল, ডাল, সবজির দাম আপডেট হয়েছে।',           url: '/bajar.html' },
-  poll:       { title: '🗳️ আজকের জনমত',            body: '৩০টি প্রশ্নে ভোট দিন, streak বজায় রাখুন!',   url: '/joaf-polls.html' },
-  streak:     { title: '🔥 Streak মিস করবেন না!',  body: 'আজকের ভোট এখনো বাকি।',                        url: '/joaf-polls.html' },
-  weather:    { title: '🌦️ আবহাওয়া সতর্কতা',      body: 'আজ বিশেষ আবহাওয়া পূর্বাভাস।',                url: '/weather.html' },
-  blood:      { title: '🩸 জরুরি রক্ত দরকার!',    body: 'আপনার এলাকায় রক্তের অনুরোধ।',                url: '/rokto.html' },
-  alert:      { title: '🚨 জরুরি সতর্কতা!',        body: 'একটি জরুরি পরিস্থিতি জানানো হয়েছে।',         url: '/alert.html' },
-  live:       { title: '📡 JOAF Live শুরু!',       body: 'সরাসরি সম্প্রচার চলছে।',                     url: '/live.html' },
-  warrior:    { title: '🏆 নতুন জুলাই যোদ্ধা!',   body: 'একজন নতুন বীর যোগ দিয়েছেন।',                url: '/july-warriors.html' },
-  corruption: { title: '🚫 দুর্নীতির রিপোর্ট',    body: 'নতুন অভিযোগ দাখিল হয়েছে।',                  url: '/leader-tracker.html' },
-  leader:     { title: '🏛️ নেতা ট্র্যাকার আপডেট', body: 'সাপ্তাহিক আপডেট এসেছে।',                     url: '/leader-tracker.html' },
-  medicine:   { title: '💊 ওষুধের দাম আপডেট',     body: 'এই সপ্তাহের দামের তালিকা।',                  url: '/medicine.html' },
-  breaking:   { title: '🚨 ব্রেকিং নিউজ',          body: 'এইমাত্র গুরুত্বপূর্ণ খবর।',                 url: '/news.html' },
-  welcome:    { title: '🔥 JOAF-এ স্বাগতম!',       body: 'বাংলাদেশের সবচেয়ে সক্রিয় মঞ্চে যোগ দিন।', url: '/' },
-};
+function getPages() {
+  const raw = (process.env.FB_PAGE_ACCESS_TOKENS || '').trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
-function safeJsonParse(str) {
-  if (!str || typeof str !== 'string') return null;
-  try { return JSON.parse(str); } catch { return null; }
+async function fbPost(pageId, token, endpoint, body) {
+  const ver = getApiVersion();
+  const url = `${FB_BASE}/${ver}/${pageId}/${endpoint}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, access_token: token }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data;
+}
+
+async function checkToken(token) {
+  const ver = getApiVersion();
+  const res = await fetch(`${FB_BASE}/${ver}/me?fields=id,name&access_token=${token}`);
+  return res.json();
 }
 
 export default async ({ req, res, log, error }) => {
   if (req.method === 'OPTIONS') return res.empty();
   if (req.method !== 'POST') return res.json({ error: 'Method not allowed' }, 405);
 
-  let _pb = {};
-  try { _pb = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); } catch(_) {}
-
+  let body = {};
   try {
-    const vapidPriv = (process.env.VAPID_PRIVATE_KEY || '').trim();
-    const vapidPub  = (process.env.VAPID_PUBLIC_KEY  || '').trim();
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  } catch (_) {}
 
-    if (!vapidPub || !vapidPriv) {
-      error('send-notification: VAPID keys missing');
-      return res.json({ error: 'VAPID keys not configured' }, 500);
-    }
+  const { action = 'post', caption = '', imageUrl, videoUrl, imageUrls = [], excludeIds = [] } = body;
 
-    webpush.setVapidDetails('mailto:admin@julyforum.com', vapidPub, vapidPriv);
+  const pages = getPages();
 
-    const { type, title: customTitle, body: customBody, url: customUrl, _verify, district: filterDistrict } = _pb;
-
-    if (_verify) return res.json({ verified: true });
-
-    const notifData = type && NOTIFICATION_TYPES[type]
-      ? {
-          ...NOTIFICATION_TYPES[type],
-          ...(customTitle ? { title: customTitle } : {}),
-          ...(customBody  ? { body:  customBody  } : {}),
-          ...(customUrl   ? { url:   customUrl   } : {}),
-        }
-      : { title: customTitle || '🔥 JOAF', body: customBody || 'নতুন আপডেট এসেছে', url: customUrl || '/' };
-
-    const notifUrl = notifData.url || '/';
-
-    let docs = [];
-    try {
-      docs = await awListAll(COL_SUBS, [], 500);
-      log(`send-notification: fetched ${docs.length} raw docs`);
-    } catch (fetchErr) {
-      error('send-notification: awListAll FAILED — ' + fetchErr.message);
-      return res.json({ success: false, error: 'DB fetch failed: ' + fetchErr.message }, 500);
-    }
-
-    // Active এবং valid subscriptionJson যুক্ত গ্রাহকদের ফিল্টার করুন
-    let activeDocs = docs
-      .map(doc => ({ id: doc.id, $id: doc.id, ...doc.data }))
-      .filter(doc => doc.active !== false && !!doc.subscriptionJson);
-
-    if (filterDistrict && ['blood', 'alert', 'weather'].includes(type)) {
-      activeDocs = activeDocs.filter(doc => doc.district === filterDistrict);
-    }
-
-    log(`send-notification: ${activeDocs.length} VAPID subscribers`);
-    if (!activeDocs.length) return res.json({ success: true, sent: 0, failed: 0, total: 0, message: 'No VAPID subscribers' });
-
-    const vapidPayload = JSON.stringify({
-      title: notifData.title,
-      body:  notifData.body,
-      url:   notifUrl,
-      type:  type || 'custom',
-      tag:   `joaf-${type || 'custom'}-${Date.now()}`
-    });
-
-    let sent = 0, failed = 0;
-
-    await Promise.allSettled(activeDocs.map(async (doc) => {
-      const docId = doc.$id || doc.id;
-      try {
-        const sub = typeof doc.subscriptionJson === 'string'
-          ? safeJsonParse(doc.subscriptionJson)
-          : doc.subscriptionJson;
-
-        await webpush.sendNotification(sub, vapidPayload);
-        sent++;
-      } catch (err) {
-        failed++;
-        log(`failed docId=${docId} err=${err.message}`);
-        if (err.statusCode === 404 || err.statusCode === 410) {
-          await awUpdate(COL_SUBS, docId, { active: false, updatedAt: new Date().toISOString() }).catch(() => {});
-        }
-      }
-    }));
-
-    await awCreate(COL_HIST, {
-      type: type || 'custom', title: notifData.title, body: notifData.body,
-      url: notifUrl, sent, failed, total: activeDocs.length,
-      sentAt: new Date().toISOString()
-    }).catch(() => {});
-
-    log(`send-notification: sent=${sent} failed=${failed} total=${activeDocs.length}`);
-    return res.json({ success: true, sent, failed, total: activeDocs.length });
-
-  } catch (err) {
-    error('send-notification fatal: ' + err.message);
-    return res.json({ success: false, error: err.message }, 500);
+  // ── action: get-pages ──────────────────────────────────────
+  if (action === 'get-pages') {
+    if (!pages.length) return res.json({ error: 'No pages configured (FB_PAGE_ACCESS_TOKENS not set)' }, 500);
+    return res.json({ pages: pages.map(p => ({ id: p.id, name: p.name })) });
   }
+
+  // ── action: check-token ────────────────────────────────────
+  if (action === 'check-token') {
+    if (!pages.length) return res.json({ error: 'No token configured', expires_at: null }, 401);
+    // Check first page token via debug_token
+    const firstPage = pages[0];
+    try {
+      const ver = getApiVersion();
+      const debugUrl = `${FB_BASE}/${ver}/debug_token?input_token=${firstPage.token}&access_token=${firstPage.token}`;
+      const debugRes = await fetch(debugUrl);
+      const debug = await debugRes.json();
+      const exp = debug?.data?.expires_at ?? null;
+      const isValid = debug?.data?.is_valid ?? false;
+      log(`check-token: valid=${isValid} expires=${exp}`);
+      return res.json({ ok: isValid, expires_at: exp, pages: pages.length });
+    } catch (e) {
+      error('check-token error: ' + e.message);
+      return res.json({ error: e.message }, 500);
+    }
+  }
+
+  // ── Require pages for post/carousel ───────────────────────
+  if (!pages.length) {
+    return res.json({ error: 'No pages configured — set FB_PAGE_ACCESS_TOKENS env var' }, 500);
+  }
+
+  const activePages = pages.filter(p => !excludeIds.includes(p.id) && !excludeIds.includes(p.name));
+  if (!activePages.length) return res.json({ error: 'All pages excluded' }, 400);
+
+  const results = [];
+
+  // ── action: carousel ──────────────────────────────────────
+  if (action === 'carousel') {
+    if (!imageUrls || imageUrls.length < 2) {
+      return res.json({ error: 'carousel requires at least 2 imageUrls' }, 400);
+    }
+    for (const page of activePages) {
+      try {
+        // Upload each photo as unpublished
+        const mediaIds = [];
+        for (const url of imageUrls) {
+          const r = await fbPost(page.id, page.token, 'photos', { url, published: false });
+          mediaIds.push({ media_fbid: r.id });
+        }
+        // Publish carousel
+        const post = await fbPost(page.id, page.token, 'feed', {
+          message: caption,
+          attached_media: mediaIds,
+        });
+        results.push({ id: page.id, name: page.name, ok: true, postId: post.id });
+        log(`carousel posted to ${page.name}: ${post.id}`);
+      } catch (e) {
+        results.push({ id: page.id, name: page.name, ok: false, error: e.message });
+        error(`carousel failed for ${page.name}: ${e.message}`);
+      }
+    }
+    const ok   = results.filter(r => r.ok).length;
+    const fail = results.filter(r => !r.ok).length;
+    return res.json({ ok, fail, total: results.length, results });
+  }
+
+  // ── action: post (text / image / video) ───────────────────
+  for (const page of activePages) {
+    try {
+      let post;
+      if (videoUrl) {
+        post = await fbPost(page.id, page.token, 'videos', { description: caption, file_url: videoUrl });
+      } else if (imageUrl) {
+        post = await fbPost(page.id, page.token, 'photos', { caption, url: imageUrl });
+      } else {
+        post = await fbPost(page.id, page.token, 'feed', { message: caption });
+      }
+      results.push({ id: page.id, name: page.name, ok: true, postId: post.id || post.post_id });
+      log(`posted to ${page.name}: ${post.id || post.post_id}`);
+    } catch (e) {
+      results.push({ id: page.id, name: page.name, ok: false, error: e.message });
+      error(`post failed for ${page.name}: ${e.message}`);
+    }
+  }
+
+  const ok   = results.filter(r => r.ok).length;
+  const fail = results.filter(r => !r.ok).length;
+  return res.json({ ok, fail, total: results.length, results });
 };
