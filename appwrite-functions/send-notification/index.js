@@ -85,11 +85,8 @@ export default async ({ req, res, log, error }) => {
   if (req.method === 'OPTIONS') return res.empty();
   if (req.method !== 'POST') return res.json({ error: 'Method not allowed' }, 405);
 
-  // Auth — headers অথবা body._adminKey থেকে
   let _pb = {};
   try { _pb = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); } catch(_) {}
-  const adminKey = req.headers['x-admin-key'] || _pb._adminKey || '';
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) return res.json({ error: 'Unauthorized' }, 401);
 
   try {
     const vapidPriv = (process.env.VAPID_PRIVATE_KEY || '').replace(/\\n/g, '').replace(/\n/g, '');
