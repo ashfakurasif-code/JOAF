@@ -9,3 +9,4 @@ git push origin main.DS_Store
 # Local Netlify folder
 .netlify
 Archive.zip
+.DS_Store
