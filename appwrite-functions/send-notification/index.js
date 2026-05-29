@@ -70,11 +70,10 @@ export default async ({ req, res, log, error }) => {
       return res.json({ success: false, error: 'DB fetch failed: ' + fetchErr.message }, 500);
     }
 
-    let activeDocs = docs
-      .map(doc => ({ id: doc.id, $id: doc.id, ...doc.data }))
-      .filter(doc => doc.active !== false && !!doc.subscriptionJson);
+    // Appwrite Fix: doc.data সংক্রান্ত ভুল দূর করে সরাসরি ফিল্টারিং করা হয়েছে
+    let activeDocs = docs.filter(doc => doc.active !== false && !!doc.subscriptionJson);
 
-    // VAPID check — keys থাকলেই valid (Chrome uses fcm endpoint for VAPID too)
+    // VAPID check — keys থাকলেই valid
     activeDocs = activeDocs.filter(doc => {
       const sub = typeof doc.subscriptionJson === 'string'
         ? safeJsonParse(doc.subscriptionJson)
@@ -100,7 +99,7 @@ export default async ({ req, res, log, error }) => {
     let sent = 0, failed = 0;
 
     await Promise.allSettled(activeDocs.map(async (doc) => {
-      const docId = doc.$id || doc.id;
+      const docId = doc.$id; 
       try {
         const sub = typeof doc.subscriptionJson === 'string'
           ? safeJsonParse(doc.subscriptionJson)
