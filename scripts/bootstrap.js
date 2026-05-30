@@ -114,7 +114,7 @@ async function ensureCollection(col) {
 }
 
 async function seedSystemConfig() {
-  const systemConfig = 'system_config';
+  const systemConfig = 'admin_config';
   const defaults = [
     { key: 'canvas_dimensions', value: JSON.stringify({ reel: { w: 1080, h: 1920, ratio: '9:16' }, feed_4_5: { w: 1080, h: 1350, ratio: '4:5' }, square: { w: 1080, h: 1080, ratio: '1:1' } }) },
     { key: 'studio_enabled', value: 'true' },

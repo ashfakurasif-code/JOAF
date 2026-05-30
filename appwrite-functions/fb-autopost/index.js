@@ -16,7 +16,7 @@ import { Client, Databases, Query } from 'node-appwrite';
 
 const FB_BASE = 'https://graph.facebook.com';
 const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || 'joaf';
-const COL_CFG = 'system_config';
+const COL_CFG = 'admin_config';
 
 const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT;
 const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID;
@@ -37,7 +37,7 @@ function getPages() {
   }
 }
 
-/** Fetch a key from system_config; returns null on failure */
+/** Fetch a key from admin_config; returns null on failure */
 async function getSysConfig(key, apiKey = '') {
   if (!APPWRITE_ENDPOINT || !APPWRITE_PROJECT) return null;
   try {

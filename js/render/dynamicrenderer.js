@@ -7,14 +7,14 @@
  *   feed_4_5 → 4:5    (1080×1350) — homepage/feed portrait
  *   square   → 1:1    (1080×1080) — square feed post
  *
- * Dimensions stored in system_config['canvas_dimensions'] on Appwrite.
+ * Dimensions stored in admin_config['canvas_dimensions'] on Appwrite.
  * Falls back to built-in defaults if config unavailable.
  */
 
 import { applyBackground, drawBrandBar, drawCornerDecor, drawBadge, drawNewsCard, drawReelFrame, PALETTES, loadBrandLogo } from './baserenderer.js';
 import { banglaWordWrap, fitText, drawTextLines, roundRect, drawGlowText, setOpticalFont } from './typography.js';
 
-// ── Default canvas dimensions (overridden by system_config) ─────────────
+// ── Default canvas dimensions (overridden by admin_config) ─────────────
 export const DEFAULT_DIMS = {
   reel:     { w: 1080, h: 1920, ratio: '9:16' },
   feed_4_5: { w: 1080, h: 1350, ratio: '4:5' },
@@ -24,7 +24,7 @@ export const DEFAULT_DIMS = {
 let _cachedDims = null;
 let _fetchPromise = null;
 
-/** Load canvas dimensions from Appwrite system_config (with cache) */
+/** Load canvas dimensions from Appwrite admin_config (with cache) */
 export async function loadCanvasDimensions(fbConfigUrl) {
   if (_cachedDims) return _cachedDims;
   if (_fetchPromise) return _fetchPromise;

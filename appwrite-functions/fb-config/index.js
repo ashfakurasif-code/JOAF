@@ -1,12 +1,12 @@
 // Appwrite Function: fb-config
 // HTTP trigger — GET/POST
-// Serves non-sensitive config OR manages system_config collection
-// system_config collection schema: { key: string, value: string, updated_at: string }
+// Serves non-sensitive config OR manages admin_config collection
+// admin_config collection schema: { key: string, value: string, updated_at: string }
 
 import { Client, Databases, Query, ID } from 'node-appwrite';
 
 const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || 'joaf';
-const COL_CFG  = 'system_config';
+const COL_CFG  = 'admin_config';
 
 const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT;
 const APPWRITE_PROJECT  = process.env.APPWRITE_PROJECT  || process.env.APPWRITE_FUNCTION_PROJECT_ID;
@@ -45,7 +45,7 @@ export default async ({ req, res, log, error }) => {
     const fbAppId = process.env.FB_APP_ID;
     if (!fbAppId) return res.json({ error: 'Facebook configuration not available' }, 500);
 
-    // Try to load canvas dims from system_config
+    // Try to load canvas dims from admin_config
     let canvasDims = {
       reel:     { w: 1080, h: 1920, ratio: '9:16' },
       feed_4_5: { w: 1080, h: 1350, ratio: '4:5' },
@@ -61,7 +61,7 @@ export default async ({ req, res, log, error }) => {
     return res.json({ appId: fbAppId, apiVersion: 'v22.0', canvasDimensions: canvasDims });
   }
 
-  // ── POST: admin CRUD for system_config ─────────────────────────────────
+  // ── POST: admin CRUD for admin_config ─────────────────────────────────
   if (req.method !== 'POST') return res.json({ error: 'Method not allowed' }, 405);
 
   const ADMIN_KEY = process.env.ADMIN_SECRET_KEY || process.env.INTERNAL_API_KEY;
@@ -93,7 +93,7 @@ export default async ({ req, res, log, error }) => {
       if (isCollectionNotFound(e)) {
         // Collection hasn't been deployed yet — return empty list rather than HTTP 500
         // so the admin UI can load without showing a red error.
-        log('system_config collection not found — returning empty list. Run: appwrite deploy collection');
+        log('admin_config collection not found — returning empty list. Run: appwrite deploy collection');
         return res.json({ ok: true, configs: [] });
       }
       return res.json({ error: e.message }, 500);
@@ -118,11 +118,11 @@ export default async ({ req, res, log, error }) => {
       } else {
         await db.createDocument(AW_DB, COL_CFG, ID.unique(), payload);
       }
-      log(`system_config SET: ${key}`);
+      log(`admin_config SET: ${key}`);
       return res.json({ ok: true, key, value: String(value ?? '') });
     } catch (e) {
       if (isCollectionNotFound(e)) {
-        return res.json({ error: 'system_config collection not found. Deploy it via: appwrite deploy collection' }, 503);
+        return res.json({ error: 'admin_config collection not found. Deploy it via: appwrite deploy collection' }, 503);
       }
       error('set error: ' + e.message);
       return res.json({ error: e.message }, 500);

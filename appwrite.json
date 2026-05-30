@@ -583,7 +583,7 @@
   ],
   "collections": [
     {
-      "$id": "system_config",
+      "$id": "admin_config",
       "name": "System Config",
       "enabled": true,
       "documentSecurity": false,
