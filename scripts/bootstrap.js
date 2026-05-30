@@ -8,7 +8,7 @@ const spec = JSON.parse(fs.readFileSync(appwritePath, 'utf8'));
 const endpoint = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT;
 const project = process.env.APPWRITE_PROJECT_ID || process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID || spec.projectId;
 const apiKey = process.env.APPWRITE_API_KEY || process.env.APPWRITE_FUNCTION_API_KEY;
-const databaseId = process.env.APPWRITE_DATABASE_ID || spec.databaseId || '69cef52f0018a2a7b05a';
+const databaseId = process.env.APPWRITE_DATABASE_ID || spec.databaseId || 'joaf';
 
 function cleanTargets() {
   for (const rel of ['.netlify', 'netlify.toml', '.cache', 'dist', 'build']) {

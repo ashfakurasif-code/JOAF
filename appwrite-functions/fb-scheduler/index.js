@@ -12,7 +12,7 @@
 
 import { Client, Databases, Functions, Query, ID } from 'node-appwrite';
 
-const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || '69cef52f0018a2a7b05a';
+const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || 'joaf';
 const COL_QUEUE  = 'fb_queue';
 
 const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT;

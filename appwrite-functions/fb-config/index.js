@@ -5,7 +5,7 @@
 
 import { Client, Databases, Query, ID } from 'node-appwrite';
 
-const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || '69cef52f0018a2a7b05a';
+const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || 'joaf';
 const COL_CFG  = 'system_config';
 const FB_BASE  = 'https://graph.facebook.com';
 

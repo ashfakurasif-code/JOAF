@@ -15,7 +15,7 @@
 import { Client, Databases, Query } from 'node-appwrite';
 
 const FB_BASE = 'https://graph.facebook.com';
-const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || '69cef52f0018a2a7b05a';
+const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || 'joaf';
 const COL_CFG = 'system_config';
 
 const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT;

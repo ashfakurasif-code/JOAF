@@ -5,7 +5,7 @@ const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_
 const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID;
 export const AW_ENDPOINT = APPWRITE_ENDPOINT;
 export const AW_PROJECT = APPWRITE_PROJECT;
-export const DB_ID = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || '69cef52f0018a2a7b05a';
+export const DB_ID = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || 'joaf';
 export const COLLECTION_ID = 'push_subscriptions';
 export const DEFAULT_DOC_PERMISSIONS = ['read("any")', 'update("any")', 'delete("any")'];
 
