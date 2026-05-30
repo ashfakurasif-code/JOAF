@@ -6,9 +6,14 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
+      APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
+      APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
     steps:
       - uses: actions/checkout@v3
       - name: Deploy to Appwrite
         run: |
           npm install -g appwrite-cli
+          appwrite client --endpoint $APPWRITE_ENDPOINT --projectId $APPWRITE_PROJECT_ID --key $APPWRITE_API_KEY
           appwrite push function --all
