@@ -38,14 +38,10 @@ function getPages() {
 }
 
 /** Fetch a key from system_config; returns null on failure */
-async function getSysConfig(key, apiKey = APPWRITE_API_KEY) {
-  const runtimeApiKey = apiKey || APPWRITE_API_KEY;
-  if (!APPWRITE_ENDPOINT || !APPWRITE_PROJECT || !runtimeApiKey) return null;
+async function getSysConfig(key, apiKey = '') {
+  if (!APPWRITE_ENDPOINT || !APPWRITE_PROJECT) return null;
   try {
-    const client = new Client()
-      .setEndpoint(APPWRITE_ENDPOINT)
-      .setProject(APPWRITE_PROJECT)
-      .setKey(runtimeApiKey);
+    const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT);
     const db = new Databases(client);
     const res = await db.listDocuments(AW_DB, COL_CFG, [Query.equal('key', key), Query.limit(1)]);
     return res.documents[0]?.value ?? null;

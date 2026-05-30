@@ -67,7 +67,7 @@
     const text = document.getElementById('healthText');
     dot.className = 'dot'; text.textContent = 'Checking…';
     try {
-      const res = await fetch(cfg.endpoint.replace(//$/, '') + '/health');
+      const res = await fetch(cfg.endpoint.replace(/\/$/, '') + '/health');
       const data = await res.json();
       const statuses = [];
       if (data.status) statuses.push(data.status);

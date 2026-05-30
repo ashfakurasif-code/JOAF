@@ -13,11 +13,10 @@ const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_
 const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID;
 const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || process.env.APPWRITE_FUNCTION_API_KEY || '';
 
-async function getDbClient(apiKey = APPWRITE_API_KEY) {
-  return new Client()
-    .setEndpoint(APPWRITE_ENDPOINT)
-    .setProject(APPWRITE_PROJECT)
-    .setKey(apiKey || APPWRITE_API_KEY);
+async function getDbClient(apiKey = '') {
+  const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT);
+  if (apiKey) client.setKey(apiKey);
+  return client;
 }
 
 function resolveRuntimeApiKey(req) {
@@ -46,7 +45,7 @@ export default async ({ req, res, log, error }) => {
       square:   { w: 1080, h: 1080, ratio: '1:1' },
     };
     try {
-      const client = await getDbClient(resolveRuntimeApiKey(req));
+      const client = await getDbClient();
       const db = new Databases(client);
       const raw = await fetchConfig(db, 'canvas_dimensions');
       if (raw) canvasDims = JSON.parse(raw);
@@ -69,7 +68,7 @@ export default async ({ req, res, log, error }) => {
 
   const { action, key, value } = body;
 
-  const client = await getDbClient(resolveRuntimeApiKey(req));
+  const client = await getDbClient();
   const db = new Databases(client);
 
   // ── list: return all config keys ──
