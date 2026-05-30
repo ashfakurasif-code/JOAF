@@ -1,9 +1,20 @@
 // Appwrite Function: groq-proxy
 // HTTP trigger — POST only
+// Auth: requires x-joaf-key header matching INTERNAL_API_KEY env var
 // Provider order: OpenRouter (primary) → Gemini (fallback) → Groq (last resort)
 
 export default async ({ req, res, log, error }) => {
   if (req.method === 'OPTIONS') return res.empty();
+
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  const INTERNAL_KEY = process.env.INTERNAL_API_KEY;
+  if (INTERNAL_KEY) {
+    const provided = req.headers['x-joaf-key'] || req.headers['x-internal-key'];
+    if (!provided || provided !== INTERNAL_KEY) {
+      error('Unauthorized request to groq-proxy');
+      return res.json({ error: 'Unauthorized' }, 401);
+    }
+  }
 
   const GEMINI_KEY     = process.env.GEMINI_API_KEY;
   const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
@@ -21,9 +32,14 @@ export default async ({ req, res, log, error }) => {
       const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENROUTER_KEY, 'HTTP-Referer': 'https://julyforum.com', 'X-Title': 'JOAF' },
-        body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct:free', max_tokens: body.max_tokens || 1000, temperature: body.temperature || 0.7, messages: body.messages }),
+        body: JSON.stringify({ model: 'meta-llama/llama-3.3-70b-instruct:free', max_tokens: body.max_tokens || 1000, temperature: body.temperature || 0.7, messages: body.messages }),
       });
-      if (orRes.ok) { log('✅ OpenRouter PRIMARY'); return res.json(await orRes.json()); }
+      if (orRes.ok) {
+        const data = await orRes.json();
+        log('✅ OpenRouter PRIMARY');
+        res.setHeader?.('x-ai-provider', 'openrouter');
+        return res.json(data);
+      }
       log('⚠️ OpenRouter failed: ' + orRes.status);
     } catch (e) { log('⚠️ OpenRouter error: ' + e.message); }
   }
@@ -66,6 +82,7 @@ export default async ({ req, res, log, error }) => {
         const gData = await gRes.json();
         const text = gData.candidates?.flatMap(c => c.content?.parts || []).map(p => p.text || '').join('\n') || '';
         log('✅ Gemini FALLBACK');
+        res.setHeader?.('x-ai-provider', 'gemini');
         return res.json({ choices: [{ message: { role: 'assistant', content: text }, finish_reason: 'stop', index: 0 }], model: geminiModel, usage: gData.usageMetadata || {} });
       }
       log('⚠️ Gemini failed: ' + gRes.status);
@@ -85,7 +102,7 @@ export default async ({ req, res, log, error }) => {
       body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: body.max_tokens || 1000, temperature: body.temperature || 0.7, messages: groqMessages }),
     });
     const data = await groqRes.json();
-    if (groqRes.ok) log('✅ Groq LAST RESORT'); else error('❌ Groq failed: ' + groqRes.status);
+    if (groqRes.ok) { log('✅ Groq LAST RESORT'); res.setHeader?.('x-ai-provider', 'groq'); } else error('❌ Groq failed: ' + groqRes.status);
     return res.json(data, groqRes.status);
   } catch (e) { error('❌ Groq error: ' + e.message); return res.json({ error: e.message }, 500); }
 };

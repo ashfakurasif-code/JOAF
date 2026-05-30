@@ -12,6 +12,34 @@ const ADMIN_KEY  = process.env.ADMIN_SECRET_KEY;
 const GROQ_MODELS = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'];
 const VALID_CATS  = ['সরকার', 'বিরোধী দল', 'যুব রাজনীতি', 'সুশীল সমাজ', 'আওয়ামী লীগ', 'ব্যবসায়ী'];
 
+/**
+ * Deduplicate headlines by trigram similarity.
+ * Removes headlines where >65% of 3-char ngrams overlap with an already-seen headline.
+ * Prevents the same story from multiple RSS sources inflating AI confidence scores.
+ */
+function dedupeHeadlines(headlines) {
+  function trigrams(str) {
+    const s = str.toLowerCase().replace(/\s+/g, ' ').trim();
+    const set = new Set();
+    for (let i = 0; i < s.length - 2; i++) set.add(s.slice(i, i + 3));
+    return set;
+  }
+  function jaccardSim(a, b) {
+    let inter = 0;
+    for (const t of a) if (b.has(t)) inter++;
+    return inter / (a.size + b.size - inter);
+  }
+
+  const seen = [];
+  return headlines.filter(h => {
+    const tg = trigrams(h);
+    if (tg.size < 3) return true; // too short to meaningfully compare
+    const isDupe = seen.some(s => jaccardSim(tg, s) > 0.65);
+    if (!isDupe) seen.push(tg);
+    return !isDupe;
+  });
+}
+
 const BD_TODAY = () => new Date(Date.now() + 6 * 3600000).toISOString().slice(0, 10);
 
 async function awGetAll() {
@@ -20,10 +48,11 @@ async function awGetAll() {
 }
 
 function buildPrompt(headlines, existingLeaders, today) {
+  const deduped = dedupeHeadlines(headlines);
   const existingStr = existingLeaders.length > 0 ? existingLeaders.slice(0, 20).map(l => l.id).join(',') : 'none';
   return `You are a Bangladesh political analyst. Today: ${today}.
 Analyze these headlines and identify BANGLADESH-RELEVANT trending people ONLY.
-Headlines:\n${headlines.slice(0, 15).join('\n')}
+Headlines:\n${deduped.slice(0, 15).join('\n')}
 Already tracked (do NOT include): ${existingStr}
 RULES: Only real fully-named individuals, 2+ headlines or clearly significant, cat must be one of: ${VALID_CATS.join(', ')}, confidence >= 0.7.
 Reply ONLY raw JSON: {"new":[{"id":"slug","name":"Full Name","party":"party","role":"role","cat":"সরকার","icon":"👤","trending_reason":"reason","confidence":0.9}],"inactive":[{"id":"existing-id","isDeceased":false}]}

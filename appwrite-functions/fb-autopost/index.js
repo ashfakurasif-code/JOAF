@@ -57,7 +57,7 @@ export default async ({ req, res, log, error }) => {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
   } catch (_) {}
 
-  const { action = 'post', caption = '', imageUrl, videoUrl, imageUrls = [], excludeIds = [] } = body;
+  const { action = 'post', caption = '', imageUrl, videoUrl, imageUrls = [], excludeIds = [], scheduledAt } = body;
 
   const pages = getPages();
 
@@ -131,12 +131,43 @@ export default async ({ req, res, log, error }) => {
   for (const page of activePages) {
     try {
       let post;
+      const unixScheduledAt = scheduledAt ? Math.floor(new Date(scheduledAt).getTime() / 1000) : null;
+
       if (videoUrl) {
-        post = await fbPost(page.id, page.token, 'videos', { description: caption, file_url: videoUrl });
+        // Video: supports scheduling natively via /videos
+        const payload = { description: caption, file_url: videoUrl };
+        if (unixScheduledAt) {
+          payload.published = false;
+          payload.scheduled_publish_time = unixScheduledAt;
+        }
+        post = await fbPost(page.id, page.token, 'videos', payload);
+
       } else if (imageUrl) {
-        post = await fbPost(page.id, page.token, 'photos', { caption, url: imageUrl });
+        if (unixScheduledAt) {
+          // Scheduled image: must upload as unpublished photo first, then post to /feed
+          const uploaded = await fbPost(page.id, page.token, 'photos', {
+            url: imageUrl,
+            published: false,
+          });
+          post = await fbPost(page.id, page.token, 'feed', {
+            message: caption,
+            attached_media: [{ media_fbid: uploaded.id }],
+            published: false,
+            scheduled_publish_time: unixScheduledAt,
+          });
+        } else {
+          // Immediate image post
+          post = await fbPost(page.id, page.token, 'photos', { caption, url: imageUrl });
+        }
+
       } else {
-        post = await fbPost(page.id, page.token, 'feed', { message: caption });
+        // Text-only post
+        const payload = { message: caption };
+        if (unixScheduledAt) {
+          payload.published = false;
+          payload.scheduled_publish_time = unixScheduledAt;
+        }
+        post = await fbPost(page.id, page.token, 'feed', payload);
       }
       results.push({ id: page.id, name: page.name, ok: true, postId: post.id || post.post_id });
       log(`posted to ${page.name}: ${post.id || post.post_id}`);

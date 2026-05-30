@@ -5,6 +5,21 @@
   } else {
     document.documentElement.style.setProperty('--ls-display', 'flex');
   }
+
+  // Inject INTERNAL_API_KEY meta tag so aimaster.js can auth groq-proxy requests.
+  // The key is stored in localStorage after admin login — it is NOT hardcoded here.
+  // Admin sets it once via Settings panel → "Internal API Key" field.
+  (function injectApiKeyMeta() {
+    const key = localStorage.getItem('joaf_internal_key') || '';
+    if (!key) return;
+    let meta = document.querySelector('meta[name="joaf-api-key"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'joaf-api-key';
+      document.head.appendChild(meta);
+    }
+    meta.content = key;
+  })();
 })();
 
 // Populate district dropdowns — called after DOM is ready

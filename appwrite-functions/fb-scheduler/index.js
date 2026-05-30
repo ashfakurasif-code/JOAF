@@ -7,10 +7,25 @@
 //   APPWRITE_PROJECT   — your project ID
 //   APPWRITE_API_KEY   — server API key (has db read/write permission)
 
-import { Client, Databases, Functions, Query } from 'node-appwrite';
+import { Client, Databases, Functions, Query, ID } from 'node-appwrite';
 
 const AW_DB      = 'joaf';
 const COL_QUEUE  = 'fb_queue';
+
+/** Exponential backoff retry for transient errors */
+async function withRetry(fn, maxAttempts = 3, label = 'op') {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      const isTransient = e.message?.includes('429') || e.message?.includes('503') || e.message?.includes('rate');
+      if (attempt === maxAttempts || !isTransient) throw e;
+      const delay = 1000 * Math.pow(2, attempt);
+      console.warn(`[fb-scheduler] ${label} attempt ${attempt} failed (${e.message}), retrying in ${delay}ms`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
 
 export default async ({ req, res, log, error }) => {
   const client = new Client()
@@ -20,7 +35,8 @@ export default async ({ req, res, log, error }) => {
 
   const db   = new Databases(client);
   const now  = new Date().toISOString();
-  log(`[fb-scheduler] running at ${now}`);
+  const lockToken = ID.unique(); // Unique per scheduler invocation
+  log(`[fb-scheduler] running at ${now}, lock=${lockToken}`);
 
   // 1. Fetch all pending posts due now or earlier
   let docs;
@@ -41,15 +57,32 @@ export default async ({ req, res, log, error }) => {
     return res.json({ ok: true, published: 0, message: 'No pending posts due' });
   }
 
-  // 2. Mark as processing to avoid double-publish
+  // 2. Atomically claim each doc with our lock token — skip any already claimed
+  const claimedDocs = [];
   for (const doc of docs) {
-    await db.updateDocument(AW_DB, COL_QUEUE, doc.$id, { status: 'processing' }).catch(() => {});
+    try {
+      // Only update if status is still 'pending' (another invocation may have grabbed it)
+      await db.updateDocument(AW_DB, COL_QUEUE, doc.$id, {
+        status: 'processing',
+        lock_token: lockToken,
+      });
+      claimedDocs.push(doc);
+    } catch (e) {
+      // Document was updated between our list and this update — another invocation has it
+      log(`[fb-scheduler] doc ${doc.$id} already claimed by another invocation, skipping`);
+    }
   }
 
-  // 3. Publish each post via Appwrite Functions SDK
+  if (!claimedDocs.length) {
+    return res.json({ ok: true, published: 0, message: 'All docs claimed by concurrent invocation' });
+  }
+
+  log(`[fb-scheduler] claimed ${claimedDocs.length} of ${docs.length} pending posts`);
+
+  // 3. Publish each claimed post via Appwrite Functions SDK with retry
   const summary = [];
 
-  for (const doc of docs) {
+  for (const doc of claimedDocs) {
     log(`[fb-scheduler] publishing doc ${doc.$id} — "${doc.caption?.substring(0, 40)}..."`);
 
     let payload;
@@ -70,15 +103,17 @@ export default async ({ req, res, log, error }) => {
     let publishResult;
     try {
       const functions = new Functions(client);
-      const execution = await functions.createExecution(
-        'fb-autopost',
-        JSON.stringify(payload),
-        false,
-        '/',
-        'POST',
-        { 'Content-Type': 'application/json' }
-      );
-      publishResult = JSON.parse(execution.responseBody || '{}');
+      publishResult = await withRetry(async () => {
+        const execution = await functions.createExecution(
+          'fb-autopost',
+          JSON.stringify(payload),
+          false,
+          '/',
+          'POST',
+          { 'Content-Type': 'application/json' }
+        );
+        return JSON.parse(execution.responseBody || '{}');
+      }, 3, `publish-${doc.$id}`);
     } catch (e) {
       publishResult = { error: e.message };
     }

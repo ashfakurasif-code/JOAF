@@ -26,7 +26,7 @@ class QueueStore {
   /** Add item to queue */
   add({ blob, name, caption, isVideo = false, scheduledAt = null, contentObj = null, pageIds = null }) {
     const item = {
-      id: `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: `q-${crypto.randomUUID()}`,
       blob,
       blobUrl: blob ? URL.createObjectURL(blob) : null,
       name: name || `joaf-${Date.now()}`,
@@ -201,11 +201,15 @@ class QueueStore {
 
     } catch (err) {
       this.update(item.id, { status: STATUS.FAILED, error: err.message });
+      // Revoke blob URL to free memory, but retain blob reference so caller can retry
+      const current = this._items.find(i => i.id === item.id);
+      if (current?.blobUrl) {
+        URL.revokeObjectURL(current.blobUrl);
+        this.update(item.id, { blobUrl: null });
+      }
       throw err;
     }
   }
-}
-
 
   // ── Appwrite persistence bridge ──────────────────────────────────────────
   async _persistToQueue(item) {
@@ -222,6 +226,7 @@ class QueueStore {
       }
     }
   }
+}
 
 // Singleton export
 export const queueStore = new QueueStore();

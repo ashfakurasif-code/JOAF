@@ -6,9 +6,7 @@
       "$id": "vote",
       "name": "Vote",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 15,
@@ -34,7 +32,15 @@
       "entrypoint": "index.js",
       "commands": "npm install",
       "scopes": [],
-      "vars": [],
+      "vars": [
+        { "name": "GROQ_API_KEY",       "value": "" },
+        { "name": "GEMINI_API_KEY",     "value": "" },
+        { "name": "OPENROUTER_API_KEY", "value": "" },
+        { "name": "ADMIN_SECRET_KEY",   "value": "" },
+        { "name": "APPWRITE_ENDPOINT",  "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",   "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",   "value": "" }
+      ],
       "ignore": [],
       "path": "appwrite-functions/discover-leaders"
     },
@@ -51,7 +57,15 @@
       "entrypoint": "index.js",
       "commands": "npm install",
       "scopes": [],
-      "vars": [],
+      "vars": [
+        { "name": "GROQ_API_KEY",       "value": "" },
+        { "name": "GEMINI_API_KEY",     "value": "" },
+        { "name": "OPENROUTER_API_KEY", "value": "" },
+        { "name": "ADMIN_SECRET_KEY",   "value": "" },
+        { "name": "APPWRITE_ENDPOINT",  "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",   "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",   "value": "" }
+      ],
       "ignore": [],
       "path": "appwrite-functions/generate-timeline"
     },
@@ -61,14 +75,23 @@
       "runtime": "node-22",
       "execute": [],
       "events": [],
-      "schedule": "0 10 * * *",
+      "schedule": "0 12 * * *",
       "timeout": 300,
       "enabled": true,
       "logging": true,
       "entrypoint": "index.js",
       "commands": "npm install",
       "scopes": [],
-      "vars": [],
+      "vars": [
+        { "name": "GROQ_API_KEY",       "value": "" },
+        { "name": "GEMINI_API_KEY",     "value": "" },
+        { "name": "OPENROUTER_API_KEY", "value": "" },
+        { "name": "ADMIN_SECRET_KEY",   "value": "" },
+        { "name": "APPWRITE_ENDPOINT",  "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",   "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",   "value": "" },
+        { "name": "GROQ_PROXY_URL",     "value": "https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions" }
+      ],
       "ignore": [],
       "path": "appwrite-functions/update-leaders"
     },
@@ -76,9 +99,7 @@
       "$id": "fb-autopost",
       "name": "FB Autopost",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 30,
@@ -88,26 +109,9 @@
       "commands": "npm install",
       "scopes": [],
       "vars": [
-        {
-          "name": "APPWRITE_API_KEY",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_ENDPOINT",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_PROJECT",
-          "value": "6a11b6cd000b59f318eb"
-        },
-        {
-          "name": "FB_PAGE_ACCESS_TOKENS",
-          "value": ""
-        },
-        {
-          "name": "FB_API_VERSION",
-          "value": "v22.0"
-        }
+        { "name": "FB_PAGE_ACCESS_TOKENS", "value": "" },
+        { "name": "FB_API_VERSION",        "value": "v22.0" },
+        { "name": "INTERNAL_API_KEY",      "value": "" }
       ],
       "ignore": [],
       "path": "appwrite-functions/fb-autopost"
@@ -116,9 +120,7 @@
       "$id": "send-notification",
       "name": "Send Notification",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 30,
@@ -128,34 +130,13 @@
       "commands": "npm install",
       "scopes": [],
       "vars": [
-        {
-          "name": "APPWRITE_API_KEY",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_ENDPOINT",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_PROJECT",
-          "value": "6a11b6cd000b59f318eb"
-        },
-        {
-          "name": "ADMIN_SECRET_KEY",
-          "value": ""
-        },
-        {
-          "name": "VAPID_PUBLIC_KEY",
-          "value": ""
-        },
-        {
-          "name": "VAPID_PRIVATE_KEY",
-          "value": ""
-        },
-        {
-          "name": "VAPID_SUBJECT",
-          "value": ""
-        }
+        { "name": "APPWRITE_ENDPOINT",  "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",   "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",   "value": "" },
+        { "name": "ADMIN_SECRET_KEY",   "value": "" },
+        { "name": "VAPID_PUBLIC_KEY",   "value": "" },
+        { "name": "VAPID_PRIVATE_KEY",  "value": "" },
+        { "name": "VAPID_SUBJECT",      "value": "mailto:admin@julyforum.com" }
       ],
       "ignore": [],
       "path": "appwrite-functions/send-notification"
@@ -164,9 +145,7 @@
       "$id": "fb-config",
       "name": "FB Config",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 15,
@@ -175,7 +154,10 @@
       "entrypoint": "index.js",
       "commands": "npm install",
       "scopes": [],
-      "vars": [],
+      "vars": [
+        { "name": "FB_APP_ID",     "value": "" },
+        { "name": "FB_API_VERSION","value": "v22.0" }
+      ],
       "ignore": [],
       "path": "appwrite-functions/fb-config"
     },
@@ -183,9 +165,7 @@
       "$id": "fetch-rss",
       "name": "Fetch RSS",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 15,
@@ -202,9 +182,7 @@
       "$id": "get-stats",
       "name": "Get Stats",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 15,
@@ -214,33 +192,19 @@
       "commands": "npm install",
       "scopes": [],
       "vars": [
-        {
-          "name": "APPWRITE_API_KEY",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_ENDPOINT",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_PROJECT",
-          "value": "6a11b6cd000b59f318eb"
-        },
-        {
-          "name": "ADMIN_SECRET_KEY",
-          "value": ""
-        }
+        { "name": "APPWRITE_ENDPOINT",  "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",   "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",   "value": "" },
+        { "name": "ADMIN_SECRET_KEY",   "value": "" }
       ],
       "ignore": [],
       "path": "appwrite-functions/get-stats"
     },
     {
       "$id": "groq-proxy",
-      "name": "Groq Proxy",
+      "name": "Groq Proxy (AI Gateway)",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 30,
@@ -250,10 +214,10 @@
       "commands": "npm install",
       "scopes": [],
       "vars": [
-        {
-          "name": "GROQ_API_KEY",
-          "value": ""
-        }
+        { "name": "GROQ_API_KEY",       "value": "" },
+        { "name": "GEMINI_API_KEY",     "value": "" },
+        { "name": "OPENROUTER_API_KEY", "value": "" },
+        { "name": "INTERNAL_API_KEY",   "value": "" }
       ],
       "ignore": [],
       "path": "appwrite-functions/groq-proxy"
@@ -262,28 +226,7 @@
       "$id": "hf-video-proxy",
       "name": "HF Video Proxy",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
-      "events": [],
-      "schedule": "",
-      "timeout": 30,
-      "enabled": true,
-      "logging": true,
-      "entrypoint": "index.js",
-      "commands": "npm install",
-      "scopes": [],
-      "vars": [],
-      "ignore": [],
-      "path": "appwrite-functions/hf-video-proxy"
-    },
-    {
-      "$id": "6a1520b8002f61b828e2",
-      "name": "FB Scheduler",
-      "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 60,
@@ -293,33 +236,60 @@
       "commands": "npm install",
       "scopes": [],
       "vars": [
-        {
-          "name": "APPWRITE_SITE_URL",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_API_KEY",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_ENDPOINT",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_PROJECT",
-          "value": "6a11b6cd000b59f318eb"
-        }
+        { "name": "HF_TOKEN", "value": "" }
+      ],
+      "ignore": [],
+      "path": "appwrite-functions/hf-video-proxy"
+    },
+    {
+      "$id": "fb-scheduler",
+      "name": "FB Scheduler",
+      "runtime": "node-22",
+      "execute": ["any"],
+      "events": [],
+      "schedule": "0 * * * *",
+      "timeout": 60,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "index.js",
+      "commands": "npm install",
+      "scopes": [],
+      "vars": [
+        { "name": "APPWRITE_ENDPOINT",  "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",   "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",   "value": "" }
       ],
       "ignore": [],
       "path": "appwrite-functions/fb-scheduler"
     },
     {
+      "$id": "fb-insights",
+      "name": "FB Insights (Engagement Analytics)",
+      "runtime": "node-22",
+      "execute": [],
+      "events": [],
+      "schedule": "0 10 * * *",
+      "timeout": 120,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "index.js",
+      "commands": "npm install",
+      "scopes": [],
+      "vars": [
+        { "name": "APPWRITE_ENDPOINT",     "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",      "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",      "value": "" },
+        { "name": "FB_PAGE_ACCESS_TOKENS", "value": "" },
+        { "name": "FB_API_VERSION",        "value": "v22.0" }
+      ],
+      "ignore": [],
+      "path": "appwrite-functions/fb-insights"
+    },
+    {
       "$id": "github-upload",
       "name": "GitHub Upload",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 30,
@@ -328,7 +298,10 @@
       "entrypoint": "index.js",
       "commands": "npm install",
       "scopes": [],
-      "vars": [],
+      "vars": [
+        { "name": "GITHUB_TOKEN",     "value": "" },
+        { "name": "ADMIN_SECRET_KEY", "value": "" }
+      ],
       "ignore": [],
       "path": "appwrite-functions/github-upload"
     },
@@ -336,9 +309,7 @@
       "$id": "save-subscription",
       "name": "Save Subscription",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 15,
@@ -348,18 +319,12 @@
       "commands": "npm install",
       "scopes": [],
       "vars": [
-        {
-          "name": "APPWRITE_API_KEY",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_ENDPOINT",
-          "value": ""
-        },
-        {
-          "name": "APPWRITE_PROJECT",
-          "value": "6a11b6cd000b59f318eb"
-        }
+        { "name": "APPWRITE_ENDPOINT",  "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",   "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",   "value": "" },
+        { "name": "VAPID_PUBLIC_KEY",   "value": "" },
+        { "name": "VAPID_PRIVATE_KEY",  "value": "" },
+        { "name": "VAPID_SUBJECT",      "value": "mailto:admin@julyforum.com" }
       ],
       "ignore": [],
       "path": "appwrite-functions/save-subscription"
@@ -368,9 +333,7 @@
       "$id": "press-release-og",
       "name": "Press Release OG",
       "runtime": "node-22",
-      "execute": [
-        "any"
-      ],
+      "execute": ["any"],
       "events": [],
       "schedule": "",
       "timeout": 15,
@@ -379,7 +342,11 @@
       "entrypoint": "index.js",
       "commands": "npm install",
       "scopes": [],
-      "vars": [],
+      "vars": [
+        { "name": "APPWRITE_ENDPOINT", "value": "https://fra.cloud.appwrite.io/v1" },
+        { "name": "APPWRITE_PROJECT",  "value": "6a11b6cd000b59f318eb" },
+        { "name": "APPWRITE_API_KEY",  "value": "" }
+      ],
       "ignore": [],
       "path": "appwrite-functions/press-release-og"
     }

@@ -2,12 +2,32 @@
  * aiMaster.js — Unified AI Engine
  * ONE AI call → full MasterContentObject
  * Supports: text topic, OCR image, URL scrape
+ *
+ * Two-phase generation:
+ *   Phase 1 (CORE)  — headline, hook, caption variants, hashtags, emotion, tone (~600 tokens)
+ *   Phase 2 (EXTENDED) — reel scripts, scene breakdowns, voice segments (lazy, on demand)
  */
 
 const AI_PROXY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions';
 
-/** Build full prompt from topic/OCR text */
-function buildMasterPrompt(input, tone = 'urgent') {
+// Read internal API key from meta tag (set by admin-init.js)
+function getInternalKey() {
+  if (typeof document !== 'undefined') {
+    return document.querySelector('meta[name="joaf-api-key"]')?.content || '';
+  }
+  return '';
+}
+
+function aiHeaders() {
+  const key = getInternalKey();
+  return {
+    'Content-Type': 'application/json',
+    ...(key ? { 'x-joaf-key': key } : {}),
+  };
+}
+
+/** PHASE 1 — Core content fields. Fast, ~600 tokens, always generated. */
+function buildCorePrompt(input, tone = 'urgent') {
   return `তুমি বাংলাদেশের সেরা AI media content strategist।
 Tone: ${tone}
 
@@ -17,20 +37,21 @@ ${input.trim()}
 """
 
 একটি মাত্র JSON object return করো। কোনো extra text, markdown backtick বা explanation নেই।
+যদি JSON সম্পূর্ণ করতে না পারো, আগের field গুলো রেখে valid JSON বন্ধ করো।
 
 JSON structure (সব ফিল্ড বাংলায়, hashtags ইংরেজি):
 {
   "headline": "সংক্ষিপ্ত, শক্তিশালী শিরোনাম",
   "subHeadline": "সাব-হেডলাইন",
-  "hook": "max ৮ শব্দের scroll stopper, question বা shocking statement",
+  "hook": "max ৮ শব্দের scroll stopper",
   "summary": "২-৩ বাক্যের সারসংক্ষেপ",
-  "breakingLine": "breaking news line যদি প্রযোজ্য হয়",
-  "caption": "hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ — full viral caption",
+  "breakingLine": "breaking news line",
+  "caption": "hook দিয়ে শুরু, emoji সহ, CTA + hashtags দিয়ে শেষ",
   "shortCaption": "max ৫০ শব্দের ছোট caption",
   "mediumCaption": "100-150 শব্দের মাঝারি caption",
   "longCaption": "200+ শব্দের বিস্তারিত caption",
   "hashtags": ["#JOAF", "#বাংলাদেশ"],
-  "keywords": ["keyword1", "keyword2"],
+  "keywords": ["keyword1"],
   "emotion": "urgent|sad|positive|angry|neutral",
   "tone": "breaking|informative|motivational|critical",
   "urgency": "high|medium|low",
@@ -38,15 +59,6 @@ JSON structure (সব ফিল্ড বাংলায়, hashtags ইংর
   "cta": "call to action text",
   "engagementQuestion": "engagement বাড়ানোর প্রশ্ন",
   "thumbnailText": "thumbnail-এ বড় text (max ৫ শব্দ)",
-  "reelTitle": "reel-এর title",
-  "reelHook": "reel শুরুর hook text",
-  "reelScript": ["slide 1 text", "slide 2 text", "slide 3 text"],
-  "sceneBreakdown": [{"title":"scene name","duration":5,"text":"content","mood":"urgent"}],
-  "voiceoverText": "full voiceover script",
-  "voiceSegments": [{"text":"segment","startTime":0,"duration":3}],
-  "subtitleLines": ["subtitle line 1", "subtitle line 2"],
-  "highlightWords": ["গুরুত্বপূর্ণ", "জরুরি"],
-  "emphasisWords": ["keyword"],
   "visualMood": "dark|vibrant|minimal|cinematic",
   "colorTheme": "red|blue|green|gold|white",
   "animationStyle": "fast|smooth|dramatic|minimal",
@@ -65,8 +77,81 @@ JSON structure (সব ফিল্ড বাংলায়, hashtags ইংর
 }`;
 }
 
+/** PHASE 2 — Extended reel/video fields. Lazy-loaded only when reel studio opens. */
+function buildExtendedPrompt(coreObj, input) {
+  return `তুমি বাংলাদেশের সেরা AI video content strategist।
+
+এই content এর জন্য reel/video fields তৈরি করো:
+Headline: "${coreObj.headline}"
+Summary: "${coreObj.summary}"
+Tone: ${coreObj.tone}
+
+একটি মাত্র JSON object return করো। কোনো extra text বা backtick নেই।
+
+{
+  "reelTitle": "reel-এর title",
+  "reelHook": "reel শুরুর hook text",
+  "reelScript": ["slide 1 text", "slide 2 text", "slide 3 text"],
+  "sceneBreakdown": [{"title":"scene name","duration":5,"text":"content","mood":"urgent"}],
+  "sceneTransitions": ["fade","slide","fade"],
+  "sceneDurations": [5,10,5],
+  "voiceoverText": "full voiceover script",
+  "voiceSegments": [{"text":"segment","startTime":0,"duration":3}],
+  "subtitleLines": ["subtitle line 1","subtitle line 2"],
+  "highlightWords": ["গুরুত্বপূর্ণ"],
+  "emphasisWords": ["keyword"],
+  "viralPhrases": ["phrase"],
+  "cameraStyle": "dynamic",
+  "sfxHints": ["sound effect"],
+  "seoTitle": "seo title",
+  "seoDescription": "seo description"
+}`;
+}
+
+/** Detect truncated JSON — mismatched brace count */
+function isTruncated(text) {
+  const open = (text.match(/\{/g) || []).length;
+  const close = (text.match(/\}/g) || []).length;
+  return open !== close;
+}
+}
+
 /**
- * Main AI generation function
+ * Low-level AI call — wraps the Appwrite groq-proxy execution.
+ * Retries once with higher token budget if response is truncated.
+ */
+async function callAI(messages, maxTokens = 1200) {
+  const body = JSON.stringify({ messages, max_tokens: maxTokens, temperature: 0.7 });
+
+  const res = await fetch(AI_PROXY, {
+    method: 'POST',
+    headers: aiHeaders(),
+    body: JSON.stringify({
+      async: false,
+      path: '/',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    }),
+  });
+
+  if (!res.ok) throw new Error(`AI proxy error: ${res.status}`);
+
+  const data = await res.json();
+  // Appwrite wraps the response in responseBody
+  const inner = data.responseBody ? JSON.parse(data.responseBody) : data;
+  const text = inner.choices?.[0]?.message?.content || '';
+
+  if (isTruncated(text) && maxTokens < 3000) {
+    console.warn('[aiMaster] Truncated JSON detected — retrying with higher token budget');
+    return callAI(messages, 3000);
+  }
+
+  return text;
+}
+
+/**
+ * Phase 1: Generate core content fields (always called).
  * @param {string} input — topic text, OCR text, or scraped content
  * @param {string} tone — urgent|informative|motivational
  * @param {File|null} imageFile — optional image for vision AI
@@ -76,35 +161,45 @@ export async function generateMasterContent(input, tone = 'urgent', imageFile = 
   const messages = [];
 
   if (imageFile) {
-    // Vision AI path — send image + text
     const base64 = await fileToBase64(imageFile);
     const mimeType = imageFile.type || 'image/jpeg';
     messages.push({
       role: 'user',
       content: [
         { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
-        { type: 'text', text: buildMasterPrompt(input || 'এই ছবি থেকে content তৈরি করো', tone) }
-      ]
+        { type: 'text', text: buildCorePrompt(input || 'এই ছবি থেকে content তৈরি করো', tone) },
+      ],
     });
   } else {
-    messages.push({
-      role: 'user',
-      content: buildMasterPrompt(input, tone)
-    });
+    messages.push({ role: 'user', content: buildCorePrompt(input, tone) });
   }
 
-  const res = await fetch(AI_PROXY, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, max_tokens: 2000, temperature: 0.7 })
-  });
-
-  if (!res.ok) throw new Error(`AI proxy error: ${res.status}`);
-
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content || '';
-
+  const text = await callAI(messages, 1200);
   return parseMasterContent(text, input, tone);
+}
+
+/**
+ * Phase 2: Generate extended reel/video fields.
+ * Call this lazily when the reel studio is opened — not on every content generation.
+ * @param {MasterContentObject} coreObj — result of generateMasterContent
+ * @param {string} input — original topic input
+ * @returns {Promise<MasterContentObject>} — coreObj merged with extended fields
+ */
+export async function extendWithReelFields(coreObj, input) {
+  const messages = [{ role: 'user', content: buildExtendedPrompt(coreObj, input) }];
+  try {
+    const text = await callAI(messages, 1000);
+    const clean = text.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+    const start = clean.indexOf('{');
+    const end = clean.lastIndexOf('}');
+    if (start !== -1 && end !== -1) {
+      const extended = JSON.parse(clean.slice(start, end + 1));
+      return { ...coreObj, ...extended };
+    }
+  } catch (e) {
+    console.warn('[aiMaster] extendWithReelFields failed (non-blocking):', e.message);
+  }
+  return coreObj;
 }
 
 /** Parse AI JSON response into MasterContentObject */
@@ -127,7 +222,7 @@ export function parseMasterContent(text, fallbackInput = '', tone = 'urgent') {
 
 /** Fill missing fields with sensible defaults */
 function normalizeContent(obj, input, tone) {
-  const id = `joaf-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const id = `joaf-${crypto.randomUUID()}`;
   return {
     id,
     topic: input,
