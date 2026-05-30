@@ -18,4 +18,4 @@ jobs:
         run: |
           appwrite client --endpoint "$APPWRITE_ENDPOINT" --project-id "$APPWRITE_PROJECT_ID" --key "$APPWRITE_API_KEY"
           # --yes ফ্ল্যাগটি যোগ করা হয়েছে যাতে এটি অটোমেটিক কনফার্ম হয়
-          appwrite push function --all --Yes
+          appwrite push function --all --yes
