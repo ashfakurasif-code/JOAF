@@ -1313,7 +1313,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
     <!-- ═══════════════════════════════════════════════════════════
          JOAF STUDIO — 5-TAB UNIFIED CONTENT CREATION PLATFORM
     ═══════════════════════════════════════════════════════════ -->
-    <div class="page" id="page-joaf-studio">
+    <div class="page" id="page-joaf-studio" style="padding:0;overflow:hidden;height:calc(100vh - 48px);flex-direction:column;display:none;">
       <!-- Studio Tab Bar -->
       <div style="display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 16px;overflow-x:auto;flex-shrink:0;">
         <div style="display:flex;gap:0;align-items:center;" id="studio-tabs">
@@ -6259,14 +6259,6 @@ async function sysconfigSaveDims() {
     else { if(st) st.innerHTML=`<span style="color:var(--red)">❌ ${data.error||'Failed'}</span>`; }
   } catch(e) { if(st) st.innerHTML=`<span style="color:var(--red)">❌ ${e.message}</span>`; }
 }
-// Auto-load when switching to sysconfig page
-const _origGoPage = window.goPage;
-if (_origGoPage) {
-  window.goPage = function(id, el) {
-    _origGoPage(id, el);
-    if (id === 'sysconfig') { setTimeout(sysconfigLoad, 50); }
-  };
-}
 
 // ═══ Caption Hooks & Viral Score ════════════════════════════════════════
 window._captionHooks = [];
@@ -6299,255 +6291,547 @@ document.addEventListener('input', function(e) {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-// JOAF STUDIO — Tab switching + Thumbnail + Caption + Reel engines
+// JOAF STUDIO — Quality-First Engine v2
+// Modules: Tab Switch | Thumbnail | Caption (AIDA) | Quality Scorer
 // ═══════════════════════════════════════════════════════════════════
 
+// ── Tab Switching ────────────────────────────────────────────────
 window.switchStudioTab = function(tab, el) {
-  // Update tab buttons
   document.querySelectorAll('.studio-tab').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
-  // Update panels
   document.querySelectorAll('.studio-panel').forEach(p => p.classList.remove('active'));
   const panel = document.getElementById('sp-' + tab);
   if (panel) panel.classList.add('active');
-  // Lazy-load reel frame
+  // Lazy-load reel engine
   if (tab === 'reel') {
     const rf = document.getElementById('reel-engine-frame');
-    if (rf && (!rf.src || rf.src === 'about:blank')) rf.src = 'studio.html';
+    if (rf && (!rf.src || rf.src === 'about:blank' || rf.src === window.location.href)) {
+      rf.src = 'studio.html';
+    }
   }
 };
 
-// ── Thumbnail Engine ──────────────────────────────────────────────
-window.generateThumbnail = function() {
-  const title  = (document.getElementById('tn-title')||{}).value?.trim() || '';
-  const sub    = (document.getElementById('tn-sub')||{}).value?.trim()   || '';
-  const bgType = (document.getElementById('tn-bg')||{}).value            || 'breaking';
-  const ratio  = (document.getElementById('tn-ratio')||{}).value         || '16:9';
+// ── Quality Scorer ───────────────────────────────────────────────
+// Scores generated content on Hook / Visual / Engagement (1–10 each).
+// If avg < 8 → triggers a re-generation with elevated parameters.
+window._qualityScorer = {
+  _scoreHook(text) {
+    if (!text) return 3;
+    let s = 5;
+    if (text.length < 60) s += 1;                          // brevity
+    if (/[?!]/.test(text)) s += 1;                        // curiosity punctuation
+    if (/\d/.test(text)) s += 1;                          // numbers = specificity
+    if (/কি|কেন|কীভাবে|কখন|কারা|কোথায়|why|how|what/.test(text.toLowerCase())) s += 1; // question words
+    if (/shocking|ব্রেকিং|সতর্ক|বিপদ|জরুরি|এখনই|আজই/.test(text)) s += 1; // urgency
+    return Math.min(s, 10);
+  },
+  _scoreVisual(style) {
+    const styleScores = { bold: 9, breaking: 9, minimal: 8, data: 7 };
+    return styleScores[style] || 7;
+  },
+  _scoreEngagement(text) {
+    if (!text) return 4;
+    let s = 5;
+    if (/শেয়ার|কমেন্ট|মতামত|ভাবছেন|share|comment|think/.test(text.toLowerCase())) s += 2;
+    if (text.split('\n').length > 3) s += 1;  // multi-line = structured
+    if (/#\w+/.test(text)) s += 1;            // hashtags present
+    if (/[😊😢🔥⚡❤️🙏🇧🇩]/.test(text)) s += 1; // emojis
+    return Math.min(s, 10);
+  },
+  score(hook, style, caption) {
+    const h = this._scoreHook(hook);
+    const v = this._scoreVisual(style);
+    const e = this._scoreEngagement(caption);
+    const avg = (h + v + e) / 3;
+    return { hook: h, visual: v, engagement: e, avg: Math.round(avg * 10) / 10, pass: avg >= 8 };
+  },
+  renderBadge(scores) {
+    const color = scores.pass ? 'var(--green)' : scores.avg >= 6 ? 'var(--amber)' : 'var(--red)';
+    const icon = scores.pass ? '✅' : scores.avg >= 6 ? '⚠️' : '❌';
+    return `<div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--bg3);border-radius:8px;border:1px solid ${color}33;margin-bottom:12px;">
+      <span style="font-size:11px;font-weight:800;color:${color}">${icon} Quality Score: ${scores.avg}/10</span>
+      <span style="font-size:10px;color:var(--text2)">Hook ${scores.hook}/10</span>
+      <span style="font-size:10px;color:var(--text2)">Visual ${scores.visual}/10</span>
+      <span style="font-size:10px;color:var(--text2)">Engagement ${scores.engagement}/10</span>
+      ${!scores.pass ? '<span style="font-size:10px;color:var(--amber)">↻ Score < 8 — retry with elevated params</span>' : ''}
+    </div>`;
+  }
+};
+
+// ── AIDA Persuasion Framework prompt builder ─────────────────────
+function _buildAIDAPrompt(topic, type, tone, lengthKey) {
+  const lenMap = { short: 'under 100 characters', medium: '150–250 words', long: '300+ words' };
+  return `তুমি JOAF-এর Chief Content Strategist। AIDA Persuasion Framework ব্যবহার করে viral Bengali Facebook caption তৈরি করো।
+
+AIDA Framework:
+A = Attention (Hook): Shocking question বা unexpected statement — max 10 words, scroll stopper
+I = Interest: Context + specific facts/numbers — curiosity জাগাও
+D = Desire: Emotional connection + value — পাঠক কেন care করবে?
+A = Action: Share trigger question + clear CTA
+
+বিষয়: ${topic}
+Type: ${type} | Tone: ${tone} | Length: ${lenMap[lengthKey] || '150–250 words'}
+
+HOOK RULES (enforce strictly):
+- Must contain: question বা shocking claim বা number
+- Triggers: curiosity / fear / joy / anger / surprise
+- Max 10 words
+
+SHARE TRIGGER RULE: Caption শেষে অবশ্যই একটা question যা পাঠক answer করতে চাইবে।
+
+শুধু raw JSON (no markdown, no extra text):
+{
+  "hook": "max 10 word scroll-stopper hook",
+  "attention": "1-2 sentence attention grabber",
+  "interest": "context + specific detail (with numbers if possible)",
+  "desire": "emotional appeal — why this matters to reader",
+  "action": "CTA + share trigger question",
+  "main_caption": "full assembled caption with emojis, line breaks, AIDA flow",
+  "short_version": "under 100 chars preview",
+  "first_comment": "additional hashtags + secondary engagement prompt",
+  "hashtags": ["#tag1","#tag2","#tag3","#JOAF","#julyforum","#জুলাই_ফোরাম"],
+  "aida_score_hint": "self-assessed hook quality 1-10"
+}`;
+}
+
+// ── Caption Engine (AIDA + Quality Scoring + Auto-retry) ─────────
+window.generateCaption = async function(retryCount) {
+  const rc = retryCount || 0;
+  const topic  = (document.getElementById('cap-topic') || {}).value?.trim() || '';
+  const type   = (document.getElementById('cap-type')  || {}).value || 'news';
+  const tone   = (document.getElementById('cap-tone')  || {}).value || 'urgent';
+  const length = (document.getElementById('cap-len')   || {}).value || 'medium';
+  const st  = document.getElementById('cap-status');
+  const out = document.getElementById('cap-output');
+
+  if (!topic) {
+    if (st) st.innerHTML = '<span style="color:var(--red)">বিষয় লিখুন</span>';
+    return;
+  }
+  if (st) st.innerHTML = `<span style="color:var(--amber)">⏳ ${rc > 0 ? 'Re-generating (quality boost)...' : 'AI generating...'}</span>`;
+  if (out) out.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text2);">
+    <div style="font-size:32px;margin-bottom:8px;">✍️</div>
+    <div style="font-size:13px;font-weight:700;">${rc > 0 ? '↻ Quality Score < 8 — Retrying with enhanced params...' : 'AIDA Framework দিয়ে caption তৈরি হচ্ছে...'}</div>
+  </div>`;
+
+  // Elevate temperature on retry
+  const temp = rc === 0 ? 0.82 : rc === 1 ? 0.92 : 0.98;
+
+  try {
+    const res = await join_aw_exec('groq-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1800,
+        temperature: temp,
+        messages: [{ role: 'user', content: _buildAIDAPrompt(topic, type, tone, length) }]
+      })
+    });
+    if (!res.ok) { const t = await res.text().catch(()=>''); throw new Error('API ' + res.status + ': ' + t.substring(0,100)); }
+    const data = await res.json();
+    if (data.error) throw new Error(data.error?.message || 'Groq error');
+
+    let raw = (data.choices?.[0]?.message?.content || '').replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    let result;
+    try { result = JSON.parse(raw); }
+    catch { const m = raw.match(/\{[\s\S]*\}/); if (m) result = JSON.parse(m[0]); else throw new Error('JSON parse failed'); }
+
+    // Quality check
+    const scores = window._qualityScorer.score(result.hook, type, result.main_caption);
+    console.log('[JOAF Caption] Quality scores:', scores, '| retry:', rc);
+
+    // Auto-retry if score < 8 and haven't retried twice
+    if (!scores.pass && rc < 2) {
+      setTimeout(() => window.generateCaption(rc + 1), 400);
+      return;
+    }
+
+    const tags = (result.hashtags || []).join(' ');
+    const fullCaption = (result.main_caption || '') + '\n\n' + tags;
+
+    out.innerHTML = `
+      ${window._qualityScorer.renderBadge(scores)}
+
+      <!-- AIDA Breakdown -->
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--amber);margin-bottom:10px;">AIDA Framework Breakdown</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${[
+            ['⚡ Hook (Attention)', result.hook],
+            ['🎯 Interest', result.interest],
+            ['❤️ Desire', result.desire],
+            ['📣 Action/CTA', result.action]
+          ].map(([l,v]) => v ? `<div style="background:var(--bg3);border-radius:8px;padding:10px;">
+            <div style="font-size:9px;font-weight:800;color:var(--text3);margin-bottom:4px;">${l}</div>
+            <div style="font-size:12px;line-height:1.6;">${v}</div>
+          </div>` : '').join('')}
+        </div>
+      </div>
+
+      <!-- Full Caption -->
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);">📝 Full Caption (AIDA)</span>
+          <button class="s-btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(fullCaption)});if(typeof toast==='function')toast('✅ Full caption copied!')">📋 Copy All</button>
+        </div>
+        <div style="font-size:13px;line-height:1.9;white-space:pre-wrap;">${(result.main_caption || '').replace(/</g,'&lt;')}</div>
+      </div>
+
+      <!-- Short Version -->
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);">⚡ Short Version</span>
+          <button class="s-btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(result.short_version||'')});if(typeof toast==='function')toast('Copied!')">📋</button>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--amber);">${(result.short_version||'').replace(/</g,'&lt;')}</div>
+      </div>
+
+      ${result.first_comment ? `<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);">💬 First Comment</span>
+          <button class="s-btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(result.first_comment||'')});if(typeof toast==='function')toast('Copied!')">📋</button>
+        </div>
+        <div style="font-size:12px;line-height:1.7;">${result.first_comment.replace(/</g,'&lt;')}</div>
+      </div>` : ''}
+
+      <!-- Hashtags -->
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);">#️⃣ Hashtags</span>
+          <button class="s-btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(tags)});if(typeof toast==='function')toast('Hashtags copied!')">📋 All</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">
+          ${(result.hashtags||[]).map(h => `<span style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--blue);cursor:pointer;" onclick="navigator.clipboard.writeText('${h.replace(/'/g,"\\'")}');if(typeof toast==='function')toast('${h.replace(/'/g,"\\'")} copied!')">${h}</span>`).join('')}
+        </div>
+      </div>
+
+      <!-- Regenerate -->
+      <div style="text-align:center;padding:12px 0 4px;">
+        <button class="s-btn" style="max-width:240px;margin:auto;" onclick="window.generateCaption(0)">🔄 Regenerate Caption</button>
+      </div>
+    `;
+    if (st) st.innerHTML = `<span style="color:var(--green)">✅ Score: ${scores.avg}/10 ${scores.pass ? '(Passed)' : '(Best attempt)'}</span>`;
+
+  } catch(e) {
+    console.error('[JOAF Caption] Error:', e);
+    if (out) out.innerHTML = `<div style="background:rgba(240,82,82,.08);border:1px solid rgba(240,82,82,.25);border-radius:10px;padding:16px;color:var(--red);">
+      <strong>❌ Error:</strong> ${e.message}<br><br>
+      <button class="s-btn-sm" onclick="window.generateCaption(0)" style="margin-top:8px;">↻ Retry</button>
+    </div>`;
+    if (st) st.innerHTML = `<span style="color:var(--red)">❌ Failed — check console</span>`;
+  }
+};
+
+// ── Thumbnail Engine (3 Style Modules + Quality Layer) ───────────
+const _TN_STYLES = ['bold', 'minimal', 'data'];
+let _tnStyleIdx = 0;
+
+window.generateThumbnail = function(forceStyle) {
+  const title  = (document.getElementById('tn-title') || {}).value?.trim() || '';
+  const sub    = (document.getElementById('tn-sub')   || {}).value?.trim() || '';
+  const bgType = (document.getElementById('tn-bg')    || {}).value || 'breaking';
+  const ratio  = (document.getElementById('tn-ratio') || {}).value || '16:9';
   const st     = document.getElementById('tn-status');
 
-  if (!title) { if(st) st.innerHTML = '<span style="color:var(--red)">শিরোনাম দিন</span>'; return; }
-  if(st) st.innerHTML = '<span style="color:var(--amber)">⏳ Generating...</span>';
+  if (!title) { if (st) st.innerHTML = '<span style="color:var(--red)">শিরোনাম দিন</span>'; return; }
+
+  // Cycle style modules automatically
+  const style = forceStyle || _TN_STYLES[_tnStyleIdx % _TN_STYLES.length];
+  _tnStyleIdx++;
+  if (st) st.innerHTML = `<span style="color:var(--amber)">⏳ Rendering (${style} mode)...</span>`;
 
   const cv = document.getElementById('tn-canvas');
   if (!cv) return;
 
-  // Set canvas size by ratio
-  const ratioMap = {'16:9':[960,540],'1:1':[960,960],'9:16':[540,960],'4:5':[864,1080]};
-  const [cw,ch] = ratioMap[ratio] || [960,540];
+  const ratioMap = { '16:9': [960,540], '1:1': [960,960], '9:16': [540,960], '4:5': [864,1080] };
+  const [cw, ch] = ratioMap[ratio] || [960, 540];
   cv.width = cw; cv.height = ch;
   const ctx = cv.getContext('2d');
-
-  // Color schemes
-  const schemes = {
-    breaking:  {bg1:'#050000',bg2:'#1c0000',acc:'#ef4444',sec:'#fca5a5',txt:'#fff'},
-    political: {bg1:'#030510',bg2:'#0a1030',acc:'#3b82f6',sec:'#93c5fd',txt:'#fff'},
-    economy:   {bg1:'#030a00',bg2:'#0a1800',acc:'#22c55e',sec:'#86efac',txt:'#fff'},
-    community: {bg1:'#030512',bg2:'#0c0a28',acc:'#a78bfa',sec:'#ddd6fe',txt:'#fff'},
-    alert:     {bg1:'#080200',bg2:'#1a0700',acc:'#f97316',sec:'#fed7aa',txt:'#fff'},
-  };
-  const P = schemes[bgType] || schemes.breaking;
   const W = cw, H = ch;
 
-  // Background gradient
-  ctx.fillStyle = P.bg1; ctx.fillRect(0,0,W,H);
-  const bgG = ctx.createRadialGradient(W*.3,H*.3,0,W*.3,H*.3,H*.9);
-  bgG.addColorStop(0,P.bg2); bgG.addColorStop(1,P.bg1);
-  ctx.fillStyle = bgG; ctx.fillRect(0,0,W,H);
+  // ── Style: BOLD/BREAKING ────────────────────────────────────────
+  if (style === 'bold') {
+    const schemes = {
+      breaking:  { bg1:'#050000', bg2:'#1c0000', acc:'#ef4444', sec:'#fca5a5' },
+      political: { bg1:'#030510', bg2:'#0a1030', acc:'#3b82f6', sec:'#93c5fd' },
+      economy:   { bg1:'#030a00', bg2:'#0a1800', acc:'#22c55e', sec:'#86efac' },
+      community: { bg1:'#030512', bg2:'#0c0a28', acc:'#a78bfa', sec:'#ddd6fe' },
+      alert:     { bg1:'#080200', bg2:'#1a0700', acc:'#f97316', sec:'#fed7aa' },
+    };
+    const P = schemes[bgType] || schemes.breaking;
 
-  // Grid
-  ctx.strokeStyle = P.acc + '18'; ctx.lineWidth = 1;
-  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    ctx.fillStyle = P.bg1; ctx.fillRect(0,0,W,H);
+    const bgG = ctx.createRadialGradient(W*.3, H*.3, 0, W*.3, H*.3, H*.9);
+    bgG.addColorStop(0, P.bg2); bgG.addColorStop(1, P.bg1);
+    ctx.fillStyle = bgG; ctx.fillRect(0,0,W,H);
 
-  // Accent bars
-  const barG = ctx.createLinearGradient(0,0,W,0);
-  barG.addColorStop(0,'transparent'); barG.addColorStop(.3,P.acc);
-  barG.addColorStop(.7,P.sec); barG.addColorStop(1,'transparent');
-  ctx.fillStyle = barG; ctx.fillRect(0,0,W,6); ctx.fillRect(0,H-6,W,6);
+    // Grid
+    ctx.strokeStyle = P.acc + '20'; ctx.lineWidth = 1;
+    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-  // Vignette
-  const vig = ctx.createRadialGradient(W/2,H/2,H*.15,W/2,H/2,H*.8);
-  vig.addColorStop(0,'transparent'); vig.addColorStop(1,'rgba(0,0,0,.75)');
-  ctx.fillStyle = vig; ctx.fillRect(0,0,W,H);
+    // Accent bars
+    const barG = ctx.createLinearGradient(0,0,W,0);
+    barG.addColorStop(0,'transparent'); barG.addColorStop(.3,P.acc);
+    barG.addColorStop(.7,P.sec); barG.addColorStop(1,'transparent');
+    ctx.fillStyle = barG; ctx.fillRect(0,0,W,6); ctx.fillRect(0,H-6,W,6);
 
-  // JOAF badge top-left
-  ctx.save();
-  ctx.fillStyle = 'rgba(6,0,0,.88)';
-  ctx.beginPath(); ctx.roundRect(16,16,160,48,10); ctx.fill();
-  ctx.strokeStyle = '#8a6d3b'; ctx.lineWidth = 1.2;
-  ctx.beginPath(); ctx.roundRect(16,16,160,48,10); ctx.stroke();
-  const fcG = ctx.createRadialGradient(36,40,0,36,40,15);
-  fcG.addColorStop(0,'#dd2222'); fcG.addColorStop(1,'#880000');
-  ctx.fillStyle = fcG; ctx.beginPath(); ctx.arc(36,40,15,0,Math.PI*2); ctx.fill();
-  ctx.font = '900 13px Arial'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('☪',36,40);
-  ctx.textBaseline = 'alphabetic';
-  ctx.font = "900 18px 'Noto Sans Bengali',Arial";
-  ctx.fillStyle = '#f0ad4e'; ctx.shadowColor = '#f0ad4e'; ctx.shadowBlur = 6;
-  ctx.textAlign = 'left'; ctx.fillText('JOAF ☪', 58,50);
-  ctx.shadowBlur = 0;
-  ctx.restore();
+    // Vignette
+    const vig = ctx.createRadialGradient(W/2,H/2,H*.15,W/2,H/2,H*.8);
+    vig.addColorStop(0,'transparent'); vig.addColorStop(1,'rgba(0,0,0,.75)');
+    ctx.fillStyle = vig; ctx.fillRect(0,0,W,H);
 
-  // Breaking badge top-right
-  const bgLabel = {breaking:'ব্রেকিং',political:'রাজনীতি',economy:'অর্থনীতি',community:'কমিউনিটি',alert:'সতর্কতা'};
-  ctx.save();
-  ctx.fillStyle = P.acc + 'cc';
-  ctx.beginPath(); ctx.roundRect(W-130,16,114,36,8); ctx.fill();
-  ctx.font = "800 15px 'Noto Sans Bengali',Arial"; ctx.fillStyle = '#fff';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(bgLabel[bgType]||'NEWS', W-73, 34);
-  ctx.restore();
+    // JOAF badge
+    _drawJoafBadge(ctx, 16, 16, P.acc);
 
-  // Main title
-  const titleFontSize = title.length<12 ? Math.round(H*.09) : title.length<22 ? Math.round(H*.075) : Math.round(H*.06);
-  ctx.font = "900 " + titleFontSize + "px 'Noto Sans Bengali',Arial";
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
-  ctx.shadowColor = P.acc; ctx.shadowBlur = 24;
-  wrapThumbnailText(ctx, title, W/2, Math.round(H*.35), W-80, titleFontSize*1.25, 3, 'center');
-  ctx.shadowBlur = 0;
+    // Breaking label
+    const lblMap = {breaking:'ব্রেকিং',political:'রাজনীতি',economy:'অর্থনীতি',community:'কমিউনিটি',alert:'সতর্কতা'};
+    ctx.save(); ctx.fillStyle = P.acc + 'cc';
+    ctx.beginPath(); ctx.roundRect(W-130,16,114,36,8); ctx.fill();
+    ctx.font = "800 15px 'Noto Sans Bengali',Arial"; ctx.fillStyle='#fff';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(lblMap[bgType]||'NEWS', W-73, 34); ctx.restore();
 
-  // Sub text
-  if (sub) {
-    ctx.font = "500 " + Math.round(H*.035) + "px 'Noto Sans Bengali',Arial";
-    ctx.fillStyle = P.sec + 'cc'; ctx.shadowBlur = 0;
-    ctx.fillText(sub, W/2, Math.round(H*.62));
+    // Title
+    const tfs = title.length<12 ? Math.round(H*.09) : title.length<22 ? Math.round(H*.075) : Math.round(H*.06);
+    ctx.font = "900 "+tfs+"px 'Noto Sans Bengali',Arial";
+    ctx.fillStyle='#fff'; ctx.textAlign='center';
+    ctx.shadowColor=P.acc; ctx.shadowBlur=28;
+    _wrapText(ctx, title, W/2, Math.round(H*.36), W-80, tfs*1.25, 3, 'center');
+    ctx.shadowBlur=0;
+
+    if(sub){
+      ctx.font="500 "+Math.round(H*.035)+"px 'Noto Sans Bengali',Arial";
+      ctx.fillStyle=P.sec+'cc';
+      ctx.fillText(sub, W/2, Math.round(H*.62));
+    }
   }
 
-  // Bottom bar
-  const bmG = ctx.createLinearGradient(0,H-80,0,H);
-  bmG.addColorStop(0,'rgba(0,0,0,0)'); bmG.addColorStop(.3,'rgba(0,0,0,.9)'); bmG.addColorStop(1,'rgba(0,0,0,.98)');
-  ctx.fillStyle = bmG; ctx.fillRect(0,H-80,W,80);
-  ctx.font = "700 15px 'Noto Sans Bengali',Arial"; ctx.fillStyle = P.sec+'cc';
-  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.fillText('www.julyforum.com', 20, H-14);
+  // ── Style: MINIMALIST ───────────────────────────────────────────
+  else if (style === 'minimal') {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,H);
 
-  if(st) st.innerHTML = '<span style="color:var(--green)">✅ Thumbnail তৈরি হয়েছে</span>';
+    // Clean white background with subtle texture
+    for(let i=0;i<200;i++){
+      ctx.fillStyle = 'rgba(0,0,0,0.015)';
+      ctx.fillRect(Math.random()*W, Math.random()*H, Math.random()*3+1, 1);
+    }
+
+    // Left accent stripe
+    const stripeW = Math.round(W * 0.012);
+    const accentColors = {breaking:'#dc2626',political:'#2563eb',economy:'#16a34a',community:'#7c3aed',alert:'#ea580c'};
+    const acc = accentColors[bgType] || '#dc2626';
+    ctx.fillStyle = acc; ctx.fillRect(0, 0, stripeW, H);
+
+    // Category label (top left)
+    const lblMap2 = {breaking:'BREAKING',political:'POLITICS',economy:'ECONOMY',community:'COMMUNITY',alert:'ALERT'};
+    ctx.font = "800 "+Math.round(H*.025)+"px Arial, sans-serif";
+    ctx.fillStyle = acc; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(lblMap2[bgType]||'NEWS', stripeW + Math.round(W*.025), Math.round(H*.12));
+
+    // Divider line
+    ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(stripeW + Math.round(W*.025), Math.round(H*.15));
+    ctx.lineTo(W - Math.round(W*.025), Math.round(H*.15)); ctx.stroke();
+
+    // Main title (dark on white)
+    const tfsM = title.length<14 ? Math.round(H*.082) : title.length<26 ? Math.round(H*.066) : Math.round(H*.052);
+    ctx.font = "900 "+tfsM+"px 'Noto Sans Bengali',Arial";
+    ctx.fillStyle = '#111827'; ctx.textAlign = 'left'; ctx.shadowBlur = 0;
+    _wrapText(ctx, title, stripeW + Math.round(W*.025), Math.round(H*.3), W - stripeW - Math.round(W*.06), tfsM*1.3, 3, 'left');
+
+    if(sub){
+      ctx.font="400 "+Math.round(H*.032)+"px 'Noto Sans Bengali',Arial";
+      ctx.fillStyle='#6b7280';
+      ctx.fillText(sub, stripeW + Math.round(W*.025), Math.round(H*.68));
+    }
+
+    // JOAF footer (minimal dark)
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(0, H-Math.round(H*.1), W, Math.round(H*.1));
+    ctx.font="700 "+Math.round(H*.03)+"px 'Noto Sans Bengali',Arial";
+    ctx.fillStyle='#f3f4f6'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('JOAF — julyforum.com', stripeW + Math.round(W*.025), H - Math.round(H*.05));
+  }
+
+  // ── Style: DATA-VISUAL ─────────────────────────────────────────
+  else if (style === 'data') {
+    ctx.fillStyle = '#060d1f'; ctx.fillRect(0,0,W,H);
+
+    // Hex grid background
+    const hexColors = {breaking:'rgba(239,68,68,.06)',political:'rgba(59,130,246,.06)',economy:'rgba(34,197,94,.06)',community:'rgba(167,139,250,.06)',alert:'rgba(249,115,22,.06)'};
+    const hc = hexColors[bgType] || hexColors.breaking;
+    const gridAcc = {breaking:'#ef4444',political:'#3b82f6',economy:'#22c55e',community:'#a78bfa',alert:'#f97316'};
+    const ga = gridAcc[bgType] || '#ef4444';
+    ctx.strokeStyle = ga + '30'; ctx.lineWidth = 0.5;
+    for(let gx=0;gx<W+40;gx+=40){
+      for(let gy=0;gy<H+40;gy+=34){
+        const ox = (Math.floor(gy/34)%2)*20;
+        ctx.beginPath(); ctx.arc(gx+ox, gy, 18, 0, Math.PI*2); ctx.stroke();
+      }
+    }
+
+    // Scanlines
+    for(let sy=0;sy<H;sy+=4){ ctx.fillStyle='rgba(0,0,0,.15)'; ctx.fillRect(0,sy,W,2); }
+
+    // Vignette
+    const vig2 = ctx.createRadialGradient(W/2,H/2,H*.1,W/2,H/2,H*.85);
+    vig2.addColorStop(0,'rgba(6,13,31,.4)'); vig2.addColorStop(1,'rgba(0,0,0,.9)');
+    ctx.fillStyle=vig2; ctx.fillRect(0,0,W,H);
+
+    // Top data bar
+    ctx.fillStyle = ga + '22'; ctx.fillRect(0,0,W,Math.round(H*.1));
+    ctx.strokeStyle = ga + '66'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0,Math.round(H*.1)); ctx.lineTo(W,Math.round(H*.1)); ctx.stroke();
+    ctx.font="700 "+Math.round(H*.022)+"px monospace";
+    ctx.fillStyle = ga + 'cc'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('JOAF DATA ANALYSIS', Math.round(W*.02), Math.round(H*.05));
+    ctx.textAlign='right';
+    ctx.fillText(new Date().toLocaleDateString('en-BD'), W-Math.round(W*.02), Math.round(H*.05));
+
+    // Decorative data bars (simulate chart)
+    const barData = [.42,.71,.58,.89,.63];
+    const barW2 = Math.round(W*.08), barGap = Math.round(W*.028);
+    const barAreaW = barData.length*(barW2+barGap) - barGap;
+    let bx = W - barAreaW - Math.round(W*.04);
+    ctx.globalAlpha = 0.25;
+    barData.forEach(v => {
+      const bh = Math.round(H*.3 * v);
+      ctx.fillStyle = ga;
+      ctx.fillRect(bx, H - Math.round(H*.1) - bh, barW2, bh);
+      bx += barW2 + barGap;
+    });
+    ctx.globalAlpha = 1;
+
+    // Main title
+    const tfsD = title.length<12 ? Math.round(H*.09) : title.length<22 ? Math.round(H*.075) : Math.round(H*.06);
+    ctx.font="900 "+tfsD+"px 'Noto Sans Bengali',Arial";
+    ctx.fillStyle='#ffffff'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.shadowColor=ga; ctx.shadowBlur=20;
+    _wrapText(ctx, title, Math.round(W*.04), Math.round(H*.38), W*0.55, tfsD*1.3, 3, 'left');
+    ctx.shadowBlur=0;
+
+    if(sub){
+      ctx.font="400 "+Math.round(H*.033)+"px 'Noto Sans Bengali',Arial";
+      ctx.fillStyle=ga+'aa';
+      ctx.fillText(sub, Math.round(W*.04), Math.round(H*.64));
+    }
+
+    // Bottom bar
+    ctx.fillStyle='rgba(0,0,0,.7)'; ctx.fillRect(0, H-Math.round(H*.1), W, Math.round(H*.1));
+    ctx.fillStyle = ga; ctx.fillRect(0, H-Math.round(H*.1), W, 2);
+    ctx.font="700 "+Math.round(H*.028)+"px 'Noto Sans Bengali',Arial";
+    ctx.fillStyle='rgba(255,255,255,.8)'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('www.julyforum.com', Math.round(W*.04), H-Math.round(H*.05));
+  }
+
+  // Bottom URL (bold/data already have it; minimal uses dark footer)
+  if (style === 'bold') {
+    const bmG = ctx.createLinearGradient(0,H-90,0,H);
+    bmG.addColorStop(0,'rgba(0,0,0,0)'); bmG.addColorStop(.3,'rgba(0,0,0,.9)'); bmG.addColorStop(1,'rgba(0,0,0,.98)');
+    ctx.fillStyle=bmG; ctx.fillRect(0,H-90,W,90);
+    ctx.font="700 "+Math.round(H*.026)+"px 'Noto Sans Bengali',Arial";
+    ctx.fillStyle='rgba(255,255,255,.6)'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.fillText('www.julyforum.com', 20, H-16);
+  }
+
+  // Quality score overlay (bottom-right badge)
+  const qs = window._qualityScorer.score(title, style, sub || title);
+  const qColor = qs.pass ? '#22c55e' : qs.avg >= 6 ? '#f59e0b' : '#ef4444';
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,.75)';
+  ctx.beginPath(); ctx.roundRect(W-96, H-40, 86, 28, 6); ctx.fill();
+  ctx.font='700 11px Arial'; ctx.fillStyle=qColor; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('Q: '+qs.avg+'/10', W-53, H-26);
+  ctx.restore();
+
+  if (st) {
+    const styleLabel = { bold:'Bold/Breaking', minimal:'Minimalist', data:'Data-Visual' };
+    st.innerHTML = `<span style="color:var(--green)">✅ ${styleLabel[style]} | Quality: ${qs.avg}/10</span>
+      <span style="font-size:10px;color:var(--text3);margin-left:8px;">
+        <button class="s-btn-sm" onclick="window.generateThumbnail('${_TN_STYLES[_tnStyleIdx%3]}')">↻ Try ${_TN_STYLES[_tnStyleIdx%3]} style</button>
+      </span>`;
+  }
 };
 
-function wrapThumbnailText(ctx,text,x,y,maxW,lh,maxLines,align){
-  if(!text) return;
-  const old = ctx.textAlign; ctx.textAlign = align||'left';
-  const words = text.split(' '); let line=''; let count=0;
-  for(const w of words){
-    const t = line ? line+' '+w : w;
-    if(ctx.measureText(t).width>maxW && line){
-      ctx.fillText(line,x,y+count*lh); line=w; count++;
-      if(maxLines && count>=maxLines){ctx.fillText(line+'…',x,y+count*lh);ctx.textAlign=old;return;}
-    } else line=t;
+function _drawJoafBadge(ctx, x, y, acc) {
+  ctx.save();
+  ctx.fillStyle='rgba(6,0,0,.88)';
+  ctx.beginPath(); ctx.roundRect(x,y,160,48,10); ctx.fill();
+  ctx.strokeStyle='#8a6d3b'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.roundRect(x,y,160,48,10); ctx.stroke();
+  const fcG = ctx.createRadialGradient(x+20,y+24,0,x+20,y+24,15);
+  fcG.addColorStop(0,'#dd2222'); fcG.addColorStop(1,'#880000');
+  ctx.fillStyle=fcG; ctx.beginPath(); ctx.arc(x+20,y+24,15,0,Math.PI*2); ctx.fill();
+  ctx.font='900 12px Arial'; ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('☪',x+20,y+24);
+  ctx.textBaseline='alphabetic';
+  ctx.font="900 17px 'Noto Sans Bengali',Arial";
+  ctx.fillStyle='#f0ad4e'; ctx.shadowColor='#f0ad4e'; ctx.shadowBlur=6;
+  ctx.textAlign='left'; ctx.fillText('JOAF', x+42, y+33);
+  ctx.shadowBlur=0;
+  ctx.restore();
+}
+
+function _wrapText(ctx, text, x, y, maxW, lh, maxLines, align) {
+  if (!text) return;
+  const old = ctx.textAlign; ctx.textAlign = align || 'left';
+  const words = text.split(' '); let line = ''; let count = 0;
+  for (const w of words) {
+    const t = line ? line + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && line) {
+      ctx.fillText(line, x, y + count * lh); line = w; count++;
+      if (maxLines && count >= maxLines) { ctx.fillText(line + '…', x, y + count * lh); ctx.textAlign = old; return; }
+    } else line = t;
   }
-  if(line) ctx.fillText(line,x,y+count*lh);
+  if (line) ctx.fillText(line, x, y + count * lh);
   ctx.textAlign = old;
 }
 
 window.downloadThumbnail = function() {
   const cv = document.getElementById('tn-canvas');
-  if(!cv) return;
+  if (!cv) return;
   const a = document.createElement('a');
   a.href = cv.toDataURL('image/png');
   a.download = 'JOAF_thumbnail_' + Date.now() + '.png';
   a.click();
+  if (typeof toast === 'function') toast('✅ Downloaded!');
 };
 
 window.copyThumbnailCaption = function() {
-  const title = (document.getElementById('tn-title')||{}).value?.trim() || '';
-  if(!title) return;
-  navigator.clipboard.writeText(title + '
-
-#JOAF #julyforum #জুলাই_ফোরাম');
-  if(typeof toast==='function') toast('📋 Caption copied!');
+  const title = (document.getElementById('tn-title') || {}).value?.trim() || '';
+  if (!title) return;
+  navigator.clipboard.writeText(title + '\n\n#JOAF #julyforum #জুলাই_ফোরাম #বাংলাদেশ');
+  if (typeof toast === 'function') toast('📋 Caption copied!');
 };
 
-// ── Caption Engine ────────────────────────────────────────────────
-window.generateCaption = async function() {
-  const topic  = (document.getElementById('cap-topic')||{}).value?.trim() || '';
-  const type   = (document.getElementById('cap-type')||{}).value  || 'news';
-  const tone   = (document.getElementById('cap-tone')||{}).value  || 'urgent';
-  const length = (document.getElementById('cap-len')||{}).value   || 'medium';
-  const st     = document.getElementById('cap-status');
-  const out    = document.getElementById('cap-output');
-  if(!topic){ if(st) st.innerHTML='<span style="color:var(--red)">বিষয় লিখুন</span>'; return; }
-  if(st) st.innerHTML = '<span style="color:var(--amber)">⏳ AI generating...</span>';
-  if(out) out.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);">⏳ AI ক্যাপশন তৈরি করছে...</div>';
-
-  const lenMap = {short:'under 100 characters',medium:'150–250 words',long:'300+ words'};
-  const prompt = `তুমি JOAF-এর জন্য একজন expert Bengali Facebook content writer।
-নিচের বিষয়ে একটি viral ${type} Facebook caption তৈরি করো।
-
-বিষয়: ${topic}
-Type: ${type}
-Tone: ${tone}
-Length: ${lenMap[length]}
-
-EXACT JSON format-এ respond করো (extra text ছাড়া):
-{
-  "main_caption": "পূর্ণ ক্যাপশন (emojis সহ, line breaks সহ)",
-  "short_version": "Short preview under 100 chars",
-  "first_comment": "First comment এ দেওয়ার জন্য additional hashtags + engagement prompt",
-  "hashtags": ["#tag1","#tag2","#tag3","#tag4","#tag5","#JOAF","#julyforum"],
-  "cta": "Call-to-action suggestion"
-}`;
-
-  try {
-    const res = await join_aw_exec('groq-proxy', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'llama-3.3-70b-versatile', max_tokens:1500, temperature:.8,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const data = await res.json();
-    if(!res.ok || data.error) throw new Error(data.error?.message||'API Error');
-    let raw = data.choices?.[0]?.message?.content || '';
-    raw = raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
-    let result;
-    try { result = JSON.parse(raw); }
-    catch { const m=raw.match(/\{[\s\S]*\}/); if(m) result=JSON.parse(m[0]); else throw new Error('Parse failed'); }
-
-    const tags = (result.hashtags||[]).join(' ');
-    out.innerHTML = `
-      <div class="cap-result-card">
-        <div class="cap-result-label">📝 Main Caption <button class="s-btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify((result.main_caption||'')+' '+tags)});if(typeof toast==='function')toast('Copied!')">📋 Copy All</button></div>
-        <div class="cap-result-text">${(result.main_caption||'').replace(/\n/g,'<br>')}</div>
-      </div>
-      <div class="cap-result-card">
-        <div class="cap-result-label">⚡ Short Version <button class="s-btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(result.short_version||'')});if(typeof toast==='function')toast('Copied!')">📋 Copy</button></div>
-        <div class="cap-result-text">${result.short_version||''}</div>
-      </div>
-      ${result.first_comment?`<div class="cap-result-card">
-        <div class="cap-result-label">💬 First Comment <button class="s-btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(result.first_comment||'')});if(typeof toast==='function')toast('Copied!')">📋 Copy</button></div>
-        <div class="cap-result-text">${result.first_comment}</div>
-      </div>`:''}
-      <div class="cap-result-card">
-        <div class="cap-result-label">#️⃣ Hashtags <button class="s-btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(tags)});if(typeof toast==='function')toast('Hashtags copied!')">📋 Copy</button></div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;">${(result.hashtags||[]).map(h=>`<span style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--blue);cursor:pointer;" onclick="navigator.clipboard.writeText('${h}');if(typeof toast==='function')toast('${h} copied!')">${h}</span>`).join('')}</div>
-      </div>
-      ${result.cta?`<div class="cap-result-card"><div class="cap-result-label">📣 CTA Suggestion</div><div class="cap-result-text">${result.cta}</div></div>`:''}
-    `;
-    if(st) st.innerHTML = '<span style="color:var(--green)">✅ Caption তৈরি হয়েছে</span>';
-  } catch(e) {
-    if(out) out.innerHTML = `<div style="background:rgba(240,82,82,.08);border:1px solid rgba(240,82,82,.25);border-radius:10px;padding:14px;color:var(--red);font-size:12px;">❌ Error: ${e.message}</div>`;
-    if(st) st.innerHTML = '<span style="color:var(--red)">❌ Failed</span>';
-  }
-};
-
-// ── goPage hook for JOAF Studio ──────────────────────────────────
-(function patchGoPageForStudio(){
-  const _orig = window.goPage;
+// ── Unified goPage extension (sysconfig + joaf-studio) ──────────────
+(function patchGoPageUnified(){
+  const _base = window.goPage;
   window.goPage = function(id, el){
-    _orig(id, el);
+    _base(id, el);
+    // Fix: page-joaf-studio needs display:flex not display:block
+    const studioPage = document.getElementById('page-joaf-studio');
+    if(studioPage){
+      studioPage.style.display = studioPage.classList.contains('active') ? 'flex' : 'none';
+    }
+    if(id === 'sysconfig'){
+      setTimeout(sysconfigLoad, 80);
+    }
     if(id === 'joaf-studio'){
-      // ensure first tab is activated
-      const firstTab = document.querySelector('.studio-tab');
-      const firstPanel = document.getElementById('sp-viral');
-      if(firstTab && !firstTab.classList.contains('active')){
+      // Activate first tab if none active
+      const activePanels = document.querySelectorAll('.studio-panel.active');
+      if(!activePanels.length){
+        const firstTab = document.querySelector('.studio-tab');
+        const firstPanel = document.getElementById('sp-viral');
         document.querySelectorAll('.studio-tab').forEach(b=>b.classList.remove('active'));
         document.querySelectorAll('.studio-panel').forEach(p=>p.classList.remove('active'));
-        firstTab.classList.add('active');
+        if(firstTab) firstTab.classList.add('active');
         if(firstPanel) firstPanel.classList.add('active');
       }
     }
   };
 })();
 // ═══════════════════════════════════════════════════════════════════
-
 </script>
