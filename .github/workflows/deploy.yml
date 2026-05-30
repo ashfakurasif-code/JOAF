@@ -1,0 +1,14 @@
+name: Deploy JOAF Production
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to Appwrite
+        run: |
+          npm install -g appwrite-cli
+          appwrite deploy function --all
