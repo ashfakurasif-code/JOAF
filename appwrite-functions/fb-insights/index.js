@@ -15,6 +15,10 @@ const COL_QUEUE     = 'fb_queue';
 const COL_ANALYTICS = 'fb_analytics';
 const FB_BASE       = 'https://graph.facebook.com';
 
+const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID || '6a11b6cd000b59f318eb';
+const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || process.env.APPWRITE_FUNCTION_API_KEY || '';
+
 function getApiVersion() {
   return (process.env.FB_API_VERSION || 'v22.0').trim();
 }
@@ -64,10 +68,11 @@ function computeActualScore(insights, impressions) {
 }
 
 export default async ({ req, res, log, error }) => {
+  const runtimeApiKey = req.headers['x-appwrite-key'] || req.headers['X-Appwrite-Key'] || APPWRITE_API_KEY;
   const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT)
-    .setProject(process.env.APPWRITE_PROJECT)
-    .setKey(process.env.APPWRITE_API_KEY);
+    .setEndpoint(APPWRITE_ENDPOINT)
+    .setProject(APPWRITE_PROJECT)
+    .setKey(runtimeApiKey || APPWRITE_API_KEY);
 
   const db = new Databases(client);
   const pages = getPages();

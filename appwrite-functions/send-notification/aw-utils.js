@@ -7,10 +7,14 @@ export const DB_ID         = 'joaf';
 export const COLLECTION_ID = 'push_subscriptions';
 export const DEFAULT_DOC_PERMISSIONS = ['read("any")', 'update("any")', 'delete("any")'];
 
+const RUNTIME_APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT || AW_ENDPOINT;
+const RUNTIME_APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID || AW_PROJECT;
+const RUNTIME_APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || process.env.APPWRITE_FUNCTION_API_KEY || '';
+
 const getClient = () => new Client()
-  .setEndpoint(AW_ENDPOINT)
-  .setProject(AW_PROJECT)
-  .setKey(process.env.APPWRITE_API_KEY);
+  .setEndpoint(RUNTIME_APPWRITE_ENDPOINT)
+  .setProject(RUNTIME_APPWRITE_PROJECT)
+  .setKey(RUNTIME_APPWRITE_API_KEY);
 
 export const getDatabases = () => new Databases(getClient());
 

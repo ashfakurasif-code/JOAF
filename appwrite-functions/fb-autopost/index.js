@@ -18,6 +18,10 @@ const FB_BASE = 'https://graph.facebook.com';
 const AW_DB   = 'joaf';
 const COL_CFG = 'system_config';
 
+const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID || '6a11b6cd000b59f318eb';
+const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || process.env.APPWRITE_FUNCTION_API_KEY || '';
+
 function getApiVersion() {
   return (process.env.FB_API_VERSION || 'v22.0').trim();
 }
@@ -34,13 +38,14 @@ function getPages() {
 }
 
 /** Fetch a key from system_config; returns null on failure */
-async function getSysConfig(key) {
-  if (!process.env.APPWRITE_ENDPOINT || !process.env.APPWRITE_PROJECT || !process.env.APPWRITE_API_KEY) return null;
+async function getSysConfig(key, apiKey = APPWRITE_API_KEY) {
+  const runtimeApiKey = apiKey || APPWRITE_API_KEY;
+  if (!APPWRITE_ENDPOINT || !APPWRITE_PROJECT || !runtimeApiKey) return null;
   try {
     const client = new Client()
-      .setEndpoint(process.env.APPWRITE_ENDPOINT)
-      .setProject(process.env.APPWRITE_PROJECT)
-      .setKey(process.env.APPWRITE_API_KEY);
+      .setEndpoint(APPWRITE_ENDPOINT)
+      .setProject(APPWRITE_PROJECT)
+      .setKey(runtimeApiKey);
     const db = new Databases(client);
     const res = await db.listDocuments(AW_DB, COL_CFG, [Query.equal('key', key), Query.limit(1)]);
     return res.documents[0]?.value ?? null;

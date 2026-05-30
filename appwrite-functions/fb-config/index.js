@@ -9,11 +9,19 @@ const AW_DB    = 'joaf';
 const COL_CFG  = 'system_config';
 const FB_BASE  = 'https://graph.facebook.com';
 
-async function getDbClient() {
+const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID || '6a11b6cd000b59f318eb';
+const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || process.env.APPWRITE_FUNCTION_API_KEY || '';
+
+async function getDbClient(apiKey = APPWRITE_API_KEY) {
   return new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT)
-    .setProject(process.env.APPWRITE_PROJECT)
-    .setKey(process.env.APPWRITE_API_KEY);
+    .setEndpoint(APPWRITE_ENDPOINT)
+    .setProject(APPWRITE_PROJECT)
+    .setKey(apiKey || APPWRITE_API_KEY);
+}
+
+function resolveRuntimeApiKey(req) {
+  return req?.headers?.['x-appwrite-key'] || req?.headers?.['X-Appwrite-Key'] || APPWRITE_API_KEY;
 }
 
 async function fetchConfig(db, key) {
@@ -38,7 +46,7 @@ export default async ({ req, res, log, error }) => {
       square:   { w: 1080, h: 1080, ratio: '1:1' },
     };
     try {
-      const client = await getDbClient();
+      const client = await getDbClient(resolveRuntimeApiKey(req));
       const db = new Databases(client);
       const raw = await fetchConfig(db, 'canvas_dimensions');
       if (raw) canvasDims = JSON.parse(raw);
@@ -61,7 +69,7 @@ export default async ({ req, res, log, error }) => {
 
   const { action, key, value } = body;
 
-  const client = await getDbClient();
+  const client = await getDbClient(resolveRuntimeApiKey(req));
   const db = new Databases(client);
 
   // ── list: return all config keys ──

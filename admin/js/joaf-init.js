@@ -69,12 +69,22 @@ async function join_aw_exec(fnId, options = {}) {
     'Content-Type': 'application/json',
     'X-Appwrite-Project': window.AW_PROJECT
   };
+  const internalKey =
+    headers['x-joaf-key'] ||
+    headers['x-internal-key'] ||
+    localStorage.getItem('joaf_internal_key') ||
+    document.querySelector('meta[name="joaf-api-key"]')?.content ||
+    '';
+  const forwardedHeaders = { ...headers };
+  if (internalKey && !forwardedHeaders['x-joaf-key'] && !forwardedHeaders['x-internal-key']) {
+    forwardedHeaders['x-joaf-key'] = internalKey;
+  }
 
   const reqBody = JSON.stringify({
     async: false,
     path: '/',
     method: method,
-    headers: { ...headers },
+    headers: forwardedHeaders,
     body: typeof bodyObj === 'string' ? bodyObj : JSON.stringify(bodyObj)
   });
 
