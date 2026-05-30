@@ -8,13 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Install Appwrite CLI
+        run: npm install -g appwrite-cli
       - name: Deploy to Appwrite
         env:
           APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
           APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: |
-          npm install -g appwrite-cli
-          # সরাসরি কমান্ড চালানোর জন্য 'yes' কমান্ডটি ব্যবহার করছি যা সব কনফার্মেশনে 'y' পাঠিয়ে দেবে
-          yes | appwrite client --endpoint "$APPWRITE_ENDPOINT" --project-id "$APPWRITE_PROJECT_ID" --key "$APPWRITE_API_KEY"
-          yes | appwrite push function --all
+          # ক্লায়েন্ট সেটআপ করার বদলে সরাসরি এনভায়রনমেন্ট ভেরিয়েবল ব্যবহার করছি
+          appwrite client --endpoint "$APPWRITE_ENDPOINT" --project-id "$APPWRITE_PROJECT_ID" --key "$APPWRITE_API_KEY"
+          appwrite push function --all
