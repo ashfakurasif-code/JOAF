@@ -16,6 +16,6 @@ jobs:
           APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: |
-          # ক্লায়েন্ট সেটআপ করার বদলে সরাসরি এনভায়রনমেন্ট ভেরিয়েবল ব্যবহার করছি
           appwrite client --endpoint "$APPWRITE_ENDPOINT" --project-id "$APPWRITE_PROJECT_ID" --key "$APPWRITE_API_KEY"
-          appwrite push function --all
+          # --yes ফ্ল্যাগটি যোগ করা হয়েছে যাতে এটি অটোমেটিক কনফার্ম হয়
+          appwrite push function --all --Yes
