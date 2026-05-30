@@ -1,4 +1,4 @@
-// JOAF Service Worker v3.1
+// JOAF Service Worker v3.2
 // ⚠️ নতুন deploy দিলে CACHE version বাড়াও: joaf-v10 → joaf-v11
 const CACHE = 'joaf-v10';
 const OFFLINE_URL = '/offline.html';
@@ -37,6 +37,42 @@ const PRECACHE = [
   '/youth-startup.html',
 ];
 
+const CONFIG_URL = (() => {
+  try {
+    return new URL('./appwrite.json', self.registration?.scope || self.location.href).href;
+  } catch (_) {
+    return null;
+  }
+})();
+
+let _configPromise = null;
+
+function loadConfig() {
+  if (_configPromise) return _configPromise;
+  _configPromise = (async () => {
+    if (!CONFIG_URL) return {};
+    try {
+      const res = await fetch(CONFIG_URL, { cache: 'no-store' });
+      if (!res.ok) return {};
+      const spec = await res.json();
+      const endpoint = spec.endpoint
+        || (spec.functions || []).flatMap(fn => fn.vars || []).find(v => v && (v.name === 'APPWRITE_ENDPOINT' || v.name === 'NEXT_PUBLIC_APPWRITE_ENDPOINT'))?.value
+        || '';
+      const projectId = spec.projectId
+        || (spec.functions || []).flatMap(fn => fn.vars || []).find(v => v && (v.name === 'APPWRITE_PROJECT_ID' || v.name === 'APPWRITE_PROJECT' || v.name === 'NEXT_PUBLIC_APPWRITE_PROJECT_ID'))?.value
+        || '';
+      return {
+        endpoint,
+        projectId,
+        functionsBase: endpoint ? endpoint.replace(/\/$/, '') + '/functions' : '',
+      };
+    } catch (_) {
+      return {};
+    }
+  })();
+  return _configPromise;
+}
+
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
@@ -61,94 +97,42 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// ── Push Notification ──────────────────────────────────────
 self.addEventListener('push', e => {
-  let data = {};
-  try { data = e.data.json(); } catch(err) {
-    data = { title: '🔥 JOAF', body: e.data ? e.data.text() : 'নতুন আপডেট' };
-  }
+  e.waitUntil((async () => {
+    try {
+      const cfg = await loadConfig();
+      const endpoint = cfg.endpoint || '';
+      const projectId = cfg.projectId || '';
+      if (!endpoint || !projectId) {
+        console.warn('[SW] Missing Appwrite config, skipping subscription sync');
+        return;
+      }
 
-  const title = data.title || '🔥 JOAF সংবাদ';
-  const options = {
-    body: data.body || 'নতুন আপডেট এসেছে — এখনই দেখুন',
-    icon: '/logoc7c3.png',
-    badge: '/logoc7c3.png',
-    image: data.image || null,
-    data: { url: data.url || '/' },
-    vibrate: [200, 100, 200, 100, 200],
-    requireInteraction: data.type === 'breaking' || data.type === 'blood',
-    tag: data.tag || 'joaf-notif',
-    renotify: true,
-    actions: [
-      { action: 'view',  title: '👁️ দেখুন' },
-      { action: 'close', title: '✕ বন্ধ করুন' }
-    ]
-  };
+      const payload = e.data ? e.data.json() : {
+        title: 'JOAF',
+        body: 'নতুন নোটিফিকেশন এসেছে',
+        icon: '/logoc7c3.png',
+        url: '/',
+      };
 
-  e.waitUntil(self.registration.showNotification(title, options));
+      await self.registration.showNotification(payload.title || 'JOAF', {
+        body: payload.body || '',
+        icon: payload.icon || '/logoc7c3.png',
+        data: { url: payload.url || '/' },
+      });
+    } catch (err) {
+      console.error('[SW] push handling failed:', err);
+    }
+  })());
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  if (e.action === 'close') return;
-
-  const url = (e.notification.data && e.notification.data.url) || '/';
-  const fullUrl = self.location.origin + url;
-
-  e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cls => {
-      const existing = cls.find(c => c.url === fullUrl || c.url.startsWith(fullUrl));
-      if (existing) {
-        existing.focus();
-        return existing.navigate ? existing.navigate(fullUrl) : existing.focus();
-      }
-      return clients.openWindow(fullUrl);
-    })
-  );
-});
-
-// ── Background Sync (push subscription save) ──────────────
-self.addEventListener('sync', e => {
-  if (e.tag === 'sync-subscription') {
-    e.waitUntil(syncSubscription());
-  }
-});
-
-async function syncSubscription() {
-  try {
-    const sub = await self.registration.pushManager.getSubscription();
-    if (!sub) return;
-
-    // TASK 3: Send a properly-structured payload so save-subscription.js can
-    // validate keys and build a canonical clean subscription.
-    // The raw PushSubscription object is also accepted by the server (dual-shape
-    // handling), but wrapping it ensures district and deviceInfo slots are present
-    // and that the payload is identical to what components.js sends.
-    const payload = {
-      subscription: sub.toJSON(),   // serialises endpoint + keys cleanly
-      district: '',                  // district unknown in SW context
-      deviceInfo: {
-        userAgent: self.navigator ? self.navigator.userAgent.substring(0, 150) : 'sw-sync',
-        savedAt: new Date().toISOString(),
-      },
-    };
-
-    const res = await fetch('https://fra.cloud.appwrite.io/v1/functions/save-subscription/executions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Appwrite-Project': '6a11b6cd000b59f318eb',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => String(res.status));
-      console.error('[SW] syncSubscription failed:', res.status, txt);
-    } else {
-      console.log('[SW] syncSubscription succeeded');
+  const url = e.notification?.data?.url || '/';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+    for (const client of clients) {
+      if ('focus' in client) return client.focus();
     }
-  } catch(e) {
-    console.error('[SW] syncSubscription error:', e);
-  }
-}
+    return self.clients.openWindow(url);
+  }));
+});

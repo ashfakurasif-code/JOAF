@@ -9,7 +9,7 @@ const GROQ_KEY       = process.env.GROQ_API_KEY;
 const GEMINI_KEY     = process.env.GEMINI_API_KEY;
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 const ADMIN_KEY      = process.env.ADMIN_SECRET_KEY;
-// URL of the deployed groq-proxy Appwrite function (e.g. https://fra.cloud.appwrite.io/v1/functions/FUNC_ID/executions)
+// URL of the deployed groq-proxy Appwrite function (e.g. the deployed Appwrite function execution URL)
 // Alternatively set GROQ_PROXY_URL to the function's HTTP endpoint if you expose it via a custom domain
 const GROQ_PROXY_URL = process.env.GROQ_PROXY_URL || null;
 

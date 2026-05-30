@@ -25,16 +25,16 @@ Replaced the flat badge list in `admin/index.html` with a visual Metro-Line circ
 
 ```
 Browser → aw-firestore.js (shim)
-           └→ Appwrite REST API (fra.cloud.appwrite.io)
+           └→ Appwrite REST API (cloud.appwrite.io)
                 └→ Collections: donors, alerts, pageviews,
                                  push_subscriptions, notification_history,
                                  leaders, press_releases, bajar_prices,
                                  warriors, forum_posts, members, polls
 ```
 
-**Netlify Functions (serverless)**
+**Appwrite Functions (serverless)**
 ```
-/.netlify/functions/
+/appwrite-functions/
   get-stats          — Appwrite read: counts for dashboard
   send-notification  — webpush dispatch from Appwrite subs list
   save-subscription  — write push sub to Appwrite
@@ -65,13 +65,13 @@ Create an Appwrite `warriors` collection with fields: `name`, `role`, `dist`, `t
 Map-based real-time alerts layer. Leaflet.js map with Appwrite `onSnapshot` on the `alerts` collection, filtered by district. Each alert is a map pin. Color-coded by type (blood, food, emergency). Admin panel already has alert submission.
 
 **Priority 3 — Namaz-time Retention Engine**
-Scheduled Netlify function triggered at BD prayer times (Fajr, Zuhr, Asr, Maghrib, Isha — computed server-side using sun-calc). Sends targeted push notifications via `send-notification`. Payload type maps to existing `NOTIFICATION_TYPES` in `send-notification.js`.
+Scheduled Appwrite function triggered at BD prayer times (Fajr, Zuhr, Asr, Maghrib, Isha — computed server-side using sun-calc). Sends targeted push notifications via `send-notification`. Payload type maps to existing `NOTIFICATION_TYPES` in `send-notification.js`.
 
 **Priority 4 — Verified Contributor Badges**
 Extend the `members` Appwrite collection with `trust_level` (0–3), `contributions`, `verified_by`. Admin panel badge grant UI. Badge displayed on warrior cards and forum posts. Trust level gates what content a user can submit without manual review.
 
 **Priority 5 — AI Provider Failover**
-`js/ai/aimaster.js` already has provider list. Add cascading fallback: Groq (primary) → OpenRouter → Gemini (via a new `gemini-proxy` Netlify function). The Metro-Line health check already pings Groq; wire the fallback order to the dashboard status.
+`js/ai/aimaster.js` already has provider list. Add cascading fallback: Groq (primary) → OpenRouter → Gemini (via a new `gemini-proxy` Appwrite function). The Metro-Line health check already pings Groq; wire the fallback order to the dashboard status.
 
 **Infrastructure note**
-All free-tier: Netlify (functions + hosting), Appwrite Cloud (Frankfurt), Cloudinary (media), Groq (AI), EmailJS (alerts), Cloudflare (DNS + email routing), GitHub (file storage + scheduled trigger source). No paid services required for Phase 2 features.
+All free-tier: Appwrite (functions + hosting), Appwrite Cloud (Frankfurt), Cloudinary (media), Groq (AI), EmailJS (alerts), Cloudflare (DNS + email routing), GitHub (file storage + scheduled trigger source). No paid services required for Phase 2 features.

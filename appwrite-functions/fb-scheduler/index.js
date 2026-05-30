@@ -3,7 +3,7 @@
 // Purpose: fetch pending fb_queue posts where scheduled_at <= now, then trigger fb-autopost via Appwrite SDK
 //
 // Appwrite Function Environment Variables needed:
-//   APPWRITE_ENDPOINT  — e.g. https://fra.cloud.appwrite.io/v1
+//   APPWRITE_ENDPOINT  — e.g. your Appwrite endpoint
 //   APPWRITE_PROJECT   — your project ID
 //   APPWRITE_API_KEY   — server API key (has db read/write permission)
 //
@@ -12,11 +12,11 @@
 
 import { Client, Databases, Functions, Query, ID } from 'node-appwrite';
 
-const AW_DB      = 'joaf';
+const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || '69cef52f0018a2a7b05a';
 const COL_QUEUE  = 'fb_queue';
 
-const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
-const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID || '6a11b6cd000b59f318eb';
+const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT;
+const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID;
 const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || process.env.APPWRITE_FUNCTION_API_KEY || '';
 
 /** Exponential backoff retry for transient errors */

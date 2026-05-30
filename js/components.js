@@ -96,7 +96,7 @@ const JOAFComponents = {
                 <ul>${navItems}</ul>
               </nav>
               <div class="joaf-mob-cta d-flex d-md-none">
-                <a href="/membership.html" class="joaf-cta-pill joaf-cta-join">
+                <a href="../membership.html" class="joaf-cta-pill joaf-cta-join">
                   <i class="zmdi zmdi-account-add"></i><span>সদস্য হোন</span>
                 </a>
                 <a href="/#about-area" class="joaf-cta-pill joaf-cta-about">
@@ -139,7 +139,7 @@ const JOAFComponents = {
           <a href="${s.social.facebook}" target="_blank" rel="noopener" class="joaf-mnav-social"><i class="zmdi zmdi-facebook"></i></a>
           <a href="${s.social.whatsapp}" target="_blank" rel="noopener" class="joaf-mnav-social"><i class="zmdi zmdi-whatsapp"></i></a>
           <a href="${s.social.twitter}" target="_blank" rel="noopener" class="joaf-mnav-social"><i class="zmdi zmdi-twitter"></i></a>
-          <a href="/membership.html" class="joaf-mnav-cta">✊ যোগ দিন</a>
+          <a href="../membership.html" class="joaf-mnav-cta">✊ যোগ দিন</a>
         </div>
       </div>
     </div>`;
@@ -234,7 +234,7 @@ const JOAFComponents = {
         </div>
       </div>
       <div class="footer-bottom">
-        <p>দেশ আগে, দল পরে — ${s.abbr} | <a href="/membership.html">✊ শামিল হোন</a> | <a href="/donate.html">💚 পাশে থাকুন</a></p>
+        <p>দেশ আগে, দল পরে — ${s.abbr} | <a href="../membership.html">✊ শামিল হোন</a> | <a href="/donate.html">💚 পাশে থাকুন</a></p>
       </div>
     </footer>`;
   },
@@ -765,11 +765,11 @@ const JOAFComponents = {
           // 🔔 Push notification — same district subscribers কে জানাও
           try {
             const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
-            await fetch('https://fra.cloud.appwrite.io/v1/functions/send-notification/executions', {
+            await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions') + '/send-notification/executions'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+                'X-Appwrite-Project': globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '',
               },
               body: JSON.stringify({
                 type: 'blood',
@@ -1200,7 +1200,7 @@ const JOAFComponents = {
                 <a href="/leader-tracker.html" class="jstile jbr-purple"><span class="jsi">🏛️</span><span class="jsn">নেতা ট্র্যাকার</span></a>
                 <a href="/live.html" class="jstile jbr-purple"><span class="jsi">📡</span><span class="jsn">লাইভ</span></a>
                 <a href="/forum.html" class="jstile jbr-purple"><span class="jsi">💬</span><span class="jsn">ফোরাম</span></a>
-                <a href="/membership.html" class="jstile jbr-purple"><span class="jsi">🤝</span><span class="jsn">যোগ দিন</span></a>
+                <a href="../membership.html" class="jstile jbr-purple"><span class="jsi">🤝</span><span class="jsn">যোগ দিন</span></a>
                 <a href="/donate.html" class="jstile jbr-purple"><span class="jsi">💚</span><span class="jsn">সহযোগিতা</span></a>
               </div>
             </div>
@@ -1497,11 +1497,11 @@ async function joafSaveSubscription(sub) {
       }
     };
 
-    const res = await fetch('https://fra.cloud.appwrite.io/v1/functions/save-subscription/executions', {
+    const res = await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/save-subscription/executions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+        'X-Appwrite-Project': globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '',
       },
       body: JSON.stringify(payload)
     });

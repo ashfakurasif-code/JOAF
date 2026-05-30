@@ -7,9 +7,9 @@
 //                            posted_at(string), page_ids(string[]), results(string)
 
 const FB_DRAFT_KEY = 'joaf_fb_draft_id';
-const AW_ENDPOINT  = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT   = '6a11b6cd000b59f318eb';
-const AW_DB        = 'joaf';
+const AW_ENDPOINT  = globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '';
+const AW_PROJECT   = globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '';
+const AW_DB        = globalThis.JOAF_DATABASE_ID || globalThis.JOAF_CONFIG?.databaseId || '';
 const COL_DRAFTS   = 'fb_drafts';
 const COL_QUEUE    = 'fb_queue';
 

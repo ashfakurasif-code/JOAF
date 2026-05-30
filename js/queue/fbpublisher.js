@@ -5,8 +5,8 @@
  */
 
 // Appwrite configuration (mirrors window.AW_EXEC_BASE / window.AW_PROJECT in admin-init)
-const AW_EXEC_BASE = 'https://fra.cloud.appwrite.io/v1/functions';
-const AW_PROJECT   = '6a11b6cd000b59f318eb';
+const AW_EXEC_BASE = globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions');
+const AW_PROJECT   = globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '';
 const FB_FUNCTION  = 'fb-autopost';
 
 /**

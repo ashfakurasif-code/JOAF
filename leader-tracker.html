@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="bn"><head>
+  <script src="./js/joaf-config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap">
 <meta charset="UTF-8">
@@ -373,7 +374,7 @@ const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/
 addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
 
 // ── GROQ CONFIG ──
-const GROQ_KEY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions'; // key moved to server
+const GROQ_KEY = (globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/groq-proxy/executions'; // key moved to server
 const BD_TODAY = () => new Date(Date.now()+6*3600000).toISOString().slice(0,10);
 
 // ── Cache: localStorage per day ──
@@ -387,7 +388,7 @@ let ISSUES = [];
 async function groqCall(prompt, maxTokens=4000) {
   // AI priority chain: OpenRouter → Gemini → Groq (enforced server-side in groq-proxy.js)
   try {
-    const r = await fetch('https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions', {
+    const r = await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/groq-proxy/executions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

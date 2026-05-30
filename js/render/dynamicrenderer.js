@@ -211,7 +211,8 @@ export async function computeViralScore(content, appwriteEndpoint, appwriteProje
     const client = new Client().setEndpoint(appwriteEndpoint).setProject(appwriteProject);
     const db     = new Databases(client);
 
-    const result = await db.listDocuments('joaf', 'fb_analytics', [
+    const dbId = globalThis.JOAF_CONFIG?.databaseId || '69cef52f0018a2a7b05a';
+    const result = await db.listDocuments(dbId, 'fb_analytics', [
       Query.equal('content_emotion', content.emotion || 'neutral'),
       Query.orderDesc('posted_at'),
       Query.limit(10),

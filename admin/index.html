@@ -572,11 +572,12 @@ body  { overflow-x:hidden; }
 
 </head>
 <body>
-<script src="/admin/js/joaf-init.js"></script>
+<script src="../js/joaf-config.js"></script>
+<script src="./js/joaf-init.js"></script>
 
 
 <!-- ══ LOGIN ══════════════════════════════════════ -->
-<script src="/admin/js/admin-init.js"></script>
+<script src="./js/admin-init.js"></script>
 <div id="loginScreen">
   <div class="lcard">
     <div class="lcard-top">
@@ -668,7 +669,7 @@ body  { overflow-x:hidden; }
     </div>
 
     <div class="page" id="page-newscard" style="padding:0;overflow:hidden;height:calc(100vh - 48px);flex-direction:column;">
-      <iframe src="/tools/news-card-generator.html" style="width:100%;flex:1;border:none;display:block;min-height:0;" id="ncgFrame"></iframe>
+      <iframe src="../tools/news-card-generator.html" style="width:100%;flex:1;border:none;display:block;min-height:0;" id="ncgFrame"></iframe>
     </div>
 
 
@@ -1258,8 +1259,8 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         <div class="btn-row">
           <button class="btn btn-ghost" onclick="clearCache()">🗑️ Cache Clear</button>
           <a href="https://github.com/ashfakurasif-code/JOAF/actions" target="_blank" class="btn btn-ghost">⚙️ GitHub Actions</a>
-          <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">🔥 Appwrite Console</a>
-          <a href="https://cloud.appwrite.io/console/project-6a11b6cd000b59f318eb" target="_blank" class="btn btn-ghost">☁️ Appwrite Console</a>
+          <a href="https://cloud.appwrite.io/console" target="_blank" class="btn btn-ghost">🔥 Appwrite Console</a>
+          <a href="https://cloud.appwrite.io/console" target="_blank" class="btn btn-ghost">☁️ Appwrite Console</a>
         </div>
       </div>
 
@@ -2184,7 +2185,7 @@ async function initDashboard() {
   };
   const HEALTH_ITEMS = [
     { label: 'Appwrite DB',  icon:'🗄', check: async () => { try{ const r=await join_aw_exec('get-stats',{headers:{'X-Admin-Key':ADMIN_KEY}}); const d=await r.json(); return {ok:d.ok===true,val:d.ok?`${d.activeSubs} subs`:'Err'}; }catch(e){return{ok:false,val:'Offline'};} } },
-    { label: 'Push SW',      icon:'📡', check: async () => { try{const r=await fetch('/sw.js');return {ok:r.ok,val:r.ok?'Active':'404'};}catch{return{ok:false,val:'Err'};} } },
+    { label: 'Push SW',      icon:'📡', check: async () => { try{const r=await fetch('../sw.js');return {ok:r.ok,val:r.ok?'Active':'404'};}catch{return{ok:false,val:'Err'};} } },
     { label: 'Notif Fn',     icon:'🔔', check: async () => { try{const r=await join_aw_exec('send-notification',{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Key':ADMIN_KEY},body:JSON.stringify({_verify:true})});return {ok:r.status!==500,val:r.status===401?'Auth OK':r.status===200?'OK':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
     { label: 'Groq AI',      icon:'🤖', check: async () => { try{const r=await join_aw_exec('groq-proxy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({_ping:true})});return {ok:r.status!==500,val:r.status<400?'Online':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
     { label: 'FB Autopost',  icon:'📘', check: async () => { try{const r=await join_aw_exec('fb-autopost',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'check-token'})});return {ok:r.status<500,val:r.status===200?'Token OK':r.status===401?'No Token':'Err '+r.status};}catch{return{ok:false,val:'Offline'};} } },
@@ -4004,8 +4005,8 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="/js/data.js"></script>
-<script src="/js/fb-draft-queue.js" type="module"></script>
+<script src="../js/data.js"></script>
+<script src="../js/fb-draft-queue.js" type="module"></script>
 <script>
 // ── FB Reel Generator ─────────────────────────────────────────
 let reelBlob = null;
@@ -5559,10 +5560,11 @@ window.saOpenPostHelper = async function() {
     if (file) {
       if (logEl) logEl.innerHTML = '<div style="color:var(--amber)">⏳ File upload হচ্ছে...</div>';
       const { Client, Storage, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
-      const client  = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('6a11b6cd000b59f318eb');
+      const projectId = globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '';
+      const client  = new Client().setEndpoint(globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').setProject(projectId);
       const storage = new Storage(client);
       const uploaded = await storage.createFile('fb_media', ID.unique(), file);
-      const fileUrl  = `https://fra.cloud.appwrite.io/v1/storage/buckets/fb_media/files/${uploaded.$id}/view?project=6a11b6cd000b59f318eb`;
+      const fileUrl  = `${(globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '')}/storage/buckets/fb_media/files/${uploaded.$id}/view?project=${projectId}`;
       if (file.type.startsWith('video/')) { videoUrl = fileUrl; }
       else { imageUrl = fileUrl; }
       if (logEl) logEl.innerHTML = '<div style="color:var(--amber)">⏳ Pages এ post হচ্ছে...</div>';
@@ -5606,9 +5608,9 @@ window.saOpenPostHelper = async function() {
     // ── Feature 9: Post-publish tracking ──────────────────────
     try {
       const { Client, Databases, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
-      const _c = new Client().setEndpoint('https://fra.cloud.appwrite.io/v1').setProject('6a11b6cd000b59f318eb');
+      const _c = new Client().setEndpoint(globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').setProject(globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '');
       const _db = new Databases(_c);
-      await _db.createDocument('joaf', 'fb_post_log', ID.unique(), {
+      await _db.createDocument((globalThis.JOAF_CONFIG?.databaseId || '69cef52f0018a2a7b05a'), 'fb_post_log', ID.unique(), {
         caption:    caption.substring(0, 500),
         media_type: videoUrl ? 'video' : imageUrl ? 'image' : 'text',
         posted_at:  new Date().toISOString(),

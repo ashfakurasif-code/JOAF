@@ -1,0 +1,14 @@
+{
+  "name": "joaf-studio",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "clean": "node scripts/clean.js",
+    "deploy": "npm run clean && npm run build:studio && appwrite deploy && node scripts/bootstrap.js && node scripts/verify.js",
+    "bootstrap": "node scripts/bootstrap.js",
+    "verify": "node scripts/verify.js",
+    "build:studio": "node build_and_deploy_studio.mjs",
+    "predeploy": "npm run clean"
+  },
+  "dependencies": {}
+}

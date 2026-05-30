@@ -25,7 +25,7 @@ joaf-v4/
 ├── css/
 │   └── joaf.css            — সব design এখানে
 │
-└── netlify.toml            — Hosting config
+└── deployment scripts            — Hosting config
 ```
 
 ---
@@ -60,20 +60,20 @@ joaf-v4/
 
 ---
 
-## 🚀 Deployment (GitHub → Netlify)
+## 🚀 Deployment (GitHub → Appwrite)
 
 ```bash
 git add .
 git commit -m "আপডেট: নতুন প্রেস রিলিজ"
 git push origin main
 ```
-Netlify auto-deploy হবে।
+Appwrite auto-deploy হবে।
 
 ---
 
-## 🔐 Netlify Environment Variables
+## 🔐 Appwrite Environment Variables
 
-Netlify dashboard → Site settings → Environment variables এ নিচেরগুলো সেট করুন:
+Appwrite Console → Site settings → Environment variables এ নিচেরগুলো সেট করুন:
 
 - `APPWRITE_API_KEY` — Appwrite server API key (functions এর জন্য)
 - `ADMIN_SECRET_KEY` — Admin panel + protected functions access

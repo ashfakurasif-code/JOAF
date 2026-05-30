@@ -1,6 +1,6 @@
-const AW_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
-const AW_PROJECT = '6a11b6cd000b59f318eb';
-const AW_DB = 'joaf';
+const AW_ENDPOINT = globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '';
+const AW_PROJECT = globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '';
+const AW_DB = globalThis.JOAF_DATABASE_ID || globalThis.JOAF_CONFIG?.databaseId || '';
 const DEFAULT_DOC_PERMISSIONS = ['read("any")', 'update("any")', 'delete("any")'];
 
 let _sdkPromise;

@@ -51,8 +51,8 @@
 // ══════════════════════════════════════════════════════════════
 // 2. Appwrite Configuration + join_aw_exec helper
 // ══════════════════════════════════════════════════════════════
-window.AW_EXEC_BASE = 'https://fra.cloud.appwrite.io/v1/functions';
-window.AW_PROJECT   = '6a11b6cd000b59f318eb';
+window.AW_EXEC_BASE = globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions');
+window.AW_PROJECT   = globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '';
 
 async function join_aw_exec(fnId, options = {}) {
   const method    = (options.method || 'GET').toUpperCase();

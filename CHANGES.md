@@ -11,8 +11,8 @@
 Without the attribute in Appwrite's schema, documents were rejected and queries returned 0 results.
 
 **Files changed:**
-- `netlify/functions/aw-utils.js` — added `endpoint: string(65535)` to `initDatabase()`
-- `netlify/functions/migrate-to-appwrite.js` — added `push_subscriptions` to `validate-schema` SCHEMAS + INDEX_DEFS
+- `appwrite-functions/aw-utils.js` — added `endpoint: string(65535)` to `initDatabase()`
+- `appwrite-functions/migrate-to-appwrite.js` — added `push_subscriptions` to `validate-schema` SCHEMAS + INDEX_DEFS
 
 ---
 
@@ -22,7 +22,7 @@ Without the attribute in Appwrite's schema, documents were rejected and queries 
 but `validate-schema` SCHEMAS only defined `totalSent`. Appwrite rejects writes to undeclared attributes.
 
 **Files changed:**
-- `netlify/functions/migrate-to-appwrite.js` — added `sent`, `failed`, `total` integer attrs to notification_history schema
+- `appwrite-functions/migrate-to-appwrite.js` — added `sent`, `failed`, `total` integer attrs to notification_history schema
 
 ---
 
@@ -34,20 +34,20 @@ but `validate-schema` SCHEMAS only defined `totalSent`. Appwrite rejects writes 
    correct flow: upload as unpublished photo → post to `/feed` with `attached_media`
 
 **Files changed:**
-- `netlify/functions/fb-autopost.js` — rewrote `postToPage()` with correct payload for all 4 post types;
+- `appwrite-functions/fb-autopost.js` — rewrote `postToPage()` with correct payload for all 4 post types;
   added `(type: ..., code: ...)` to error messages for easier debugging
 
 ---
 
 ## Bug 4: CSP / Inline Scripts ✅ FIXED
 
-**Root cause:** No `Content-Security-Policy` header in `netlify.toml`, plus blocking inline scripts
+**Root cause:** No `Content-Security-Policy` header in `deployment scripts`, plus blocking inline scripts
 in `admin/index.html` (login check, district selector).
 
 **Files changed:**
 - `admin/js/admin-init.js` — NEW: external file for login screen CSS var + district dropdown population
 - `admin/index.html` — replaced 2 inline `<script>` blocks with external file references
-- `netlify.toml` — added CSP header for `/admin/*.html` covering all required origins
+- `deployment scripts` — added CSP header for `/admin/*.html` covering all required origins
 
 ---
 
@@ -66,7 +66,7 @@ The shim ignores them, but they leaked credentials in client-side source.
 ## Bug 6: 503 Timeouts on Schema Validation ✅ FIXED
 
 **Root cause A:** Sequential attribute creation with `await ... 250ms` per attribute.
-18 attrs × 250ms = 4.5s + indexes = easily > 10s Netlify limit.
+18 attrs × 250ms = 4.5s + indexes = easily > 10s runtime limit.
 
 **Fix:** Batch attribute creation in groups of 3 with a single 200ms gap between batches.
 Worst case: ceil(18/3) × 200ms = 1.2s. 4× faster.
@@ -86,8 +86,8 @@ and index creation — ran on every `init-database` call.
 If all attrs already exist (idempotent re-run), skips the wait entirely.
 
 **Files changed:**
-- `netlify/functions/migrate-to-appwrite.js` — parallelized attr creation, new `fsGetPage()`, pageToken protocol
-- `netlify/functions/aw-utils.js` — adaptive wait in `initDatabase()`, fixed `awUpsert()` return value
+- `appwrite-functions/migrate-to-appwrite.js` — parallelized attr creation, new `fsGetPage()`, pageToken protocol
+- `appwrite-functions/aw-utils.js` — adaptive wait in `initDatabase()`, fixed `awUpsert()` return value
 - `admin/index.html` — updated migration loop to use `pageToken` instead of `offset`
 
 ---

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
+  <script src="./js/joaf-config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap">
   <meta charset="UTF-8">
@@ -426,7 +427,7 @@
 
 // 🔑 ──────────────────────────────────────────────────────────
 // GROQ_KEY এখানে বসাও (console.groq.com থেকে নাও)
-const GROQ_KEY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions'; // key moved to server
+const GROQ_KEY = (globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/groq-proxy/executions'; // key moved to server
 // ─────────────────────────────────────────────────────────────
 
 const GROQ_MODELS = [
@@ -883,7 +884,7 @@ async function genPolls() {
     let data = null;
     for (const model of GROQ_MODELS) {
       try {
-        const r = await fetch('https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions', {
+        const r = await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/groq-proxy/executions', {
           method:  'POST',
           headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+GROQ_KEY },
           body: JSON.stringify({

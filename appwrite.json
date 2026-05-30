@@ -53,7 +53,7 @@
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -99,7 +99,7 @@
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -145,7 +145,7 @@
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -157,7 +157,7 @@
         },
         {
           "name": "GROQ_PROXY_URL",
-          "value": "https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions"
+          "value": "https://cloud.appwrite.io/v1/functions/groq-proxy/executions"
         }
       ],
       "ignore": [],
@@ -217,7 +217,7 @@
       "vars": [
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -269,7 +269,7 @@
         },
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -324,7 +324,7 @@
       "vars": [
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -420,7 +420,7 @@
       "vars": [
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -450,7 +450,7 @@
       "vars": [
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -518,7 +518,7 @@
       "vars": [
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -562,7 +562,7 @@
       "vars": [
         {
           "name": "APPWRITE_ENDPOINT",
-          "value": "https://fra.cloud.appwrite.io/v1"
+          "value": "https://cloud.appwrite.io/v1"
         },
         {
           "name": "APPWRITE_PROJECT",
@@ -611,7 +611,20 @@
             "key"
           ]
         }
+      ],
+      "permissions": [
+        "create(\"any\")",
+        "read(\"any\")",
+        "update(\"any\")",
+        "delete(\"any\")"
       ]
+    }
+  ],
+  "databaseId": "69cef52f0018a2a7b05a",
+  "databases": [
+    {
+      "$id": "69cef52f0018a2a7b05a",
+      "name": "JOAF"
     }
   ]
 }

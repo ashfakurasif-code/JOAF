@@ -8,7 +8,7 @@
  *   Phase 2 (EXTENDED) — reel scripts, scene breakdowns, voice segments (lazy, on demand)
  */
 
-const AI_PROXY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions';
+const AI_PROXY = (globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions') + '/groq-proxy/executions');
 
 // Read internal API key from meta tag (set by admin-init.js)
 function getInternalKey() {
@@ -113,7 +113,6 @@ function isTruncated(text) {
   const open = (text.match(/\{/g) || []).length;
   const close = (text.match(/\}/g) || []).length;
   return open !== close;
-}
 }
 
 /**
