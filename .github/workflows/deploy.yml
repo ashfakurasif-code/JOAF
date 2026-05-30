@@ -18,10 +18,7 @@ jobs:
           APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: |
-          # ক্লায়েন্ট কনফিগার করা
           appwrite client --endpoint "$APPWRITE_ENDPOINT" --project-id "$APPWRITE_PROJECT_ID" --key "$APPWRITE_API_KEY"
           
-          # 'yes' কমান্ড ব্যবহার করে কনফার্মেশন প্রম্পট এড়িয়ে চলা
-          yes | appwrite push function --all
-          # দ্রষ্টব্য: যদি database কমান্ডটি কাজ না করে, তবে অ্যাপরাইট সিএলআই ডকুমেন্টেশন অনুযায়ী সঠিক কমান্ডটি ব্যবহার করুন
-          yes | appwrite push collection --all
+          # 'yes "YES"' কমান্ড ব্যবহার করুন যাতে এটি সঠিকভাবে প্রম্পটে "YES" পাঠায়
+          yes "YES" | appwrite push function --all
