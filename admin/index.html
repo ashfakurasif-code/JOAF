@@ -1253,50 +1253,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════════
-           FIRESTORE → APPWRITE MIGRATION PANEL
-           Auto-hidden permanently after successful migration.
-           Stored in localStorage key: joaf_migration_done
-      ════════════════════════════════════════════════════════════ -->
-      <div class="card" id="migration-panel" style="border:1.5px solid var(--amber-border,#f59e0b44);background:var(--amber-bg,#fffbeb10);">
-        <div class="card-header">
-          <div class="card-title">🚚 Firestore → Appwrite Migration</div>
-          <div style="font-size:11px;color:var(--text2)">One-time operation — panel hides permanently after success</div>
-        </div>
 
-        <!-- Step badges -->
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="mig-steps">
-          <span class="mig-step" id="mig-step-validate" style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">① Validate</span>
-          <span class="mig-step" id="mig-step-fetch"    style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">② Fetch Firestore</span>
-          <span class="mig-step" id="mig-step-upsert"   style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">③ Upsert Appwrite</span>
-          <span class="mig-step" id="mig-step-done"     style="padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)">④ Complete</span>
-        </div>
-
-        <!-- Progress bar -->
-        <div style="background:var(--surface2);border-radius:8px;height:10px;overflow:hidden;margin-bottom:8px;" id="mig-progress-wrap">
-          <div id="mig-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#10b981);border-radius:8px;transition:width 0.4s ease;"></div>
-        </div>
-        <div id="mig-status-text" style="font-size:12px;color:var(--text2);margin-bottom:12px;min-height:18px;"></div>
-
-        <!-- Error box -->
-        <div id="mig-error-box" style="display:none;background:var(--red-bg,#fef2f2);border:1px solid var(--red-border,#fca5a5);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
-          <div style="font-size:12px;font-weight:600;color:var(--red,#ef4444);margin-bottom:4px;">❌ Error</div>
-          <pre id="mig-error-msg" style="font-size:11px;color:var(--red,#ef4444);white-space:pre-wrap;margin:0;"></pre>
-        </div>
-
-        <!-- Result summary -->
-        <div id="mig-result-box" style="display:none;background:var(--green-bg,#f0fdf4);border:1px solid var(--green-border,#86efac);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
-          <div id="mig-result-text" style="font-size:12px;color:var(--green,#16a34a);"></div>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="btn-row">
-          <button id="mig-btn-dryrun" class="btn btn-ghost"    onclick="migrationDryRun()">🔍 Dry Run</button>
-          <button id="mig-btn-schema" class="btn btn-ghost"    onclick="migrationValidateSchema()">🧬 Validate Schema</button>
-          <button id="mig-btn-start"  class="btn btn-primary"  onclick="migrationStart()">🚀 Validate &amp; Migrate</button>
-          <button id="mig-btn-resume" class="btn btn-primary"  onclick="migrationResume()" style="display:none;">🔄 Resume / Retry</button>
-        </div>
-      </div>
     </div>
 
     <!-- SYSTEM CONFIGURATION PAGE -->
@@ -2545,7 +2502,7 @@ async function loadDonors() {
 function renderDonors(donors) {
   const tbody = document.getElementById('donor-tbody');
   if (!donors.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty" style="padding:28px;text-align:center;color:var(--text2)">📭 কোনো দাতা পাওয়া যায়নি<br><span style="font-size:10px;margin-top:4px;display:block">Migration চালান অথবা রক্তদান পেজ থেকে নতুন দাতা যোগ করুন</span></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty" style="padding:28px;text-align:center;color:var(--text2)">📭 কোনো দাতা পাওয়া যায়নি<br><span style="font-size:10px;margin-top:4px;display:block">রক্তদান পেজ থেকে নতুন দাতা যোগ করুন</span></td></tr>';
     return;
   }
   tbody.innerHTML = donors.slice(0,50).map(d => `
@@ -2599,7 +2556,6 @@ window.deleteDonor = async function(id) {
 };
 
 function renderSyncBadges(syncStatus) {
-  // Inject sync status badges into the migration panel header (if visible)
   const existingBadges = document.getElementById('sync-status-badges');
   if (existingBadges) existingBadges.remove();
 
@@ -2624,15 +2580,9 @@ function renderSyncBadges(syncStatus) {
     container.appendChild(badge);
   });
 
-  // Append to migration panel or dashboard
-  const migPanel = document.getElementById('migration-panel');
-  if (migPanel && migPanel.style.display !== 'none') {
-    migPanel.appendChild(container);
-  } else {
-    // Fall back to inserting in dashboard stats area
-    const statsGrid = document.querySelector('#page-dashboard .stats-grid');
-    if (statsGrid) statsGrid.parentElement.insertBefore(container, statsGrid.nextSibling);
-  }
+  // Insert sync badges in dashboard stats area
+  const statsGrid = document.querySelector('#page-dashboard .stats-grid');
+  if (statsGrid) statsGrid.parentElement.insertBefore(container, statsGrid.nextSibling);
 }
 
 function renderBloodPreview(donors) {
@@ -2710,7 +2660,7 @@ async function loadLeaders() {
   tbody.innerHTML='<tr><td colspan="8" class="loading">লোড হচ্ছে...</td></tr>';
   try {
     const snap = await getDocs(collection(db,'leaders'));
-    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">Firestore এ কোনো data নেই — migrate করুন</td></tr>'; return; }
+    if (snap.empty) { tbody.innerHTML='<tr><td colspan="8" class="empty">কোনো নেতার তথ্য পাওয়া যায়নি</td></tr>'; return; }
     tbody.innerHTML = snap.docs.map(d => {
       const data = d.data();
       return `<tr>
@@ -3162,287 +3112,6 @@ window.saveSettings = function() { toast('Settings saved (UI only)','success'); 
 
 window.clearCache = function() { toast('Cache cleared','success'); };
 
-// ── Migration Engine v4 — Chunked Sequential (Appwrite 10s limit safe) ──────
-(function() {
-  const DONE_KEY    = 'joaf_migration_done';
-  const FN_URL      = 'migrate-to-appwrite';
-  const CHUNK_SIZE  = 25;   // docs per function call
-  const ALL_COLS    = [
-    'push_subscriptions','notification_history','leaders','donors',
-    'timeline','alerts','members','press_releases','warriors',
-    'forum_messages','leader_votes','polls','medicines','bajar_cache',
-    'blood_requests','food_aid','jobs','pageviews','poll_users',
-    'issue_reacts','bajar_override','med_cache','notifications',
-  ];
-
-  // Hide panel if already done
-  document.addEventListener('DOMContentLoaded', function() {
-    if (localStorage.getItem(DONE_KEY) === '1') {
-      const panel = document.getElementById('migration-panel');
-      if (panel) panel.style.display = 'none';
-    }
-  });
-
-  // ── UI helpers ────────────────────────────────────────────────────────────
-  function setProgress(pct, stepId, label) {
-    const bar = document.getElementById('mig-progress-bar');
-    if (bar) bar.style.width = pct + '%';
-    if (label) { const st = document.getElementById('mig-status-text'); if (st) st.textContent = label; }
-    ['validate','fetch','upsert','done'].forEach(function(s) {
-      const el = document.getElementById('mig-step-' + s);
-      if (!el) return;
-      const steps = ['validate','fetch','upsert','done'];
-      if (s === stepId)                                   { el.style.background='#f59e0b'; el.style.color='#fff'; }
-      else if (steps.indexOf(s) < steps.indexOf(stepId)) { el.style.background='#10b981'; el.style.color='#fff'; }
-      else                                                { el.style.background='var(--surface2)'; el.style.color='var(--text2)'; }
-    });
-  }
-
-  function setStatus(msg) {
-    const st = document.getElementById('mig-status-text');
-    if (st) st.textContent = msg;
-  }
-
-  function showError(msg) {
-    const box = document.getElementById('mig-error-box');
-    const pre = document.getElementById('mig-error-msg');
-    if (box) box.style.display = 'block';
-    if (pre) pre.textContent   = msg;
-    setBtns(false);
-    const r = document.getElementById('mig-btn-resume');
-    if (r) r.style.display = 'inline-flex';
-  }
-
-  function clearError() {
-    const box = document.getElementById('mig-error-box');
-    if (box) box.style.display = 'none';
-    const r = document.getElementById('mig-btn-resume');
-    if (r) r.style.display = 'none';
-  }
-
-  function setBtns(disabled) {
-    ['mig-btn-start','mig-btn-dryrun'].forEach(function(id) {
-      const b = document.getElementById(id);
-      if (b) b.disabled = disabled;
-    });
-    const start = document.getElementById('mig-btn-start');
-    if (start) start.style.display = disabled ? 'none' : 'inline-flex';
-  }
-
-  function updateResultTable(totals) {
-    const rb = document.getElementById('mig-result-box');
-    const rt = document.getElementById('mig-result-text');
-    if (!rb || !rt) return;
-    rb.style.display = 'block';
-
-    const rows = ALL_COLS.map(function(c) {
-      const s = totals[c];
-      if (!s || s.total === 0) return '<tr><td style="color:var(--text2)">' + c + '</td><td colspan="4" style="color:var(--text2);font-size:10px">—</td></tr>';
-      return '<tr><td>' + c + '</td><td style="color:#10b981">+' + (s.created||0) + '</td><td style="color:#3b82f6">↺' + (s.updated||0) + '</td><td style="color:#6b7280">~' + (s.skipped||0) + '</td><td style="color:' + (s.failed?'#ef4444':'#6b7280') + '">' + (s.failed||0) + '</td></tr>';
-    }).join('');
-
-    rt.innerHTML =
-      '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
-      '<thead><tr style="color:var(--text2);border-bottom:1px solid var(--border)">' +
-      '<th style="text-align:left;padding:2px 6px">Collection</th>' +
-      '<th style="text-align:center;padding:2px 4px">Created</th>' +
-      '<th style="text-align:center;padding:2px 4px">Updated</th>' +
-      '<th style="text-align:center;padding:2px 4px">Skipped</th>' +
-      '<th style="text-align:center;padding:2px 4px">Failed</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>';
-  }
-
-  // ── Safe fetch with HTML guard ─────────────────────────────────────────────
-  async function apiFetch(body) {
-    const res  = await join_aw_exec(FN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'X-Admin-Key': ADMIN_KEY },
-      body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    if (text.trimStart().startsWith('<'))
-      throw new Error('Function returned HTML (HTTP ' + res.status + ') — check Appwrite Function logs in Console.');
-    let data;
-    try { data = JSON.parse(text); } catch(_) { throw new Error('Bad JSON: ' + text.slice(0,200)); }
-    if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
-    return data;
-  }
-
-  // ── Main migration runner ─────────────────────────────────────────────────
-  async function runMigration(isDry) {
-    clearError();
-    setBtns(true);
-
-    // Accumulate results per collection
-    const totals = {};
-    ALL_COLS.forEach(function(c) { totals[c] = { total:0, created:0, updated:0, skipped:0, failed:0, failures:[] }; });
-    let grandCreated=0, grandUpdated=0, grandSkipped=0, grandFailed=0;
-
-    try {
-      // ── Step 1: Validate ───────────────────────────────────────────────────
-      setProgress(10, 'validate', '🔍 Validating connectivity…');
-      const val = await apiFetch({ action:'validate' });
-      if (!val.ok) throw new Error('Validation failed:\n' + (val.errors||[]).join('\n'));
-
-      if (isDry) {
-        // ── Dry-run: fetch counts only ────────────────────────────────────────
-        setProgress(40, 'fetch', '🔍 Counting Firestore docs…');
-        const counts = await apiFetch({ action:'dry-run' });
-        setProgress(100, 'done', '🔍 Dry-run complete!');
-        const rb = document.getElementById('mig-result-box');
-        const rt = document.getElementById('mig-result-text');
-        if (rb && rt) {
-          rb.style.display = 'block';
-          const rows = Object.entries(counts.counts||{}).map(function([c,n]) {
-            return '<tr><td>' + c + '</td><td style="color:#10b981;text-align:center">' + n + ' docs</td></tr>';
-          }).join('');
-          rt.innerHTML = '<strong>' + (counts.message||'Dry-run complete') + '</strong>' +
-            '<table style="margin-top:8px;width:100%;font-size:11px;border-collapse:collapse">' +
-            '<thead><tr style="color:var(--text2)"><th style="text-align:left">Collection</th><th>Docs in Firestore</th></tr></thead>' +
-            '<tbody>' + rows + '</tbody></table>';
-        }
-        setBtns(false);
-        return;
-      }
-
-      // ── Steps 2–3: Chunked migration ────────────────────────────────────────
-      setProgress(20, 'fetch', '📥 Starting migration…');
-      const activeCols = ALL_COLS.slice(); // all 23 collections
-      let colsDone = 0;
-
-      for (let ci = 0; ci < activeCols.length; ci++) {
-        const colName  = activeCols[ci];
-        let pageToken  = null; // native Firestore cursor — avoids full re-fetch each call
-        let pageNum    = 0;
-        let colDone    = false;
-
-        while (!colDone) {
-          // Progress: 20% → 95% across all collections
-          const overallPct = 20 + Math.round(
-            ((ci / activeCols.length) + (pageNum > 0 ? 0.5 / activeCols.length : 0)) * 75
-          );
-          setProgress(Math.min(overallPct, 94), 'upsert',
-            '🔄 [' + (ci+1) + '/' + activeCols.length + '] ' + colName +
-            (pageNum > 0 ? ' (page ' + pageNum + ')' : '') + '…'
-          );
-
-          const chunk = await apiFetch({
-            action:     'migrate-collection',
-            collection: colName,
-            pageToken:  pageToken,  // native cursor — O(1) fetch per page
-            limit:      CHUNK_SIZE,
-          });
-
-          pageNum++;
-          totals[colName].created += chunk.created  || 0;
-          totals[colName].updated += chunk.updated  || 0;
-          totals[colName].skipped += chunk.skipped  || 0;
-          totals[colName].failed  += chunk.failed   || 0;
-          totals[colName].failures.push(...(chunk.failures||[]));
-
-          grandCreated += chunk.created  || 0;
-          grandUpdated += chunk.updated  || 0;
-          grandSkipped += chunk.skipped  || 0;
-          grandFailed  += chunk.failed   || 0;
-
-          updateResultTable(totals);
-
-          if (chunk.done || chunk.processed === 0) {
-            colDone = true;
-          } else {
-            pageToken = chunk.nextPageToken; // advance cursor
-          }
-
-          // Tiny gap between calls to avoid hammering Appwrite rate limit
-          if (!colDone) await new Promise(function(r){ setTimeout(r, 100); });
-        }
-
-        colsDone++;
-      }
-
-      // ── Step 4: Done ───────────────────────────────────────────────────────
-      setProgress(100, 'done', '✅ Migration complete!');
-      setStatus(
-        '✅ Done! Created: ' + grandCreated +
-        ' | Updated: ' + grandUpdated +
-        ' | Skipped: ' + grandSkipped +
-        (grandFailed ? ' | ❌ Failed: ' + grandFailed : '')
-      );
-      updateResultTable(totals);
-
-      if (grandFailed === 0) {
-        localStorage.setItem(DONE_KEY, '1');
-        setTimeout(function() {
-          const panel = document.getElementById('migration-panel');
-          if (panel) {
-            panel.style.transition = 'opacity 1s ease';
-            panel.style.opacity = '0';
-            setTimeout(function() { panel.style.display = 'none'; }, 1000);
-          }
-          toast('🎉 Migration 100% complete! Panel removed.', 'success');
-        }, 3000);
-      } else {
-        toast('⚠️ Migration done with ' + grandFailed + ' failure(s). Check the table.', 'warning');
-      }
-
-    } catch(err) {
-      setProgress(0, '', '');
-      showError(err.message || String(err));
-      return;
-    }
-
-    setBtns(false);
-  }
-
-  window.migrationStart  = function() { runMigration(false); };
-  window.migrationDryRun = function() { runMigration(true); };
-  window.migrationResume = function() { clearError(); runMigration(false); };
-  window.runMigration    = window.migrationStart;
-
-  window.migrationValidateSchema = async function() {
-    clearError();
-    const btn = document.getElementById('mig-btn-schema');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
-    const rb = document.getElementById('mig-result-box');
-    const rt = document.getElementById('mig-result-text');
-    if (rb && rt) { rb.style.display='block'; rt.innerHTML='<strong>🧬 Schema Validation — Running per-collection…</strong>'; }
-    try {
-      // Step 1: get collection list (no Appwrite SDK calls — instant)
-      const listRes = await apiFetch({ action:'validate-schema', collection:'all' });
-      const cols = listRes.collections || [];
-      const lines = [];
-      let totalPatched = 0;
-      // Step 2: process each collection sequentially (each call < 8s)
-      for (let idx=0; idx<cols.length; idx++) {
-        const col = cols[idx];
-        setStatus(`🧬 [${idx+1}/${cols.length}] Checking ${col}…`);
-        if (btn) btn.textContent = `⏳ ${col}…`;
-        try {
-          const r = await apiFetch({ action:'validate-schema', collection:col });
-          const patchedAttrs = r.patched&&r.patched.length ? ` ✏️ attrs: ${r.patched.join(', ')}` : '';
-          const patchedIdx   = r.indexPatched&&r.indexPatched.length ? ` 📇 idx: ${r.indexPatched.join(', ')}` : '';
-          const skippedIdx   = r.indexSkipped&&r.indexSkipped.length ? ` (${r.indexSkipped.length} idx ok)` : '';
-          const errs = [...(r.attrErrors||[]), ...(r.indexErrors||[])];
-          const errStr = errs.length ? ` ⚠️ ${errs.join('; ')}` : '';
-          lines.push(`✅ ${col}: ${r.checked} attrs checked${patchedAttrs}${patchedIdx}${skippedIdx}${errStr}`);
-          totalPatched += (r.patched||[]).length;
-          if (rb&&rt) rt.innerHTML = '<strong>🧬 Schema Validation Report</strong>'
-            + '<pre style="font-size:10px;margin-top:6px;white-space:pre-wrap;color:var(--green)">'
-            + lines.join('\n') + (idx<cols.length-1?'\n⏳ …':'') + '</pre>';
-        } catch(e) { lines.push(`⚠️ ${col}: ERROR — ${e.message.slice(0,80)}`); }
-        if (idx < cols.length-1) await new Promise(r=>setTimeout(r,200));
-      }
-      setStatus(`✅ Schema OK! ${totalPatched} attributes patched across ${cols.length} collections.`);
-      if (rb&&rt) rt.innerHTML = '<strong>🧬 Schema + Index Validation Complete</strong>'
-        + '<pre style="font-size:10px;margin-top:6px;white-space:pre-wrap;color:var(--green)">'
-        + lines.join('\n') + '</pre>';
-    } catch(e) {
-      showError('Schema validation failed: ' + e.message);
-    } finally {
-      if (btn) { btn.disabled=false; btn.textContent='🧬 Validate Schema'; }
-    }
-  };;
-})();
 
 // ── Helpers ──────────────────────────────────────────────
 window.openModal  = id => document.getElementById(id).classList.add('open');
