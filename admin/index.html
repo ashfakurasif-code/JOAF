@@ -580,6 +580,7 @@ body  { overflow-x:hidden; }
       <div class="nsec">System</div>
       <div class="ni" onclick="goPage('analytics',this)"><span class="ic">📈</span>Analytics</div>
       <div class="ni" onclick="goPage('settings',this)"><span class="ic">⚙️</span>Settings</div>
+      <div class="ni" onclick="goPage('sysconfig',this)"><span class="ic">🔧</span>Configuration</div>
     </div>
 
     <div class="sfoot">
@@ -1252,6 +1253,57 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         </div>
       </div>
     </div>
+
+    <!-- SYSTEM CONFIGURATION PAGE -->
+    <div class="page" id="page-sysconfig">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header">
+          <div><div class="card-title">🔧 System Configuration</div><div class="card-sub">Appwrite system_config collection management</div></div>
+          <button class="btn btn-primary btn-sm" onclick="sysconfigLoad()">🔄 Refresh</button>
+        </div>
+        <div id="sysconfig-table-wrap" style="overflow-x:auto;">
+          <div style="color:var(--text2);font-size:12px;padding:12px">Loading...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">➕ Add / Update Config Key</div></div>
+        <div class="field-2">
+          <div class="field"><label>Key</label><input type="text" id="cfg-key" placeholder="e.g. canvas_dimensions"></div>
+          <div class="field"><label>Value (JSON or plain text)</label><input type="text" id="cfg-val" placeholder='e.g. {"reel":{"w":1080,"h":1920}}'></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="sysconfigSet()">💾 Save Key</button>
+        </div>
+        <div id="cfg-status" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📐 Canvas Dimensions Editor</div></div>
+        <div class="card-sub" style="margin-bottom:12px;font-size:11px;color:var(--text2)">Quick editor for platform canvas sizes stored in system_config</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px" id="dims-grid">
+          <div class="card" style="padding:12px">
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px">🎬 Reel (9:16)</div>
+            <div class="field"><label>Width</label><input type="number" id="dim-reel-w" value="1080"></div>
+            <div class="field"><label>Height</label><input type="number" id="dim-reel-h" value="1920"></div>
+          </div>
+          <div class="card" style="padding:12px">
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px">📱 Feed 4:5</div>
+            <div class="field"><label>Width</label><input type="number" id="dim-feed-w" value="1080"></div>
+            <div class="field"><label>Height</label><input type="number" id="dim-feed-h" value="1350"></div>
+          </div>
+          <div class="card" style="padding:12px">
+            <div style="font-weight:700;font-size:12px;margin-bottom:8px">⬜ Square 1:1</div>
+            <div class="field"><label>Width</label><input type="number" id="dim-sq-w" value="1080"></div>
+            <div class="field"><label>Height</label><input type="number" id="dim-sq-h" value="1080"></div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-primary" onclick="sysconfigSaveDims()">💾 Canvas Dims 저장</button>
+        </div>
+        <div id="dims-status" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+      </div>
+    </div>
     <!-- FB AUTO POST -->
     <!-- FB AUTO POST -->
     <div class="page" id="page-fbpost">
@@ -1331,6 +1383,16 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <label style="font-size:10px;font-weight:700;color:var(--text2);">Full Caption</label>
             <textarea id="fb-caption" rows="5" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg3);color:var(--text);margin-top:4px;resize:vertical;font-family:inherit;"></textarea>
             <button onclick="navigator.clipboard.writeText(document.getElementById('fb-caption').value).then(()=>{this.textContent='✅ Copied!';setTimeout(()=>this.textContent='📋 Caption Copy',1500)})" style="margin-top:5px;padding:5px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">📋 Caption Copy</button>
+            <!-- Caption Hook Variants -->
+            <div style="margin-top:10px;">
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">🎯 Engagement Hook Variants</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+                <button class="btn btn-sm btn-ghost" onclick="applyHook(0)">💡 Curiosity</button>
+                <button class="btn btn-sm btn-ghost" onclick="applyHook(1)">👥 Community</button>
+                <button class="btn btn-sm btn-ghost" onclick="applyHook(2)">🗳️ Poll</button>
+              </div>
+              <div id="hook-preview" style="font-size:10px;color:var(--text2);background:var(--bg);border-radius:7px;padding:8px;max-height:80px;overflow-y:auto;white-space:pre-wrap;display:none;"></div>
+            </div>
             <span id="fb-draft-indicator" style="font-size:10px;color:var(--green);margin-left:8px;opacity:0;transition:opacity 0.5s;">Draft saved ✓</span>
             <div style="margin-top:10px;">
               <label style="font-size:10px;font-weight:700;color:var(--text2);">🏷️ Hashtags</label>
@@ -1767,7 +1829,7 @@ window.goPage = function(id, el) {
     'alert-page':'🚨 সতর্কতা',blood:'🩸 রক্তদাতা',press:'📰 Press Release',
     leader:'🏛️ নেতা ট্র্যাকার',warrior:'✊ জুলাই যোদ্ধা',bajar:'🛒 বাজার দর',
     medicine:'💊 ওষুধের দাম',members:'👥 Members',polls:'🗳️ Polls',
-    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',fbpost:'📢 FB Auto Post',newscard:'🎨 News Card Generator',studio:'🎬 AI Studio'};
+    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',fbpost:'📢 FB Auto Post',sysconfig:'🔧 System Configuration',newscard:'🎨 News Card Generator',studio:'🎬 AI Studio'};
   document.getElementById('pageTitle').textContent = titles[id] || id;
   // Lazy load page data
   const loaders = {
@@ -5846,4 +5908,124 @@ try {
   };
 } catch(_) { window.__joafBroadcast = function() {}; }
 // ════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SYSTEM CONFIG PANEL
+// ═══════════════════════════════════════════════════════════════════════════
+const _SYSCONFIG_URL = 'https://fra.cloud.appwrite.io/v1/functions/fb-config/executions';
+const _ADMIN_KEY = (() => { try { return localStorage.getItem('joaf_admin_key') || ''; } catch { return ''; } })();
+
+async function _sysconfigCall(body) {
+  const r = await fetch(_SYSCONFIG_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-appwrite-project': '6a11b6cd000b59f318eb', 'x-joaf-key': _ADMIN_KEY },
+    body: JSON.stringify({ body: JSON.stringify(body) }),
+  });
+  const data = await r.json();
+  // Appwrite wraps response in responseBody
+  const inner = data.responseBody ? JSON.parse(data.responseBody) : data;
+  return inner;
+}
+
+async function sysconfigLoad() {
+  const wrap = document.getElementById('sysconfig-table-wrap');
+  if (wrap) wrap.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:12px">Loading...</div>';
+  try {
+    const data = await _sysconfigCall({ action: 'list' });
+    if (!data.configs) { if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:12px;padding:12px">Error: ${data.error || 'Unknown'}</div>`; return; }
+    if (!data.configs.length) { if(wrap) wrap.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:12px">No config keys yet.</div>'; return; }
+    const rows = data.configs.map(c => `<tr>
+      <td style="font-weight:600">${c.key}</td>
+      <td style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(c.value||'')}</td>
+      <td style="color:var(--text2)">${c.updated_at ? c.updated_at.slice(0,10) : '—'}</td>
+      <td><button class="btn btn-sm btn-ghost" onclick="sysconfigEdit(${JSON.stringify(c.key)},${JSON.stringify(c.value||'')})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="sysconfigDelete(${JSON.stringify(c.key)})">🗑️</button></td>
+    </tr>`).join('');
+    if (wrap) wrap.innerHTML = `<table><thead><tr><th>Key</th><th>Value</th><th>Updated</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+    // Populate dims editor
+    const dimsEntry = data.configs.find(c => c.key === 'canvas_dimensions');
+    if (dimsEntry) {
+      try {
+        const dims = JSON.parse(dimsEntry.value);
+        if (dims.reel)     { setV('dim-reel-w', dims.reel.w); setV('dim-reel-h', dims.reel.h); }
+        if (dims.feed_4_5) { setV('dim-feed-w', dims.feed_4_5.w); setV('dim-feed-h', dims.feed_4_5.h); }
+        if (dims.square)   { setV('dim-sq-w', dims.square.w); setV('dim-sq-h', dims.square.h); }
+      } catch {}
+    }
+  } catch(e) { if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:12px;padding:12px">Error: ${e.message}</div>`; }
+}
+function setV(id,v) { const el=document.getElementById(id); if(el) el.value=v; }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sysconfigEdit(key, val) {
+  const k=document.getElementById('cfg-key'); const v=document.getElementById('cfg-val');
+  if(k) k.value=key; if(v) v.value=val;
+}
+async function sysconfigSet() {
+  const key=(document.getElementById('cfg-key')||{}).value?.trim();
+  const val=(document.getElementById('cfg-val')||{}).value?.trim();
+  const st=document.getElementById('cfg-status');
+  if(!key){if(st)st.innerHTML='<span style="color:var(--red)">Key required</span>';return;}
+  if(st) st.innerHTML='<span style="color:var(--text2)">Saving...</span>';
+  try {
+    const data = await _sysconfigCall({ action:'set', key, value:val });
+    if(data.ok) { if(st) st.innerHTML='<span style="color:var(--green)">✅ Saved</span>'; sysconfigLoad(); }
+    else { if(st) st.innerHTML=`<span style="color:var(--red)">❌ ${data.error||'Failed'}</span>`; }
+  } catch(e) { if(st) st.innerHTML=`<span style="color:var(--red)">❌ ${e.message}</span>`; }
+}
+async function sysconfigDelete(key) {
+  if (!confirm(`Delete config key: ${key}?`)) return;
+  try { await _sysconfigCall({ action:'delete', key }); sysconfigLoad(); } catch {}
+}
+async function sysconfigSaveDims() {
+  const dims = {
+    reel:     { w: +document.getElementById('dim-reel-w').value, h: +document.getElementById('dim-reel-h').value, ratio:'9:16' },
+    feed_4_5: { w: +document.getElementById('dim-feed-w').value, h: +document.getElementById('dim-feed-h').value, ratio:'4:5' },
+    square:   { w: +document.getElementById('dim-sq-w').value,   h: +document.getElementById('dim-sq-h').value,   ratio:'1:1' },
+  };
+  const st = document.getElementById('dims-status');
+  if(st) st.innerHTML = '<span style="color:var(--text2)">Saving...</span>';
+  try {
+    const data = await _sysconfigCall({ action:'set', key:'canvas_dimensions', value: JSON.stringify(dims) });
+    if(data.ok) { if(st) st.innerHTML='<span style="color:var(--green)">✅ Canvas dimensions saved</span>'; sysconfigLoad(); }
+    else { if(st) st.innerHTML=`<span style="color:var(--red)">❌ ${data.error||'Failed'}</span>`; }
+  } catch(e) { if(st) st.innerHTML=`<span style="color:var(--red)">❌ ${e.message}</span>`; }
+}
+// Auto-load when switching to sysconfig page
+const _origGoPage = window.goPage;
+if (_origGoPage) {
+  window.goPage = function(id, el) {
+    _origGoPage(id, el);
+    if (id === 'sysconfig') { setTimeout(sysconfigLoad, 50); }
+  };
+}
+
+// ═══ Caption Hooks & Viral Score ════════════════════════════════════════
+window._captionHooks = [];
+function buildCaptionHooks(headline, emotion) {
+  const emojiMap = {urgent:'🚨',breaking:'📢',sad:'💔',positive:'✅',angry:'😡',neutral:'📌',informative:'📊',motivational:'💪'};
+  const emo = emojiMap[emotion] || '📢';
+  window._captionHooks = [
+    [`${emo} ${headline||''}`, '', '👇 আপনার মতামত কমেন্টে জানান — এটি কি সত্যিই সম্ভব?', '', '#JOAF #জুলাইফোরাম #বাংলাদেশ'].join('\n'),
+    ['💬 কথা বলুন, পরিবর্তন আনুন', '', headline||'', '', 'এই বিষয়ে আপনি কী মনে করেন? প্রথম কমেন্ট করুন 👇', '', '#JOAF #সক্রিয়নাগরিক'].join('\n'),
+    ['🗳️ আপনার ভোট দিন!', '', headline||'', '', '✅ সহমত হলে 👍  |  ❌ দ্বিমত হলে 👎', '👇 কমেন্টে কারণ বলুন', '', '#JOAF #জনমত'].join('\n'),
+  ];
+}
+function applyHook(idx) {
+  const cap = document.getElementById('fb-caption');
+  const pre = document.getElementById('hook-preview');
+  if (!window._captionHooks.length) {
+    const headline = (document.getElementById('fb-headline')||{}).value || '';
+    const emotion  = (document.getElementById('fb-emotion')||document.getElementById('sa-emotion')||{}).value || 'neutral';
+    buildCaptionHooks(headline, emotion);
+  }
+  const text = window._captionHooks[idx];
+  if (cap) cap.value = text;
+  if (pre) { pre.style.display='block'; pre.textContent = text; }
+}
+// Re-build hooks whenever headline/emotion changes
+document.addEventListener('input', function(e) {
+  if (e.target && (e.target.id === 'fb-headline' || e.target.id === 'sa-emotion')) {
+    window._captionHooks = [];
+  }
+});
 </script>

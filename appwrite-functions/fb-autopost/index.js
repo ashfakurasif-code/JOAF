@@ -12,7 +12,11 @@
 //   "check-token" — verify token validity, return expiry
 //   "get-pages"   — return list of configured pages (no tokens exposed)
 
+import { Client, Databases, Query } from 'node-appwrite';
+
 const FB_BASE = 'https://graph.facebook.com';
+const AW_DB   = 'joaf';
+const COL_CFG = 'system_config';
 
 function getApiVersion() {
   return (process.env.FB_API_VERSION || 'v22.0').trim();
@@ -27,6 +31,20 @@ function getPages() {
   } catch {
     return [];
   }
+}
+
+/** Fetch a key from system_config; returns null on failure */
+async function getSysConfig(key) {
+  if (!process.env.APPWRITE_ENDPOINT || !process.env.APPWRITE_PROJECT || !process.env.APPWRITE_API_KEY) return null;
+  try {
+    const client = new Client()
+      .setEndpoint(process.env.APPWRITE_ENDPOINT)
+      .setProject(process.env.APPWRITE_PROJECT)
+      .setKey(process.env.APPWRITE_API_KEY);
+    const db = new Databases(client);
+    const res = await db.listDocuments(AW_DB, COL_CFG, [Query.equal('key', key), Query.limit(1)]);
+    return res.documents[0]?.value ?? null;
+  } catch { return null; }
 }
 
 async function fbPost(pageId, token, endpoint, body) {
