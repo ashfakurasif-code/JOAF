@@ -1509,6 +1509,9 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
           <div><div class="card-title">🔧 System Configuration</div><div class="card-sub">Appwrite admin_config collection management</div></div>
           <button class="btn btn-primary btn-sm" onclick="sysconfigLoad()">🔄 Refresh</button>
         </div>
+        <div id="sysconfig-deploy-notice" style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:9px;padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--amber);display:none;">
+          ⚠️ <strong>Schema not deployed.</strong> The <code>admin_config</code> collection schema is defined in <code>appwrite.json</code> but not yet live in Appwrite. Run <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;">appwrite deploy collection</code> in your project root, then refresh.
+        </div>
         <div id="sysconfig-table-wrap" style="overflow-x:auto;">
           <div style="color:var(--text2);font-size:12px;padding:12px">Loading...</div>
         </div>
@@ -6187,10 +6190,20 @@ async function _sysconfigCall(body) {
 
 async function sysconfigLoad() {
   const wrap = document.getElementById('sysconfig-table-wrap');
+  const notice = document.getElementById('sysconfig-deploy-notice');
+  if (notice) notice.style.display = 'none';
   if (wrap) wrap.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:12px">Loading...</div>';
   try {
     const data = await _sysconfigCall({ action: 'list' });
-    if (!data.configs) { if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:12px;padding:12px">Error: ${data.error || 'Unknown'}</div>`; return; }
+    if (!data.configs) {
+      const isSchemaErr = (data.error||'').includes('Attribute not found in schema');
+      if (isSchemaErr && notice) notice.style.display = 'block';
+      const msg = isSchemaErr
+        ? '⚠️ admin_config schema mismatch. Deploy the schema first: <code>appwrite deploy collection</code>'
+        : 'Error: ' + (data.error || 'Unknown');
+      if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:12px;padding:12px">${msg}</div>`;
+      return;
+    }
     const validConfigs = data.configs.filter(c => c && typeof c.key === 'string' && c.key.trim() !== '');
     if (!validConfigs.length) { if(wrap) wrap.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:12px">No config keys yet.</div>'; return; }
     const rows = validConfigs.map(c => `<tr>
@@ -6211,7 +6224,14 @@ async function sysconfigLoad() {
         if (dims.square)   { setV('dim-sq-w', dims.square.w); setV('dim-sq-h', dims.square.h); }
       } catch {}
     }
-  } catch(e) { if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:12px;padding:12px">Error: ${e.message}</div>`; }
+  } catch(e) {
+    const isSchemaErr = e.message && e.message.includes('Attribute not found in schema');
+    if (isSchemaErr && notice) notice.style.display = 'block';
+    const msg = isSchemaErr
+      ? '⚠️ admin_config collection schema mismatch. Run: <code>appwrite deploy collection</code> to deploy the correct schema, then refresh.'
+      : 'Error: ' + e.message;
+    if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:12px;padding:12px">${msg}</div>`;
+  }
 }
 function setV(id,v) { const el=document.getElementById(id); if(el) el.value=v; }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

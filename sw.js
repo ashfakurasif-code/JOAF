@@ -1,6 +1,6 @@
 // JOAF Service Worker v3.2
 // ⚠️ নতুন deploy দিলে CACHE version বাড়াও: joaf-v10 → joaf-v11
-const CACHE = 'joaf-v10';
+const CACHE = 'joaf-v11';
 const OFFLINE_URL = '/offline.html';
 
 const PRECACHE = [
@@ -88,6 +88,9 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Skip cross-origin requests (Appwrite API, Firebase, CDN etc) — let browser handle them normally
+  if (!e.request.url.startsWith(self.location.origin)) return;
+
   if (e.request.mode === 'navigate') {
     e.respondWith(fetch(e.request).catch(() => caches.match(OFFLINE_URL)));
     return;
