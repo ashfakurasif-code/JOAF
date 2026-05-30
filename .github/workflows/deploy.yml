@@ -10,12 +10,15 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Appwrite CLI
         run: npm install -g appwrite-cli
-      - name: Deploy to Appwrite
+            - name: Deploy to Appwrite
         env:
           APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
           APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: |
+          # ক্লায়েন্ট কনফিগার করা
           appwrite client --endpoint "$APPWRITE_ENDPOINT" --project-id "$APPWRITE_PROJECT_ID" --key "$APPWRITE_API_KEY"
-          # --yes ফ্ল্যাগটি যোগ করা হয়েছে যাতে এটি অটোমেটিক কনফার্ম হয়
-          appwrite push function --all --yes
+          
+          # 'yes' কমান্ড ব্যবহার করে কনফার্মেশন প্রম্পট এড়িয়ে চলা
+          yes | appwrite push function --all
+          yes | appwrite push database --all
