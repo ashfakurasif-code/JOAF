@@ -4006,9 +4006,7 @@ document.getElementById('pr-date').value = new Date().toISOString().slice(0,10);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="/js/data.js"></script>
 <script src="/js/fb-draft-queue.js" type="module"></script>
-</body>
-</body>
-</html><script>
+<script>
 // ── FB Reel Generator ─────────────────────────────────────────
 let reelBlob = null;
 let _fbCurrentTone = 'urgent';
@@ -6359,8 +6357,97 @@ window._qualityScorer = {
 };
 
 // ── AIDA Persuasion Framework prompt builder ─────────────────────
-function _buildAIDAPrompt(topic, type, tone, lengthKey) {
+const _CAPTION_RESEARCH_MIN_TOPIC_CHARS = 60;
+const _CAPTION_RESEARCH_MIN_WORDS = 8;
+const _CAPTION_RETRY_TEMPS = [0.82, 0.92, 0.98];
+function _escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function _sanitizeStringArray(arr, maxLen) {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(x => String(x || '').trim()).filter(Boolean).slice(0, maxLen);
+}
+function _getCaptionRetryTemperature(retryCount) {
+  return _CAPTION_RETRY_TEMPS[Math.min(retryCount, _CAPTION_RETRY_TEMPS.length - 1)];
+}
+
+async function _researchTopicContext(topic, type, tone, forceRefresh) {
+  const words = topic.split(/\s+/).filter(Boolean).length;
+  const shouldResearch = !!forceRefresh || topic.length < _CAPTION_RESEARCH_MIN_TOPIC_CHARS || words < _CAPTION_RESEARCH_MIN_WORDS;
+  if (!shouldResearch) return null;
+  const prompt = `তুমি JOAF Research Desk। বিষয় থেকে viral content-এর জন্য দ্রুত research brief বানাও।
+
+বিষয়: ${topic}
+Type: ${type}
+Tone: ${tone}
+
+শুধু raw JSON দাও:
+{
+  "expanded_topic": "topic expanded with context",
+  "key_facts": ["fact 1","fact 2","fact 3"],
+  "angles": ["angle 1","angle 2"],
+  "search_queries": ["query 1","query 2"],
+  "source_hints": ["source/domain hint 1","source/domain hint 2"]
+}
+Rules:
+- facts short, specific, and usable for AIDA
+- no markdown
+- no explanation outside JSON`;
+  try {
+    const r = await join_aw_exec('groq-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 800,
+        temperature: 0.45,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    let raw = (d.choices?.[0]?.message?.content || '').replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    let j;
+    try { j = JSON.parse(raw); }
+    catch (parseErr) {
+      const m = raw.match(/\{[\s\S]*\}/);
+      if (m) j = JSON.parse(m[0]);
+      else {
+        console.warn('[JOAF Caption] Research JSON parse failed:', parseErr?.message || parseErr, '| raw:', raw.slice(0, 260));
+        return null;
+      }
+    }
+    return {
+      expanded_topic: String(j.expanded_topic || '').trim(),
+      key_facts: _sanitizeStringArray(j.key_facts, 5),
+      angles: _sanitizeStringArray(j.angles, 3),
+      search_queries: _sanitizeStringArray(j.search_queries, 3),
+      source_hints: _sanitizeStringArray(j.source_hints, 3)
+    };
+  } catch (e) {
+    console.warn('[JOAF Caption] Research phase skipped:', e?.message || e);
+    return null;
+  }
+}
+
+function _buildAIDAPrompt(topic, type, tone, lengthKey, research) {
   const lenMap = { short: 'under 100 characters', medium: '150–250 words', long: '300+ words' };
+  const researchBlock = research ? `
+Research Brief (must use before writing):
+- Expanded Topic: ${research.expanded_topic || topic}
+- Key Facts: ${(research.key_facts || []).join(' | ') || 'N/A'}
+- Angles: ${(research.angles || []).join(' | ') || 'N/A'}
+- Suggested Queries: ${(research.search_queries || []).join(' | ') || 'N/A'}
+- Source Hints: ${(research.source_hints || []).join(' | ') || 'N/A'}
+` : `
+Research Brief:
+- If topic is short/unclear, first expand missing context and infer likely facts before AIDA writing.
+`;
   return `তুমি JOAF-এর Chief Content Strategist। AIDA Persuasion Framework ব্যবহার করে viral Bengali Facebook caption তৈরি করো।
 
 AIDA Framework:
@@ -6371,6 +6458,7 @@ A = Action: Share trigger question + clear CTA
 
 বিষয়: ${topic}
 Type: ${type} | Tone: ${tone} | Length: ${lenMap[lengthKey] || '150–250 words'}
+${researchBlock}
 
 HOOK RULES (enforce strictly):
 - Must contain: question বা shocking claim বা number
@@ -6408,16 +6496,18 @@ window.generateCaption = async function(retryCount) {
     if (st) st.innerHTML = '<span style="color:var(--red)">বিষয় লিখুন</span>';
     return;
   }
-  if (st) st.innerHTML = `<span style="color:var(--amber)">⏳ ${rc > 0 ? 'Re-generating (quality boost)...' : 'AI generating...'}</span>`;
+  if (st) st.innerHTML = `<span style="color:var(--amber)">⏳ ${rc > 0 ? 'Re-research + Re-generating...' : 'Research + AIDA generating...'}</span>`;
   if (out) out.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text2);">
     <div style="font-size:32px;margin-bottom:8px;">✍️</div>
-    <div style="font-size:13px;font-weight:700;">${rc > 0 ? '↻ Quality Score < 8 — Retrying with enhanced params...' : 'AIDA Framework দিয়ে caption তৈরি হচ্ছে...'}</div>
+    <div style="font-size:13px;font-weight:700;">${rc > 0 ? '↻ Quality Score < 8 — নতুন research context নিয়ে retry হচ্ছে...' : 'Research → AIDA Framework দিয়ে caption তৈরি হচ্ছে...'}</div>
   </div>`;
 
   // Elevate temperature on retry
-  const temp = rc === 0 ? 0.82 : rc === 1 ? 0.92 : 0.98;
+  const temp = _getCaptionRetryTemperature(rc);
 
   try {
+    const research = await _researchTopicContext(topic, type, tone, rc > 0);
+    const enrichedTopic = (research && research.expanded_topic) ? research.expanded_topic : topic;
     const res = await join_aw_exec('groq-proxy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -6425,7 +6515,7 @@ window.generateCaption = async function(retryCount) {
         model: 'llama-3.3-70b-versatile',
         max_tokens: 1800,
         temperature: temp,
-        messages: [{ role: 'user', content: _buildAIDAPrompt(topic, type, tone, length) }]
+        messages: [{ role: 'user', content: _buildAIDAPrompt(enrichedTopic, type, tone, length, research) }]
       })
     });
     if (!res.ok) { const t = await res.text().catch(()=>''); throw new Error('API ' + res.status + ': ' + t.substring(0,100)); }
@@ -6452,6 +6542,11 @@ window.generateCaption = async function(retryCount) {
 
     out.innerHTML = `
       ${window._qualityScorer.renderBadge(scores)}
+      ${research ? `<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);margin-bottom:8px;">🔎 Research Context Used</div>
+        <div style="font-size:12px;line-height:1.7;margin-bottom:8px;">${_escapeHtml(research.expanded_topic || topic)}</div>
+        ${(research.key_facts && research.key_facts.length) ? `<ul style="margin:0 0 0 16px;padding:0;font-size:11px;line-height:1.7;color:var(--text2);">${research.key_facts.map(f => `<li>${_escapeHtml(f)}</li>`).join('')}</ul>` : ''}
+      </div>` : ''}
 
       <!-- AIDA Breakdown -->
       <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:12px;">
@@ -6835,3 +6930,5 @@ window.copyThumbnailCaption = function() {
 })();
 // ═══════════════════════════════════════════════════════════════════
 </script>
+</body>
+</html>
