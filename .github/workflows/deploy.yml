@@ -15,5 +15,6 @@ jobs:
       - name: Deploy to Appwrite
         run: |
           npm install -g appwrite-cli
-          appwrite client --endpoint $APPWRITE_ENDPOINT --projectId $APPWRITE_PROJECT_ID --key $APPWRITE_API_KEY
+          # এখানে --project-id খেয়াল করো
+          appwrite client --endpoint $APPWRITE_ENDPOINT --project-id $APPWRITE_PROJECT_ID --key $APPWRITE_API_KEY
           appwrite push function --all
