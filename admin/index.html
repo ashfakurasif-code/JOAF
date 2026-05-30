@@ -106,7 +106,6 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 /* PAGES */
 .page{padding:22px;display:none;flex:1;min-height:0;overflow:auto;}
 .page.active{display:block;}
-#page-newscard{padding:0;} #page-newscard.active{display:flex!important;}
 
 
 /* ══ MOBILE RESPONSIVE ══════════════════════════ */
@@ -662,16 +661,6 @@ body  { overflow-x:hidden; }
         <a href="https://www.julyforum.com" target="_blank" class="tbtn">🌐 Live Site</a>
       </div>
     </div>
-
-    <!-- ══ NEWS CARD GENERATOR ══ -->
-    <div class="page" id="page-studio" style="padding:0;overflow:hidden;height:calc(100vh - 48px);flex-direction:column;">
-      <iframe src="studio.html" style="width:100%;height:calc(100vh - 48px);border:none;display:block;" id="studioFrame"></iframe>
-    </div>
-
-    <div class="page" id="page-newscard" style="padding:0;overflow:hidden;height:calc(100vh - 48px);flex-direction:column;">
-      <iframe src="../tools/news-card-generator.html" style="width:100%;flex:1;border:none;display:block;min-height:0;" id="ncgFrame"></iframe>
-    </div>
-
 
     <!-- ══ DASHBOARD ══ -->
     <div class="page active" id="page-dashboard">
@@ -1438,7 +1427,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             </div>
             <div style="flex:1;overflow:hidden;position:relative;">
               <iframe id="reel-engine-frame"
-                      src="about:blank"
+                      src="../tools/fb-reel-studio.html"
                       style="width:100%;height:100%;border:none;display:block;"
                       allow="clipboard-write"></iframe>
             </div>
@@ -6202,8 +6191,9 @@ async function sysconfigLoad() {
   try {
     const data = await _sysconfigCall({ action: 'list' });
     if (!data.configs) { if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:12px;padding:12px">Error: ${data.error || 'Unknown'}</div>`; return; }
-    if (!data.configs.length) { if(wrap) wrap.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:12px">No config keys yet.</div>'; return; }
-    const rows = data.configs.map(c => `<tr>
+    const validConfigs = data.configs.filter(c => c && typeof c.key === 'string' && c.key.trim() !== '');
+    if (!validConfigs.length) { if(wrap) wrap.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:12px">No config keys yet.</div>'; return; }
+    const rows = validConfigs.map(c => `<tr>
       <td style="font-weight:600">${c.key}</td>
       <td style="max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(c.value||'')}</td>
       <td style="color:var(--text2)">${c.updated_at ? c.updated_at.slice(0,10) : '—'}</td>
@@ -6212,7 +6202,7 @@ async function sysconfigLoad() {
     </tr>`).join('');
     if (wrap) wrap.innerHTML = `<table><thead><tr><th>Key</th><th>Value</th><th>Updated</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
     // Populate dims editor
-    const dimsEntry = data.configs.find(c => c.key === 'canvas_dimensions');
+    const dimsEntry = validConfigs.find(c => c.key === 'canvas_dimensions');
     if (dimsEntry) {
       try {
         const dims = JSON.parse(dimsEntry.value);
