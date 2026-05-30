@@ -11,4 +11,4 @@ jobs:
       - name: Deploy to Appwrite
         run: |
           npm install -g appwrite-cli
-          appwrite deploy function --all
+          appwrite push function --all
