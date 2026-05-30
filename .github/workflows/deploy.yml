@@ -15,5 +15,6 @@ jobs:
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
         run: |
           npm install -g appwrite-cli
-          appwrite client --endpoint "$APPWRITE_ENDPOINT" --project-id "$APPWRITE_PROJECT_ID" --key "$APPWRITE_API_KEY"
-          appwrite push function --all --yes
+          # সরাসরি কমান্ড চালানোর জন্য 'yes' কমান্ডটি ব্যবহার করছি যা সব কনফার্মেশনে 'y' পাঠিয়ে দেবে
+          yes | appwrite client --endpoint "$APPWRITE_ENDPOINT" --project-id "$APPWRITE_PROJECT_ID" --key "$APPWRITE_API_KEY"
+          yes | appwrite push function --all
