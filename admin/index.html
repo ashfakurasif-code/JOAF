@@ -5610,7 +5610,7 @@ window.saOpenPostHelper = async function() {
       const { Client, Databases, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
       const _c = new Client().setEndpoint(globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').setProject(globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '');
       const _db = new Databases(_c);
-      await _db.createDocument((globalThis.JOAF_CONFIG?.databaseId || '69cef52f0018a2a7b05a'), 'fb_post_log', ID.unique(), {
+      await _db.createDocument((globalThis.JOAF_CONFIG?.databaseId || 'joaf'), 'fb_post_log', ID.unique(), {
         caption:    caption.substring(0, 500),
         media_type: videoUrl ? 'video' : imageUrl ? 'image' : 'text',
         posted_at:  new Date().toISOString(),
