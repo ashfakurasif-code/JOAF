@@ -7,11 +7,10 @@ import { Client, Databases, Query, ID } from 'node-appwrite';
 
 const AW_DB = process.env.APPWRITE_DATABASE_ID || process.env.APPWRITE_FUNCTION_DATABASE_ID || 'joaf';
 const COL_CFG  = 'system_config';
-const FB_BASE  = 'https://graph.facebook.com';
 
 const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT;
-const APPWRITE_PROJECT = process.env.APPWRITE_PROJECT || process.env.APPWRITE_FUNCTION_PROJECT_ID;
-const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || process.env.APPWRITE_FUNCTION_API_KEY || '';
+const APPWRITE_PROJECT  = process.env.APPWRITE_PROJECT  || process.env.APPWRITE_FUNCTION_PROJECT_ID;
+const APPWRITE_API_KEY  = process.env.APPWRITE_API_KEY  || process.env.APPWRITE_FUNCTION_API_KEY || '';
 
 async function getDbClient(apiKey = '') {
   const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT);
@@ -21,6 +20,14 @@ async function getDbClient(apiKey = '') {
 
 function resolveRuntimeApiKey(req) {
   return req?.headers?.['x-appwrite-key'] || req?.headers?.['X-Appwrite-Key'] || APPWRITE_API_KEY;
+}
+
+// Returns true when an AppwriteException indicates the collection does not exist.
+function isCollectionNotFound(e) {
+  return (
+    e?.code === 404 ||
+    (typeof e?.message === 'string' && e.message.toLowerCase().includes('collection with the requested id'))
+  );
 }
 
 async function fetchConfig(db, key) {
@@ -66,6 +73,12 @@ export default async ({ req, res, log, error }) => {
   let body = {};
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); } catch { }
 
+  // Support body._adminKey forwarded by join_aw_exec wrapper
+  if (body._adminKey && !req.headers['x-admin-key']) {
+    const provided = body._adminKey;
+    if (ADMIN_KEY && provided !== ADMIN_KEY) return res.json({ error: 'Unauthorized' }, 401);
+  }
+
   const { action, key, value } = body;
 
   const client = await getDbClient();
@@ -76,7 +89,15 @@ export default async ({ req, res, log, error }) => {
     try {
       const result = await db.listDocuments(AW_DB, COL_CFG, [Query.limit(100)]);
       return res.json({ ok: true, configs: result.documents.map(d => ({ key: d.key, value: d.value, updated_at: d.updated_at })) });
-    } catch (e) { return res.json({ error: e.message }, 500); }
+    } catch (e) {
+      if (isCollectionNotFound(e)) {
+        // Collection hasn't been deployed yet — return empty list rather than HTTP 500
+        // so the admin UI can load without showing a red error.
+        log('system_config collection not found — returning empty list. Run: appwrite deploy collection');
+        return res.json({ ok: true, configs: [] });
+      }
+      return res.json({ error: e.message }, 500);
+    }
   }
 
   // ── get: fetch single key ──
@@ -99,7 +120,13 @@ export default async ({ req, res, log, error }) => {
       }
       log(`system_config SET: ${key}`);
       return res.json({ ok: true, key, value: String(value ?? '') });
-    } catch (e) { error('set error: ' + e.message); return res.json({ error: e.message }, 500); }
+    } catch (e) {
+      if (isCollectionNotFound(e)) {
+        return res.json({ error: 'system_config collection not found. Deploy it via: appwrite deploy collection' }, 503);
+      }
+      error('set error: ' + e.message);
+      return res.json({ error: e.message }, 500);
+    }
   }
 
   // ── delete: remove a config key ──
@@ -111,7 +138,10 @@ export default async ({ req, res, log, error }) => {
         await db.deleteDocument(AW_DB, COL_CFG, existing.documents[0].$id);
       }
       return res.json({ ok: true, deleted: key });
-    } catch (e) { return res.json({ error: e.message }, 500); }
+    } catch (e) {
+      if (isCollectionNotFound(e)) return res.json({ ok: true, deleted: key }); // already gone
+      return res.json({ error: e.message }, 500);
+    }
   }
 
   return res.json({ error: 'Unknown action' }, 400);

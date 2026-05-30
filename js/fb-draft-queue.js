@@ -123,7 +123,7 @@ window.fbQueueList = async function(status = 'pending') {
 window.fbDraftStartAutoSave = function() {
   fbDraftRestore(); // restore on init
   setInterval(fbDraftSave, 30000);
-  console.log('[FB Draft] auto-save started (30s interval)');
+  // auto-save loop started
 };
 
 // ── Feature 10: Upload to Appwrite Storage with progress ──────

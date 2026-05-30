@@ -52,35 +52,6 @@
     </div>
   </section>
 </main>
-<script>
-  const cfg = window.JOAF_CONFIG || {};
-  document.getElementById('cfg-endpoint').value = cfg.endpoint || '';
-  document.getElementById('cfg-project').value = cfg.projectId || '';
-  const btns = [...document.querySelectorAll('.btn[data-target]')];
-  const frames = { news: document.getElementById('frame-news'), fb: document.getElementById('frame-fb'), reel: document.getElementById('frame-reel') };
-  btns.forEach(btn => btn.addEventListener('click', () => {
-    btns.forEach(b => b.classList.toggle('active', b === btn));
-    Object.entries(frames).forEach(([k, el]) => el.classList.toggle('active', k === btn.dataset.target));
-  }));
-  async function refreshHealth() {
-    const dot = document.getElementById('healthDot');
-    const text = document.getElementById('healthText');
-    dot.className = 'dot'; text.textContent = 'Checking…';
-    try {
-      const res = await fetch(cfg.endpoint.replace(/\/$/, '') + '/health');
-      const data = await res.json();
-      const statuses = [];
-      if (data.status) statuses.push(data.status);
-      if (Array.isArray(data.services)) statuses.push(...data.services.map(s => s.status));
-      const ok = res.ok && statuses.every(s => String(s).toLowerCase() === 'pass');
-      dot.className = 'dot ' + (ok ? 'ok' : 'bad');
-      text.textContent = ok ? 'Health pass' : 'Health fail';
-    } catch {
-      dot.className = 'dot bad'; text.textContent = 'Health error';
-    }
-  }
-  document.getElementById('refreshHealth').addEventListener('click', refreshHealth);
-  refreshHealth();
-</script>
+<script src="./js/studio-init.js"></script>
 </body>
 </html>

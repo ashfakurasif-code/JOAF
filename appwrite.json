@@ -282,6 +282,10 @@
         {
           "name": "ADMIN_SECRET_KEY",
           "value": ""
+        },
+        {
+          "name": "APPWRITE_DATABASE_ID",
+          "value": "joaf"
         }
       ],
       "ignore": [],
