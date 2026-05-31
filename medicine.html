@@ -97,14 +97,14 @@
 <script src="/js/components.js?v=6.6"></script>
 
 <script type="module">
-import { initializeApp, getApps } from '/js/aw-firestore.js';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from '/js/aw-firestore.js';
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from '/js/appwrite-db.js';
 
 const FB_CONFIG = {}; // Firebase config removed
 const GROQ_KEY = (globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/groq-proxy/executions'; // key moved to server
 
 const fbApp = getApps().length ? getApps()[0] : initializeApp({});
-const db = getFirestore(fbApp);
+const db = getFirestore();
 
 function bn(n) { return String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]); }
 
@@ -269,10 +269,10 @@ loadMeds();
 </script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from '/js/aw-firestore.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/appwrite-db.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({});
-const _db = getFirestore(_fa);
+const _db = getFirestore();
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;

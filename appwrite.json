@@ -877,6 +877,786 @@
                 "delete(\"any\")"
             ],
             "databaseId": "joaf"
+        },
+        {
+            "$id": "donors",
+            "name": "Blood Donors",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true
+                },
+                {
+                    "key": "phone",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "blood",
+                    "type": "string",
+                    "size": 16,
+                    "required": false
+                },
+                {
+                    "key": "district",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "area",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "lastDonate",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "lat",
+                    "type": "double",
+                    "required": false
+                },
+                {
+                    "key": "lng",
+                    "type": "double",
+                    "required": false
+                },
+                {
+                    "key": "active",
+                    "type": "boolean",
+                    "required": false,
+                    "default": true
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "district_blood",
+                    "type": "key",
+                    "attributes": [
+                        "district",
+                        "blood"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "alerts",
+            "name": "Alerts",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "title",
+                    "type": "string",
+                    "size": 512,
+                    "required": true
+                },
+                {
+                    "key": "description",
+                    "type": "string",
+                    "size": 4096,
+                    "required": false
+                },
+                {
+                    "key": "location",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                },
+                {
+                    "key": "reporter",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "type",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "imageUrl",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "lat",
+                    "type": "double",
+                    "required": false
+                },
+                {
+                    "key": "lng",
+                    "type": "double",
+                    "required": false
+                },
+                {
+                    "key": "active",
+                    "type": "boolean",
+                    "required": false,
+                    "default": true
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "active_idx",
+                    "type": "key",
+                    "attributes": [
+                        "active"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "press_releases",
+            "name": "Press Releases",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "title",
+                    "type": "string",
+                    "size": 512,
+                    "required": true
+                },
+                {
+                    "key": "content",
+                    "type": "string",
+                    "size": 65535,
+                    "required": false
+                },
+                {
+                    "key": "summary",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "imageUrl",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "author",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "date",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "category",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "tags",
+                    "type": "string",
+                    "size": 1024,
+                    "required": false
+                },
+                {
+                    "key": "slug",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "published",
+                    "type": "boolean",
+                    "required": false,
+                    "default": true
+                },
+                {
+                    "key": "createdAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "date_desc",
+                    "type": "key",
+                    "attributes": [
+                        "date"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "leaders",
+            "name": "Leaders",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "size": 512,
+                    "required": true
+                },
+                {
+                    "key": "party",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "position",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                },
+                {
+                    "key": "district",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "imageUrl",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "bio",
+                    "type": "string",
+                    "size": 8192,
+                    "required": false
+                },
+                {
+                    "key": "corruptionScore",
+                    "type": "integer",
+                    "required": false,
+                    "default": 0
+                },
+                {
+                    "key": "performanceScore",
+                    "type": "integer",
+                    "required": false,
+                    "default": 0
+                },
+                {
+                    "key": "status",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "source",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "medicines",
+            "name": "Medicines",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "size": 512,
+                    "required": true
+                },
+                {
+                    "key": "generic",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                },
+                {
+                    "key": "company",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "form",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "strength",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "price",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "mrp",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "category",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "name_idx",
+                    "type": "key",
+                    "attributes": [
+                        "name"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "warriors",
+            "name": "July Warriors",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "size": 512,
+                    "required": true
+                },
+                {
+                    "key": "district",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "story",
+                    "type": "string",
+                    "size": 8192,
+                    "required": false
+                },
+                {
+                    "key": "imageUrl",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "date",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "category",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "verified",
+                    "type": "boolean",
+                    "required": false,
+                    "default": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "members",
+            "name": "Members",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "name",
+                    "type": "string",
+                    "size": 512,
+                    "required": true
+                },
+                {
+                    "key": "phone",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "district",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "email",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                },
+                {
+                    "key": "role",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "status",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "joinedAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "bio",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "imageUrl",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "forum_messages",
+            "name": "Forum Messages",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "text",
+                    "type": "string",
+                    "size": 4096,
+                    "required": true
+                },
+                {
+                    "key": "author",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "authorId",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "room",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "deleted",
+                    "type": "boolean",
+                    "required": false,
+                    "default": false
+                },
+                {
+                    "key": "replyTo",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "room_idx",
+                    "type": "key",
+                    "attributes": [
+                        "room"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "pageviews",
+            "name": "Page Views",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "page",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                },
+                {
+                    "key": "device",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "source",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "referrer",
+                    "type": "string",
+                    "size": 1024,
+                    "required": false
+                },
+                {
+                    "key": "ts",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "poll_users",
+            "name": "Poll Users",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "userId",
+                    "type": "string",
+                    "size": 128,
+                    "required": true
+                },
+                {
+                    "key": "pollId",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "answer",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                },
+                {
+                    "key": "district",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "streak",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "user_poll",
+                    "type": "key",
+                    "attributes": [
+                        "userId",
+                        "pollId"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "notifications",
+            "name": "Notifications",
+            "enabled": true,
+            "documentSecurity": false,
+            "databaseId": "joaf",
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "attributes": [
+                {
+                    "key": "type",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "title",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                },
+                {
+                    "key": "body",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "url",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "district",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "sent",
+                    "type": "boolean",
+                    "required": false,
+                    "default": false
+                }
+            ],
+            "indexes": []
         }
     ],
     "databaseId": "joaf",
