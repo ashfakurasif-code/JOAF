@@ -24,9 +24,8 @@
     document.getElementById('pr-title').textContent = 'প্রেস রিলিজ পাওয়া যায়নি।';
   }
 
-  // Sidebar
   try {
-    const snap = await fetch(`${EP}/databases/${DB}/collections/press_releases/documents?queries[]=orderDesc("date")&queries[]=limit(5)`, {
+    const snap = await fetch(`${EP}/databases/${DB}/collections/press_releases/documents`, {
       headers: { 'X-Appwrite-Project': PJ }
     });
     const data = await snap.json();
