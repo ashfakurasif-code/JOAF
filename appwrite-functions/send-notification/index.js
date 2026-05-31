@@ -129,9 +129,14 @@ export default async ({ req, res, log, error }) => {
   try { initVapid(); }
   catch (e) { return res.json({ error: e.message }, 500); }
 
-  let body;
-  try { body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); }
-  catch { return res.json({ error: 'Invalid JSON' }, 400); }
+  // Unwrap Appwrite execution envelope if present
+  let rawBody = req.body;
+  if (rawBody && typeof rawBody === 'object' && typeof rawBody.body === 'string') {
+    try { rawBody = JSON.parse(rawBody.body); } catch (_) {}
+  } else if (typeof rawBody === 'string') {
+    try { rawBody = JSON.parse(rawBody); } catch (_) { rawBody = {}; }
+  }
+  const body = rawBody || {};
 
   const { type = 'welcome', title, bodyText, url, icon, district } = body;
 

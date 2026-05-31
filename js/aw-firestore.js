@@ -139,29 +139,12 @@ function safeDocId(id) {
   return sanitizeId(id);
 }
 
-let _sessionReady = null;
-
-async function ensureSession(client) {
-  if (_sessionReady) return _sessionReady;
-  _sessionReady = (async () => {
-    try {
-      const { Account } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
-      const acc = new Account(client);
-      try { await acc.get(); } catch(e) {
-        if (e.code === 401) { try { await acc.createAnonymousSession(); } catch(e2) {} }
-      }
-    } catch(e) {}
-  })();
-  return _sessionReady;
-}
-
 async function getSdk() {
   if (!_sdkPromise) {
     _sdkPromise = (async () => {
       const { Client, Databases, Query, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
       const client = new Client();
       client.setEndpoint(AW_ENDPOINT).setProject(AW_PROJECT);
-      await ensureSession(client);
       const db = new Databases(client);
       return { client, db, Query, ID };
     })();

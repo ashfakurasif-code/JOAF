@@ -96,8 +96,16 @@ export default async ({ req, res, log, error }) => {
   }
 
   let body;
-  try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
-  catch { return res.json({ error: 'Invalid JSON' }, 400); }
+  try {
+    let raw = req.body;
+    // Unwrap Appwrite execution envelope: { body: "JSON_STRING", async: false, ... }
+    if (raw && typeof raw === 'object' && typeof raw.body === 'string') {
+      raw = JSON.parse(raw.body);
+    } else if (typeof raw === 'string') {
+      raw = JSON.parse(raw);
+    }
+    body = raw || {};
+  } catch { return res.json({ error: 'Invalid JSON' }, 400); }
 
   if (!body?.messages?.length) return res.json({ error: 'messages required' }, 400);
   if (body._ping) return res.json({ ok: true, pong: true });

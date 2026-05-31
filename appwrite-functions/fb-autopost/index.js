@@ -48,8 +48,12 @@ export default async ({ req, res, log, error }) => {
   }
 
   let body = {};
-  try { body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); }
-  catch { /* allow empty body for get-pages */ }
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    if (body && typeof body.body === 'string' && body.body.trim().startsWith('{')) {
+      try { body = JSON.parse(body.body); } catch(_) {}
+    }
+  } catch { /* allow empty body */ }
 
   const { action = 'post', caption = '', imageUrl, videoUrl, imageUrls = [], excludeIds = [], scheduledAt } = body;
   const pages = getPages();

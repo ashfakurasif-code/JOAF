@@ -765,18 +765,22 @@ const JOAFComponents = {
           // 🔔 Push notification — same district subscribers কে জানাও
           try {
             const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
-            await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions') + '/send-notification/executions'), {
+            await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/send-notification/executions', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'X-Appwrite-Project': globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '',
               },
               body: JSON.stringify({
-                type: 'blood',
-                title: `🩸 ${district} এ ${blood} রক্তদাতা যোগ দিয়েছেন!`,
-                body: `${name} — ${district}${area ? ', ' + area : ''}। এখনই যোগাযোগ করুন।`,
-                url: '/rokto.html',
-                district,
+                async: false, path: '/', method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: 'blood',
+                  title: `🩸 ${district} এ ${blood} রক্তদাতা যোগ দিয়েছেন!`,
+                  bodyText: `${name} — ${district}${area ? ', ' + area : ''}। এখনই যোগাযোগ করুন।`,
+                  url: '/rokto.html',
+                  district,
+                })
               })
             });
           } catch(_ne) {}
@@ -1503,7 +1507,11 @@ async function joafSaveSubscription(sub) {
         'Content-Type': 'application/json',
         'X-Appwrite-Project': globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '',
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        async: false, path: '/', method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
     });
 
     if (res.ok) {
