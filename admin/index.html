@@ -2617,7 +2617,7 @@ async function loadPress() {
         <input type="checkbox" class="press-chk" data-id="${d.id}" onchange="onPressCheck()" style="cursor:pointer;accent-color:var(--accent);flex-shrink:0;">
         <span class="act-icon">📰</span>
         <div class="act-text"><b>${data.title||'—'}</b>${data.slug&&data.slug.startsWith('auto-press-release')?' <span style="font-size:9px;background:#1877f2;color:#fff;border-radius:4px;padding:1px 5px;vertical-align:middle;">🤖 AUTO</span>':''}<br><span style="color:var(--text2);font-size:10px">${data.date||'—'} ${data.summary?'· '+(data.summary.substring(0,50))+'...':''}</span></div>
-        <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;border-color:#1877f2;color:#1877f2;flex-shrink:0;" onclick="postPressToFb(`${d.id}`,`${(data.title||'').replace(/`/g,'')}`,`${(data.summary||'').replace(/`/g,'')}`,`${data.img||'/img/press-release-bg.jpg'}`,this)" title="Facebook এ Post">📤 FB</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;border-color:#1877f2;color:#1877f2;flex-shrink:0;" onclick="postPressToFb('${d.id}','${(data.title||\"\").replace(/'/g,\"\")}','${(data.summary||\"\").replace(/'/g,\"\")}','${data.img||\"/img/press-release-bg.jpg\"}')" title="Facebook এ Post">📤 FB</button>
         <button class="btn btn-danger btn-sm" onclick="deletePress('${d.id}')">🗑️</button>
       </div>`;
     }).join('');
