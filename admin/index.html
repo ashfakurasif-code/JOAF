@@ -1209,8 +1209,8 @@ body  { overflow-x:hidden; }
       <div id="an-setup" style="display:none;margin-top:12px" class="card">
         <div class="card-title" style="color:var(--amber);margin-bottom:8px">⚙️ Visitor Tracking সেটআপ করুন</div>
         <code style="display:block;background:var(--bg);padding:12px;border-radius:8px;font-size:10px;white-space:pre-wrap;border:1px solid var(--border);line-height:1.6">&lt;script type="module"&gt;
-import{initializeApp,getApps}from'/js/aw-firestore.js';
-import{getFirestore,addDoc,collection,serverTimestamp}from'/js/aw-firestore.js';
+import{initializeApp,getApps}from'/js/appwrite-db.js';
+import{getFirestore,addDoc,collection,serverTimestamp}from'/js/appwrite-db.js';
 const app=getApps().length?getApps()[0]:initializeApp({});
 const db=getFirestore(app);
 const ua=navigator.userAgent,dev=/Mobile|Android|iPhone/i.test(ua)?'mobile':'desktop';
@@ -1939,15 +1939,15 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp, getApps } from '/js/aw-firestore.js';
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from '/js/aw-firestore.js';
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from '/js/appwrite-db.js';
 
 // ── Firebase config (LEGACY — READ-ONLY reference, no writes) ────────────────
-// All imports above come from /js/aw-firestore.js which is a Firebase-API-compatible
+// All imports above come from /js/appwrite-db.js which is a Firebase-API-compatible
 // shim that routes ALL operations (addDoc, setDoc, updateDoc, deleteDoc, getDocs)
 // exclusively to Appwrite. Firebase Firestore is NEVER written to from this panel.
 // This config object is passed to the shim's initializeApp() only for API compat;
-// the shim ignores it and uses the Appwrite endpoint/project hardcoded in aw-firestore.js.
+// the shim ignores it and uses the Appwrite endpoint/project hardcoded in appwrite-db.js.
 const FB = {}; // Firebase config removed — shim uses Appwrite
 // ─────────────────────────────────────────────────────────────────────────────
 const app = getApps().length ? getApps()[0] : initializeApp({});
@@ -2478,7 +2478,7 @@ async function loadDonors() {
   const tbody = document.getElementById('donor-tbody');
   tbody.innerHTML = '<tr><td colspan="7" class="loading">লোড হচ্ছে... (Appwrite)</td></tr>';
   try {
-    // aw-firestore.js shim routes this to Appwrite — no Firebase read
+    // appwrite-db.js shim routes this to Appwrite — no Firebase read
     const snap = await getDocs(collection(db,'donors'));
     allDonors = snap.docs.map(d=>({...d.data(),id:d.id}));
     // Stats
@@ -2860,7 +2860,7 @@ window.migrateLeaders = async function() {
       virals:[{text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশে ব্যাপক আলোচনা।',icon:'📋',date:'জানুয়ারি ২০২৬'}]},
   ];
   try {
-    const { setDoc, doc } = await import('/js/aw-firestore.js');
+    const { setDoc, doc } = await import('/js/appwrite-db.js');
     for (const leader of leaders) {
       const {id, ...data} = leader;
       await setDoc(doc(db,'leaders', id), {...data, createdAt:serverTimestamp()});

@@ -38,8 +38,8 @@ button:disabled{background:#aaa;cursor:not-allowed;}
 <div id="log">Upload শুরু করতে বাটন চাপুন...</div>
 
 <script type="module">
-import { initializeApp, getApps } from "/js/aw-firestore.js";
-import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, where } from "/js/aw-firestore.js";
+import { initializeApp, getApps } from "/js/appwrite-db.js";
+import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query, where } from "/js/appwrite-db.js";
 
 const app = getApps().length ? getApps()[0] : initializeApp({});
 const db = getFirestore(app);
@@ -104,8 +104,8 @@ window.startSeed = async () => {
 };
 </script>
 <script type="module">
-import { initializeApp, getApps } from '/js/aw-firestore.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/appwrite-db.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;

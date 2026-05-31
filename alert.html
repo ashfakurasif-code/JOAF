@@ -207,8 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <script type="module">
-import { initializeApp } from "/js/aw-firestore.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from "/js/aw-firestore.js";
+import { initializeApp } from "/js/appwrite-db.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from "/js/appwrite-db.js";
 
 
 const app = initializeApp({});
@@ -382,8 +382,8 @@ setTimeout(() => { document.getElementById('joaf-preloader').style.display = 'no
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
 </script>
 <script type="module">
-import { initializeApp, getApps } from '/js/aw-firestore.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/appwrite-db.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;

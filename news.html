@@ -212,8 +212,8 @@ loadAllNews();
 </script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from '/js/aw-firestore.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/appwrite-db.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;

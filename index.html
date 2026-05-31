@@ -890,8 +890,8 @@ function initFilter() {
   const grid = document.getElementById('press-grid');
   if (!grid) return;
   try {
-    const { initializeApp, getApps } = await import('/js/aw-firestore.js');
-    const { getFirestore, getDocs, query, orderBy, limit, collection } = await import('/js/aw-firestore.js');
+    const { initializeApp, getApps } = await import('/js/appwrite-db.js');
+    const { getFirestore, getDocs, query, orderBy, limit, collection } = await import('/js/appwrite-db.js');
     const _fa2 = getApps().length ? getApps()[0] : initializeApp({});
     const _db2 = getFirestore(_fa2);
     const snap = await getDocs(query(collection(_db2,'press_releases'), orderBy('date','desc'), limit(4)));
@@ -995,8 +995,8 @@ setTimeout(function(){
 },800);
 </script>
 <script type="module">
-import { initializeApp, getApps } from '/js/aw-firestore.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/appwrite-db.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;

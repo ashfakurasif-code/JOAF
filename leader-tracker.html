@@ -366,8 +366,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:var(--
 <script src="/js/data.js?v=6.6"></script>
 <script src="/js/components.js?v=6.6"></script>
 <script type="module">
-import { initializeApp, getApps } from '/js/aw-firestore.js';
-import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from '/js/aw-firestore.js';
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from '/js/appwrite-db.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({});
 const _db = getFirestore(_fa);
 const _ua=navigator.userAgent,_dev=/Mobile|Android|iPhone/i.test(_ua)?'mobile':/iPad/i.test(_ua)?'tablet':'desktop',_ref=document.referrer,_src=_ref.includes('google')?'Google':_ref.includes('facebook')?'Facebook':_ref?'Referral':'Direct';
@@ -1267,7 +1267,7 @@ window.closeModal = function(e) {
 const VOTE_CACHE = {};
 async function loadVotes() {
   try {
-    const { getDocs, collection: col } = await import('/js/aw-firestore.js');
+    const { getDocs, collection: col } = await import('/js/appwrite-db.js');
     const snap = await getDocs(col(_db, 'leader_votes'));
     snap.forEach(doc => {
       const d = doc.data();
@@ -1288,7 +1288,7 @@ window.voteLeader = async function(lid, type, btn) {
   document.querySelectorAll('[data-lid="' + lid + '"].vote-count-up').forEach(el => el.textContent = VOTE_CACHE[lid].up);
   document.querySelectorAll('[data-lid="' + lid + '"].vote-count-down').forEach(el => el.textContent = VOTE_CACHE[lid].down);
   try {
-    const { addDoc, collection: col, serverTimestamp: sts } = await import('/js/aw-firestore.js');
+    const { addDoc, collection: col, serverTimestamp: sts } = await import('/js/appwrite-db.js');
     await addDoc(col(_db, 'leader_votes'), {lid, type, ts: sts()});
   } catch(e) { console.warn('Vote save failed:', e); }
 };
@@ -1296,7 +1296,7 @@ const REACT_EMOJIS = ['🔥','😡','😢','👏'];
 const REACT_CACHE = {};
 async function loadReacts() {
   try {
-    const { getDocs, collection: col } = await import('/js/aw-firestore.js');
+    const { getDocs, collection: col } = await import('/js/appwrite-db.js');
     const snap = await getDocs(col(_db, 'issue_reacts'));
     snap.forEach(doc => {
       const d = doc.data();
@@ -1314,7 +1314,7 @@ window.reactIssue = async function(iid, emoji, btn) {
   const row = btn.closest('.ic-reacts');
   if (row) { row.querySelectorAll('.react-btn').forEach(b => b.classList.remove('reacted')); btn.classList.add('reacted'); const cn=btn.querySelector('.rc-n'); if(cn) cn.textContent=REACT_CACHE[iid][emoji]||''; }
   try {
-    const { addDoc, collection: col, serverTimestamp: sts } = await import('/js/aw-firestore.js');
+    const { addDoc, collection: col, serverTimestamp: sts } = await import('/js/appwrite-db.js');
     await addDoc(col(_db, 'issue_reacts'), {iid, emoji, ts: sts()});
   } catch(e) { console.warn('React save failed:', e); }
 };
