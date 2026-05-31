@@ -596,6 +596,52 @@
             ],
             "ignore": [],
             "path": "appwrite-functions/press-release-og"
+        },
+        {
+            "$id": "daily-press-release",
+            "name": "Daily Press Release",
+            "runtime": "node-22",
+            "execute": [],
+            "events": [],
+            "schedule": "0 17 * * *",
+            "timeout": 60,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "index.js",
+            "commands": "",
+            "scopes": [],
+            "vars": [
+                {
+                    "name": "APPWRITE_ENDPOINT",
+                    "value": "https://fra.cloud.appwrite.io/v1"
+                },
+                {
+                    "name": "APPWRITE_PROJECT_ID",
+                    "value": "6a11b6cd000b59f318eb"
+                },
+                {
+                    "name": "APPWRITE_DATABASE_ID",
+                    "value": "joaf"
+                },
+                {
+                    "name": "APPWRITE_API_KEY",
+                    "value": ""
+                },
+                {
+                    "name": "OPENROUTER_API_KEY",
+                    "value": ""
+                },
+                {
+                    "name": "GEMINI_API_KEY",
+                    "value": ""
+                },
+                {
+                    "name": "GROQ_API_KEY",
+                    "value": ""
+                }
+            ],
+            "ignore": [],
+            "path": "appwrite-functions/daily-press-release"
         }
     ],
     "sites": [
