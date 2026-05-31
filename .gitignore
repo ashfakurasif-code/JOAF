@@ -10,3 +10,4 @@ Archive.zip
 .env.*
 vapid-keys.json
 appwrite-secrets.json
+sites/
