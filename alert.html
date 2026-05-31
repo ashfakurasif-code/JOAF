@@ -207,12 +207,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <script type="module">
-import { initializeApp } from "/js/appwrite-db.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from "/js/appwrite-db.js";
+import { initializeApp } from "/js/aw-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp } from "/js/aw-firestore.js";
 
 
 const app = initializeApp({});
-const db = getFirestore();
+const db = getFirestore(app);
 
 
 const TYPE_ICONS = {fire:'🔥',flood:'🌊',crime:'⚠️',medical:'🏥',accident:'🚗',other:'📢'};
@@ -382,10 +382,10 @@ setTimeout(() => { document.getElementById('joaf-preloader').style.display = 'no
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(console.error);
 </script>
 <script type="module">
-import { initializeApp, getApps } from '/js/appwrite-db.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from '/js/appwrite-db.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({});
-const _db = getFirestore();
+const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;

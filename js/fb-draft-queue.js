@@ -1,5 +1,5 @@
 // fb-draft-queue.js — JOAF FB Post Draft + Queue system
-// Uses Appwrite SDK (same client as appwrite-db.js)
+// Uses Appwrite SDK (same client as aw-firestore.js)
 // Collections needed in Appwrite console:
 //   fb_drafts  — attributes: caption(string), tags(string), tone(string), hook(string), updated_at(string)
 //   fb_queue   — attributes: caption(string), tags(string), image_url(string), video_url(string),

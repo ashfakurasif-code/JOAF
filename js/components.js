@@ -755,32 +755,28 @@ const JOAFComponents = {
         const btn = document.getElementById('jbr-submit');
         btn.textContent='নিবন্ধন হচ্ছে...'; btn.disabled=true;
         try {
-          const {initializeApp,getApps} = await import('/js/appwrite-db.js');
-          const {getFirestore,collection,addDoc,serverTimestamp} = await import('/js/appwrite-db.js');
+          const {initializeApp,getApps} = await import('/js/aw-firestore.js');
+          const {getFirestore,collection,addDoc,serverTimestamp} = await import('/js/aw-firestore.js');
           const fbApp = getApps().length ? getApps()[0] : initializeApp({});
-          const db = getFirestore();
+          const db = getFirestore(fbApp);
           const lat = document.getElementById('jbr-lat').value;
           const lng = document.getElementById('jbr-lng').value;
           await addDoc(collection(db,'donors'),{name,phone,blood,district,area,lastDonate,lat:lat?parseFloat(lat):null,lng:lng?parseFloat(lng):null,createdAt:serverTimestamp()});
           // 🔔 Push notification — same district subscribers কে জানাও
           try {
             const _adminKey = (typeof JOAF !== 'undefined' && JOAF.adminKey) ? JOAF.adminKey : '';
-            await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/send-notification/executions', {
+            await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions') + '/send-notification/executions'), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'X-Appwrite-Project': globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '',
               },
               body: JSON.stringify({
-                async: false, path: '/', method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  type: 'blood',
-                  title: `🩸 ${district} এ ${blood} রক্তদাতা যোগ দিয়েছেন!`,
-                  bodyText: `${name} — ${district}${area ? ', ' + area : ''}। এখনই যোগাযোগ করুন।`,
-                  url: '/rokto.html',
-                  district,
-                })
+                type: 'blood',
+                title: `🩸 ${district} এ ${blood} রক্তদাতা যোগ দিয়েছেন!`,
+                body: `${name} — ${district}${area ? ', ' + area : ''}। এখনই যোগাযোগ করুন।`,
+                url: '/rokto.html',
+                district,
               })
             });
           } catch(_ne) {}
@@ -882,10 +878,10 @@ const JOAFComponents = {
             imageUrl = d.secure_url;
           }
 
-          const {initializeApp, getApps} = await import('/js/appwrite-db.js');
-          const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/appwrite-db.js');
+          const {initializeApp, getApps} = await import('/js/aw-firestore.js');
+          const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/aw-firestore.js');
           const fbApp = getApps().length ? getApps()[0] : initializeApp({});
-          const db = getFirestore();
+          const db = getFirestore(fbApp);
           await addDoc(collection(db,'alerts'), {title, description:desc, location, reporter, type:_selType, imageUrl, lat:_gps?.lat||null, lng:_gps?.lng||null, createdAt:serverTimestamp()});
 
           alert('✅ সতর্কতা পাঠানো হয়েছে!');
@@ -1327,10 +1323,10 @@ async function joafSendAlertNotification(data) {
 
   // Also save to Appwrite so other users see it on next visit
   try {
-    const {getApps, initializeApp} = await import('/js/appwrite-db.js');
-    const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/appwrite-db.js');
+    const {getApps, initializeApp} = await import('/js/aw-firestore.js');
+    const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/aw-firestore.js');
     const fbApp = getApps().length ? getApps()[0] : initializeApp({});
-    const db = getFirestore();
+    const db = getFirestore(fbApp);
     await addDoc(collection(db, 'notifications'), {
       ...data,
       createdAt: serverTimestamp()
@@ -1507,11 +1503,7 @@ async function joafSaveSubscription(sub) {
         'Content-Type': 'application/json',
         'X-Appwrite-Project': globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '',
       },
-      body: JSON.stringify({
-        async: false, path: '/', method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      body: JSON.stringify(payload)
     });
 
     if (res.ok) {
@@ -1686,10 +1678,10 @@ setTimeout(() => {
 // ── Dynamic latest press release in ticker ──────────────────
 (async function injectLatestPressRelease() {
   try {
-    const { getApps, initializeApp } = await import('/js/appwrite-db.js');
-    const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('/js/appwrite-db.js');
+    const { getApps, initializeApp } = await import('/js/aw-firestore.js');
+    const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('/js/aw-firestore.js');
     const fbApp = getApps().length ? getApps()[0] : initializeApp({});
-    const db = getFirestore();
+    const db = getFirestore(fbApp);
     const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
     if (snap.empty) return;
     const href = '/press-releases/view.html?id=' + snap.docs[0].id;

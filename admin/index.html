@@ -913,7 +913,7 @@ body  { overflow-x:hidden; }
     <div class="page" id="page-leader">
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">🏛️ নেতা ট্র্যাকার</div><div class="card-sub">Appwrite DB-তে data save হলে সাইটে automatically দেখাবে</div></div>
+          <div><div class="card-title">🏛️ নেতা ট্র্যাকার</div><div class="card-sub">Firestore এ data save হলে সাইটে automatically দেখাবে</div></div>
           <div style="display:flex;gap:6px;align-items:center;">
             <button class="btn btn-ghost btn-sm" id="leader-bulk-del" style="display:none;background:var(--red-bg);color:var(--red);border-color:var(--red-border);" onclick="bulkDeleteLeaders()">🗑️ Selected Delete</button>
             <button class="btn btn-primary btn-sm" onclick="openModal('leaderModal')">+ নতুন নেতা</button>
@@ -1003,7 +1003,7 @@ body  { overflow-x:hidden; }
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">আজকের দাম (Appwrite)</div></div>
+        <div class="card-header"><div class="card-title">আজকের দাম (Firestore)</div></div>
         <div id="bajar-current"><div class="loading">লোড হচ্ছে...</div></div>
       </div>
     </div>
@@ -1209,10 +1209,10 @@ body  { overflow-x:hidden; }
       <div id="an-setup" style="display:none;margin-top:12px" class="card">
         <div class="card-title" style="color:var(--amber);margin-bottom:8px">⚙️ Visitor Tracking সেটআপ করুন</div>
         <code style="display:block;background:var(--bg);padding:12px;border-radius:8px;font-size:10px;white-space:pre-wrap;border:1px solid var(--border);line-height:1.6">&lt;script type="module"&gt;
-import {initializeApp,getApps}from'/js/appwrite-db.js';
-import {getFirestore,addDoc,collection,serverTimestamp}from'/js/appwrite-db.js';
+import{initializeApp,getApps}from'/js/aw-firestore.js';
+import{getFirestore,addDoc,collection,serverTimestamp}from'/js/aw-firestore.js';
 const app=getApps().length?getApps()[0]:initializeApp({});
-const db=getFirestore();
+const db=getFirestore(app);
 const ua=navigator.userAgent,dev=/Mobile|Android|iPhone/i.test(ua)?'mobile':'desktop';
 const ref=document.referrer;
 const src=ref.includes('google')?'Google':ref.includes('facebook')?'Facebook':ref.includes('t.co')?'Twitter':ref?'Referral':'Direct';
@@ -1939,19 +1939,19 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp, getApps } from '/js/appwrite-db.js';
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from '/js/appwrite-db.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, limit, serverTimestamp, getDoc, setDoc, onSnapshot } from '/js/aw-firestore.js';
 
 // ── Firebase config (LEGACY — READ-ONLY reference, no writes) ────────────────
-// All imports above come from /js/appwrite-db.js which is a Firebase-API-compatible
+// All imports above come from /js/aw-firestore.js which is a Firebase-API-compatible
 // shim that routes ALL operations (addDoc, setDoc, updateDoc, deleteDoc, getDocs)
 // exclusively to Appwrite. Firebase Firestore is NEVER written to from this panel.
 // This config object is passed to the shim's initializeApp() only for API compat;
-// the shim ignores it and uses the Appwrite endpoint/project hardcoded in appwrite-db.js.
+// the shim ignores it and uses the Appwrite endpoint/project hardcoded in aw-firestore.js.
 const FB = {}; // Firebase config removed — shim uses Appwrite
 // ─────────────────────────────────────────────────────────────────────────────
 const app = getApps().length ? getApps()[0] : initializeApp({});
-const db  = getFirestore();
+const db  = getFirestore(app);
 
 // ── Auth ────────────────────────────────────────────────
 let ADMIN_KEY = '';
@@ -2357,7 +2357,7 @@ function renderHistory(elId, docs) {
   const colors = {bajar:'#fbbf24',weather:'#60a5fa',streak:'#f05252',blood:'#f05252',alert:'#f05252',live:'#a78bfa',default:'#34d399'};
   el.innerHTML = docs.map(d => {
     const color = colors[d.type]||colors.default;
-    // Handle all three date formats: Appwrite ISO string, Appwrite Timestamp object, Firestore seconds
+    // Handle all three date formats: Appwrite ISO string, Firestore Timestamp object, Firestore seconds
     let time = '—';
     if (d.sentAt) {
       if (typeof d.sentAt === 'string') {
@@ -2365,7 +2365,7 @@ function renderHistory(elId, docs) {
         const dt = new Date(d.sentAt);
         if (!isNaN(dt)) time = dt.toLocaleString('bn-BD');
       } else if (typeof d.sentAt.toDate === 'function') {
-        // Appwrite Timestamp
+        // Firestore Timestamp
         time = d.sentAt.toDate().toLocaleString('bn-BD');
       } else if (typeof d.sentAt.seconds === 'number') {
         time = new Date(d.sentAt.seconds * 1000).toLocaleString('bn-BD');
@@ -2478,7 +2478,7 @@ async function loadDonors() {
   const tbody = document.getElementById('donor-tbody');
   tbody.innerHTML = '<tr><td colspan="7" class="loading">লোড হচ্ছে... (Appwrite)</td></tr>';
   try {
-    // appwrite-db.js shim routes this to Appwrite — no Firebase read
+    // aw-firestore.js shim routes this to Appwrite — no Firebase read
     const snap = await getDocs(collection(db,'donors'));
     allDonors = snap.docs.map(d=>({...d.data(),id:d.id}));
     // Stats
@@ -2826,7 +2826,7 @@ window.runLeaderAiUpdate = async function() {
 };
 
 window.migrateLeaders = async function() {
-  if (!confirm('Appwrite DB-তে সব নেতার latest data migrate করবেন? পুরনো data replace হবে না, নতুন add হবে।')) return;
+  if (!confirm('Firestore-এ সব নেতার latest data migrate করবেন? পুরনো data replace হবে না, নতুন add হবে।')) return;
   const leaders = [
     {id:'yunus',name:'ড. মুহাম্মদ ইউনূস',party:'অন্তর্বর্তীকালীন সরকার',role:'প্রধান উপদেষ্টা',icon:'👴',cat:'সরকার',approval:68,viral:true,
       promises:[{text:'নির্বাচন কমিশন সংস্কার',status:'done'},{text:'বিচার বিভাগ সংস্কার',status:'progress'},{text:'দুর্নীতি দমন কমিশন শক্তিশালীকরণ',status:'progress'},{text:'দ্রব্যমূল্য নিয়ন্ত্রণ',status:'pending'},{text:'সংবিধান সংস্কার কমিশন গঠন',status:'done'},{text:'নতুন নির্বাচনী রোডম্যাপ',status:'progress'}],
@@ -2860,7 +2860,7 @@ window.migrateLeaders = async function() {
       virals:[{text:'সংবিধান সংস্কার প্রতিবেদন প্রকাশে ব্যাপক আলোচনা।',icon:'📋',date:'জানুয়ারি ২০২৬'}]},
   ];
   try {
-    const { setDoc, doc } = await import('/js/appwrite-db.js');
+    const { setDoc, doc } = await import('/js/aw-firestore.js');
     for (const leader of leaders) {
       const {id, ...data} = leader;
       await setDoc(doc(db,'leaders', id), {...data, createdAt:serverTimestamp()});

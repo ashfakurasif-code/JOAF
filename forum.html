@@ -112,9 +112,9 @@ let unsubscribe=null;
 // Appwrite init (Firestore-compat wrapper)
 (async () => {
   try {
-    const { initializeApp, getApps, getFirestore } = await import('/js/appwrite-db.js');
+    const { initializeApp, getApps, getFirestore } = await import('/js/aw-firestore.js');
     const app = getApps().length ? getApps()[0] : initializeApp({});
-    db = getFirestore();
+    db = getFirestore(app);
     loadMessages(activeRoom);
   } catch (e) {}
 })();
@@ -164,7 +164,7 @@ async function loadMessages(roomId){
   if(!db) return;
   if(unsubscribe) unsubscribe();
   try{
-    const { collection, query, where, orderBy, limit, onSnapshot } = await import('/js/appwrite-db.js');
+    const { collection, query, where, orderBy, limit, onSnapshot } = await import('/js/aw-firestore.js');
     const q = query(
       collection(db, 'forum_messages'),
       where('roomId', '==', roomId),
@@ -193,7 +193,7 @@ function sendMsg(){
   input.value='';
   if(db&&cuId){
     try{
-      const { addDoc, collection, serverTimestamp } = await import('/js/appwrite-db.js');
+      const { addDoc, collection, serverTimestamp } = await import('/js/aw-firestore.js');
       await addDoc(collection(db, 'forum_messages'), {roomId: activeRoom, name, text, uid: cuId, ts: serverTimestamp()});
       return;
     }catch(e){}
@@ -212,10 +212,10 @@ function sendMsg(){
 loadMessages('general');
 </script><script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script type="module">
-import { initializeApp, getApps } from '/js/appwrite-db.js';
-import { getFirestore, addDoc, collection, serverTimestamp } from '/js/appwrite-db.js';
+import { initializeApp, getApps } from '/js/aw-firestore.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/aw-firestore.js';
 const _fa = getApps().length ? getApps()[0] : initializeApp({});
-const _db = getFirestore();
+const _db = getFirestore(_fa);
 const _ua = navigator.userAgent;
 const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
 const _ref = document.referrer;

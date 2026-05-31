@@ -13,7 +13,7 @@ before `plugins.js` and `components.js`.
 
 ### [FIX-2] Missing `push_subscriptions` collection in `appwrite.json`
 The `save-subscription` function writes to `push_subscriptions`, but the
-collection was never declared in `appwrite.json` → `appwrite push collection`
+collection was never declared in `appwrite.json` → `appwrite deploy collection`
 would never create it → Appwrite returns 404 on every write attempt.
 
 **Fix:** Added `push_subscriptions`, `notification_history`, and `fb_queue`
@@ -52,37 +52,7 @@ handles 409 conflict (race condition).
 
 ## Deployment Steps
 1. Copy all files from this archive to your project root
-2. Run: `appwrite push collection` (creates push_subscriptions, notification_history, fb_queue)
+2. Run: `appwrite deploy collection` (creates push_subscriptions, notification_history, fb_queue)
 3. Set all env vars marked `""` in appwrite.json (API keys, VAPID keys, FB tokens)
-4. Run: `appwrite push function --all`
+4. Run: `appwrite deploy function --all`
 5. Deploy frontend HTML/JS files to julyforum.com
-
----
-
-## Round 2 Fixes (from live deployment review)
-
-### [FIX-6] `save-subscription` 400 — Appwrite execution body not unwrapped
-When the frontend posts to `/executions`, Appwrite wraps the payload as:
-`{ body: "JSON_STRING", async: false, path: "/", method: "POST", headers: {} }`
-The function must unwrap `req.body.body` to get the actual payload.
-Both `save-subscription` and `send-notification` now handle this format plus
-direct body (for backwards compatibility).
-
-### [FIX-7] `aw-firestore.js` 401 spam — anonymous session removed
-`aw-firestore.js` tried to create an anonymous Appwrite session for every
-database read. Since all collections use `read("any")` permissions, no
-session is needed. Removed `ensureSession()` and `Account` import → eliminates
-the 401 error and one unnecessary network round-trip on every page load.
-
-### [FIX-8] `send-notification` body field renamed to `bodyText`
-The `body` field name clashed with the execution envelope's `body` key.
-Renamed to `bodyText` in both components.js and the function handler.
-
-### [FIX-9] Deployment command: `appwrite deploy` → `appwrite push`
-The Appwrite CLI v6+ removed `appwrite deploy`. Use `appwrite push` instead.
-
-## Correct Deployment Commands
-```bash
-appwrite push collection
-appwrite push function --all
-```
