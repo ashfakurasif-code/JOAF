@@ -15,8 +15,9 @@
     if (!res.ok) throw new Error('not found');
     const pr = await res.json();
 
-    const dateShort = pr.date ? new Date(pr.date).toLocaleDateString('bn-BD') : '';
-    const dateFull  = pr.date ? new Date(pr.date).toLocaleDateString('bn-BD', {year:'numeric',month:'long',day:'numeric'}) : '';
+    const parseDate = d => d ? new Date(d.includes('T') ? d : d + 'T00:00:00') : null;
+    const dateShort = pr.date ? (parseDate(pr.date).toLocaleDateString('bn-BD') || pr.date) : '';
+    const dateFull  = pr.date ? (parseDate(pr.date).toLocaleDateString('bn-BD', {year:'numeric',month:'long',day:'numeric'}) || pr.date) : '';
 
     document.getElementById('pr-title').textContent        = pr.title || '';
     document.getElementById('pr-summary').textContent      = pr.summary || '';
