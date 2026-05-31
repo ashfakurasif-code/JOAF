@@ -755,8 +755,8 @@ const JOAFComponents = {
         const btn = document.getElementById('jbr-submit');
         btn.textContent='নিবন্ধন হচ্ছে...'; btn.disabled=true;
         try {
-          const {initializeApp,getApps} = await import('/js/aw-firestore.js');
-          const {getFirestore,collection,addDoc,serverTimestamp} = await import('/js/aw-firestore.js');
+          const {initializeApp,getApps} = await import('/js/appwrite-db.js');
+          const {getFirestore,collection,addDoc,serverTimestamp} = await import('/js/appwrite-db.js');
           const fbApp = getApps().length ? getApps()[0] : initializeApp({});
           const db = getFirestore(fbApp);
           const lat = document.getElementById('jbr-lat').value;
@@ -878,8 +878,8 @@ const JOAFComponents = {
             imageUrl = d.secure_url;
           }
 
-          const {initializeApp, getApps} = await import('/js/aw-firestore.js');
-          const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/aw-firestore.js');
+          const {initializeApp, getApps} = await import('/js/appwrite-db.js');
+          const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/appwrite-db.js');
           const fbApp = getApps().length ? getApps()[0] : initializeApp({});
           const db = getFirestore(fbApp);
           await addDoc(collection(db,'alerts'), {title, description:desc, location, reporter, type:_selType, imageUrl, lat:_gps?.lat||null, lng:_gps?.lng||null, createdAt:serverTimestamp()});
@@ -1323,8 +1323,8 @@ async function joafSendAlertNotification(data) {
 
   // Also save to Appwrite so other users see it on next visit
   try {
-    const {getApps, initializeApp} = await import('/js/aw-firestore.js');
-    const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/aw-firestore.js');
+    const {getApps, initializeApp} = await import('/js/appwrite-db.js');
+    const {getFirestore, collection, addDoc, serverTimestamp} = await import('/js/appwrite-db.js');
     const fbApp = getApps().length ? getApps()[0] : initializeApp({});
     const db = getFirestore(fbApp);
     await addDoc(collection(db, 'notifications'), {
@@ -1678,8 +1678,8 @@ setTimeout(() => {
 // ── Dynamic latest press release in ticker ──────────────────
 (async function injectLatestPressRelease() {
   try {
-    const { getApps, initializeApp } = await import('/js/aw-firestore.js');
-    const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('/js/aw-firestore.js');
+    const { getApps, initializeApp } = await import('/js/appwrite-db.js');
+    const { getFirestore, collection, query, orderBy, limit, getDocs } = await import('/js/appwrite-db.js');
     const fbApp = getApps().length ? getApps()[0] : initializeApp({});
     const db = getFirestore(fbApp);
     const snap = await getDocs(query(collection(db, 'press_releases'), orderBy('date', 'desc'), limit(1)));
