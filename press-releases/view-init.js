@@ -59,7 +59,7 @@
     const others = all.filter(p => p.$id !== id);
 
     // Sidebar — top 4
-    document.getElementById('sidebarPR').innerHTML = others.slice(0,4).map(p => `
+    document.getElementById('sidebarPR').innerHTML = others.map(p => `
       <a href="/press-releases/view.html?id=${p.$id}" class="sc-pr-item">
         <img src="${p.img || '/logoc7c3.png'}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
         <div class="sc-pr-info">
