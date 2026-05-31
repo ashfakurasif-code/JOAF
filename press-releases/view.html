@@ -242,7 +242,7 @@
     document.getElementById('pr-summary').textContent      = pr.summary || '';
     document.getElementById('pr-date-display').textContent = pr.date ? new Date(pr.date).toLocaleDateString('bn-BD') : '';
     const img = document.getElementById('pr-img');
-    if (img && pr.imageUrl) { img.src = pr.imageUrl; img.alt = pr.title; }
+    if (img && (pr.imageUrl || pr.img)) { img.src = pr.imageUrl || pr.img; img.alt = pr.title; }
     document.getElementById('pr-content').innerHTML        = pr.content || pr.summary || '';
     document.title = (pr.title || 'প্রেস রিলিজ') + ' — জোয়াফ';
   } catch(e) {
