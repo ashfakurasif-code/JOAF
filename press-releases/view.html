@@ -207,7 +207,7 @@
     <a href="https://twitter.com/intent/tweet?text=${title}&url=${url}" target="_blank" style="background:#1da1f2"><i class="zmdi zmdi-twitter"></i> Twitter</a>`;
 
   // Sidebar — other press releases from Appwrite
-  (async () => { try {
+  try {
     const { Client, Databases, Query } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
     const _c = new Client().setEndpoint(EP).setProject(PJ);
     const _d = new Databases(_c);
@@ -221,7 +221,7 @@
           <span>${p.date ? new Date(p.date).toLocaleDateString('bn-BD') : ''}</span>
         </div>
       </a>`).join('');
-  } catch(_e) { document.getElementById('sidebarPR').innerHTML = ''; } })();
+  } catch(_e) { document.getElementById('sidebarPR').innerHTML = ''; }
 })();
 </script>
 <script src="/press-releases/view-init.js"></script>
