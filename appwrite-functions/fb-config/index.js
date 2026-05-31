@@ -88,7 +88,9 @@ export default async ({ req, res, log, error }) => {
   if (action === 'list') {
     try {
       const result = await db.listDocuments(AW_DB, COL_CFG, [Query.limit(100)]);
-      return res.json({ ok: true, configs: result.documents.map(d => ({ key: d.key, value: d.value, updated_at: d.updated_at })) });
+      // Filter out orphan docs where 'key' was never set (Appwrite stored $id as key fallback)
+      const valid = result.documents.filter(d => d.key && d.key !== d.$id);
+      return res.json({ ok: true, configs: valid.map(d => ({ key: d.key, value: d.value, updated_at: d.updated_at })) });
     } catch (e) {
       if (isCollectionNotFound(e)) {
         // Collection hasn't been deployed yet — return empty list rather than HTTP 500
