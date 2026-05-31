@@ -32,7 +32,7 @@
     const top = document.getElementById('pr-img-date-top');
     const bot = document.getElementById('pr-img-date-bottom');
     if (top) top.innerHTML = dateShort ? `<i class="zmdi zmdi-calendar"></i> ${dateShort}` : '';
-    if (bot) bot.innerHTML = `<i class="zmdi zmdi-label"></i> JOAF`;
+    if (bot) bot.style.display = "none";
 
     // Share buttons
     const shareEl = document.getElementById('pr-share');
