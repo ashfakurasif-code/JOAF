@@ -1,62 +1,92 @@
 // Appwrite Function: get-stats
-// HTTP trigger — GET only (admin key required)
-// Returns subscriber count, notification history, donor and alert counts
+// OPTIMIZED BUILD — Free Tier Safe
+// Uses parallel queries with reasonable limits, no full table scans
 
-import { awListAll } from './aw-utils.js';
+import { Client, Databases, Query } from 'node-appwrite';
 
+const DB_ID      = process.env.APPWRITE_DATABASE_ID || 'joaf';
 const COL_SUBS   = 'push_subscriptions';
 const COL_HIST   = 'notification_history';
 const COL_DONORS = 'donors';
 const COL_ALERTS = 'alerts';
 
+let _db = null;
+function getDb() {
+  if (_db) return _db;
+  const ep  = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT;
+  const prj = process.env.APPWRITE_PROJECT  || process.env.APPWRITE_FUNCTION_PROJECT_ID;
+  const key = process.env.APPWRITE_API_KEY  || process.env.APPWRITE_FUNCTION_API_KEY || '';
+  _db = new Databases(new Client().setEndpoint(ep).setProject(prj).setKey(key));
+  return _db;
+}
+
+async function safeCount(db, col, queries = []) {
+  try {
+    const r = await db.listDocuments(DB_ID, col, [...queries, Query.limit(1)]);
+    return r.total ?? r.documents?.length ?? 0;
+  } catch { return 0; }
+}
+
+async function safeFetch(db, col, queries = [], limit = 25) {
+  try {
+    const r = await db.listDocuments(DB_ID, col, [...queries, Query.limit(limit)]);
+    return r.documents || [];
+  } catch { return []; }
+}
+
 export default async ({ req, res, log, error }) => {
   if (req.method === 'OPTIONS') return res.empty();
   if (req.method !== 'GET') return res.json({ error: 'Method not allowed' }, 405);
 
-  let _sb = {};
-  try { _sb = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); } catch(_) {}
-  
+  const ADMIN_KEY = process.env.ADMIN_SECRET_KEY;
+  if (ADMIN_KEY) {
+    const provided = req.headers['x-joaf-key'] || req.headers['x-admin-key'];
+    if (!provided || provided !== ADMIN_KEY) {
+      error('get-stats: unauthorized');
+      return res.json({ error: 'Unauthorized' }, 401);
+    }
+  }
+
+  const db = getDb();
+
   try {
-    const [subDocs, histDocs, donorDocs, alertDocs] = await Promise.all([
-      awListAll(COL_SUBS,   [], 2000).catch(() => []),
-      awListAll(COL_HIST,   [], 50 ).catch(() => []),
-      awListAll(COL_DONORS, [], 500).catch(() => []),
-      awListAll(COL_ALERTS, [], 200).catch(() => []),
+    const [
+      totalSubs, activeSubs, inactiveSubs,
+      histDocs, totalDonors, totalAlerts, activeAlerts
+    ] = await Promise.all([
+      safeCount(db, COL_SUBS),
+      safeCount(db, COL_SUBS, [Query.equal('active', true)]),
+      safeCount(db, COL_SUBS, [Query.equal('active', false)]),
+      safeFetch(db, COL_HIST, [Query.orderDesc('$createdAt')], 20),
+      safeCount(db, COL_DONORS),
+      safeCount(db, COL_ALERTS),
+      safeCount(db, COL_ALERTS, [Query.notEqual('active', false)]),
     ]);
 
-    const activeSubs   = subDocs.filter(d => d.data && d.data.active === true).length;
-    const inactiveSubs = subDocs.filter(d => d.data && d.data.active === false).length;
-    const totalDonors  = donorDocs.length;
-    const totalAlerts  = alertDocs.length;
-    const activeAlerts = alertDocs.filter(d => d.data && d.data.active !== false).length;
-
-    const history = histDocs
-      .map(d => ({ id: d.id, ...d.data }))
-      .sort((a, b) => (b.sentAt ? new Date(b.sentAt).getTime() : 0) - (a.sentAt ? new Date(a.sentAt).getTime() : 0))
-      .slice(0, 20);
+    const history = histDocs.map(d => ({
+      id: d.$id, type: d.type, title: d.title, body: d.body,
+      sentAt: d.sentAt, totalSent: d.totalSent, totalFailed: d.totalFailed,
+    }));
 
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayCount = history.filter(d => d.sentAt && new Date(d.sentAt) >= todayStart).length;
 
-    log(`get-stats: ${activeSubs} active subs, ${histDocs.length} notifs, ${totalDonors} donors`);
+    log(`get-stats: ${activeSubs} active subs, ${totalDonors} donors`);
 
     return res.json({
-      ok: true, activeSubs, inactiveSubs, totalSubs: subDocs.length,
+      ok: true, activeSubs, inactiveSubs, totalSubs,
       totalNotifs: histDocs.length, todayNotifs: todayCount,
       totalDonors, totalAlerts, activeAlerts,
-      bloodAPos: donorDocs.filter(d => d.data && (d.data.blood === 'A+' || d.data.bloodGroup === 'A+')).length,
-      bloodOPos: donorDocs.filter(d => d.data && (d.data.blood === 'O+' || d.data.bloodGroup === 'O+')).length,
       syncStatus: {
-        push_subscriptions: subDocs.length > 0 ? 'synced' : 'empty',
+        push_subscriptions:   totalSubs > 0 ? 'synced' : 'empty',
         notification_history: histDocs.length > 0 ? 'synced' : 'empty',
-        donors: totalDonors > 0 ? 'synced' : 'empty',
-        alerts: totalAlerts > 0 ? 'synced' : 'empty',
+        donors:  totalDonors > 0 ? 'synced' : 'empty',
+        alerts:  totalAlerts > 0 ? 'synced' : 'empty',
       },
       history,
-      recentDonors: donorDocs.slice(0, 5).map(d => ({ id: d.id, ...d.data })),
     });
   } catch (err) {
-    error('get-stats fatal: ' + err.message);
+    error('get-stats: ' + err.message);
     return res.json({ ok: false, error: err.message }, 500);
   }
 };

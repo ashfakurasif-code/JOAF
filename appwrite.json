@@ -194,6 +194,18 @@
                 {
                     "name": "APPWRITE_API_KEY",
                     "value": ""
+                },
+                {
+                    "name": "APPWRITE_ENDPOINT",
+                    "value": "https://fra.cloud.appwrite.io/v1"
+                },
+                {
+                    "name": "APPWRITE_PROJECT",
+                    "value": "6a11b6cd000b59f318eb"
+                },
+                {
+                    "name": "APPWRITE_DATABASE_ID",
+                    "value": "joaf"
                 }
             ],
             "ignore": [],
@@ -433,6 +445,10 @@
                 {
                     "name": "APPWRITE_API_KEY",
                     "value": ""
+                },
+                {
+                    "name": "FB_PAGE_ACCESS_TOKENS",
+                    "value": ""
                 }
             ],
             "ignore": [],
@@ -629,7 +645,240 @@
                 "delete(\"any\")"
             ],
             "databaseId": "joaf"
+        },
+        {
+            "$id": "push_subscriptions",
+            "name": "Push Subscriptions",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "endpoint",
+                    "type": "string",
+                    "size": 2048,
+                    "required": true
+                },
+                {
+                    "key": "subscriptionJson",
+                    "type": "string",
+                    "size": 4096,
+                    "required": true
+                },
+                {
+                    "key": "district",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                },
+                {
+                    "key": "active",
+                    "type": "boolean",
+                    "required": false,
+                    "default": true
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "endpoint_unique",
+                    "type": "unique",
+                    "attributes": [
+                        "endpoint"
+                    ]
+                },
+                {
+                    "key": "active_idx",
+                    "type": "key",
+                    "attributes": [
+                        "active"
+                    ]
+                }
+            ],
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "databaseId": "joaf"
+        },
+        {
+            "$id": "notification_history",
+            "name": "Notification History",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "type",
+                    "type": "string",
+                    "size": 64,
+                    "required": true
+                },
+                {
+                    "key": "title",
+                    "type": "string",
+                    "size": 512,
+                    "required": false
+                },
+                {
+                    "key": "body",
+                    "type": "string",
+                    "size": 1024,
+                    "required": false
+                },
+                {
+                    "key": "sentAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "totalSent",
+                    "type": "integer",
+                    "required": false,
+                    "default": 0
+                },
+                {
+                    "key": "totalFailed",
+                    "type": "integer",
+                    "required": false,
+                    "default": 0
+                },
+                {
+                    "key": "district",
+                    "type": "string",
+                    "size": 255,
+                    "required": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "sentAt_idx",
+                    "type": "key",
+                    "attributes": [
+                        "sentAt"
+                    ]
+                }
+            ],
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "databaseId": "joaf"
+        },
+        {
+            "$id": "fb_queue",
+            "name": "FB Queue",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "caption",
+                    "type": "string",
+                    "size": 8192,
+                    "required": false
+                },
+                {
+                    "key": "imageUrl",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "videoUrl",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "imageUrls",
+                    "type": "string",
+                    "size": 8192,
+                    "required": false
+                },
+                {
+                    "key": "action",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": "post"
+                },
+                {
+                    "key": "status",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": "pending"
+                },
+                {
+                    "key": "scheduled_at",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "pageIds",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "locked_by",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                },
+                {
+                    "key": "locked_at",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                },
+                {
+                    "key": "result",
+                    "type": "string",
+                    "size": 4096,
+                    "required": false
+                },
+                {
+                    "key": "error",
+                    "type": "string",
+                    "size": 2048,
+                    "required": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "string",
+                    "size": 64,
+                    "required": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "status_scheduled_idx",
+                    "type": "key",
+                    "attributes": [
+                        "status",
+                        "scheduled_at"
+                    ]
+                }
+            ],
+            "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+            ],
+            "databaseId": "joaf"
         }
     ],
-    "databaseId": "joaf"
+    "databaseId": "joaf",
+    "endpoint": "https://fra.cloud.appwrite.io/v1"
 }
