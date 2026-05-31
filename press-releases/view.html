@@ -206,16 +206,22 @@
     <a href="https://wa.me/?text=${title}%20${url}" target="_blank" style="background:#25d366"><i class="zmdi zmdi-whatsapp"></i> WhatsApp</a>
     <a href="https://twitter.com/intent/tweet?text=${title}&url=${url}" target="_blank" style="background:#1da1f2"><i class="zmdi zmdi-twitter"></i> Twitter</a>`;
 
-  // Sidebar — other press releases
-  const others = JOAF.pressReleases.filter(p => p.id !== pr.id).slice(-4).reverse();
-  document.getElementById('sidebarPR').innerHTML = others.map(p => `
-    <a href="/press-releases/${p.slug}.html" class="sc-pr-item">
-      <img src="${p.img}" alt="${p.title}" loading="lazy">
-      <div class="sc-pr-info">
-        <h4>${p.title}</h4>
-        <span>${BanglaUtil.formatDateShort(p.date)}</span>
-      </div>
-    </a>`).join('');
+  // Sidebar — other press releases from Appwrite
+  try {
+    const { Client, Databases, Query } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
+    const _c = new Client().setEndpoint(EP).setProject(PJ);
+    const _d = new Databases(_c);
+    const _snap = await _d.listDocuments(DB, 'press_releases', [Query.orderDesc('date'), Query.limit(5)]);
+    const _others = _snap.documents.filter(p => p.$id !== id).slice(0, 4);
+    document.getElementById('sidebarPR').innerHTML = _others.map(p => `
+      <a href="/press-releases/view.html?id=${p.$id}" class="sc-pr-item">
+        <img src="${p.img || '/logoc7c3.png'}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+        <div class="sc-pr-info">
+          <h4>${p.title||''}</h4>
+          <span>${p.date ? new Date(p.date).toLocaleDateString('bn-BD') : ''}</span>
+        </div>
+      </a>`).join('');
+  } catch(_e) { document.getElementById('sidebarPR').innerHTML = ''; }
 })();
 </script>
 </body>
