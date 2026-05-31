@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title id="pr-page-title">প্রেস রিলিজ — জোয়াফ</title>
   <meta name="description" id="pr-meta-desc" content="">
   <meta property="og:title" id="pr-og-title" content="">
-  <meta property="og:image" id="pr-og-img" content="https://julyforum.com/logoc7c3.png">
+  <meta property="og:image" id="pr-og-img" content="https://www.julyforum.com/logoc7c3.png">
   <meta property="og:type" content="article">
-  <meta property="fb:app_id" content="1114707634145642">
     <!-- Resource hints for speed -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="preconnect" href="https://code.jquery.com">
@@ -21,7 +22,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
   <link rel="stylesheet" href="/css/pluginsc7c3.css">
   <link rel="stylesheet" href="/css/stylec7c3.css">
-  <link rel="stylesheet" href="/css/joaf.css?v=6.6">
+  <link rel="stylesheet" href="/css/joaf.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QV3CFV7R98"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QV3CFV7R98');</script>
   <style>
@@ -65,6 +66,7 @@
         <div class="pr-date-badge"><i class="zmdi zmdi-calendar"></i> <span id="pr-date-display">—</span></div>
         <h1 id="pr-title">লোড হচ্ছে...</h1>
         <p id="pr-summary" style="opacity:.82;font-size:15px;max-width:640px;margin-top:10px"></p>
+        <div style="margin-top:10px;opacity:.7;font-size:13px" id="pr-read-time"></div>
       </div>
     </div>
   </section>
@@ -91,13 +93,30 @@
             <div id="sidebarPR"></div>
           </div>
           <div class="sidebar-card joaf-reveal" style="transition-delay:.1s">
-            <div class="sc-head">🤝 সম্পর্কিত লিঙ্ক</div>
-            <div style="padding:14px">
-              <a href="/membership.html" style="display:block;padding:9px 14px;background:linear-gradient(135deg,var(--brand),var(--accent));color:#fff;border-radius:10px;font-weight:700;text-decoration:none;text-align:center;margin-bottom:8px">✊ সদস্য হোন</a>
-              <a href="/community.html" style="display:block;padding:9px 14px;background:linear-gradient(135deg,#075e55,#15803d);color:#fff;border-radius:10px;font-weight:700;text-decoration:none;text-align:center">🤝 কমিউনিটিতে যোগ দিন</a>
+            <div class="sc-head">🔗 দ্রুত নেভিগেশন</div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+              <a href="/media-news.html" style="display:block;padding:9px 14px;background:linear-gradient(135deg,var(--brand),var(--accent));color:#fff;border-radius:10px;font-weight:700;text-decoration:none;text-align:center">📰 সকল প্রেস রিলিজ</a>
+              <a href="/leader-tracker.html" style="display:block;padding:9px 14px;background:linear-gradient(135deg,#075e55,#15803d);color:#fff;border-radius:10px;font-weight:700;text-decoration:none;text-align:center">👁 নেতার জবাবদিহিতা</a>
+              <a href="/membership.html" style="display:block;padding:9px 14px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border-radius:10px;font-weight:700;text-decoration:none;text-align:center">✊ সদস্য হোন</a>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- আরও পড়ুন -->
+  <section class="section bg-subtle">
+    <div class="container">
+      <div class="section-heading joaf-reveal">
+        <h2>আরও পড়ুন</h2>
+        <p>অন্যান্য প্রেস রিলিজ দেখুন</p>
+      </div>
+      <div class="row g-4" id="more-press-grid"></div>
+      <div class="text-center mt-4 joaf-reveal">
+        <a href="/media-news.html" class="btn btn-primary px-4 py-2" style="background:var(--brand);border:none;border-radius:50px;font-weight:700">
+          সকল প্রেস রিলিজ দেখুন <i class="zmdi zmdi-arrow-right"></i>
+        </a>
       </div>
     </div>
   </section>
@@ -107,134 +126,107 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous" defer></script>
+<script src="/js/joaf-config.js"></script>
 <script src="/js/plugins.js" defer></script>
+<script src="/js/data.js"></script>
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
-<script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, getDoc, getDocs, doc, collection, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const _fa = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyDBbm1eiqatwEUQenPIEAEFSubTJTUTdZk',authDomain:'joaf-app-45753.firebaseapp.com',projectId:'joaf-app-45753'});
-const _db = getFirestore(_fa);
+<script>
+(function() {
+  // Legacy slug-based pages — skip for ?id= URLs
+  if (location.search.includes('id=')) return;
+  const slug = window.location.pathname.split('/').pop().replace('.html','');
+  const pr = (typeof JOAF !== 'undefined' && JOAF.pressReleases) ? JOAF.pressReleases.find(p => p.slug === slug) : null;
+  if (!pr) return;
 
-(async function() {
-  const params = new URLSearchParams(location.search);
-  const id = params.get('id');
-  if (!id) {
-    document.getElementById('pr-title').textContent = 'Press Release খুঁজে পাওয়া যায়নি।';
-    return;
-  }
+  const dateShort = BanglaUtil.formatDateShort(pr.date);
+  const dateFull  = BanglaUtil.formatDate(pr.date);
 
-  try {
-    const snap = await getDoc(doc(_db, 'press_releases', id));
-    if (!snap.exists()) {
-      document.getElementById('pr-title').textContent = 'Press Release পাওয়া যায়নি।';
-      return;
-    }
-    const pr = snap.data();
-    const dateStr = pr.date || '';
-    const dateShort = (dateStr && typeof BanglaUtil !== 'undefined') ? BanglaUtil.formatDateShort(dateStr) : dateStr;
-    const dateFull  = (dateStr && typeof BanglaUtil !== 'undefined') ? BanglaUtil.formatDate(dateStr) : dateStr;
-    const img = pr.img || '/logoc7c3.png';
-    const viewUrl = '/press-releases/view.html?id=' + id;
+  // Update meta & page title
+  document.title = pr.title + ' — জোয়াফ';
+  document.getElementById('pr-page-title').textContent = pr.title + ' — জোয়াফ';
+  document.getElementById('pr-meta-desc').content = pr.summary;
+  document.getElementById('pr-og-title').content = pr.title;
+  document.getElementById('pr-og-img').content = 'https://www.julyforum.com' + pr.img;
 
-    // Meta & title
-    document.title = (pr.title || 'প্রেস রিলিজ') + ' — জোয়াফ';
-    document.getElementById('pr-page-title').textContent = (pr.title || 'প্রেস রিলিজ') + ' — জোয়াফ';
-    document.getElementById('pr-meta-desc').content = pr.summary || '';
-    document.getElementById('pr-og-title').content = pr.title || '';
-    document.getElementById('pr-og-img').content = img.startsWith('http') ? img : 'https://julyforum.com' + img;
+  // Hero
+  document.getElementById('pr-title').textContent = pr.title;
+  document.getElementById('pr-summary').textContent = pr.summary;
+  document.getElementById('pr-date-display').textContent = dateFull;
 
-    // Hero
-    document.getElementById('pr-title').textContent = pr.title || '';
-    document.getElementById('pr-summary').textContent = pr.summary || '';
-    document.getElementById('pr-date-display').textContent = dateFull;
+  // Image + date badges
+  document.getElementById('pr-img').src = pr.img;
+  document.getElementById('pr-img').alt = pr.title;
+  document.getElementById('pr-img-date-top').innerHTML = '<i class="zmdi zmdi-calendar"></i> ' + dateShort;
+  document.getElementById('pr-img-date-bottom').textContent = '#' + pr.id;
 
-    // Image
-    const imgEl = document.getElementById('pr-img');
-    imgEl.src = img;
-    imgEl.alt = pr.title || '';
-    imgEl.onerror = () => { imgEl.src = '/logoc7c3.png'; };
-    const imgDateTop = document.getElementById('pr-img-date-top');
-    if (imgDateTop) imgDateTop.innerHTML = dateShort ? '<i class="zmdi zmdi-calendar"></i> ' + dateShort : '';
-    const imgDateBot = document.getElementById('pr-img-date-bottom');
-    if (imgDateBot) imgDateBot.textContent = '';
+  // Reading time estimate
+  const readTimeEl = document.getElementById('pr-read-time');
 
-    // Reading time
-    const readTimeEl = document.getElementById('pr-read-time');
+  // Content — load from /press-releases/content/ folder
+  const contentEl = document.getElementById('pr-content');
+  fetch('/press-releases/content/' + slug + '.txt')
+    .then(r => r.ok ? r.text() : null)
+    .then(text => {
+      if (text) {
+        // Smart text → HTML parser
+        // Supports: ## headings, **bold**, empty line = new paragraph
+        const lines = text.split('\n');
+        let html = '';
+        let para = [];
+        const flushPara = () => {
+          if (para.length) {
+            const t = para.join(' ').trim();
+            if (t) html += `<p>${t}</p>`;
+            para = [];
+          }
+        };
+        lines.forEach(line => {
+          const l = line.trim();
+          if (!l) { flushPara(); return; }
+          if (l.startsWith('## ')) { flushPara(); html += `<h3 style="font-weight:900;color:#1a202c;margin:24px 0 10px;font-size:1.15rem">${l.slice(3)}</h3>`; return; }
+          if (l.startsWith('# '))  { flushPara(); html += `<h2 style="font-weight:900;color:#90161f;margin:28px 0 12px;font-size:1.3rem">${l.slice(2)}</h2>`; return; }
+          if (l.startsWith('- ') || l.startsWith('• ')) { flushPara(); html += `<li style="margin-bottom:6px">${l.slice(2)}</li>`; return; }
+          // Inline bold **text**
+          const formatted = l.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          para.push(formatted);
+        });
+        flushPara();
+        // Wrap consecutive <li> in <ul>
+        html = html.replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, m => `<ul style="padding-left:20px;margin-bottom:16px">${m}</ul>`);
+        contentEl.innerHTML = html;
 
-    // Content
-    const contentEl = document.getElementById('pr-content');
-    if (pr.content && pr.content.trim()) {
-      const lines = pr.content.split('\n');
-      let html = '';
-      let para = [];
-      const flushPara = () => {
-        if (para.length) {
-          const t = para.join(' ').trim();
-          if (t) html += `<p>${t}</p>`;
-          para = [];
-        }
-      };
-      lines.forEach(line => {
-        const l = line.trim();
-        if (!l) { flushPara(); return; }
-        if (l.startsWith('## ')) { flushPara(); html += `<h3 style="font-weight:900;color:#1a202c;margin:24px 0 10px;font-size:1.15rem">${l.slice(3)}</h3>`; return; }
-        if (l.startsWith('# '))  { flushPara(); html += `<h2 style="font-weight:900;color:#90161f;margin:28px 0 12px;font-size:1.3rem">${l.slice(2)}</h2>`; return; }
-        if (l.startsWith('- ') || l.startsWith('• ')) { flushPara(); html += `<li style="margin-bottom:6px">${l.slice(2)}</li>`; return; }
-        const formatted = l.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        para.push(formatted);
-      });
-      flushPara();
-      html = html.replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, m => `<ul style="padding-left:20px;margin-bottom:16px">${m}</ul>`);
-      contentEl.innerHTML = html;
-      if (readTimeEl) {
-        const words = pr.content.split(/\s+/).length;
+        // Reading time
+        const words = text.split(/\s+/).length;
         const mins  = Math.max(1, Math.round(words / 200));
-        readTimeEl.textContent = `⏱ ${mins} মিনিট পড়ার সময়`;
+        if (readTimeEl) readTimeEl.textContent = `⏱ ${mins} মিনিট পড়ার সময়`;
+      } else {
+        contentEl.innerHTML = `<p>${pr.summary}</p><p style="color:#9ca3af;font-size:14px">📌 বিস্তারিত বিষয়বস্তু শীঘ্রই প্রকাশিত হবে।</p>`;
       }
-    } else {
-      contentEl.innerHTML = `<p>${pr.summary || ''}</p><p style="color:#9ca3af;font-size:14px">📌 বিস্তারিত বিষয়বস্তু শীঘ্রই প্রকাশিত হবে।</p>`;
-    }
+    })
+    .catch(() => {
+      contentEl.innerHTML = `<p>${pr.summary}</p>`;
+    });
 
-    // Canonical & OG URL
-    const canonEl = document.getElementById('pr-canonical');
-    if (canonEl) canonEl.href = 'https://julyforum.com' + viewUrl;
-    let ogUrl = document.querySelector('meta[property="og:url"]');
-    if (!ogUrl) { ogUrl = document.createElement('meta'); ogUrl.setAttribute('property','og:url'); document.head.appendChild(ogUrl); }
-    ogUrl.content = 'https://julyforum.com' + viewUrl;
+  // Dynamic canonical
+  const canonEl = document.getElementById('pr-canonical');
+  if (canonEl) canonEl.href = 'https://www.julyforum.com/press-releases/' + slug + '.html';
+  // Dynamic OG URL
+  let ogUrl = document.querySelector('meta[property="og:url"]');
+  if (!ogUrl) { ogUrl = document.createElement('meta'); ogUrl.setAttribute('property','og:url'); document.head.appendChild(ogUrl); }
+  ogUrl.content = 'https://www.julyforum.com/press-releases/' + slug + '.html';
 
-    // Share buttons
-    const shareUrlEnc = encodeURIComponent('https://julyforum.com' + viewUrl);
-    const shareTitleEnc = encodeURIComponent(pr.title || '');
-    document.getElementById('pr-share').innerHTML = `
-      <strong style="font-size:14px;align-self:center">শেয়ার করুন:</strong>
-      <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrlEnc}" target="_blank" style="background:#3b5998"><i class="zmdi zmdi-facebook"></i> Facebook</a>
-      <a href="https://wa.me/?text=${shareTitleEnc}%20${shareUrlEnc}" target="_blank" style="background:#25d366"><i class="zmdi zmdi-whatsapp"></i> WhatsApp</a>
-      <a href="https://twitter.com/intent/tweet?text=${shareTitleEnc}&url=${shareUrlEnc}" target="_blank" style="background:#1da1f2"><i class="zmdi zmdi-twitter"></i> Twitter</a>`;
-
-    // Sidebar — other press releases (latest 4 excluding current)
-    try {
-      const othersSnap = await getDocs(query(collection(_db,'press_releases'), orderBy('createdAt','desc'), limit(5)));
-      const others = othersSnap.docs.filter(d => d.id !== id).slice(0,4);
-      document.getElementById('sidebarPR').innerHTML = others.map(d => {
-        const op = d.data();
-        const oImg = op.img || '/logoc7c3.png';
-        const oDate = (op.date && typeof BanglaUtil !== 'undefined') ? BanglaUtil.formatDateShort(op.date) : (op.date || '');
-        return `<a href="/press-releases/view.html?id=${d.id}" class="sc-pr-item">
-          <img src="${oImg}" alt="${op.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
-          <div class="sc-pr-info">
-            <h4>${op.title||''}</h4>
-            <span>${oDate}</span>
-          </div>
-        </a>`;
-      }).join('');
-    } catch(e) { console.warn('Sidebar load error', e); }
-
-  } catch(e) {
-    document.getElementById('pr-title').textContent = 'লোড করতে সমস্যা হয়েছে।';
-    console.error('Press release load error:', e);
-  }
+  // Share buttons (slug-based legacy)
+  const url2   = encodeURIComponent('https://www.julyforum.com/press-releases/' + slug + '.html');
+  const title2 = encodeURIComponent(pr.title);
+  const shareEl = document.getElementById('pr-share');
+  if (shareEl) shareEl.innerHTML = `
+    <strong style="font-size:14px;align-self:center">শেয়ার করুন:</strong>
+    <a href="https://www.facebook.com/sharer/sharer.php?u=${url2}" target="_blank" style="background:#3b5998"><i class="zmdi zmdi-facebook"></i> Facebook</a>
+    <a href="https://wa.me/?text=${title2}%20${url2}" target="_blank" style="background:#25d366"><i class="zmdi zmdi-whatsapp"></i> WhatsApp</a>
+    <a href="https://twitter.com/intent/tweet?text=${title2}&url=${url2}" target="_blank" style="background:#1da1f2"><i class="zmdi zmdi-twitter"></i> Twitter</a>`;
 })();
 </script>
-<script>document.addEventListener("DOMContentLoaded",function(){document.querySelectorAll(".joaf-reveal,.joaf-reveal-zoom,.joaf-reveal-flip,.joaf-reveal-left,.joaf-reveal-right,.joaf-reveal-scale").forEach(function(e){e.classList.add("visible");});});</script></body>
+<script src="/press-releases/view-init.js"></script>
+</body>
 </html>
