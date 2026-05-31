@@ -1,0 +1,130 @@
+import fs from 'fs';
+import path from 'path';
+
+const REPO = process.cwd();
+const OUT = path.join(REPO, 'admin', 'studio.html');
+const APPWRITE_SPEC_PATH = path.join(REPO, 'appwrite.json');
+const tools = {
+  news: path.join(REPO, 'tools', 'news-card-generator.html'),
+  fb: path.join(REPO, 'tools', 'fb-smart-studio.html'),
+  reel: path.join(REPO, 'tools', 'fb-reel-studio.html'),
+};
+
+const spec = JSON.parse(fs.readFileSync(APPWRITE_SPEC_PATH, 'utf8'));
+
+function specVar(name) {
+  for (const fn of spec.functions || []) {
+    for (const v of fn.vars || []) {
+      if (v && v.name === name && v.value) return v.value;
+    }
+  }
+  return '';
+}
+
+const endpoint = process.env.APPWRITE_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT || specVar('APPWRITE_ENDPOINT') || specVar('NEXT_PUBLIC_APPWRITE_ENDPOINT') || '';
+const projectId = process.env.APPWRITE_PROJECT_ID || process.env.APPWRITE_PROJECT || spec.projectId || specVar('APPWRITE_PROJECT_ID') || specVar('APPWRITE_PROJECT') || '';
+const databaseId = process.env.APPWRITE_DATABASE_ID || spec.databaseId || specVar('APPWRITE_DATABASE_ID') || specVar('NEXT_PUBLIC_APPWRITE_DATABASE_ID') || '';
+
+for (const [name, file] of Object.entries(tools)) {
+  if (!fs.existsSync(file)) {
+    console.error(`Missing tool file: ${file}`);
+    process.exit(1);
+  }
+}
+
+const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOAF Studio — Control Center</title>
+<script>window.__JOAF_CONFIG__ = Object.freeze({
+  endpoint: ${JSON.stringify(endpoint)},
+  projectId: ${JSON.stringify(projectId)},
+  databaseId: ${JSON.stringify(databaseId)},
+  functionsBase: ${JSON.stringify(endpoint ? endpoint.replace(/\/$/, '') + '/functions' : '')}
+});</script>
+<script src="../js/joaf-config.js"></script>
+<script src="./js/joaf-init.js"></script>
+<style>
+  :root{color-scheme:dark;--bg:#0b0c10;--panel:#141826;--line:#2a3245;--text:#e9edff;--muted:#8ea0bf;--accent:#7c3aed;--good:#34d399;--bad:#f87171;}
+  *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh}
+  header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:#0f1117}
+  .brand{font-weight:800} .pill{font-size:12px;color:var(--muted);background:#111625;border:1px solid var(--line);padding:6px 10px;border-radius:999px}
+  main{display:grid;grid-template-columns:280px 1fr;gap:16px;padding:16px;flex:1;min-height:0}
+  .side,.panel{border:1px solid var(--line);border-radius:18px;background:var(--panel);overflow:hidden}
+  .side{padding:14px;display:flex;flex-direction:column;gap:10px}
+  .btn{width:100%;border:none;border-radius:12px;padding:12px 14px;background:#0f1117;color:var(--text);text-align:left;cursor:pointer;border:1px solid transparent}
+  .btn.active,.btn:hover{border-color:rgba(124,58,237,.55);background:rgba(124,58,237,.12)}
+  .panel{display:flex;flex-direction:column;min-height:0}
+  .toolbar{display:flex;gap:10px;padding:14px;border-bottom:1px solid var(--line);align-items:center}
+  .toolbar input{flex:1;background:#0f1117;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px}
+  .health{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--muted)} .dot.ok{background:var(--good)} .dot.bad{background:var(--bad)}
+  iframe{border:0;width:100%;height:100%;min-height:0;background:#fff}
+  .frames{position:relative;flex:1;min-height:0}
+  .frame{position:absolute;inset:0;display:none}.frame.active{display:block}
+  @media (max-width:1100px){main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">⚡ JOAF Studio</div>
+  <div class="pill">Appwrite-native · zero-touch</div>
+  <div style="margin-left:auto" class="health"><span id="healthDot" class="dot"></span><span id="healthText">Checking…</span></div>
+</header>
+<main>
+  <aside class="side">
+    <button class="btn active" data-target="news">🗞️ News Card Generator</button>
+    <button class="btn" data-target="fb">📘 FB Smart Studio</button>
+    <button class="btn" data-target="reel">🎬 FB Reel Studio</button>
+    <button class="btn" id="refreshHealth">♻ Refresh Health</button>
+  </aside>
+  <section class="panel">
+    <div class="toolbar">
+      <input id="cfg-endpoint" readonly />
+      <input id="cfg-project" readonly />
+    </div>
+    <div class="frames">
+      <div class="frame active" id="frame-news"><iframe src="../tools/news-card-generator.html"></iframe></div>
+      <div class="frame" id="frame-fb"><iframe src="../tools/fb-smart-studio.html"></iframe></div>
+      <div class="frame" id="frame-reel"><iframe src="../tools/fb-reel-studio.html"></iframe></div>
+    </div>
+  </section>
+</main>
+<script>
+  const cfg = window.JOAF_CONFIG || {};
+  document.getElementById('cfg-endpoint').value = cfg.endpoint || '';
+  document.getElementById('cfg-project').value = cfg.projectId || '';
+  const btns = [...document.querySelectorAll('.btn[data-target]')];
+  const frames = { news: document.getElementById('frame-news'), fb: document.getElementById('frame-fb'), reel: document.getElementById('frame-reel') };
+  btns.forEach(btn => btn.addEventListener('click', () => {
+    btns.forEach(b => b.classList.toggle('active', b === btn));
+    Object.entries(frames).forEach(([k, el]) => el.classList.toggle('active', k === btn.dataset.target));
+  }));
+  async function refreshHealth() {
+    const dot = document.getElementById('healthDot');
+    const text = document.getElementById('healthText');
+    dot.className = 'dot'; text.textContent = 'Checking…';
+    try {
+      const res = await fetch(cfg.endpoint.replace(/\/$/, '') + '/health');
+      const data = await res.json();
+      const statuses = [];
+      if (data.status) statuses.push(data.status);
+      if (Array.isArray(data.services)) statuses.push(...data.services.map(s => s.status));
+      const ok = res.ok && statuses.every(s => String(s).toLowerCase() === 'pass');
+      dot.className = 'dot ' + (ok ? 'ok' : 'bad');
+      text.textContent = ok ? 'Health pass' : 'Health fail';
+    } catch {
+      dot.className = 'dot bad'; text.textContent = 'Health error';
+    }
+  }
+  document.getElementById('refreshHealth').addEventListener('click', refreshHealth);
+  refreshHealth();
+</script>
+</body>
+</html>`;
+
+fs.mkdirSync(path.dirname(OUT), { recursive: true });
+fs.writeFileSync(OUT, html, 'utf8');
+console.log(`Wrote ${OUT}`);

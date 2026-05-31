@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <script src="./js/joaf-config.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&display=swap">
+<meta charset="UTF-8">
+<meta name="description" content="বাংলাদেশের নিত্যপণ্যের বাজারদর। চাল, তেল, পেঁয়াজসহ সব পণ্যের আপডেট দাম।">
+<link rel="canonical" href="https://www.julyforum.com/bajar.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.julyforum.com/bajar.html">
+<meta property="og:title" content="বাজার দর — JOAF Bajar">
+<meta property="og:description" content="বাংলাদেশের নিত্যপণ্যের বাজারদর। চাল, তেল, পেঁয়াজসহ সব পণ্যের আপডেট দাম।">
+<meta property="og:image" content="https://www.julyforum.com/og-cover.png">
+<meta property="og:locale" content="bn_BD">
+<meta property="og:site_name" content="JOAF — www.julyforum.com">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="বাজার দর — JOAF Bajar">
+<meta name="twitter:description" content="বাংলাদেশের নিত্যপণ্যের বাজারদর। চাল, তেল, পেঁয়াজসহ সব পণ্যের আপডেট দাম।">
+<meta name="twitter:image" content="https://www.julyforum.com/og-cover.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"বাজার দর — JOAF Bajar","description":"বাংলাদেশের নিত্যপণ্যের বাজারদর। চাল, তেল, পেঁয়াজসহ সব পণ্যের আপডেট দাম।","url":"https://www.julyforum.com/bajar.html","publisher":{"@type":"Organization","name":"JOAF","url":"https://www.julyforum.com"},"inLanguage":"bn"}</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>বাজার দর — JOAF</title>
+<link rel="stylesheet" href="/css/stylec7c3.css">
+<link rel="stylesheet" href="/css/pluginsc7c3.css">
+<link rel="stylesheet" href="/css/joaf.css?v=6.6">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+</head>
+<body data-page="bajar">
+<div id="joaf-preloader" role="status" class="hidden"></div>
+<div id="joaf-header"></div>
+<div id="joaf-ticker"></div>
+
+<style>
+.bajar-hero{background:linear-gradient(135deg,#14532d,#16a34a);padding:40px 0 30px;color:#fff;text-align:center;}
+.bajar-hero h1{font-size:clamp(1.5rem,4vw,2.2rem);font-weight:900;margin-bottom:8px;}
+.bajar-hero p{font-size:14px;opacity:.85;}
+.bajar-updated{font-size:11px;opacity:.7;margin-top:6px;}
+.cat-tabs{display:flex;gap:8px;overflow-x:auto;padding:16px 0 8px;scrollbar-width:none;}
+.cat-tabs::-webkit-scrollbar{display:none;}
+.cat-tab{flex-shrink:0;padding:7px 16px;border-radius:50px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit;}
+.cat-tab.active{background:#16a34a;color:#fff;border-color:#16a34a;}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px 0;}
+.price-card{background:#fff;border-radius:16px;padding:16px 12px;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1.5px solid #f0f0f0;transition:transform .15s;}
+.price-card:hover{transform:translateY(-2px);}
+.price-icon{font-size:32px;margin-bottom:8px;}
+.price-name{font-size:13px;font-weight:800;color:#1a1a2e;margin-bottom:6px;}
+.price-main{font-size:20px;font-weight:900;color:#16a34a;}
+.price-unit{font-size:10px;color:#9ca3af;margin-left:2px;}
+.price-range{font-size:11px;color:#6b7280;margin-top:3px;}
+.price-trend{font-size:11px;margin-top:4px;font-weight:700;}
+.trend-up{color:#dc2626;}
+.trend-down{color:#16a34a;}
+.trend-same{color:#9ca3af;}
+.alert-box{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px;padding:14px 16px;margin-bottom:16px;border:1.5px solid #fbbf24;}
+.alert-box h4{font-size:14px;font-weight:800;color:#92400e;margin-bottom:4px;}
+.alert-box p{font-size:12px;color:#78350f;}
+.notif-btn{width:100%;padding:12px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:50px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:16px;}
+
+/* Loading state */
+.loading-state{text-align:center;padding:60px 20px;}
+.loading-spinner{width:48px;height:48px;border:4px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:#6b7280;font-weight:600;}
+.loading-sub{font-size:12px;color:#9ca3af;margin-top:6px;}
+
+/* AI badge */
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:50px;font-size:11px;font-weight:700;margin-top:8px;}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Error state */
+.error-box{background:#fef2f2;border:1.5px solid #fecaca;border-radius:14px;padding:16px;text-align:center;margin:20px 0;}
+.error-box p{color:#dc2626;font-size:13px;font-weight:700;}
+.retry-btn{margin-top:10px;padding:8px 20px;background:#dc2626;color:#fff;border:none;border-radius:50px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+</style>
+
+<div class="bajar-hero">
+  <div class="container">
+    <h1>🛒 আজকের বাজার দর</h1>
+    <p>ঢাকা, চট্টগ্রাম ও সারাদেশের গড় বাজার মূল্য</p>
+    <div class="bajar-updated" id="bajarUpdated">তথ্য লোড হচ্ছে...</div>
+    <div class="ai-badge"><span class="ai-dot"></span> AI দিয়ে রিয়েল-টাইম আপডেট</div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div class="alert-box">
+      <h4>🔔 দৈনিক বাজার দর নোটিফিকেশন পান</h4>
+      <p>প্রতিদিন সকালে আপনার ফোনে বাজার দর পাঠানো হবে — একদম বিনামূল্যে।</p>
+      <button class="notif-btn" onclick="requestBajarNotif()">✅ চালু করুন</button>
+    </div>
+
+    <div class="cat-tabs" id="catTabs"></div>
+    <div id="priceGrid">
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">আজকের বাজার দর আনা হচ্ছে...</div>
+        <div class="loading-sub">AI দিয়ে সর্বশেষ দাম খোঁজা হচ্ছে</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="joaf-footer"></div>
+<script src="/js/modernizr-2.8.3.min.js"></script>
+<script src="/js/data.js?v=6.6"></script>
+<script src="/js/components.js?v=6.6"></script>
+
+<script type="module">
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from '/js/appwrite-db.js';
+
+const FB_CONFIG = {}; // Firebase config removed
+const GROQ_KEY = (globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/groq-proxy/executions'; // key moved to server
+
+const fbApp = getApps().length ? getApps()[0] : initializeApp({});
+const db = getFirestore(fbApp);
+
+// Bangla number converter
+function bn(n) {
+  return String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+}
+
+// Today's date string YYYY-MM-DD for cache key
+function todayKey() {
+  const d = new Date();
+  return `bajar_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function todayBangla() {
+  const d = new Date();
+  const days = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+  const months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+  return `${days[d.getDay()]}, ${bn(d.getDate())} ${months[d.getMonth()]} ${bn(d.getFullYear())}`;
+}
+
+// Fallback data if Groq fails
+const FALLBACK = {
+  চাল: [
+    {name:'মিনিকেট চাল',icon:'🌾',price:72,unit:'কেজি',min:68,max:78,trend:'up'},
+    {name:'নাজিরশাইল',icon:'🌾',price:85,unit:'কেজি',min:80,max:90,trend:'same'},
+    {name:'মোটা চাল',icon:'🌾',price:52,unit:'কেজি',min:48,max:56,trend:'up'},
+    {name:'আতপ চাল',icon:'🌾',price:65,unit:'কেজি',min:60,max:70,trend:'same'},
+  ],
+  ডাল: [
+    {name:'মসুর ডাল',icon:'🟡',price:130,unit:'কেজি',min:120,max:140,trend:'up'},
+    {name:'মুগ ডাল',icon:'🟢',price:150,unit:'কেজি',min:140,max:165,trend:'same'},
+    {name:'ছোলা',icon:'🟤',price:95,unit:'কেজি',min:88,max:105,trend:'down'},
+  ],
+  সবজি: [
+    {name:'আলু',icon:'🥔',price:35,unit:'কেজি',min:30,max:42,trend:'down'},
+    {name:'পেঁয়াজ',icon:'🧅',price:65,unit:'কেজি',min:55,max:75,trend:'up'},
+    {name:'টমেটো',icon:'🍅',price:45,unit:'কেজি',min:38,max:55,trend:'same'},
+    {name:'বেগুন',icon:'🍆',price:50,unit:'কেজি',min:40,max:62,trend:'down'},
+  ],
+  মাছ: [
+    {name:'রুই মাছ',icon:'🐟',price:280,unit:'কেজি',min:250,max:320,trend:'same'},
+    {name:'কাতলা',icon:'🐠',price:320,unit:'কেজি',min:280,max:360,trend:'up'},
+    {name:'ইলিশ (ছোট)',icon:'🐡',price:800,unit:'কেজি',min:700,max:950,trend:'up'},
+    {name:'পাঙাশ',icon:'🐟',price:160,unit:'কেজি',min:140,max:180,trend:'down'},
+  ],
+  মাংস: [
+    {name:'গরুর মাংস',icon:'🥩',price:750,unit:'কেজি',min:700,max:800,trend:'up'},
+    {name:'ব্রয়লার মুরগি',icon:'🍗',price:195,unit:'কেজি',min:180,max:210,trend:'down'},
+    {name:'দেশি মুরগি',icon:'🐔',price:450,unit:'কেজি',min:400,max:500,trend:'same'},
+  ],
+  তেল: [
+    {name:'সয়াবিন তেল',icon:'🫙',price:175,unit:'লিটার',min:168,max:182,trend:'same'},
+    {name:'পাম অয়েল',icon:'🫙',price:145,unit:'লিটার',min:138,max:152,trend:'down'},
+    {name:'সরিষার তেল',icon:'🫙',price:220,unit:'লিটার',min:210,max:235,trend:'up'},
+  ],
+  মসলা: [
+    {name:'রসুন',icon:'🧄',price:220,unit:'কেজি',min:200,max:250,trend:'up'},
+    {name:'আদা',icon:'🫚',price:180,unit:'কেজি',min:160,max:200,trend:'same'},
+    {name:'হলুদ',icon:'🟡',price:280,unit:'কেজি',min:260,max:300,trend:'same'},
+  ],
+  ডিম: [
+    {name:'ফার্মের ডিম',icon:'🥚',price:145,unit:'ডজন',min:138,max:155,trend:'same'},
+    {name:'দেশি ডিম',icon:'🥚',price:220,unit:'ডজন',min:200,max:240,trend:'up'},
+  ],
+};
+
+let BAJAR_DATA = FALLBACK;
+let activeCat = Object.keys(BAJAR_DATA)[0];
+
+function renderTabs() {
+  const cats = Object.keys(BAJAR_DATA);
+  document.getElementById('catTabs').innerHTML = cats.map(c =>
+    `<button class="cat-tab${c===activeCat?' active':''}" onclick="window._setCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function renderPrices() {
+  const items = BAJAR_DATA[activeCat] || [];
+  const trendIcon = t => t==='up'?'▲ বাড়ছে':t==='down'?'▼ কমছে':'→ স্থিতিশীল';
+  const trendCls  = t => t==='up'?'trend-up':t==='down'?'trend-down':'trend-same';
+  document.getElementById('priceGrid').innerHTML = items.map(it => `
+    <div class="price-card">
+      <div class="price-icon">${it.icon}</div>
+      <div class="price-name">${it.name}</div>
+      <div class="price-main">৳${bn(it.price)}<span class="price-unit">/${it.unit}</span></div>
+      <div class="price-range">৳${bn(it.min)} – ৳${bn(it.max)}</div>
+      <div class="price-trend ${trendCls(it.trend)}">${trendIcon(it.trend)}</div>
+    </div>`).join('');
+}
+
+window._setCat = function(c) {
+  activeCat = c;
+  renderTabs();
+  renderPrices();
+};
+
+function showError() {
+  document.getElementById('priceGrid').innerHTML = `
+    <div class="error-box">
+      <p>⚠️ দাম লোড করতে সমস্যা হয়েছে</p>
+      <p style="color:#6b7280;font-size:12px;margin-top:4px">পুরনো তথ্য দেখানো হচ্ছে</p>
+      <button class="retry-btn" onclick="window.location.reload()">🔄 আবার চেষ্টা করুন</button>
+    </div>`;
+  BAJAR_DATA = FALLBACK;
+  activeCat = Object.keys(BAJAR_DATA)[0];
+  renderTabs();
+  renderPrices();
+}
+
+async function fetchFromGroq() {
+  const today = new Date();
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+
+  const prompt = `আজকের তারিখ ${dateStr}। বাংলাদেশের ঢাকার বাজারে আজকের পণ্যের দাম web search করে খুঁজে বের করো।
+
+নিচের প্রতিটি ক্যাটাগরির জন্য পণ্যের দাম দাও। শুধু নিচের JSON format এ return করো, অন্য কিছু না:
+
+{
+  "চাল": [
+    {"name":"মিনিকেট চাল","icon":"🌾","price":72,"unit":"কেজি","min":68,"max":78,"trend":"up"},
+    {"name":"নাজিরশাইল","icon":"🌾","price":85,"unit":"কেজি","min":80,"max":90,"trend":"same"},
+    {"name":"মোটা চাল","icon":"🌾","price":52,"unit":"কেজি","min":48,"max":56,"trend":"up"},
+    {"name":"আতপ চাল","icon":"🌾","price":65,"unit":"কেজি","min":60,"max":70,"trend":"same"}
+  ],
+  "ডাল": [
+    {"name":"মসুর ডাল","icon":"🟡","price":130,"unit":"কেজি","min":120,"max":140,"trend":"up"},
+    {"name":"মুগ ডাল","icon":"🟢","price":150,"unit":"কেজি","min":140,"max":165,"trend":"same"},
+    {"name":"ছোলা","icon":"🟤","price":95,"unit":"কেজি","min":88,"max":105,"trend":"down"}
+  ],
+  "সবজি": [
+    {"name":"আলু","icon":"🥔","price":35,"unit":"কেজি","min":30,"max":42,"trend":"down"},
+    {"name":"পেঁয়াজ","icon":"🧅","price":65,"unit":"কেজি","min":55,"max":75,"trend":"up"},
+    {"name":"টমেটো","icon":"🍅","price":45,"unit":"কেজি","min":38,"max":55,"trend":"same"},
+    {"name":"বেগুন","icon":"🍆","price":50,"unit":"কেজি","min":40,"max":62,"trend":"down"},
+    {"name":"শিম","icon":"🫘","price":70,"unit":"কেজি","min":60,"max":80,"trend":"up"}
+  ],
+  "মাছ": [
+    {"name":"রুই মাছ","icon":"🐟","price":280,"unit":"কেজি","min":250,"max":320,"trend":"same"},
+    {"name":"কাতলা","icon":"🐠","price":320,"unit":"কেজি","min":280,"max":360,"trend":"up"},
+    {"name":"ইলিশ (ছোট)","icon":"🐡","price":800,"unit":"কেজি","min":700,"max":950,"trend":"up"},
+    {"name":"পাঙাশ","icon":"🐟","price":160,"unit":"কেজি","min":140,"max":180,"trend":"down"},
+    {"name":"চিংড়ি","icon":"🦐","price":600,"unit":"কেজি","min":550,"max":680,"trend":"up"}
+  ],
+  "মাংস": [
+    {"name":"গরুর মাংস","icon":"🥩","price":750,"unit":"কেজি","min":700,"max":800,"trend":"up"},
+    {"name":"খাসির মাংস","icon":"🍖","price":950,"unit":"কেজি","min":900,"max":1000,"trend":"same"},
+    {"name":"ব্রয়লার মুরগি","icon":"🍗","price":195,"unit":"কেজি","min":180,"max":210,"trend":"down"},
+    {"name":"দেশি মুরগি","icon":"🐔","price":450,"unit":"কেজি","min":400,"max":500,"trend":"same"}
+  ],
+  "তেল": [
+    {"name":"সয়াবিন তেল","icon":"🫙","price":175,"unit":"লিটার","min":168,"max":182,"trend":"same"},
+    {"name":"পাম অয়েল","icon":"🫙","price":145,"unit":"লিটার","min":138,"max":152,"trend":"down"},
+    {"name":"সরিষার তেল","icon":"🫙","price":220,"unit":"লিটার","min":210,"max":235,"trend":"up"}
+  ],
+  "মসলা": [
+    {"name":"রসুন","icon":"🧄","price":220,"unit":"কেজি","min":200,"max":250,"trend":"up"},
+    {"name":"আদা","icon":"🫚","price":180,"unit":"কেজি","min":160,"max":200,"trend":"same"},
+    {"name":"হলুদ","icon":"🟡","price":280,"unit":"কেজি","min":260,"max":300,"trend":"same"},
+    {"name":"মরিচ গুঁড়া","icon":"🌶️","price":320,"unit":"কেজি","min":300,"max":350,"trend":"up"}
+  ],
+  "ডিম": [
+    {"name":"ফার্মের ডিম","icon":"🥚","price":145,"unit":"ডজন","min":138,"max":155,"trend":"same"},
+    {"name":"দেশি ডিম","icon":"🥚","price":220,"unit":"ডজন","min":200,"max":240,"trend":"up"},
+    {"name":"হাঁসের ডিম","icon":"🥚","price":200,"unit":"ডজন","min":185,"max":215,"trend":"same"}
+  ]
+}
+
+নিয়ম:
+- price, min, max সব সংখ্যা (string না)
+- trend শুধু "up", "down", বা "same"
+- আজকের বাস্তব বাজার দর দাও, অনুমান না
+- শুধু JSON, অন্য কোনো কথা না`;
+
+  const res = await fetch((globalThis.JOAF_FUNCTIONS_BASE || globalThis.JOAF_CONFIG?.functionsBase || ((globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '').replace(/\/$/, '') + '/functions')) + '/groq-proxy/executions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + GROQ_KEY
+    },
+    body: JSON.stringify({
+      model: 'compound-beta-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 2000
+    })
+  });
+
+  if (!res.ok) throw new Error('Groq API failed: ' + res.status);
+  const data = await res.json();
+  let txt = data.choices?.[0]?.message?.content || '';
+  txt = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  const match = txt.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('No JSON in response');
+  return JSON.parse(match[0]);
+}
+
+async function loadPrices() {
+  const cacheKey = todayKey();
+
+  // 1. Try Appwrite cache first
+  try {
+    const snap = await getDoc(doc(db, 'bajar_cache', cacheKey));
+    if (snap.exists()) {
+      const cached = snap.data();
+      if (cached.data && typeof cached.data === 'object') {
+        BAJAR_DATA = cached.data;
+        activeCat = Object.keys(BAJAR_DATA)[0];
+        renderTabs();
+        renderPrices();
+        document.getElementById('bajarUpdated').textContent =
+          `আজ ${todayBangla()} — AI আপডেট ✓`;
+        return;
+      }
+    }
+  } catch(e) {
+    console.log('Appwrite cache miss:', e);
+  }
+
+  // 2. Fetch from Groq
+  try {
+    const freshData = await fetchFromGroq();
+    BAJAR_DATA = freshData;
+    activeCat = Object.keys(BAJAR_DATA)[0];
+    renderTabs();
+    renderPrices();
+    document.getElementById('bajarUpdated').textContent =
+      `আজ ${todayBangla()} — AI আপডেট ✓`;
+
+    // 3. Save to Appwrite cache
+    try {
+      await setDoc(doc(db, 'bajar_cache', cacheKey), {
+        data: freshData,
+        fetchedAt: serverTimestamp()
+      });
+    } catch(e) {
+      console.log('Appwrite save failed:', e);
+    }
+
+  } catch(e) {
+    console.warn('Groq failed, using fallback:', e);
+    showError();
+  }
+}
+
+// Notification
+window.requestBajarNotif = function() {
+  if (!('Notification' in window)) { alert('আপনার ব্রাউজার notification সাপোর্ট করে না'); return; }
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') {
+      navigator.serviceWorker.ready.then(r => r.showNotification('✅ চালু হয়েছে!', {
+        body: 'প্রতিদিন সকালে বাজার দর পাবেন।', icon: '/logoc7c3.png', badge: '/logoc7c3.png'
+      }));
+      localStorage.setItem('joaf-bajar-notif', '1');
+    }
+  });
+};
+
+// Start
+loadPrices();
+</script>
+<script src="/js/rainbow-swirl-cursor.js" defer></script>
+<script type="module">
+import { initializeApp, getApps } from '/js/appwrite-db.js';
+import { getFirestore, addDoc, collection, serverTimestamp } from '/js/appwrite-db.js';
+const _fa = getApps().length ? getApps()[0] : initializeApp({});
+const _db = getFirestore(_fa);
+const _ua = navigator.userAgent;
+const _dev = /Mobile|Android|iPhone/i.test(_ua) ? 'mobile' : /iPad|Tablet/i.test(_ua) ? 'tablet' : 'desktop';
+const _ref = document.referrer;
+const _src = _ref.includes('google') ? 'Google' : _ref.includes('facebook') ? 'Facebook' : _ref.includes('t.co') || _ref.includes('twitter') ? 'Twitter' : _ref ? 'Referral' : 'Direct';
+addDoc(collection(_db,'pageviews'),{page:location.pathname,device:_dev,source:_src,referrer:_ref,ts:serverTimestamp()}).catch(()=>{});
+</script>
+<div id="joaf-share-bar" style="position:fixed;bottom:16px;right:16px;z-index:8888;display:flex;flex-direction:column;gap:8px;"><a href="https://wa.me/?text=বাজার%20দর%20—%20JOAF%20Bajar%20https%3A%2F%2Fwww.julyforum.com%2Fbajar.html" target="_blank" style="width:44px;height:44px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">💬</a><a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.julyforum.com%2Fbajar.html" target="_blank" style="width:44px;height:44px;background:#1877F2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.25)">👍</a><button onclick="navigator.clipboard.writeText('https://www.julyforum.com/bajar.html').then(()=>{this.textContent='✅';setTimeout(()=>this.textContent='🔗',2000)})" style="width:44px;height:44px;background:#0f172a;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)">🔗</button></div>
+</body>
+</html>
