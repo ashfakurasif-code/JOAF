@@ -9,8 +9,14 @@
 
   const __prImageCache = new Map();
   async function resolvePressImageSrc(url) {
+    // পরিবর্তন: Appwrite preview URL থাকলে তা view URL-এ রূপান্তর করুন
+    if (typeof url === 'string' && url.includes('/storage/buckets/') && url.includes('/preview')) {
+        url = url.replace('/preview', '/view');
+    }
+
     const fallback = '/logoc7c3.png';
     if (!url) return fallback;
+    // ... বাকি কোড আগের মতোই থাকবে
     if (/^(data|blob):/i.test(url)) return url;
     if (__prImageCache.has(url)) return __prImageCache.get(url);
 
