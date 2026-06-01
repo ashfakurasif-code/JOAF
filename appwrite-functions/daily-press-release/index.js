@@ -199,10 +199,12 @@ async function groq(key, messages) {
   return d.choices[0].message.content;
 }
 
-// ── Upload SVG to Appwrite Storage (fb_media bucket) ─────────────────────────
+// ── Upload SVG to Appwrite Storage + Cloudinary JPG ─────────────────────────
 async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
   const svgBuffer = Buffer.from(svgContent, 'utf8');
   const filename = `${slug}.svg`;
+
+  // 1) Upload SVG to Appwrite (for website display)
   const form = new FormData();
   form.append('fileId', 'unique()');
   form.append('file', new Blob([svgBuffer], { type: 'image/svg+xml' }), filename);
@@ -219,8 +221,32 @@ async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
 
   if (!uploadRes.ok) throw new Error('Appwrite Storage upload failed: ' + uploadRes.status + ' ' + await uploadRes.text());
   const data = await uploadRes.json();
-  const fileUrl = `${ep}/storage/buckets/fb_media/files/${data.$id}/view?project=${pj}`;
-  return { svgUrl: fileUrl, jpgUrl: fileUrl };
+  const svgUrl = `${ep}/storage/buckets/fb_media/files/${data.$id}/view?project=${pj}`;
+
+  // 2) Upload SVG to Cloudinary → auto-converts to JPG (for Facebook)
+  let jpgUrl = svgUrl; // fallback
+  try {
+    const CLOUD_NAME = 'dou71pfe1';
+    const UPLOAD_PRESET = 'kf483px5';
+    const cdnForm = new FormData();
+    cdnForm.append('file', new Blob([svgBuffer], { type: 'image/svg+xml' }), filename);
+    cdnForm.append('upload_preset', UPLOAD_PRESET);
+    cdnForm.append('public_id', slug);
+    cdnForm.append('format', 'jpg');
+    const cdnRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: cdnForm,
+      signal: abortSignal(25000),
+    });
+    if (cdnRes.ok) {
+      const cdnData = await cdnRes.json();
+      jpgUrl = cdnData.secure_url || svgUrl;
+    }
+  } catch (e) {
+    // Cloudinary failed, jpgUrl stays as svgUrl fallback
+  }
+
+  return { svgUrl, jpgUrl };
 }
 
 // ── Appwrite Save ─────────────────────────────────────────────────────────────
