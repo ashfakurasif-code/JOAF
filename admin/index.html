@@ -2618,7 +2618,7 @@ async function loadPress() {
         ${data.img ? `<img src="${data.img}" style="width:52px;height:36px;object-fit:cover;border-radius:5px;flex-shrink:0;border:1px solid var(--border);" onerror="this.style.display='none'">` : '<span class="act-icon">📰</span>'}
         <div class="act-text" style="flex:1;min-width:0;"><b>${data.title||'—'}</b>${data.slug&&data.slug.startsWith('auto-press-release')?' <span style="font-size:9px;background:#1877f2;color:#fff;border-radius:4px;padding:1px 5px;vertical-align:middle;">🤖 AUTO</span>':''}<br><span style="color:var(--text2);font-size:10px">${data.date||'—'} ${data.summary?'· '+(data.summary.substring(0,50))+'...':''}</span></div>
         <a href="/press-releases/view.html?id=${d.id}" target="_blank" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;flex-shrink:0;" title="Website এ দেখুন">🌐</a>
-        <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;border-color:#1877f2;color:#1877f2;flex-shrink:0;" data-pid="${d.id}" data-img="${data.img||'/img/press-release-bg.jpg'}" onclick="postPressToFb(this)" title="Facebook এ Post">📤 FB</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;border-color:#1877f2;color:#1877f2;flex-shrink:0;" data-pid="${d.id}" data-img="${data.imageUrl||''}" onclick="postPressToFb(this)" title="Facebook এ Post">📤 FB</button>
         <button class="btn btn-danger btn-sm" onclick="deletePress('${d.id}')">🗑️</button>
       </div>`;
     }).join('');
@@ -2672,7 +2672,7 @@ window.postPressToFb = async function(btnOrId, title, summary, img) {
     const res = await join_aw_exec('fb-autopost', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'post', caption, imageUrl: img || '/img/press-release-bg.jpg' })
+      body: JSON.stringify({ action: 'post', caption, imageUrl: (img && img.includes('fra.cloud.appwrite.io')) ? undefined : (img || undefined) })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
