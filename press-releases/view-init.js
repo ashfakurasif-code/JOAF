@@ -7,6 +7,47 @@
   const PJ = '6a11b6cd000b59f318eb';
   const DB = 'joaf';
 
+  const __prImageCache = new Map();
+  async function resolvePressImageSrc(url) {
+    const fallback = '/logoc7c3.png';
+    if (!url) return fallback;
+    if (/^(data|blob):/i.test(url)) return url;
+    if (__prImageCache.has(url)) return __prImageCache.get(url);
+
+    try {
+      const res = await fetch(url, { cache: 'force-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      const looksLikeSvg = contentType.includes('image/svg+xml') || /\.svg(?:$|\?)/i.test(url);
+
+      if (looksLikeSvg) {
+        const svgText = await res.text();
+        const trimmed = svgText.trimStart();
+        if (trimmed.startsWith('<svg') || trimmed.includes('<svg')) {
+          const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+          __prImageCache.set(url, dataUrl);
+          return dataUrl;
+        }
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      __prImageCache.set(url, blobUrl);
+      return blobUrl;
+    } catch (_err) {
+      __prImageCache.set(url, url);
+      return url;
+    }
+  }
+
+  async function setPressImage(imgEl, url, alt = '') {
+    if (!imgEl) return;
+    imgEl.alt = alt;
+    imgEl.src = await resolvePressImageSrc(url);
+  }
+
+
   // ── Main press release ─────────────────────────────────────────────
   try {
     const res = await fetch(`${EP}/databases/${DB}/collections/press_releases/documents/${id}`, {
@@ -26,7 +67,7 @@
     document.title = (pr.title || 'প্রেস রিলিজ') + ' — জোয়াফ';
 
     const img = document.getElementById('pr-img');
-    if (img && (pr.imageUrl || pr.img)) { img.src = pr.imageUrl || pr.img; img.alt = pr.title || ''; }
+    if (img && (pr.imageUrl || pr.img)) { await setPressImage(img, pr.imageUrl || pr.img, pr.title || ''); }
 
     // Date badges on image
     const top = document.getElementById('pr-img-date-top');
@@ -61,7 +102,7 @@
     // Sidebar — top 4
     document.getElementById('sidebarPR').innerHTML = others.map(p => `
       <a href="/press-releases/view.html?id=${p.$id}" class="sc-pr-item">
-        <img src="${p.img || '/logoc7c3.png'}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+        <img data-press-src="${p.img || '/logoc7c3.png'}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
         <div class="sc-pr-info">
           <h4>${p.title||''}</h4>
           <span>${p.date ? new Date(p.date).toLocaleDateString('bn-BD') : ''}</span>
@@ -81,7 +122,7 @@
         <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:${i*0.1}s">
           <div class="press-card">
             <div class="press-card-img-wrap">
-              <img src="${img}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+              <img data-press-src="${img}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
               ${dateStr ? `<span class="press-date-top"><i class="zmdi zmdi-calendar"></i> ${dateStr}</span>` : ''}
             </div>
             <div class="press-card-body">
@@ -96,6 +137,14 @@
           </div>
         </div>`;
       }).join('');
+      await (async () => {
+        const imgs = [...document.querySelectorAll('img[data-press-src]')];
+        await Promise.all(imgs.map(async img => {
+          const url = img.getAttribute('data-press-src');
+          if (!url) return;
+          img.src = await resolvePressImageSrc(url);
+        }));
+      })();
       // trigger animations
       setTimeout(() => {
         document.querySelectorAll('#more-press-grid .joaf-reveal').forEach(el => el.classList.add('visible'));

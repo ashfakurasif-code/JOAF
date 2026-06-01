@@ -136,12 +136,50 @@
 <script src="/js/components.js"></script>
 <script src="/js/rainbow-swirl-cursor.js" defer></script>
 <script>
-(function() {
+(async function() {
   // Legacy slug-based pages — skip for ?id= URLs
   if (location.search.includes('id=')) return;
   const slug = window.location.pathname.split('/').pop().replace('.html','');
   const pr = (typeof JOAF !== 'undefined' && JOAF.pressReleases) ? JOAF.pressReleases.find(p => p.slug === slug) : null;
   if (!pr) return;
+
+
+  const __prImageCache = new Map();
+  async function resolvePressImageSrc(url) {
+    const fallback = '/logoc7c3.png';
+    if (!url) return fallback;
+    if (/^(data|blob):/i.test(url)) return url;
+    if (__prImageCache.has(url)) return __prImageCache.get(url);
+
+    try {
+      const res = await fetch(url, { cache: 'force-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      const looksLikeSvg = contentType.includes('image/svg+xml') || /\.svg(?:$|\?)/i.test(url);
+      if (looksLikeSvg) {
+        const svgText = await res.text();
+        const trimmed = svgText.trimStart();
+        if (trimmed.startsWith('<svg') || trimmed.includes('<svg')) {
+          const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+          __prImageCache.set(url, dataUrl);
+          return dataUrl;
+        }
+      }
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      __prImageCache.set(url, blobUrl);
+      return blobUrl;
+    } catch (_err) {
+      __prImageCache.set(url, url);
+      return url;
+    }
+  }
+
+  async function setPressImage(imgEl, url, alt = '') {
+    if (!imgEl) return;
+    imgEl.alt = alt;
+    imgEl.src = await resolvePressImageSrc(url);
+  }
 
   const dateShort = BanglaUtil.formatDateShort(pr.date);
   const dateFull  = BanglaUtil.formatDate(pr.date);
@@ -159,8 +197,7 @@
   document.getElementById('pr-date-display').textContent = dateFull;
 
   // Image + date badges
-  document.getElementById('pr-img').src = pr.img;
-  document.getElementById('pr-img').alt = pr.title;
+  await setPressImage(document.getElementById('pr-img'), pr.img, pr.title);
   document.getElementById('pr-img-date-top').innerHTML = '<i class="zmdi zmdi-calendar"></i> ' + dateShort;
   document.getElementById('pr-img-date-bottom').textContent = '#' + pr.id;
 
