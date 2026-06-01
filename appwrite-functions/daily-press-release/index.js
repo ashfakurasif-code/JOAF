@@ -232,7 +232,7 @@ async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
     cdnForm.append('file', new Blob([svgBuffer], { type: 'image/svg+xml' }), filename);
     cdnForm.append('upload_preset', UPLOAD_PRESET);
     cdnForm.append('public_id', slug);
-    cdnForm.append('format', 'jpg');
+    
     const cdnRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
       method: 'POST',
       body: cdnForm,
@@ -240,7 +240,7 @@ async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
     });
     if (cdnRes.ok) {
       const cdnData = await cdnRes.json();
-      jpgUrl = cdnData.secure_url || svgUrl;
+      jpgUrl = (cdnData.secure_url || svgUrl).replace('/upload/', '/upload/f_jpg/');
     }
   } catch (e) {
     // Cloudinary failed, jpgUrl stays as svgUrl fallback
