@@ -25,7 +25,7 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const contentType = (res.headers.get('content-type') || '').toLowerCase();
-      const looksLikeSvg = contentType.includes('image/svg+xml') || /\.svg(?:$|\?)/i.test(url);
+      const looksLikeSvg = contentType.includes('image/svg+xml') || contentType.includes('text/plain') || /\.svg(?:$|\?)/i.test(url);
 
       if (looksLikeSvg) {
         const svgText = await res.text();

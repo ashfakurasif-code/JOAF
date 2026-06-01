@@ -66,7 +66,7 @@ function wrapBengali(text, maxChars) {
 function buildSVG({ title, date, paragraphs }) {
   // Letterhead canvas: 1414 x 2000 (exact bg image size)
   const W = 1414, H = 2000;
-  const FONT = "'Hind Siliguri', 'Noto Sans Bengali', Arial, sans-serif";
+  const FONT = "'Noto Sans Bengali', Arial, sans-serif";
   const TEXT_X = 110;       // left margin
   const TEXT_RIGHT = 1304;  // right margin (W - 110)
   const MAX_CHARS = 54;     // chars per line at font-size 38
@@ -102,7 +102,7 @@ function buildSVG({ title, date, paragraphs }) {
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&amp;display=swap');</style>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&amp;display=swap');</style>
   </defs>
 
   <!-- Letterhead background (embedded) -->
@@ -202,9 +202,8 @@ async function groq(key, messages) {
 
 // ── Upload SVG to Appwrite Storage (fb_media bucket) ─────────────────────────
 async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
-  const filename = `${slug}.svg`;
   const svgBuffer = Buffer.from(svgContent, 'utf8');
-
+  const filename = `${slug}.svg`;
   const form = new FormData();
   form.append('fileId', 'unique()');
   form.append('file', new Blob([svgBuffer], { type: 'image/svg+xml' }), filename);
@@ -221,7 +220,7 @@ async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
 
   if (!uploadRes.ok) throw new Error('Appwrite Storage upload failed: ' + uploadRes.status + ' ' + await uploadRes.text());
   const data = await uploadRes.json();
-  const fileUrl = `${ep}/storage/buckets/fb_media/files/${data.$id}/view?project=${pj}&output=jpg&width=1200&quality=90`;
+  const fileUrl = `${ep}/storage/buckets/fb_media/files/${data.$id}/view?project=${pj}`;
   return { svgUrl: fileUrl, jpgUrl: fileUrl };
 }
 

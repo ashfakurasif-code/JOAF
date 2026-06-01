@@ -127,6 +127,26 @@ async function renderAllPress() {
   if (!grid) return;
   grid.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-danger" role="status"></div></div>';
   try {
+    
+  async function resolvePressImg(url) {
+    if (!url || url.startsWith('/')) return url;
+    try {
+      const r = await fetch(url, { cache: 'force-cache' });
+      if (!r.ok) return url;
+      const ct = (r.headers.get('content-type') || '').toLowerCase();
+      if (ct.includes('svg') || url.endsWith('.svg')) {
+        const txt = await r.text();
+        if (txt.includes('<svg')) return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(txt);
+      }
+      return URL.createObjectURL(await r.blob());
+    } catch { return url; }
+  }
+  async function resolveAllPressImgs() {
+    const imgs = document.querySelectorAll('img[data-press-src]');
+    await Promise.all([...imgs].map(async img => {
+      img.src = await resolvePressImg(img.getAttribute('data-press-src'));
+    }));
+  }
     const snap = await getDocs(query(collection(_db,'press_releases'), orderBy('date','desc')));
     if (snap.empty) {
       grid.innerHTML = '<div class="col-12 text-center py-4 text-muted">কোনো press release নেই।</div>';
@@ -145,7 +165,7 @@ async function renderAllPress() {
     <div class="col-md-6 col-lg-4 joaf-reveal" style="transition-delay:${(i%3)*0.1}s">
       <div class="press-card">
         <div class="press-card-img-wrap">
-          <img src="${img}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+          <img data-press-src="${img}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
           ${dateDisplay ? `<span class="press-date-top"><i class="zmdi zmdi-calendar"></i> ${dateDisplay}</span>` : ''}
         </div>
         <div class="press-card-body">
@@ -161,6 +181,7 @@ async function renderAllPress() {
     </div>`;
     }).join('');
     document.querySelectorAll('#all-press-grid .joaf-reveal').forEach(el => el.classList.add('visible'));
+    await resolveAllPressImgs();
   } catch(e) {
     grid.innerHTML = '<div class="col-12 text-center py-4 text-muted">লোড করতে সমস্যা হয়েছে।</div>';
     console.error('Press releases load error:', e);
