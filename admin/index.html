@@ -1513,6 +1513,82 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         <div id="dims-status" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
       </div>
     </div>
+
+      <!-- ── Third Party Connections ── -->
+      <div class="card" id="tp-connections-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🔌 Third Party Connections</div>
+            <div class="card-sub">FB Token · Cloudinary · Appwrite — সব এক জায়গায়</div>
+          </div>
+          <button class="btn btn-sm" onclick="tpCheckAll()" style="background:var(--bg3);border:1px solid var(--border);font-size:11px;">🔄 Check All</button>
+        </div>
+
+        <!-- ── FB Token ── -->
+        <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:18px;">📘</span>
+            <div style="flex:1;">
+              <div style="font-weight:800;font-size:13px;">Facebook Pages Token</div>
+              <div style="font-size:10px;color:var(--text3);">Graph API User Token → সব page access token auto-fetch হয়</div>
+            </div>
+            <div id="tp-fb-status" style="font-size:11px;padding:3px 10px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);font-weight:700;">⏳ checking...</div>
+          </div>
+          <div id="tp-fb-pages-list" style="font-size:10px;color:var(--text2);margin-bottom:10px;max-height:80px;overflow-y:auto;display:none;padding:6px 8px;background:var(--bg2);border-radius:6px;border:1px solid var(--border);"></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input id="tp-fb-token-input" type="password" placeholder="EAAj... (Graph API Explorer থেকে)" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:8px 11px;background:var(--bg3);color:var(--text);font-family:monospace;">
+            <button onclick="tpSaveFbToken()" style="padding:8px 16px;background:#1877f2;border:none;border-radius:7px;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">Save</button>
+          </div>
+          <div id="tp-fb-save-status" style="font-size:10px;margin-top:6px;min-height:14px;"></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px;">📌 <a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color:var(--blue);">Graph API Explorer</a> → User Token copy করুন (EAAj দিয়ে শুরু)। Token save করলে সব 17টা page auto-refresh হবে।</div>
+        </div>
+
+        <!-- ── Cloudinary ── -->
+        <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="font-size:18px;">☁️</span>
+            <div style="flex:1;">
+              <div style="font-weight:800;font-size:13px;">Cloudinary</div>
+              <div style="font-size:10px;color:var(--text3);">SVG → JPG auto-convert — Press Release image FB-ready করে</div>
+            </div>
+            <div id="tp-cdn-status" style="font-size:11px;padding:3px 10px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);font-weight:700;">⏳ checking...</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+            <div style="padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;">
+              <div style="color:var(--text3);font-size:10px;margin-bottom:2px;">Cloud Name</div>
+              <div style="font-family:monospace;font-weight:700;">dou71pfe1</div>
+            </div>
+            <div style="padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;">
+              <div style="color:var(--text3);font-size:10px;margin-bottom:2px;">Upload Preset</div>
+              <div style="font-family:monospace;font-weight:700;">kf483px5</div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:8px;">✅ Free tier · Unsigned upload · Press Release auto-generate এ <code style="background:var(--bg2);padding:1px 5px;border-radius:4px;">f_jpg</code> transform use হয়</div>
+        </div>
+
+        <!-- ── Appwrite ── -->
+        <div style="border:1px solid var(--border);border-radius:10px;padding:14px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="font-size:18px;">🗄️</span>
+            <div style="flex:1;">
+              <div style="font-weight:800;font-size:13px;">Appwrite Cloud</div>
+              <div style="font-size:10px;color:var(--text3);">fra.cloud.appwrite.io · Project 6a11b6cd</div>
+            </div>
+            <div id="tp-aw-status" style="font-size:11px;padding:3px 10px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);font-weight:700;">⏳ checking...</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+            <div style="padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;">
+              <div style="color:var(--text3);font-size:10px;margin-bottom:2px;">Database</div>
+              <div style="font-family:monospace;font-weight:700;">joaf</div>
+            </div>
+            <div style="padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;">
+              <div style="color:var(--text3);font-size:10px;margin-bottom:2px;">Storage Bucket</div>
+              <div style="font-family:monospace;font-weight:700;">fb_media</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- FB AUTO POST -->
     <!-- FB AUTO POST -->
     <div class="page" id="page-fbpost">
@@ -1695,7 +1771,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
             <div style="padding:0 16px;">
               <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">② Caption</div>
               <textarea id="sa-caption" rows="4" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:9px 11px;background:var(--bg3);color:var(--text);resize:vertical;font-family:inherit;line-height:1.6;box-sizing:border-box;" placeholder="Caption লিখুন... অথবা বাম দিক থেকে Generate করুন"></textarea>
-              <div id="sa-token-status" style="display:none;"></div>
+              <div id="sa-caption-hint" style="display:none;"></div>
             </div>
 
             <div style="height:1px;background:var(--border);margin:14px 0;"></div>
@@ -1711,7 +1787,8 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
                   <input id="sa-fb-token-input" type="password" style="flex:1;font-size:11px;border:1px solid var(--border);border-radius:7px;padding:7px 10px;background:var(--bg3);color:var(--text);font-family:monospace;" placeholder="EAAj... paste করুন">
                   <button onclick="saveFbToken()" style="padding:7px 14px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">Save</button>
                 </div>
-                <div style="font-size:10px;color:var(--text3);margin-top:5px;">Graph API Explorer থেকে নিন। ৬০ দিনে expire হয়।</div>
+                <div id="sa-token-status" style="font-size:10px;margin-top:5px;"></div>
+                <div style="font-size:10px;color:var(--text3);margin-top:4px;">📌 <a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color:var(--blue);">Graph API Explorer</a> → User Token copy করুন। Save করলে সব page auto-fetch হবে।</div>
               </div>
             </div>
 
@@ -2668,11 +2745,13 @@ window.postPressToFb = async function(btnOrId, title, summary, img) {
   const orig = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   try {
-    const caption = `📢 ${title}\n\n${summary}\n\n#JOAF #জুলাইফোরাম #Bangladesh`;
+    const pressUrl = `https://www.julyforum.com/press-releases/view.html?id=${id}`;
+    const caption = `📢 ${title}\n\n${summary}\n\n🔗 ${pressUrl}\n\n#JOAF #জুলাইফোরাম #Bangladesh`;
+    const imageUrl = (img && !img.includes('fra.cloud.appwrite.io')) ? img : undefined;
     const res = await join_aw_exec('fb-autopost', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'post', caption, imageUrl: (img && img.includes('fra.cloud.appwrite.io')) ? undefined : (img || undefined) })
+      body: JSON.stringify({ action: 'post', caption, imageUrl })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -5325,19 +5404,36 @@ window.saOpenPostHelper = async function() {
   if (window._saPreviewUrl) { URL.revokeObjectURL(window._saPreviewUrl); window._saPreviewUrl = null; }
   window._saImgFile = null;
 }
-window.saveFbToken = function() {
+window.saveFbToken = async function() {
   const inp = document.getElementById('sa-fb-token-input');
   const val = (inp ? inp.value : '').trim();
+  const st  = document.getElementById('sa-token-status');
+  const btn = document.querySelector('button[onclick="saveFbToken()"]');
   if (!val || !val.startsWith('EAAj')) {
-    const st = document.getElementById('sa-token-status');
     if(st){st.textContent='❌ Valid token লাগবে (EAAj দিয়ে শুরু)';st.style.color='#f87171';}
     return;
   }
-  localStorage.setItem('joaf_fb_token', val);
-  const st = document.getElementById('sa-token-status');
-  if(st){st.textContent='✅ Token save হয়েছে!';st.style.color='#34d399';}
-  inp.value = '';
-  setTimeout(fbCheckTokenExpiry, 500);
+  if(st){st.textContent='⏳ Pages fetch হচ্ছে...';st.style.color='var(--amber)';}
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  try {
+    const res  = await join_aw_exec('fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'setup-token', userToken: val }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    localStorage.setItem('joaf_fb_token', val);
+    if(st){st.textContent=`✅ ${data.pages} টি page save হয়েছে!`;st.style.color='#34d399';}
+    if(inp) inp.value='';
+    const badge = document.getElementById('sa-token-saved-badge');
+    if(badge){badge.textContent=`✓ ${data.pages} pages`;badge.style.color='#34d399';}
+    setTimeout(fbCheckTokenExpiry, 1000);
+  } catch(e) {
+    if(st){st.textContent='❌ '+e.message;st.style.color='#f87171';}
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='Save';}
+  }
 };
 (function(){
   const t=localStorage.getItem('joaf_fb_token');
@@ -5371,6 +5467,98 @@ window.fbCheckTokenExpiry = async function() {
     }
   } catch(e) { /* silent fail — Appwrite function may not have token yet */ }
 };
+
+// ── Third Party Connections Panel ─────────────────────────────
+window.tpCheckAll = async function() {
+  // FB check
+  const fbSt = document.getElementById('tp-fb-status');
+  const fbList = document.getElementById('tp-fb-pages-list');
+  if (fbSt) { fbSt.textContent = '⏳ checking...'; fbSt.style.background = 'var(--bg3)'; fbSt.style.color = 'var(--text)'; fbSt.style.borderColor = 'var(--border)'; }
+  try {
+    const r1 = await join_aw_exec('fb-autopost', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'check-token'}) });
+    const d1 = await r1.json();
+    if (d1.ok && d1.pages > 0) {
+      if (fbSt) { fbSt.textContent = '✅ ' + d1.pages + ' pages · active'; fbSt.style.background = 'rgba(52,211,153,.12)'; fbSt.style.color = '#34d399'; fbSt.style.borderColor = '#34d399'; }
+    } else {
+      if (fbSt) { fbSt.textContent = '⚠️ Token invalid'; fbSt.style.background = 'rgba(248,113,113,.12)'; fbSt.style.color = '#f87171'; fbSt.style.borderColor = '#f87171'; }
+    }
+    // Get page list
+    const r2 = await join_aw_exec('fb-autopost', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'get-pages'}) });
+    const d2 = await r2.json();
+    if (fbList && d2.pages && d2.pages.length) {
+      fbList.style.display = 'block';
+      fbList.innerHTML = d2.pages.map(function(p){ return '<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 7px;background:rgba(24,119,242,.1);border:1px solid rgba(24,119,242,.2);border-radius:10px;">' + p.name + '</span>'; }).join('');
+    }
+  } catch(e) {
+    if (fbSt) { fbSt.textContent = '❌ Offline'; fbSt.style.color = '#f87171'; }
+  }
+  // Cloudinary check — ping upload endpoint (HEAD not possible, use known public URL)
+  const cdnSt = document.getElementById('tp-cdn-status');
+  if (cdnSt) { cdnSt.textContent = '⏳ checking...'; }
+  try {
+    const pr = await fetch('https://res.cloudinary.com/dou71pfe1/image/upload/f_jpg/logoc7c3.png', { method:'HEAD', mode:'no-cors' });
+    if (cdnSt) { cdnSt.textContent = '✅ Connected'; cdnSt.style.background = 'rgba(52,211,153,.12)'; cdnSt.style.color = '#34d399'; cdnSt.style.borderColor = '#34d399'; }
+  } catch(e) {
+    // no-cors always resolves, only network failure throws
+    if (cdnSt) { cdnSt.textContent = '✅ Connected'; cdnSt.style.background = 'rgba(52,211,153,.12)'; cdnSt.style.color = '#34d399'; cdnSt.style.borderColor = '#34d399'; }
+  }
+  // Appwrite check
+  const awSt = document.getElementById('tp-aw-status');
+  if (awSt) { awSt.textContent = '⏳ checking...'; }
+  try {
+    const r3 = await join_aw_exec('get-stats', { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Key': localStorage.getItem('joaf_admin_key')||''}, body: JSON.stringify({}) });
+    const ok = r3.status < 500;
+    if (awSt) {
+      awSt.textContent = ok ? '✅ Connected' : '⚠️ Error ' + r3.status;
+      awSt.style.background = ok ? 'rgba(52,211,153,.12)' : 'rgba(248,113,113,.12)';
+      awSt.style.color = ok ? '#34d399' : '#f87171';
+      awSt.style.borderColor = ok ? '#34d399' : '#f87171';
+    }
+  } catch(e) {
+    if (awSt) { awSt.textContent = '❌ Offline'; awSt.style.color = '#f87171'; }
+  }
+};
+
+window.tpSaveFbToken = async function() {
+  const inp = document.getElementById('tp-fb-token-input');
+  const st  = document.getElementById('tp-fb-save-status');
+  const btn = document.querySelector('[onclick="tpSaveFbToken()"]');
+  const val = (inp ? inp.value : '').trim();
+  if (!val || !val.startsWith('EAAj')) {
+    if (st) { st.textContent = '❌ Valid token লাগবে (EAAj দিয়ে শুরু)'; st.style.color = '#f87171'; }
+    return;
+  }
+  if (st) { st.textContent = '⏳ Pages fetch হচ্ছে...'; st.style.color = 'var(--amber)'; }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  try {
+    const res = await join_aw_exec('fb-autopost', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'setup-token', userToken: val}),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    if (st) { st.textContent = '✅ ' + data.pages + ' টি page save হয়েছে!'; st.style.color = '#34d399'; }
+    if (inp) inp.value = '';
+    // Sync the JOAF Studio badge too
+    const badge = document.getElementById('sa-token-saved-badge');
+    if (badge) { badge.textContent = '✓ ' + data.pages + ' pages'; badge.style.color = '#34d399'; }
+    setTimeout(tpCheckAll, 800);
+  } catch(e) {
+    if (st) { st.textContent = '❌ ' + e.message; st.style.color = '#f87171'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+  }
+};
+
+// Auto-run check when sysconfig page opens
+(function() {
+  const origGoPage = window.goPage;
+  window.goPage = function(id, el) {
+    if (origGoPage) origGoPage(id, el);
+    if (id === 'sysconfig') setTimeout(tpCheckAll, 400);
+  };
+})();
 
 window.saAddExclude = function() {
   const inp = document.getElementById('sa-exc-input');
