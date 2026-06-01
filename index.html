@@ -886,6 +886,18 @@ function initFilter() {
 })();
 
 // ── Press releases (latest 4 from Firestore) ──────────────
+async function resolvePressImg(url) {
+  if (!url || url.startsWith('/')) return url;
+  try {
+    const r = await fetch(url, { cache: 'force-cache' });
+    if (!r.ok) return url;
+    const txt = await r.text();
+    if (txt.trimStart().startsWith('<svg') || txt.includes('<svg')) {
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(txt);
+    }
+    return url;
+  } catch { return url; }
+}
 (async function() {
   const grid = document.getElementById('press-grid');
   if (!grid) return;
@@ -905,7 +917,7 @@ function initFilter() {
         <div class="col-md-6 col-lg-3 joaf-reveal" style="transition-delay:${i*.1}s">
           <div class="press-card">
             <div class="press-card-img-wrap">
-              <img src="${p.img||'/logoc7c3.png'}" alt="${p.title||''}" loading="lazy" onerror="this.src='/logoc7c3.png'">
+              <img data-press-src="${p.img||''}" src="/logoc7c3.png" alt="${p.title||''}" loading="lazy">
               ${dateDisplay ? `<span class="press-date-top"><i class="zmdi zmdi-calendar"></i> ${dateDisplay}</span>` : ''}
             </div>
             <div class="press-card-body">
@@ -921,6 +933,11 @@ function initFilter() {
           </div>
         </div>`; }).join('');
       document.querySelectorAll('#press-grid .joaf-reveal').forEach(el => el.classList.add('visible'));
+      // resolve SVG thumbnails
+      document.querySelectorAll('#press-grid img[data-press-src]').forEach(async img => {
+        const src = img.getAttribute('data-press-src');
+        if (src) img.src = await resolvePressImg(src);
+      });
       return;
     }
   } catch(e) { console.warn('Press Firestore failed, fallback:', e); }
