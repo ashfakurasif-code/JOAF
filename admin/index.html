@@ -2655,7 +2655,7 @@ window.addPressRelease = async function(withNotif=false) {
 window.postPressToFb = async function(btnOrId, title, summary, img) {
   const btn = (typeof btnOrId === 'string') ? null : btnOrId;
   const id  = btn ? btn.dataset.pid : btnOrId;
-  img = btn ? (btn.dataset.img || '/img/press-release-bg.jpg') : (img || '/img/press-release-bg.jpg');
+  img = btn ? (btn.dataset.img || '') : (img || '');
   // fetch title+summary from Appwrite if not passed
   if (!title) {
     try {
