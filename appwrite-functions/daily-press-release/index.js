@@ -221,7 +221,7 @@ async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
 
   if (!uploadRes.ok) throw new Error('Appwrite Storage upload failed: ' + uploadRes.status + ' ' + await uploadRes.text());
   const data = await uploadRes.json();
-  const fileUrl = `${ep}/storage/buckets/fb_media/files/${data.$id}/view?project=${pj}`;
+  const fileUrl = `${ep}/storage/buckets/fb_media/files/${data.$id}/view?project=${pj}&output=jpg&width=1200&quality=90`;
   return { svgUrl: fileUrl, jpgUrl: fileUrl };
 }
 
