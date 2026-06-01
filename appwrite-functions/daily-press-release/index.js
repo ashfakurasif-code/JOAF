@@ -26,11 +26,12 @@ const PRESS_PROMPT = (date) => `আজ ${date} তারিখে বাংল�
 
 ফরম্যাট (JSON, অন্য কিছু না):
 {
-  "title": "প্রেস ব্রিফিং — [তারিখ]",
+  "title": "আজকের মূল বিষয় সংক্ষেপে (৫-১০ শব্দ, তারিখ ছাড়া)",
   "summary": "এক বাক্যে মূল বার্তা (৩০ শব্দের মধ্যে)",
   "paragraphs": ["প্যারাগ্রাফ ১ (plain text, ৩-৪ বাক্য)", "প্যারাগ্রাফ ২", "প্যারাগ্রাফ ৩", "প্যারাগ্রাফ ৪ (জনগণের প্রতি আহ্বান)"]
 }
 
+গুরুত্বপূর্ণ: title-এ কোনো তারিখ বা "প্রেস ব্রিফিং" শব্দ রাখবে না। শুধু বিষয় লিখবে।
 প্রতিটি paragraphs entry: plain text, কোনো HTML নয়।
 শেষ paragraph এ থাকবে: "জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম (JOAF)" বাক্য।
 শুধু JSON রিটার্ন করো।`;
@@ -73,8 +74,8 @@ function buildSVG({ title, date, paragraphs }) {
   const LINE_H = 58;        // line height px
   const PARA_GAP = 36;      // extra gap between paragraphs
   const TITLE_Y = 345;      // title baseline
-  const BODY_START_Y = 500; // first body line baseline
-  const MAX_BODY_BOTTOM = 1560; // don't go below signatures
+  const BODY_START_Y = 430; // first body line baseline (date removed, gap reduced)
+  const MAX_BODY_BOTTOM = 1520; // don't go below signatures
 
   // Build all body lines
   const allBlocks = []; // [{lines, isLast}]
@@ -100,7 +101,7 @@ function buildSVG({ title, date, paragraphs }) {
     y += PARA_GAP;
   }
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
   <defs>
     <style>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&amp;display=swap');</style>
   </defs>
@@ -111,8 +112,6 @@ function buildSVG({ title, date, paragraphs }) {
   <!-- Title -->
   <text x="${W / 2}" y="${TITLE_Y}" font-family="${FONT}" font-size="52" fill="#5c2a0e" text-anchor="middle" font-weight="700">${escSVG(title)}</text>
 
-  <!-- Date -->
-  <text x="${W / 2}" y="${TITLE_Y + 60}" font-family="${FONT}" font-size="34" fill="#7a4a1e" text-anchor="middle">${escSVG(date)}</text>
 
   <!-- Thin divider line -->
   <line x1="${TEXT_X}" y1="${BODY_START_Y - 28}" x2="${TEXT_RIGHT}" y2="${BODY_START_Y - 28}" stroke="#8B4513" stroke-width="1.5" stroke-dasharray="8,5"/>
