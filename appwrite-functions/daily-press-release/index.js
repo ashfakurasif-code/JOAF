@@ -1,7 +1,7 @@
 // Appwrite Function: daily-press-release
 // Schedule: 17:00 UTC (11pm BD) every day
 // Cascade: OpenRouter → Gemini → Groq
-// Image: SVG with embedded letterhead JPG + text overlay → GitHub → CDN/Cloudinary
+// Image: SVG with embedded letterhead JPG + text overlay → Appwrite Storage (fb_media)
 
 const TIMEOUT_MS = 25000;
 function abortSignal(ms) {
@@ -72,8 +72,8 @@ function buildSVG({ title, date, paragraphs }) {
   const MAX_CHARS = 54;     // chars per line at font-size 38
   const LINE_H = 58;        // line height px
   const PARA_GAP = 36;      // extra gap between paragraphs
-  const TITLE_Y = 295;      // title baseline
-  const BODY_START_Y = 430; // first body line baseline
+  const TITLE_Y = 345;      // title baseline
+  const BODY_START_Y = 500; // first body line baseline
   const MAX_BODY_BOTTOM = 1560; // don't go below signatures
 
   // Build all body lines
@@ -200,38 +200,29 @@ async function groq(key, messages) {
   return d.choices[0].message.content;
 }
 
-// ── Upload SVG to GitHub via github-upload function ───────────────────────────
-async function uploadImageToGitHub({ svgContent, slug, adminKey, ep, pj }) {
+// ── Upload SVG to Appwrite Storage (fb_media bucket) ─────────────────────────
+async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
   const filename = `${slug}.svg`;
-  const base64Content = Buffer.from(svgContent, 'utf8').toString('base64');
+  const svgBuffer = Buffer.from(svgContent, 'utf8');
 
-  const uploadRes = await fetch(`${ep}/functions/github-upload/executions`, {
+  const form = new FormData();
+  form.append('fileId', 'unique()');
+  form.append('file', new Blob([svgBuffer], { type: 'image/svg+xml' }), filename);
+
+  const uploadRes = await fetch(`${ep}/storage/buckets/fb_media/files`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       'X-Appwrite-Project': pj,
       'X-Appwrite-Key': process.env.APPWRITE_API_KEY,
     },
-    body: JSON.stringify({
-      body: JSON.stringify({ filename, content: base64Content, folder: 'img', message: `Auto press release: ${slug}` }),
-      headers: { 'x-admin-key': adminKey },
-      method: 'POST',
-      path: '/',
-    }),
+    body: form,
     signal: abortSignal(22000),
   });
 
-  if (!uploadRes.ok) throw new Error('github-upload exec failed: ' + uploadRes.status);
-  const execData = await uploadRes.json();
-  let fnRes = {};
-  try { fnRes = JSON.parse(execData.responseBody || execData.response || '{}'); } catch (_) {}
-  if (!fnRes.success) throw new Error('github-upload error: ' + JSON.stringify(fnRes));
-
-  // GitHub raw URL (SVG source)
-  const rawUrl = `https://raw.githubusercontent.com/ashfakurasif-code/JOAF/main/img/${filename}`;
-  // Cloudinary fetch: SVG → JPG (works for both website display AND Facebook)
-  const cloudinaryUrl = `https://res.cloudinary.com/dou71pfe1/image/fetch/f_jpg,w_1200,q_90/${encodeURIComponent(rawUrl)}`;
-  return { svgUrl: cloudinaryUrl, jpgUrl: cloudinaryUrl };
+  if (!uploadRes.ok) throw new Error('Appwrite Storage upload failed: ' + uploadRes.status + ' ' + await uploadRes.text());
+  const data = await uploadRes.json();
+  const fileUrl = `${ep}/storage/buckets/fb_media/files/${data.$id}/view?project=${pj}`;
+  return { svgUrl: fileUrl, jpgUrl: fileUrl };
 }
 
 // ── Appwrite Save ─────────────────────────────────────────────────────────────
@@ -302,7 +293,7 @@ export default async ({ req, res, log, error }) => {
     let jpgUrl = '';
     try {
       const svgContent = buildSVG({ title: generated.title, date: bn, paragraphs: generated.paragraphs });
-      const urls = await uploadImageToGitHub({ svgContent, slug, adminKey: ADMIN_KEY, ep: EP, pj: PJ });
+      const urls = await uploadImageToAppwriteStorage({ svgContent, slug, ep: EP, pj: PJ });
       svgUrl = urls.svgUrl;
       jpgUrl = urls.jpgUrl;
       log('daily-press-release: image → ' + svgUrl);
