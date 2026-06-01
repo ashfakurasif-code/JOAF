@@ -133,12 +133,11 @@ async function renderAllPress() {
     try {
       const r = await fetch(url, { cache: 'force-cache' });
       if (!r.ok) return url;
-      const ct = (r.headers.get('content-type') || '').toLowerCase();
-      if (ct.includes('svg') || url.endsWith('.svg')) {
-        const txt = await r.text();
-        if (txt.includes('<svg')) return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(txt);
+      const txt = await r.text();
+      if (txt.trimStart().startsWith('<svg') || txt.includes('<svg')) {
+        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(txt);
       }
-      return URL.createObjectURL(await r.blob());
+      return url;
     } catch { return url; }
   }
   async function resolveAllPressImgs() {
