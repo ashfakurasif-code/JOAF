@@ -175,16 +175,20 @@ async function getRecentFingerprints() {
 // ── Queue helpers ─────────────────────────────────────────────────────────────
 async function getQueueCount() {
   try {
-    const docs = await awQuery(COL_QUEUE, [`equal("status","pending")`], 1);
-    // Appwrite doesn't return total without pagination hack; use list count
-    const all = await awQuery(COL_QUEUE, [`equal("status","pending")`], 200);
-    return all.length;
+    // Query without filter — count all, filter client-side (avoids index dependency)
+    const all = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?limit=100`);
+    const docs = all.documents || [];
+    return docs.filter(d => d.status === 'pending').length;
   } catch { return 0; }
 }
 
 async function getNextQueueItem() {
   try {
-    const docs = await awQuery(COL_QUEUE, [`equal("status","pending")`, `orderAsc("created_at")`], 1);
+    // Fetch without filter — pick first pending (avoids Appwrite index issues)
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?limit=100`);
+    const docs = (r.documents || []).filter(d => d.status === 'pending');
+    // Sort by created_at ascending
+    docs.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
     return docs[0] || null;
   } catch { return null; }
 }
@@ -470,25 +474,42 @@ const IMAGE_FORMATS = new Set([
 
 // ── Call fb-autopost ──────────────────────────────────────────────────────────
 async function callFbAutopost(action, payload) {
+  // Use async:true to avoid timeout — poll for result
   const outer = JSON.stringify({
-    async: false, path: '/', method: 'POST', headers: {},
+    async: true, path: '/', method: 'POST', headers: {},
     body: JSON.stringify({ action, ...payload }),
   });
   const r = await fetch(`${AW_ENDPOINT}/functions/${FN_FB}/executions`, {
     method: 'POST',
     headers: AW_HEADERS(),
     body: outer,
-    signal: AbortSignal.timeout(120000),
+    signal: AbortSignal.timeout(15000),
   });
-  const d = await r.json();
-  try { return JSON.parse(d.responseBody || '{}'); } catch { return {}; }
+  const execData = await r.json();
+  const execId = execData.$id;
+  if (!execId) return {};
+
+  // Poll up to 90s for completion
+  for (let i = 0; i < 18; i++) {
+    await new Promise(res => setTimeout(res, 5000));
+    try {
+      const poll = await fetch(`${AW_ENDPOINT}/functions/${FN_FB}/executions/${execId}`, {
+        headers: AW_HEADERS(), signal: AbortSignal.timeout(10000),
+      });
+      const pd = await poll.json();
+      if (pd.status === 'completed' || pd.status === 'failed') {
+        try { return JSON.parse(pd.responseBody || '{}'); } catch { return {}; }
+      }
+    } catch {}
+  }
+  return {};
 }
 
 // ── Content pool dedup check ──────────────────────────────────────────────────
 async function isInPool(fp) {
   try {
-    const docs = await awQuery(COL_POOL, [`equal("fp","${fp}")`], 1);
-    return docs.length > 0;
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100`);
+    return (r.documents || []).some(d => d.fp === fp);
   } catch { return false; }
 }
 

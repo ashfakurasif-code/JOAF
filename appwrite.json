@@ -646,7 +646,7 @@
         {
             "$id": "joaf-viral-os",
             "name": "JOAF Viral OS",
-            "runtime": "node-22",
+            "runtime": "node-18.0",
             "entrypoint": "index.js",
             "execute": [
                 "any"
