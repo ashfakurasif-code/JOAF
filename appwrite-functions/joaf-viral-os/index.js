@@ -38,9 +38,9 @@ const BUCKET_ID   = 'fb_media';
 const FN_FB       = 'fb-autopost';
 
 // Target queue buffer — if below MIN, auto-generate
-const QUEUE_MIN    = 48;
-const QUEUE_TARGET = 96;
-const FILL_PER_RUN = 8; // max items per fill run (avoid timeout)
+const QUEUE_MIN    = 16;  // lower threshold — fill less, publish sooner
+const QUEUE_TARGET = 24;  // smaller buffer — prevents stale content buildup
+const FILL_PER_RUN = 4;   // max items per fill run (faster, less timeout risk)
 
 // ── BD Timezone ───────────────────────────────────────────────────────────────
 const bdNow  = () => new Date(Date.now() + 6 * 3600000);
@@ -453,8 +453,12 @@ async function uploadToCloudinary(svgContent, publicId) {
   const params = new URLSearchParams();
   params.set('file', `data:image/svg+xml;base64,${b64}`);
   params.set('upload_preset', CDN_PRESET);
-  params.set('public_id', publicId.replace(/[\/\\:*?"<>|]/g, '_').slice(0, 100));
-  const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD}/image/upload`, {
+  // Strip ALL non-alphanumeric chars to avoid Cloudinary "display name contains slashes" error
+  const safeId = publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 80);
+  params.set('public_id', safeId);
+  params.set('use_filename', 'false');
+  params.set('unique_filename', 'true');
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
@@ -670,7 +674,12 @@ async function fillQueue(needed, log) {
 
 // ── MAIN: Publish one item from queue ─────────────────────────────────────────
 async function publishNext(log) {
-  const item = await getNextQueueItem();
+  let item = await getNextQueueItem();
+  // Retry once after 2s — Appwrite write propagation may cause false empty on first check
+  if (!item) {
+    await new Promise(r => setTimeout(r, 2000));
+    item = await getNextQueueItem();
+  }
   if (!item) { log('publish: queue empty'); return false; }
 
   log(`publish: format=${item.format} fp=${item.fp}`);
