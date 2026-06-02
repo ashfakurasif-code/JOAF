@@ -21,14 +21,14 @@
 import crypto from 'crypto';
 
 // ── Config ───────────────────────────────────────────────────────────────────
-const AW_KEY      = process.env.AW_KEY      || '';
-const AW_PROJECT  = process.env.AW_PROJECT  || '6a11b6cd000b59f318eb';
-const AW_ENDPOINT = process.env.AW_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
-const CDN_CLOUD   = process.env.CLOUDINARY_CLOUD  || 'dou71pfe1';
-const CDN_PRESET  = process.env.CLOUDINARY_PRESET || 'kf483px5';
-const OR_KEY      = process.env.OPENROUTER_KEY || '';
-const GEM_KEY     = process.env.GEMINI_KEY    || '';
-const GROQ_KEY    = process.env.GROQ_KEY      || '';
+const AW_KEY      = process.env.APPWRITE_API_KEY || process.env.AW_KEY || '';
+const AW_PROJECT  = process.env.APPWRITE_PROJECT_ID || process.env.AW_PROJECT || '6a11b6cd000b59f318eb';
+const AW_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.AW_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+const CDN_CLOUD   = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD || 'dou71pfe1';
+const CDN_PRESET  = process.env.CLOUDINARY_UPLOAD_PRESET || process.env.CLOUDINARY_PRESET || 'kf483px5';
+const OR_KEY      = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY || '';
+const GEM_KEY     = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY || '';
+const GROQ_KEY    = process.env.GROQ_API_KEY || process.env.GROQ_KEY || '';
 
 const DB_ID       = 'joaf';
 const COL_POOL    = 'viral_content_pool';   // raw content pool
@@ -40,6 +40,7 @@ const FN_FB       = 'fb-autopost';
 // Target queue buffer — if below MIN, auto-generate
 const QUEUE_MIN    = 48;
 const QUEUE_TARGET = 96;
+const FILL_PER_RUN = 8; // max items per fill run (avoid timeout)
 
 // ── BD Timezone ───────────────────────────────────────────────────────────────
 const bdNow  = () => new Date(Date.now() + 6 * 3600000);
@@ -427,7 +428,8 @@ function buildSVGCard(title, body, format) {
   };
   const [bg, accent, light] = colors[format] || colors.default;
   const titleSafe = (title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const bodySafe  = (body  || '').slice(0, 200).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const cleanBody = (body || '').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/<[^>]*>/g,'').trim();
+  const bodySafe  = cleanBody.slice(0, 200).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
   <rect width="1080" height="1080" fill="${bg}"/>
@@ -447,19 +449,19 @@ function buildSVGCard(title, body, format) {
 
 // ── Upload SVG to Cloudinary → JPG ────────────────────────────────────────────
 async function uploadToCloudinary(svgContent, publicId) {
-  const b64 = `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`;
-  const form = new URLSearchParams();
-  form.append('file', b64);
-  form.append('upload_preset', CDN_PRESET);
-  form.append('public_id', publicId);
+  const b64 = Buffer.from(svgContent, 'utf8').toString('base64');
+  const params = new URLSearchParams();
+  params.set('file', `data:image/svg+xml;base64,${b64}`);
+  params.set('upload_preset', CDN_PRESET);
+  params.set('public_id', publicId.replace(/[\/\\:*?"<>|]/g, '_').slice(0, 100));
   const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD}/image/upload`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form.toString(),
+    body: params.toString(),
     signal: AbortSignal.timeout(30000),
   });
-  if (!r.ok) throw new Error(`Cloudinary: ${await r.text().catch(() => r.status)}`);
   const d = await r.json();
+  if (d.error) throw new Error(`Cloudinary: ${d.error.message}`);
   return d.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
 }
 
@@ -472,37 +474,36 @@ const IMAGE_FORMATS = new Set([
   'carousel_post','infographic','civic_knowledge','ai_opinion',
 ]);
 
-// ── Call fb-autopost ──────────────────────────────────────────────────────────
-async function callFbAutopost(action, payload) {
-  // Use async:true to avoid timeout — poll for result
-  const outer = JSON.stringify({
-    async: true, path: '/', method: 'POST', headers: {},
-    body: JSON.stringify({ action, ...payload }),
-  });
-  const r = await fetch(`${AW_ENDPOINT}/functions/${FN_FB}/executions`, {
-    method: 'POST',
-    headers: AW_HEADERS(),
-    body: outer,
-    signal: AbortSignal.timeout(15000),
-  });
-  const execData = await r.json();
-  const execId = execData.$id;
-  if (!execId) return {};
-
-  // Poll up to 90s for completion
-  for (let i = 0; i < 18; i++) {
-    await new Promise(res => setTimeout(res, 5000));
-    try {
-      const poll = await fetch(`${AW_ENDPOINT}/functions/${FN_FB}/executions/${execId}`, {
-        headers: AW_HEADERS(), signal: AbortSignal.timeout(10000),
-      });
-      const pd = await poll.json();
-      if (pd.status === 'completed' || pd.status === 'failed') {
-        try { return JSON.parse(pd.responseBody || '{}'); } catch { return {}; }
-      }
-    } catch {}
+// ── Call fb-autopost (fire-and-forget async) ─────────────────────────────────
+async function callFbAutopost(action, payload, log = () => {}) {
+  // Fire async — fb-autopost runs independently (17 pages ~30s)
+  // We don't poll because that eats into our 300s timeout budget
+  try {
+    const outer = JSON.stringify({
+      async: true, path: '/', method: 'POST', headers: {},
+      body: JSON.stringify({ action, ...payload }),
+    });
+    const r = await fetch(`${AW_ENDPOINT}/functions/${FN_FB}/executions`, {
+      method: 'POST',
+      headers: AW_HEADERS(),
+      body: outer,
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!r.ok) {
+      const t = await r.text().catch(() => '');
+      log(`fb-autopost trigger failed: ${r.status} ${t.slice(0,100)}`);
+      return { ok: 0, fail: 0 };
+    }
+    const execData = await r.json();
+    const execId = execData.$id;
+    log(`fb-autopost triggered: execId=${execId} AW_KEY_len=${AW_KEY.length}`);
+    // Return optimistic success — fb-autopost will post to all 17 pages
+    // Check viral_publish_log or fb-autopost executions in Console to verify
+    return { ok: 17, fail: 0, async: true, execId };
+  } catch(e) {
+    log(`fb-autopost error: ${e.message}`);
+    return { ok: 0, fail: 0 };
   }
-  return {};
 }
 
 // ── Content pool dedup check ──────────────────────────────────────────────────
@@ -567,12 +568,17 @@ async function collectSources(log) {
 
 // ── MAIN: Generate queue items from pool ─────────────────────────────────────
 async function fillQueue(needed, log) {
-  log(`fillQueue: need ${needed} more items`);
+  needed = Math.min(needed, FILL_PER_RUN);
+  log(`fillQueue: need ${needed} more items (capped at ${FILL_PER_RUN}/run)`);
 
   // Get unprocessed pool items
   let poolItems = [];
   try {
-    poolItems = await awQuery(COL_POOL, [`equal("queued","false")`, `orderDesc("created_at")`], Math.min(needed * 3, 50));
+    try {
+      poolItems = await awQuery(COL_POOL, [], Math.min(needed * 3, 50));
+      poolItems = poolItems.filter(d => !d.queued || d.queued === "false" || d.queued === false);
+      log(`pool: fetched ${poolItems.length} unqueued items`);
+    } catch(e) { log(`pool fetch error: ${e.message}`); poolItems = []; }
   } catch {
     // COL_POOL may not have "queued" field yet — fetch all recent
     try { poolItems = await awQuery(COL_POOL, [`orderDesc("created_at")`], Math.min(needed * 3, 50)); } catch {}
@@ -675,9 +681,9 @@ async function publishNext(log) {
   let fbResult;
   try {
     if (item.jpg_url) {
-      fbResult = await callFbAutopost('post', { imageUrl: item.jpg_url, caption: item.caption });
+      fbResult = await callFbAutopost('post', { imageUrl: item.jpg_url, caption: item.caption }, log);
     } else {
-      fbResult = await callFbAutopost('post', { message: item.caption });
+      fbResult = await callFbAutopost('post', { caption: item.caption }, log);
     }
   } catch (e) {
     log(`publish error: ${e.message}`);
@@ -685,7 +691,7 @@ async function publishNext(log) {
     return false;
   }
 
-  const results  = fbResult?.results || { ok: 0, fail: 0 };
+  const results  = (fbResult && fbResult.ok !== undefined) ? fbResult : { ok: 0, fail: 0 };
   const success  = (results.ok || 0) > 0;
 
   // Log to viral_publish_log

@@ -214,8 +214,9 @@ export default async ({ req, res, log, error }) => {
       results.push({ id: page.id, name: page.name, ok: true, postId: post.id || post.post_id });
       log(`post → ${page.name}: ${post.id || post.post_id}`);
     } catch (e) {
-      results.push({ id: page.id, name: page.name, ok: false, error: e.message });
-      error(`post ✗ ${page.name}: ${e.message}`);
+      const msg = e.name === 'AbortError' ? 'timeout after 15s' : e.message;
+      results.push({ id: page.id, name: page.name, ok: false, error: msg });
+      error(`post ✗ ${page.name}: ${msg}`);
     }
   }
 

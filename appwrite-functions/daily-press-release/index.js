@@ -131,20 +131,20 @@ async function callAI(providers, date) {
     try {
       const text = await fn(messages);
       const clean = text.replace(/```json|```/g, '').trim();
-      // Char-by-char sanitizer: replace literal newlines inside JSON strings
-      const sanitized = (() => {
-        let r = '', inStr = false, i = 0;
-        while (i < clean.length) {
-          const ch = clean[i];
-          if (ch === '\\\\' && inStr) { r += ch + clean[i+1]; i += 2; continue; }
-          if (ch === '"') { inStr = !inStr; r += ch; }
-          else if (inStr && (ch === '\n' || ch === '\r' || ch === '\t')) { r += ' '; }
-          else { r += ch; }
-          i++;
-        }
-        return r;
-      })();
-      const parsed = JSON.parse(sanitized);
+      // Extract JSON object robustly
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('no JSON object found');
+      // Sanitize: replace unescaped newlines/tabs inside strings
+      let s = jsonMatch[0], out = '', inStr2 = false;
+      for (let i = 0; i < s.length; i++) {
+        const c = s[i];
+        if (c === '\\' && inStr2) { out += c + (s[i+1]||''); i++; continue; }
+        if (c === '"') { inStr2 = !inStr2; out += c; continue; }
+        if (inStr2 && (c === '\n' || c === '\r')) { out += ' '; continue; }
+        if (inStr2 && c === '\t') { out += ' '; continue; }
+        out += c;
+      }
+      const parsed = JSON.parse(out);
       if (parsed.title && parsed.paragraphs?.length) {
         parsed.summary = parsed.summary || parsed.paragraphs[0].slice(0, 80);
         console.log(`daily-press-release: ${name} OK`);
@@ -227,6 +227,8 @@ async function uploadImageToAppwriteStorage({ svgContent, slug, ep, pj }) {
   let jpgUrl = svgUrl; // fallback
   try {
     const CLOUD_NAME = 'dou71pfe1';
+const CDN_API_KEY  = process.env.CLOUDINARY_API_KEY    || '629623956125173';
+const CDN_API_SEC  = process.env.CLOUDINARY_API_SECRET || 'SynV9B5Dw4OvXjhzoOhUKucFGHM';
     const UPLOAD_PRESET = 'kf483px5';
     const cdnForm = new FormData();
     cdnForm.append('file', new Blob([svgBuffer], { type: 'image/svg+xml' }), filename);
@@ -328,9 +330,41 @@ export default async ({ req, res, log, error }) => {
     // 3. Save to Appwrite
     const saved = await saveToAppwrite({ ...generated, date: iso, slug, svgUrl, jpgUrl });
     log('daily-press-release: ' + (saved.skipped ? 'skipped (exists)' : 'saved ' + saved.$id));
-    return res.json({ ok: true, date: iso, skipped: saved.skipped || false, id: saved.$id, img: svgUrl, fbImg: jpgUrl });
+
+    // Auto-post to FB if not skipped
+    let fbResult = null;
+    if (!saved.skipped && jpgUrl) {
+      try {
+        const fbPayload = {
+          async: false, path: '/', method: 'POST', headers: {},
+          body: JSON.stringify({
+            action: 'post',
+            imageUrl: jpgUrl,
+            caption: `📋 আজকের JOAF প্রেস ব্রিফিং\n\n${generated.title}\n\n${generated.summary}\n\nবিস্তারিত পড়ুন: https://julyforum.com/press-releases/view.html?id=${saved.$id}\n\n#JOAF #জুলাইফোরাম #বাংলাদেশ`,
+          })
+        };
+        const execRes = await fetch(`${EP}/functions/fb-autopost/executions`, {
+          method: 'POST',
+          headers: { 'X-Appwrite-Project': PJ, 'X-Appwrite-Key': process.env.APPWRITE_API_KEY || process.env.AW_KEY || AW_KEY_FALLBACK, 'Content-Type': 'application/json' },
+          body: JSON.stringify(fbPayload),
+          signal: abortSignal(90000),
+        });
+        if (execRes.ok) {
+          const execData = await execRes.json();
+          const rb = execData.responseBody || execData.body || '{}';
+          fbResult = typeof rb === 'string' ? JSON.parse(rb) : rb;
+          log('daily-press-release: fb-autopost → ok=' + fbResult.ok + ' pages=' + (fbResult.ok || 0));
+        }
+      } catch (fbErr) {
+        error('daily-press-release: fb-autopost failed — ' + fbErr.message);
+      }
+    }
+
+    // files kept in Appwrite + Cloudinary for website display
+
+    return res.json({ ok: true, date: iso, skipped: saved.skipped || false, id: saved.$id, img: svgUrl, fbImg: jpgUrl, fb: fbResult });
   } catch (e) {
     error('daily-press-release: ' + e.message);
-    return res.json({ error: e.message }, 500);
+    throw e; // let retry loop handle it
   }
 };
