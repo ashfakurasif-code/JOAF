@@ -456,6 +456,46 @@
       "path": "appwrite-functions/fb-scheduler"
     },
     {
+      "$id": "joaf-autopublish",
+      "name": "JOAF Auto Publisher",
+      "runtime": "node-18.0",
+      "execute": [
+        "any"
+      ],
+      "events": [],
+      "schedule": "0 1,7,13,19 * * *",
+      "timeout": 300,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "index.js",
+      "commands": "npm install",
+      "scopes": [],
+      "vars": [
+        {
+          "name": "APPWRITE_ENDPOINT",
+          "value": "https://fra.cloud.appwrite.io/v1"
+        },
+        {
+          "name": "APPWRITE_PROJECT",
+          "value": "6a11b6cd000b59f318eb"
+        },
+        {
+          "name": "APPWRITE_API_KEY",
+          "value": ""
+        },
+        {
+          "name": "APPWRITE_DATABASE_ID",
+          "value": "joaf"
+        },
+        {
+          "name": "INTERNAL_API_KEY",
+          "value": ""
+        }
+      ],
+      "ignore": [],
+      "path": "appwrite-functions/joaf-autopublish"
+    },
+    {
       "$id": "fb-insights",
       "name": "FB Insights (Engagement Analytics)",
       "runtime": "node-22",
