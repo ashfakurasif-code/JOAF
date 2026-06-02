@@ -456,8 +456,6 @@ async function uploadToCloudinary(svgContent, publicId) {
   // Strip ALL non-alphanumeric chars to avoid Cloudinary "display name contains slashes" error
   const safeId = publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 80);
   params.set('public_id', safeId);
-  params.set('use_filename', 'false');
-  params.set('unique_filename', 'true');
   const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
