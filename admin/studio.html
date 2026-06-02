@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JOAF Studio — Control Center</title>
+<script>window.__JOAF_CONFIG__ = Object.freeze({
+  endpoint: "https://fra.cloud.appwrite.io/v1",
+  projectId: "6a11b6cd000b59f318eb",
+  databaseId: "joaf",
+  functionsBase: "https://fra.cloud.appwrite.io/v1/functions"
+});</script>
 <script src="../js/joaf-config.js"></script>
 <script src="./js/joaf-init.js"></script>
 <style>
@@ -52,6 +58,35 @@
     </div>
   </section>
 </main>
-<script src="./js/studio-init.js"></script>
+<script>
+  const cfg = window.JOAF_CONFIG || {};
+  document.getElementById('cfg-endpoint').value = cfg.endpoint || '';
+  document.getElementById('cfg-project').value = cfg.projectId || '';
+  const btns = [...document.querySelectorAll('.btn[data-target]')];
+  const frames = { news: document.getElementById('frame-news'), fb: document.getElementById('frame-fb'), reel: document.getElementById('frame-reel') };
+  btns.forEach(btn => btn.addEventListener('click', () => {
+    btns.forEach(b => b.classList.toggle('active', b === btn));
+    Object.entries(frames).forEach(([k, el]) => el.classList.toggle('active', k === btn.dataset.target));
+  }));
+  async function refreshHealth() {
+    const dot = document.getElementById('healthDot');
+    const text = document.getElementById('healthText');
+    dot.className = 'dot'; text.textContent = 'Checking…';
+    try {
+      const res = await fetch(cfg.endpoint.replace(//$/, '') + '/health');
+      const data = await res.json();
+      const statuses = [];
+      if (data.status) statuses.push(data.status);
+      if (Array.isArray(data.services)) statuses.push(...data.services.map(s => s.status));
+      const ok = res.ok && statuses.every(s => String(s).toLowerCase() === 'pass');
+      dot.className = 'dot ' + (ok ? 'ok' : 'bad');
+      text.textContent = ok ? 'Health pass' : 'Health fail';
+    } catch {
+      dot.className = 'dot bad'; text.textContent = 'Health error';
+    }
+  }
+  document.getElementById('refreshHealth').addEventListener('click', refreshHealth);
+  refreshHealth();
+</script>
 </body>
 </html>
