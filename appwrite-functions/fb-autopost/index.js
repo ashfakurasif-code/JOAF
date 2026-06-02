@@ -1,11 +1,16 @@
 // Appwrite Function: fb-autopost
 // OPTIMIZED BUILD — Free Tier Safe
 // Auth: INTERNAL_API_KEY header (x-joaf-key)
-// Actions: post | carousel | check-token | get-pages
+// Actions: post | carousel | check-token | get-pages | setup-token
 
-const FB_BASE   = 'https://graph.facebook.com';
-const FB_VER    = () => (process.env.FB_API_VERSION || 'v22.0').trim();
-const TIMEOUT   = 25000;
+const FB_BASE = 'https://graph.facebook.com';
+const FB_VER  = () => (process.env.FB_API_VERSION || 'v22.0').trim();
+const TIMEOUT = 25000;
+
+const AW_EP  = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+const AW_PJ  = process.env.APPWRITE_PROJECT  || '6a11b6cd000b59f318eb';
+const AW_KEY = process.env.APPWRITE_API_KEY  || '';
+const FN_ID  = 'fb-autopost';
 
 function abortSig() { return AbortSignal.timeout ? AbortSignal.timeout(TIMEOUT) : undefined; }
 
@@ -31,6 +36,43 @@ async function fbPost(pageId, token, endpoint, body) {
   const data = await res.json();
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
   return data;
+}
+
+// ── Update FB_PAGE_ACCESS_TOKENS variable via Appwrite API ───────────────────
+async function updateAppwriteVariable(key, value) {
+  // List existing variables to find the variable ID
+  const listRes = await fetch(`${AW_EP}/functions/${FN_ID}/variables`, {
+    headers: { 'X-Appwrite-Project': AW_PJ, 'X-Appwrite-Key': AW_KEY },
+  });
+  const listData = await listRes.json();
+  const vars = listData.variables || [];
+  const existing = vars.find(v => v.key === key);
+
+  if (existing) {
+    // Update existing variable
+    const r = await fetch(`${AW_EP}/functions/${FN_ID}/variables/${existing.$id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': AW_PJ,
+        'X-Appwrite-Key': AW_KEY,
+      },
+      body: JSON.stringify({ key, value }),
+    });
+    return r.json();
+  } else {
+    // Create new variable
+    const r = await fetch(`${AW_EP}/functions/${FN_ID}/variables`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': AW_PJ,
+        'X-Appwrite-Key': AW_KEY,
+      },
+      body: JSON.stringify({ key, value }),
+    });
+    return r.json();
+  }
 }
 
 export default async ({ req, res, log, error }) => {
@@ -59,9 +101,53 @@ export default async ({ req, res, log, error }) => {
     return res.json({ pages: pages.map(p => ({ id: p.id, name: p.name })) });
   }
 
+  // ── setup-token: user token → fetch all pages → save to env var ──────────
+  if (action === 'setup-token') {
+    const userToken = body.userToken || body.token || '';
+    if (!userToken || !userToken.startsWith('EAAj')) {
+      return res.json({ error: 'Valid FB user token required (starts with EAAj)' }, 400);
+    }
+    if (!AW_KEY) {
+      return res.json({ error: 'APPWRITE_API_KEY not set in function env' }, 500);
+    }
+    try {
+      // Fetch all pages this user manages
+      const r = await fetch(`${FB_BASE}/${FB_VER()}/me/accounts?access_token=${userToken}&limit=100`, {
+        signal: abortSig(),
+      });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      const fetchedPages = (d.data || []).map(p => ({
+        id: p.id,
+        name: p.name.trim(),
+        token: p.access_token,
+      }));
+      if (!fetchedPages.length) return res.json({ error: 'No pages found for this token' }, 400);
+
+      // Save to Appwrite function variable
+      const tokensJson = JSON.stringify(fetchedPages);
+      const updateResult = await updateAppwriteVariable('FB_PAGE_ACCESS_TOKENS', tokensJson);
+      if (updateResult.error) throw new Error(updateResult.error.message || JSON.stringify(updateResult.error));
+
+      // Reset cached pages so next invocation picks up new tokens
+      _pages = fetchedPages;
+
+      log(`setup-token: saved ${fetchedPages.length} pages`);
+      return res.json({
+        ok: true,
+        pages: fetchedPages.length,
+        pageNames: fetchedPages.map(p => p.name),
+        note: 'Tokens saved. Redeploy function to apply (or wait for next cold start).',
+      });
+    } catch (e) {
+      error('setup-token error: ' + e.message);
+      return res.json({ error: e.message }, 500);
+    }
+  }
+
   // ── check-token ──────────────────────────────────────────────────────────
   if (action === 'check-token') {
-    if (!pages.length) return res.json({ error: 'No token configured' }, 500);
+    if (!pages.length) return res.json({ error: 'No token configured', pages: 0 }, 500);
     try {
       const p   = pages[0];
       const url = `${FB_BASE}/${FB_VER()}/debug_token?input_token=${p.token}&access_token=${p.token}`;

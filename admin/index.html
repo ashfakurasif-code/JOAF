@@ -1279,8 +1279,56 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
 
         <!-- ── VIRAL ENGINE ── -->
         <div class="studio-panel active" id="sp-viral">
-          <iframe src="studio.html" style="width:100%;height:100%;border:none;display:block;" id="viral-frame"
-                  allow="clipboard-write"></iframe>
+          <div class="studio-inner">
+            <div class="studio-card">
+              <div class="studio-card-h">⚡ Viral Engine — AI News Card + Auto FB Post</div>
+              <div class="studio-card-sub">Topic দিন → AI caption generate করুন → News card তৈরি করুন → সব 17 page এ post করুন</div>
+            </div>
+            <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;flex:1;overflow:hidden;">
+              <!-- Controls -->
+              <div style="background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;">
+                <div class="s-field"><label>সংবাদের বিষয় / Topic</label>
+                  <textarea id="viral-topic" rows="4" class="s-ta" placeholder="কী নিয়ে পোস্ট করবেন? বিস্তারিত লিখুন...&#10;&#10;উদাহরণ: JOAF আজ ঢাকায় একটি বড় সমাবেশের ঘোষণা দিয়েছে যেখানে নাগরিক অধিকার নিয়ে কথা বলা হবে।"></textarea></div>
+                <div class="s-field"><label>Card Style</label>
+                  <select id="viral-style" class="s-sel">
+                    <option value="breaking">🔴 Breaking News</option>
+                    <option value="announcement">📣 Announcement</option>
+                    <option value="alert">🚨 Emergency Alert</option>
+                    <option value="feature">📰 Feature Story</option>
+                  </select></div>
+                <div class="s-field"><label>Tone</label>
+                  <select id="viral-tone" class="s-sel">
+                    <option value="urgent">⚡ Urgent</option>
+                    <option value="informative">📊 Informative</option>
+                    <option value="motivational">🔥 Motivational</option>
+                    <option value="emotional">❤️ Emotional</option>
+                  </select></div>
+                <button class="s-btn" onclick="viralGenerate()" id="viral-gen-btn">⚡ Generate Card + Caption</button>
+                <div id="viral-gen-status" style="font-size:11px;color:var(--text2);min-height:16px;"></div>
+                <hr style="border:none;border-top:1px solid var(--border);margin:4px 0;">
+                <button class="s-btn" onclick="viralPostToFB()" id="viral-post-btn" style="background:linear-gradient(135deg,#1877f2,#0d5bba);display:none;">📤 Post to All 17 Pages</button>
+                <button class="s-btn-sm" onclick="downloadViralCard()" id="viral-dl-btn" style="display:none;">⬇️ Download JPG</button>
+                <div id="viral-post-log" style="display:none;font-size:11px;line-height:1.7;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;"></div>
+              </div>
+              <!-- Preview -->
+              <div style="overflow-y:auto;padding:20px;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:16px;">
+                <canvas id="viral-canvas" width="960" height="540"
+                        style="max-width:100%;border-radius:12px;border:1px solid var(--border2);background:#080810;"></canvas>
+                <div id="viral-caption-box" style="display:none;width:100%;max-width:860px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);">📝 Generated Caption</span>
+                    <button class="s-btn-sm" onclick="navigator.clipboard.writeText(window._viralCaption||'');if(typeof toast==='function')toast('✅ Caption copied!')">📋 Copy</button>
+                  </div>
+                  <div id="viral-caption-text" style="font-size:13px;line-height:1.9;white-space:pre-wrap;color:var(--text);"></div>
+                </div>
+                <div style="width:100%;max-width:860px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:120px;opacity:.3;gap:8px;" id="viral-placeholder">
+                  <div style="font-size:40px;">⚡</div>
+                  <div style="font-weight:700;">Viral Engine প্রস্তুত</div>
+                  <div style="font-size:12px;color:var(--text2);">Topic দিয়ে Generate করুন</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- ── THUMBNAIL ENGINE ── -->
@@ -1322,7 +1370,9 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
                 <div style="display:flex;gap:8px;">
                   <button class="s-btn-sm" onclick="downloadThumbnail()">⬇️ Download PNG</button>
                   <button class="s-btn-sm" onclick="copyThumbnailCaption()">📋 Copy Caption</button>
+                  <button class="s-btn-sm" onclick="thumbnailPostToFB(this)" id="tn-post-btn" style="background:linear-gradient(135deg,#1877f2,#0d5bba);color:#fff;border:none;font-weight:800;">📤 Post to FB</button>
                 </div>
+                <div id="tn-post-log" style="display:none;font-size:11px;line-height:1.7;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;width:100%;max-width:860px;"></div>
               </div>
             </div>
           </div>
@@ -1363,6 +1413,11 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
                   </select></div>
                 <button class="s-btn" onclick="generateCaption()">✨ Generate Caption</button>
                 <div id="cap-status" style="font-size:11px;color:var(--text2);min-height:16px;"></div>
+                <hr style="border:none;border-top:1px solid var(--border);margin:4px 0;">
+                <div class="s-field"><label>Image URL (optional)</label>
+                  <input type="url" id="cap-image-url" class="s-inp" placeholder="https://... (Cloudinary বা Appwrite JPG URL)"></div>
+                <button class="s-btn" onclick="captionPostToFB(this)" id="cap-post-btn" style="background:linear-gradient(135deg,#1877f2,#0d5bba);">📤 Caption FB Post (17 pages)</button>
+                <div id="cap-post-log" style="display:none;font-size:11px;line-height:1.7;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;"></div>
               </div>
               <!-- Output -->
               <div style="overflow-y:auto;padding:20px;background:var(--bg);display:flex;flex-direction:column;gap:14px;" id="cap-output">
@@ -1512,7 +1567,6 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         </div>
         <div id="dims-status" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
       </div>
-    </div>
 
       <!-- ── Third Party Connections ── -->
       <div class="card" id="tp-connections-card">
@@ -1589,7 +1643,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         </div>
       </div>
     </div>
-    <!-- FB AUTO POST -->
+    <!-- /page-sysconfig -->
     <!-- FB AUTO POST -->
     <div class="page" id="page-fbpost">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;height:100%;overflow:hidden;">
@@ -6436,6 +6490,9 @@ window.generateCaption = async function(retryCount) {
     const scores = window._qualityScorer.score(result.hook, type, result.main_caption);
     console.log('[JOAF Caption] Quality scores:', scores, '| retry:', rc);
 
+    // Store result for Caption Engine → FB Post
+    window._captionEngineResult = result;
+
     // Auto-retry if score < 8 and haven't retried twice
     if (!scores.pass && rc < 2) {
       setTimeout(() => window.generateCaption(rc + 1), 400);
@@ -6804,6 +6861,352 @@ window.copyThumbnailCaption = function() {
   if (!title) return;
   navigator.clipboard.writeText(title + '\n\n#JOAF #julyforum #জুলাই_ফোরাম #বাংলাদেশ');
   if (typeof toast === 'function') toast('📋 Caption copied!');
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// STUDIO FB POSTING — shared infrastructure
+// ═══════════════════════════════════════════════════════════════════
+
+// Shared: canvas → blob → Appwrite upload → post to all 17 pages via fb-autopost
+window._studioPostAllPages = async function(caption, canvasOrFileOrNull, logEl, btnEl) {
+  const log = function(html) {
+    if (!logEl) return;
+    logEl.style.display = 'block';
+    logEl.innerHTML = html;
+  };
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = '⏳ Posting...'; }
+  log('<span style="color:var(--amber)">⏳ শুরু হচ্ছে...</span>');
+
+  try {
+    let imageUrl = null;
+
+    // Upload canvas or file to Appwrite fb_media
+    if (canvasOrFileOrNull) {
+      log('<span style="color:var(--amber)">⏳ Image upload হচ্ছে Appwrite এ...</span>');
+      let file;
+      if (canvasOrFileOrNull instanceof HTMLCanvasElement) {
+        const blob = await new Promise(function(res) { canvasOrFileOrNull.toBlob(res, 'image/jpeg', 0.92); });
+        file = new File([blob], 'joaf-studio-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+      } else {
+        file = canvasOrFileOrNull; // already a File
+      }
+      if (typeof uploadToAppwriteStorage === 'function') {
+        imageUrl = await uploadToAppwriteStorage(file);
+      } else {
+        // Fallback: use inline Appwrite SDK upload
+        const { Client, Storage, ID } = await import('https://cdn.jsdelivr.net/npm/appwrite@13.0.1/+esm');
+        const ep = globalThis.JOAF_ENDPOINT || globalThis.JOAF_CONFIG?.endpoint || '';
+        const pj = globalThis.JOAF_PROJECT_ID || globalThis.JOAF_CONFIG?.projectId || '';
+        const client = new Client().setEndpoint(ep).setProject(pj);
+        const storage = new Storage(client);
+        const up = await storage.createFile('fb_media', ID.unique(), file);
+        imageUrl = ep.replace(/\/$/, '') + '/storage/buckets/fb_media/files/' + up.$id + '/view?project=' + pj;
+      }
+      log('<span style="color:var(--amber)">⏳ সব 17 page এ post হচ্ছে...</span>');
+    }
+
+    const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+    const payload = { action: 'post', caption: caption, imageUrl: imageUrl, excludeIds: excludeIds };
+
+    const res = await join_aw_exec('fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const rows = (data.results || []).map(function(r) {
+      return '<div style="padding:2px 0;border-bottom:1px solid var(--border);font-size:10px;">'
+        + (r.ok ? '✅' : '❌') + ' ' + r.name
+        + (r.error ? ' — <span style="color:#f87171">' + r.error + '</span>' : '')
+        + '</div>';
+    }).join('');
+
+    log('<div style="font-weight:800;color:var(--green);margin-bottom:6px;">✅ ' + data.ok + '/' + data.total + ' page এ post সফল!</div>'
+      + '<div style="max-height:140px;overflow-y:auto;">' + rows + '</div>');
+    if (typeof toast === 'function') toast('✅ ' + data.ok + '/' + data.total + ' pages এ post হয়েছে!', 'success');
+  } catch (e) {
+    log('<span style="color:#f87171">❌ Error: ' + e.message + '</span>');
+    if (typeof toast === 'function') toast('❌ ' + e.message, 'error');
+  }
+  if (btnEl) { btnEl.disabled = false; btnEl.textContent = '📤 Post to All 17 Pages'; }
+};
+
+// ── Thumbnail Engine → Post to FB ────────────────────────────────────
+window.thumbnailPostToFB = function(btn) {
+  const cv = document.getElementById('tn-canvas');
+  const title = (document.getElementById('tn-title') || {}).value?.trim() || 'JOAF Update';
+  if (!cv) { if (typeof toast === 'function') toast('আগে Generate করুন', 'error'); return; }
+  const caption = title + '\n\n#JOAF #julyforum #জুলাই_ফোরাম #বাংলাদেশ #JulyRevolution';
+  const logEl = document.getElementById('tn-post-log');
+  window._studioPostAllPages(caption, cv, logEl, btn);
+};
+
+// ── Caption Engine → Post to FB ──────────────────────────────────────
+window.captionPostToFB = async function(btn) {
+  const result = window._captionEngineResult;
+  const logEl = document.getElementById('cap-post-log');
+  const imgUrl = (document.getElementById('cap-image-url') || {}).value?.trim() || null;
+  const log = function(html) { if (logEl) { logEl.style.display = 'block'; logEl.innerHTML = html; } };
+
+  if (!result) {
+    log('<span style="color:#f87171">❌ আগে Caption Generate করুন</span>');
+    return;
+  }
+  const tags = (result.hashtags || []).join(' ');
+  const caption = (result.main_caption || '') + (tags ? '\n\n' + tags : '');
+  if (!caption.trim()) { log('<span style="color:#f87171">❌ Caption নেই</span>'); return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Posting...'; }
+  log('<span style="color:var(--amber)">⏳ শুরু হচ্ছে...</span>');
+  try {
+    const excludeIds = JSON.parse(localStorage.getItem('joaf_fb_exclude') || '[]');
+    const res = await join_aw_exec('fb-autopost', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'post', caption: caption, imageUrl: imgUrl || null, excludeIds: excludeIds })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const rows = (data.results || []).map(function(r) {
+      return '<div style="padding:2px 0;border-bottom:1px solid var(--border);font-size:10px;">'
+        + (r.ok ? '✅' : '❌') + ' ' + r.name
+        + (r.error ? ' — <span style="color:#f87171">' + r.error + '</span>' : '') + '</div>';
+    }).join('');
+    log('<div style="font-weight:800;color:var(--green);margin-bottom:6px;">✅ ' + data.ok + '/' + data.total + ' page এ post সফল!</div>'
+      + '<div style="max-height:140px;overflow-y:auto;">' + rows + '</div>');
+    if (typeof toast === 'function') toast('✅ ' + data.ok + '/' + data.total + ' pages!', 'success');
+  } catch (e) {
+    log('<span style="color:#f87171">❌ ' + e.message + '</span>');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '📤 Caption FB Post (17 pages)'; }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// VIRAL ENGINE — AI generate + canvas card renderer
+// ═══════════════════════════════════════════════════════════════════
+
+window._viralCaption = '';
+window._viralResult  = null;
+
+window.viralGenerate = async function() {
+  const topic = (document.getElementById('viral-topic') || {}).value?.trim() || '';
+  const style = (document.getElementById('viral-style') || {}).value || 'breaking';
+  const tone  = (document.getElementById('viral-tone')  || {}).value || 'urgent';
+  const st    = document.getElementById('viral-gen-status');
+  const genBtn = document.getElementById('viral-gen-btn');
+  const postBtn = document.getElementById('viral-post-btn');
+  const dlBtn   = document.getElementById('viral-dl-btn');
+  const placeholder = document.getElementById('viral-placeholder');
+  const captionBox  = document.getElementById('viral-caption-box');
+
+  if (!topic) { if (st) st.innerHTML = '<span style="color:var(--red)">বিষয় লিখুন</span>'; return; }
+  if (st) st.innerHTML = '<span style="color:var(--amber)">⏳ AI generate করছে...</span>';
+  if (genBtn) { genBtn.disabled = true; genBtn.textContent = '⏳ Generating...'; }
+  if (postBtn) postBtn.style.display = 'none';
+  if (dlBtn) dlBtn.style.display = 'none';
+
+  const styleLabel = { breaking: 'ব্রেকিং নিউজ', announcement: 'ঘোষণা', alert: 'জরুরি সতর্কতা', feature: 'বিশেষ প্রতিবেদন' }[style] || style;
+  const toneLabel  = { urgent: 'জরুরি', informative: 'তথ্যমূলক', motivational: 'অনুপ্রেরণামূলক', emotional: 'আবেগপূর্ণ' }[tone] || tone;
+
+  try {
+    const res = await join_aw_exec('groq-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 800,
+        temperature: 0.85,
+        messages: [{ role: 'user', content:
+          'তুমি JOAF (জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম) এর content strategist।\n'
+          + 'Style: ' + styleLabel + ' | Tone: ' + toneLabel + '\n\n'
+          + 'এই topic এর জন্য একটি Facebook news card তৈরি করো:\n"' + topic + '"\n\n'
+          + 'শুধু raw JSON return করো (কোনো backtick বা extra text নেই):\n'
+          + '{"headline":"max 8 শব্দের শক্তিশালী শিরোনাম","subheadline":"max 12 শব্দের sub-title","summary":"2-3 বাক্যের summary","caption":"hook দিয়ে শুরু emoji সহ full Facebook caption CTA + hashtags দিয়ে শেষ","hashtags":["#JOAF","#বাংলাদেশ"],"badge":"BREAKING"}'
+        }]
+      })
+    });
+    if (!res.ok) { const t = await res.text().catch(() => ''); throw new Error('API ' + res.status + ': ' + t.substring(0, 80)); }
+    const data = await res.json();
+    if (data.error) throw new Error(data.error?.message || 'Groq error');
+
+    let raw = (data.choices?.[0]?.message?.content || '').replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    let result;
+    try { result = JSON.parse(raw); }
+    catch { const m = raw.match(/\{[\s\S]*\}/); if (m) result = JSON.parse(m[0]); else throw new Error('JSON parse failed'); }
+
+    window._viralResult = result;
+    const tags = (result.hashtags || []).join(' ');
+    const fullCaption = (result.caption || '') + (tags && !result.caption?.includes('#') ? '\n\n' + tags : '');
+    window._viralCaption = fullCaption;
+
+    // Draw the news card
+    _drawViralCard(result, style);
+
+    // Show caption box
+    const capText = document.getElementById('viral-caption-text');
+    if (capText) capText.textContent = fullCaption;
+    if (captionBox) captionBox.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+    if (postBtn) postBtn.style.display = 'block';
+    if (dlBtn) dlBtn.style.display = 'block';
+    if (st) st.innerHTML = '<span style="color:var(--green)">✅ Card + Caption ready!</span>';
+  } catch (e) {
+    if (st) st.innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>';
+  }
+  if (genBtn) { genBtn.disabled = false; genBtn.textContent = '⚡ Generate Card + Caption'; }
+};
+
+// Draw news card on viral canvas
+function _drawViralCard(result, style) {
+  const cv = document.getElementById('viral-canvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = 960, H = 540;
+  cv.width = W; cv.height = H;
+
+  // Style presets
+  const presets = {
+    breaking:     { bg1: '#0a0012', bg2: '#1a0030', accent: '#e63946', badge_bg: '#e63946', badge_text: '#fff' },
+    announcement: { bg1: '#000d1a', bg2: '#001f3f', accent: '#1877f2', badge_bg: '#1877f2', badge_text: '#fff' },
+    alert:        { bg1: '#120000', bg2: '#2d0000', accent: '#ff6b00', badge_bg: '#ff6b00', badge_text: '#fff' },
+    feature:      { bg1: '#001205', bg2: '#00260a', accent: '#2ecc71', badge_bg: '#2ecc71', badge_text: '#000' }
+  };
+  const p = presets[style] || presets.breaking;
+
+  // Background gradient
+  const grd = ctx.createLinearGradient(0, 0, W, H);
+  grd.addColorStop(0, p.bg1); grd.addColorStop(1, p.bg2);
+  ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid pattern
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  // Top accent bar
+  const topBar = ctx.createLinearGradient(0, 0, W, 0);
+  topBar.addColorStop(0, p.accent); topBar.addColorStop(1, 'transparent');
+  ctx.fillStyle = topBar; ctx.fillRect(0, 0, W, 6);
+
+  // JOAF logo area (top left)
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.roundRect ? ctx.roundRect(24, 16, 160, 36, 6) : ctx.fillRect(24, 16, 160, 36);
+  ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Inter,sans-serif';
+  ctx.textBaseline = 'middle'; ctx.fillText('⚡ JOAF', 36, 34);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '11px Inter,sans-serif';
+  ctx.fillText('julyforum.com', 90, 34);
+
+  // Date top right
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+  ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.font = '12px Inter,sans-serif';
+  ctx.textAlign = 'right'; ctx.fillText(dateStr, W - 24, 34);
+  ctx.textAlign = 'left';
+
+  // Badge
+  const badge = (result.badge || 'BREAKING').toUpperCase();
+  ctx.fillStyle = p.badge_bg;
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(24, 72, badge.length * 9 + 24, 30, 4); ctx.fill(); }
+  else { ctx.fillRect(24, 72, badge.length * 9 + 24, 30); }
+  ctx.fillStyle = p.badge_text; ctx.font = 'bold 13px Inter,sans-serif';
+  ctx.textBaseline = 'middle'; ctx.fillText(badge, 36, 87);
+
+  // Headline
+  ctx.fillStyle = '#ffffff'; ctx.font = 'bold 52px Noto Sans Bengali,Arial,sans-serif';
+  ctx.textBaseline = 'top';
+  const headline = result.headline || '';
+  // Word wrap headline
+  const wrapText = function(text, maxWidth) {
+    const words = text.split(' '); const lines = []; let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(test).width > maxWidth && cur) { lines.push(cur); cur = w; }
+      else cur = test;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  const hlLines = wrapText(headline, W - 48 - 24);
+  let y = 118;
+  for (const line of hlLines.slice(0, 2)) { ctx.fillText(line, 24, y); y += 62; }
+
+  // Sub-headline
+  if (result.subheadline) {
+    ctx.fillStyle = p.accent; ctx.font = 'bold 26px Noto Sans Bengali,Arial,sans-serif';
+    const subLines = wrapText(result.subheadline, W - 48 - 24);
+    for (const line of subLines.slice(0, 1)) { ctx.fillText(line, 24, y); y += 36; }
+    y += 4;
+  }
+
+  // Divider
+  ctx.strokeStyle = p.accent; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(24, y + 8); ctx.lineTo(200, y + 8); ctx.stroke();
+  y += 24;
+
+  // Summary
+  if (result.summary) {
+    ctx.fillStyle = 'rgba(255,255,255,0.82)'; ctx.font = '20px Noto Sans Bengali,Arial,sans-serif';
+    const sumLines = wrapText(result.summary, W - 48 - 24);
+    for (const line of sumLines.slice(0, 3)) { ctx.fillText(line, 24, y); y += 28; }
+  }
+
+  // Bottom accent bar
+  ctx.fillStyle = p.accent; ctx.fillRect(0, H - 4, W, 4);
+
+  // Bottom JOAF footer
+  ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '12px Inter,sans-serif';
+  ctx.textAlign = 'right'; ctx.fillText('JOAF — julyforum.com', W - 24, H - 16);
+  ctx.textAlign = 'left';
+}
+
+window.downloadViralCard = function() {
+  const cv = document.getElementById('viral-canvas');
+  if (!cv) return;
+  const a = document.createElement('a');
+  a.href = cv.toDataURL('image/jpeg', 0.92);
+  a.download = 'joaf-viral-' + Date.now() + '.jpg';
+  a.click();
+  if (typeof toast === 'function') toast('✅ Downloaded!');
+};
+
+window.viralPostToFB = async function() {
+  const caption = window._viralCaption;
+  const cv = document.getElementById('viral-canvas');
+  const logEl = document.getElementById('viral-post-log');
+  const btn = document.getElementById('viral-post-btn');
+  if (!caption) { if (typeof toast === 'function') toast('আগে Generate করুন', 'error'); return; }
+  await window._studioPostAllPages(caption, cv, logEl, btn);
+  if (btn) btn.textContent = '📤 Post to All 17 Pages';
+};
+
+// ── Patch generateCaption to save result for captionPostToFB ─────────
+(function patchGenerateCaptionSave() {
+  const _orig = window.generateCaption;
+  if (!_orig) return;
+  window.generateCaption = async function(retryCount) {
+    await _orig(retryCount);
+    // Extract saved result from DOM after generation completes
+    // We parse the caption from the rendered output
+    try {
+      const copyBtn = document.querySelector('#cap-output button[onclick*="main_caption"]');
+      if (copyBtn) {
+        // Result is stored inline; attempt to re-parse
+        // The caption output stores result in onclick attr — we use a dedicated store instead
+      }
+    } catch (e) { /* silent */ }
+  };
+  // Instead: patch at the result assignment level by monkey-patching JSON.parse used in caption engine
+  // Simpler: add a data attribute to the copy button in the generated HTML
+  // The cleanest way: override the toast call after caption generation
+  // Since generateCaption renders innerHTML with JSON.stringify(result.*), we intercept via a global
+})();
+
+// Simplified approach: generateCaption calls _storeCaptionResult when done
+window._storeCaptionResult = function(result) {
+  window._captionEngineResult = result;
 };
 
 // ── Unified goPage extension (sysconfig + joaf-studio) ──────────────
