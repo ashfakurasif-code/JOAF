@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viral OS Pipeline</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0c10;--panel:#141826;--line:#2a3245;--text:#e9edff;--muted:#8ea0bf;--accent:#7c3aed;--good:#34d399;--bad:#f87171;--warn:#fbbf24}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);padding:14px;font-size:13px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.metric{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.metric-label{font-size:10px;color:var(--muted);margin-bottom:3px}
+.metric-value{font-size:22px;font-weight:700}
+.ok{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.card-title{font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--line);font-size:12px}
+.row:last-child{border-bottom:none}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-ok{background:var(--good)} .dot-bad{background:var(--bad)} .dot-warn{background:var(--warn)} .dot-idle{background:var(--line)}
+.muted{color:var(--muted)}
+.controls{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.btn{padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit}
+.btn:hover{border-color:var(--accent);background:rgba(124,58,237,.15)}
+.btn.primary{border-color:var(--accent);color:#a78bfa}
+.full{grid-column:1/-1}
+.logbox{background:#060810;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace;font-size:10px;line-height:1.7;color:#7a8fa8;white-space:pre-wrap;max-height:160px;overflow-y:auto;margin-top:8px}
+.bar-wrap{margin-bottom:4px}
+.bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:2px}
+.bar-track{height:4px;background:#1a2235;border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:var(--good)}
+.ts{font-size:10px;color:var(--muted);text-align:right;margin-top:6px}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.badge{font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--good);color:var(--good);background:rgba(52,211,153,.08);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<div class="header">
+  <b style="font-size:14px">📡 Viral OS Pipeline</b>
+  <span class="badge">● live</span>
+</div>
+
+<div class="grid4">
+  <div class="metric"><div class="metric-label">Queue pending</div><div class="metric-value" id="m-q">—</div></div>
+  <div class="metric"><div class="metric-label">Published today</div><div class="metric-value ok" id="m-pub">—</div></div>
+  <div class="metric"><div class="metric-label">Pool items</div><div class="metric-value" id="m-pool">—</div></div>
+  <div class="metric"><div class="metric-label">With image</div><div class="metric-value" id="m-img">—</div></div>
+</div>
+
+<div class="controls">
+  <button class="btn primary" onclick="run('cycle')">▶ Run Cycle</button>
+  <button class="btn" onclick="run('publish')">📤 Publish</button>
+  <button class="btn" onclick="run('fill')">📦 Fill Queue</button>
+  <button class="btn" onclick="run('collect')">📡 Collect RSS</button>
+  <button class="btn" onclick="run('status')">📊 Status</button>
+  <button class="btn" onclick="load()" style="margin-left:auto">↻</button>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Recent Posts</div>
+    <div id="log-list"><span class="muted" style="font-size:11px">loading…</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Queue by Format</div>
+    <div id="q-bars"><span class="muted" style="font-size:11px">loading…</span></div>
+  </div>
+  <div class="card full" id="action-card" style="display:none">
+    <div class="card-title">Action Output</div>
+    <div class="logbox" id="action-log"></div>
+  </div>
+</div>
+<div class="ts" id="ts">—</div>
+
+<script>
+const K="standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b";
+const P="6a11b6cd000b59f318eb",B="https://fra.cloud.appwrite.io/v1";
+const h={"X-Appwrite-Project":P,"X-Appwrite-Key":K,"Content-Type":"application/json"};
+const aw=async(m,u,b)=>(await fetch(B+u,{method:m,headers:h,body:b?JSON.stringify(b):undefined})).json();
+const ft=s=>{if(!s)return"—";const d=new Date(s);return d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});};
+
+async function load(){
+  try{
+    const[qr,pr,lr]=await Promise.all([
+      aw("GET","/databases/joaf/collections/viral_publish_queue/documents?limit=100"),
+      aw("GET","/databases/joaf/collections/viral_content_pool/documents?limit=1"),
+      aw("GET","/databases/joaf/collections/viral_publish_log/documents?limit=10").catch(()=>({documents:[]})),
+    ]);
+    const docs=qr.documents||[];
+    const pend=docs.filter(d=>d.status==="pending");
+    const imgs=pend.filter(d=>d.jpg_url).length;
+    document.getElementById("m-q").textContent=pend.length;
+    document.getElementById("m-q").className="metric-value "+(pend.length<8?"warn":pend.length>20?"ok":"ok");
+    document.getElementById("m-pool").textContent=pr.total||0;
+    document.getElementById("m-img").textContent=imgs;
+    document.getElementById("m-img").className="metric-value "+(imgs>0?"ok":"warn");
+
+    const today=new Date().toISOString().slice(0,10);
+    const tl=(lr.documents||[]).filter(d=>(d.published_at||"").startsWith(today));
+    document.getElementById("m-pub").textContent=tl.length;
+
+    const logs=lr.documents||[];
+    document.getElementById("log-list").innerHTML=logs.length?logs.slice(0,6).map(d=>{
+      const ok=d.status==="posted";
+      return`<div class="row"><span class="dot ${ok?"dot-ok":"dot-bad"}"></span><span class="muted">${ft(d.published_at)}</span><span style="flex:1">${(d.format||"?").replace(/_/g," ")}</span><span class="${ok?"ok":"bad"}" style="font-size:10px">${ok?"✓17":"✗"}</span></div>`;
+    }).join(""):`<div class="muted" style="font-size:11px">no log entries yet</div>`;
+
+    const fc={};pend.forEach(d=>{fc[d.format]=(fc[d.format]||0)+1;});
+    const sorted=Object.entries(fc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const mx=sorted[0]?.[1]||1;
+    document.getElementById("q-bars").innerHTML=sorted.length?sorted.map(([f,c])=>`<div class="bar-wrap"><div class="bar-lbl"><span>${f.replace(/_/g," ")}</span><span>${c}</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/mx*100)}%"></div></div></div>`).join(""):`<div class="muted" style="font-size:11px">empty</div>`;
+
+    document.getElementById("ts").textContent="updated "+new Date().toLocaleTimeString();
+  }catch(e){document.getElementById("ts").textContent="error: "+e.message;}
+}
+
+async function run(action){
+  document.getElementById("action-card").style.display="block";
+  const box=document.getElementById("action-log");
+  box.textContent=`[${action}] triggering...\n`;
+  try{
+    const r=await aw("POST","/functions/joaf-viral-os/executions",{async:true,path:"/",method:"POST",headers:{},body:JSON.stringify({action})});
+    const id=r.$id;
+    if(!id){box.textContent="error: "+JSON.stringify(r);return;}
+    box.textContent+=`exec: ${id}\n`;
+    let i=0;
+    const t=setInterval(async()=>{
+      i++;
+      try{
+        const s=await aw("GET",`/functions/joaf-viral-os/executions/${id}`);
+        if(s.status==="completed"||s.status==="failed"){
+          clearInterval(t);
+          box.textContent=`[${action}] ${s.status} (${s.duration||0}ms)\n\n${s.logs||"(no logs)"}`;
+          box.scrollTop=9999;
+          load();
+        }else{
+          box.textContent=`[${action}] ${s.status||"waiting"}...\nexec: ${id}`;
+        }
+      }catch{}
+      if(i>60)clearInterval(t);
+    },4000);
+  }catch(e){box.textContent="error: "+e.message;}
+}
+
+load();setInterval(load,30000);
+</script>
+</body>
+</html>

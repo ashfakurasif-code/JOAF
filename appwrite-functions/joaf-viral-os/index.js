@@ -449,17 +449,21 @@ function buildSVGCard(title, body, format) {
 
 // ── Upload SVG to Cloudinary → JPG ────────────────────────────────────────────
 async function uploadToCloudinary(svgContent, publicId) {
-  const b64 = Buffer.from(svgContent, 'utf8').toString('base64');
-  const params = new URLSearchParams();
-  params.set('file', `data:image/svg+xml;base64,${b64}`);
-  params.set('upload_preset', CDN_PRESET);
-  // Strip ALL non-alphanumeric chars to avoid Cloudinary "display name contains slashes" error
   const safeId = publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 80);
-  params.set('public_id', safeId);
+  const boundary = 'JOAF' + Date.now();
+  const svgBytes = Buffer.from(svgContent, 'utf8');
+  const nl = '\r\n';
+  const part = (name, val) => `--${boundary}${nl}Content-Disposition: form-data; name="${name}"${nl}${nl}${val}${nl}`;
+  const filePart = `--${boundary}${nl}Content-Disposition: form-data; name="file"; filename="${safeId}.svg"${nl}Content-Type: image/svg+xml${nl}${nl}`;
+  const endPart = `--${boundary}--${nl}`;
+  const body = Buffer.concat([
+    Buffer.from(filePart), svgBytes,
+    Buffer.from(nl + part('upload_preset', CDN_PRESET) + part('public_id', safeId) + endPart),
+  ]);
   const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
+    headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+    body,
     signal: AbortSignal.timeout(30000),
   });
   const d = await r.json();
@@ -519,7 +523,8 @@ async function isInPool(fp) {
 // ── Get last-used formats (anti-repeat) ───────────────────────────────────────
 async function getLastFormats(n = 5) {
   try {
-    const docs = await awQuery(COL_LOG, [`orderDesc("published_at")`], n);
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=${n}`);
+    const docs = r.documents || [];
     return docs.map(d => d.format).filter(Boolean);
   } catch { return []; }
 }
@@ -583,7 +588,7 @@ async function fillQueue(needed, log) {
     } catch(e) { log(`pool fetch error: ${e.message}`); poolItems = []; }
   } catch {
     // COL_POOL may not have "queued" field yet — fetch all recent
-    try { poolItems = await awQuery(COL_POOL, [`orderDesc("created_at")`], Math.min(needed * 3, 50)); } catch {}
+    // orderDesc removed - not supported in Appwrite 1.9.x without index
   }
 
   const lastFormats = await getLastFormats(5);
@@ -740,16 +745,15 @@ export default async ({ req, res, log, error }) => {
   // ── STATUS ────────────────────────────────────────────────────────────────
   if (action === 'status') {
     try {
-      const [queueDocs, logDocs] = await Promise.all([
-        awQuery(COL_QUEUE, [`equal("status","pending")`], 200),
-        awQuery(COL_LOG,   [`orderDesc("published_at")`], 5),
-      ]);
+      const queueAll = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?limit=100`);
+      const pending = (queueAll.documents || []).filter(d => d.status === 'pending');
+      const logAll = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=5`).catch(() => ({ documents: [] }));
       return res.json({
         ok: true,
-        queue_pending: queueDocs.length,
+        queue_pending: pending.length,
         queue_min: QUEUE_MIN,
         queue_target: QUEUE_TARGET,
-        recent_posts: logDocs.map(d => ({ format: d.format, status: d.status, published_at: d.published_at })),
+        recent_posts: (logAll.documents || []).map(d => ({ format: d.format, status: d.status, published_at: d.published_at })),
       });
     } catch (e) {
       return res.json({ ok: false, error: e.message });
