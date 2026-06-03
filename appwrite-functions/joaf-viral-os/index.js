@@ -547,17 +547,16 @@ function buildSVGCard(title, body, format) {
 // ── Upload SVG to Cloudinary → JPG ────────────────────────────────────────────
 async function uploadToCloudinary(svgContent, publicId) {
   const safeId = (publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 60)) + '_' + Date.now();
-  // base64 data URI approach — most reliable for Cloudinary unsigned upload
-  const b64 = Buffer.from(svgContent, 'utf8').toString('base64');
-  const dataUri = 'data:image/svg+xml;base64,' + b64;
-  const params = new URLSearchParams();
-  params.set('file', dataUri);
-  params.set('upload_preset', CDN_PRESET);
-  params.set('public_id', safeId);
+  const svgBytes = Buffer.from(svgContent, 'utf8');
+  const filename = safeId + '.svg';
+  // FormData + Blob — same proven method as daily-press-release
+  const form = new FormData();
+  form.append('file', new Blob([svgBytes], { type: 'image/svg+xml' }), filename);
+  form.append('upload_preset', CDN_PRESET);
+  form.append('public_id', safeId);
   const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
+    body: form,
     signal: AbortSignal.timeout(40000),
   });
   const d = await r.json();
@@ -921,8 +920,9 @@ async function publishNext(log) {
     // Delete Cloudinary image (not needed after FB post)
     if (item.jpg_url && CDN_CLOUD && CDN_API_SECRET) {
       try {
-        const pubId = item.jpg_url.split('/upload/')[1]?.replace(/\.[^.]+$/, '').replace(/^f_jpg,q_90\//, '');
-        if (pubId) {
+        const pubId = item.jpg_url.split('/upload/')[1]?.replace(/\.[^.]+$/, '').replace(/^f_jpg,q_90\//, '').replace(/^v\d+\//, '');
+        // Only delete joaf_viral_ images — never touch press-release images
+        if (pubId && pubId.startsWith('joaf_viral_')) {
           const ts = Math.floor(Date.now()/1000);
           const sigStr = `public_id=${pubId}&timestamp=${ts}${CDN_API_SECRET}`;
           const crypto = await import('node:crypto');
