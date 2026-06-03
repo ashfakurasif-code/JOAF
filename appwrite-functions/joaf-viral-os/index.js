@@ -669,7 +669,7 @@ async function fillQueue(needed, log) {
     if (needsImg) {
       try {
         const titleForCard = item.title || '';
-        const bodyForCard  = caption.replace(/^[^
+        const bodyForCard  = caption.split('\n').slice(1).join('\n').replace(/#[^ \t\n\r]+/g, '').trim().slice(0, 400);
 ]*
 /, '').replace(/#[^\s]+/g, '').trim().slice(0, 400);
         const svg          = buildSVGCard(titleForCard, bodyForCard, format);

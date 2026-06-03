@@ -1270,6 +1270,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
           <button class="studio-tab" onclick="switchStudioTab('caption',this)">✍️ Caption Engine</button>
           <button class="studio-tab" onclick="switchStudioTab('reel',this)">🎬 Reel Engine</button>
           <button class="studio-tab" onclick="switchStudioTab('learning',this)">📚 Learning Engine</button>
+          <button class="studio-tab" onclick="switchStudioTab('viral-os',this)" style="color:#22c55e;">📡 Viral OS</button>
         </div>
         <div style="margin-left:auto;font-size:10px;color:var(--text3);padding:0 8px;white-space:nowrap;">JOAF Studio v2</div>
       </div>
@@ -1511,6 +1512,15 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- ── VIRAL OS PIPELINE ── -->
+        <div class="studio-panel" id="sp-viral-os" style="padding:0;overflow:hidden;">
+          <iframe
+            src="/tools/viral-os-dashboard.html"
+            style="width:100%;height:100%;border:none;background:var(--bg2);"
+            id="viral-os-frame"
+          ></iframe>
         </div>
 
       </div><!-- /studio-panels -->
