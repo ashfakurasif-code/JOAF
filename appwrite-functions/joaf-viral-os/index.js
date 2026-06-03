@@ -558,7 +558,8 @@ async function uploadToCloudinary(svgContent, publicId) {
   });
   const d = await r.json();
   if (d.error) throw new Error(`Cloudinary: ${d.error.message}`);
-  return d.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
+  const url = d.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
+  return url.replace(/\.svg$/i, '.jpg').replace(/\.png$/i, '.jpg').replace(/\.webp$/i, '.jpg');
 }
 
 // ── Decide if this format needs an image ─────────────────────────────────────
