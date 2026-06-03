@@ -414,38 +414,73 @@ function makeVariants(baseCaption, format) {
 }
 
 // ── SVG card builder ──────────────────────────────────────────────────────────
+function wrapText(text, maxChars) {
+  // Split text into lines of maxChars
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    if ((cur + ' ' + w).trim().length > maxChars) {
+      if (cur) lines.push(cur.trim());
+      cur = w;
+    } else {
+      cur = cur ? cur + ' ' + w : w;
+    }
+  }
+  if (cur) lines.push(cur.trim());
+  return lines;
+}
+
 function buildSVGCard(title, body, format) {
   const colors = {
-    breaking_news:    ['#0f172a', '#dc2626', '#fef2f2'],
-    poll_post:        ['#0f172a', '#7c3aed', '#f5f3ff'],
-    question_post:    ['#0f172a', '#0ea5e9', '#f0f9ff'],
-    community_question:['#0f172a', '#0ea5e9', '#f0f9ff'],
-    civic_rights:     ['#0f172a', '#059669', '#ecfdf5'],
-    constitution_fact:['#0f172a', '#059669', '#ecfdf5'],
-    bangladesh_history:['#1a0a00','#d97706','#fffbeb'],
-    this_day_history: ['#1a0a00', '#d97706', '#fffbeb'],
-    did_you_know:     ['#0f172a', '#0891b2', '#ecfeff'],
-    youth_engagement: ['#0f172a', '#ea580c', '#fff7ed'],
-    default:          ['#0f172a', '#f59e0b', '#fffbeb'],
+    breaking_news:     ['#0f172a', '#dc2626'],
+    poll_post:         ['#0f172a', '#7c3aed'],
+    question_post:     ['#0f172a', '#0ea5e9'],
+    community_question:['#0f172a', '#0ea5e9'],
+    civic_rights:      ['#0f172a', '#059669'],
+    constitution_fact: ['#0f172a', '#059669'],
+    bangladesh_history:['#1a0a00', '#d97706'],
+    this_day_history:  ['#1a0a00', '#d97706'],
+    did_you_know:      ['#0f172a', '#0891b2'],
+    youth_engagement:  ['#0f172a', '#ea580c'],
+    fact_check:        ['#0f172a', '#16a34a'],
+    myth_vs_fact:      ['#0f172a', '#9333ea'],
+    awareness_post:    ['#0f172a', '#0284c7'],
+    default:           ['#0f172a', '#f59e0b'],
   };
-  const [bg, accent, light] = colors[format] || colors.default;
-  const titleSafe = (title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const cleanBody = (body || '').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/<[^>]*>/g,'').trim();
-  const bodySafe  = cleanBody.slice(0, 200).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const e = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const [bg, accent] = colors[format] || colors.default;
+
+  const cleanBody = (body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/<[^>]*>/g,'').trim();
+
+  // Title: wrap at 22 chars/line, max 4 lines, font 44px, lh 58
+  const titleLines = wrapText(e(title||''), 22).slice(0, 4);
+  const titleY = 160;
+  const titleLH = 58;
+  const titleBlock = titleLines.map((l,i) =>
+    `<text x="60" y="${titleY + i*titleLH}" font-family="Arial,sans-serif" font-size="44" font-weight="800" fill="#f8fafc">${l}</text>`
+  ).join('\n  ');
+  const titleEnd = titleY + titleLines.length * titleLH + 20;
+
+  // Body: wrap at 36 chars/line, max 10 lines, font 28px, lh 42
+  const bodyLines = wrapText(e(cleanBody), 36).slice(0, 10);
+  const bodyY = titleEnd + 30;
+  const bodyLH = 42;
+  const bodyBlock = bodyLines.map((l,i) =>
+    `<text x="60" y="${bodyY + i*bodyLH}" font-family="Arial,sans-serif" font-size="28" fill="#cbd5e1">${l}</text>`
+  ).join('\n  ');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
   <rect width="1080" height="1080" fill="${bg}"/>
-  <rect x="0" y="0" width="1080" height="10" fill="${accent}"/>
-  <text x="60" y="78" font-family="'Noto Sans Bengali',Arial,sans-serif" font-size="26" font-weight="700" fill="${accent}">JOAF · julyforum.com</text>
-  <foreignObject x="60" y="120" width="960" height="280">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Noto Sans Bengali',Arial,sans-serif;font-size:50px;font-weight:800;color:#f8fafc;line-height:1.3;word-break:break-word;">${titleSafe}</div>
-  </foreignObject>
-  <rect x="60" y="430" width="960" height="3" fill="${accent}" rx="2"/>
-  <foreignObject x="60" y="450" width="960" height="520">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Noto Sans Bengali',Arial,sans-serif;font-size:32px;color:#cbd5e1;line-height:1.7;word-break:break-word;">${bodySafe}</div>
-  </foreignObject>
-  <rect x="0" y="1030" width="1080" height="50" fill="rgba(0,0,0,0.5)"/>
-  <text x="540" y="1062" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" fill="${accent}">#JOAF #জুলাইফোরাম #বাংলাদেশ</text>
+  <rect x="0" y="0" width="1080" height="8" fill="${accent}"/>
+  <rect x="0" y="0" width="8" height="1080" fill="${accent}"/>
+  <text x="60" y="80" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="${accent}">JOAF · julyforum.com</text>
+  <rect x="60" y="100" width="200" height="3" fill="${accent}"/>
+  ${titleBlock}
+  <rect x="60" y="${titleEnd}" width="960" height="2" fill="${accent}" opacity="0.4"/>
+  ${bodyBlock}
+  <rect x="0" y="1030" width="1080" height="50" fill="rgba(0,0,0,0.6)"/>
+  <text x="540" y="1062" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="${accent}">#JOAF #জুলাইফোরাম #BangladeshNews</text>
 </svg>`;
 }
 
@@ -596,6 +631,18 @@ async function fillQueue(needed, log) {
   const lastFormats = await getLastFormats(5);
   let generated = 0;
 
+  // Viral scoring — prioritize items with keywords that signal high engagement
+  const VIRAL_KEYWORDS = ['হত্যা','গ্রেফতার','ধর্ষণ','আন্দোলন','বিস্ফোরণ','দুর্ঘটনা','শহীদ','যুদ্ধ','অভ্যুত্থান','নির্বাচন','বন্যা','ভূমিকম্প','attack','arrest','protest','explosion','killed','crisis','breaking','exclusive','urgent'];
+  poolItems.sort((a, b) => {
+    const score = item => {
+      const t = (item.title || '').toLowerCase();
+      return VIRAL_KEYWORDS.reduce((s, k) => s + (t.includes(k.toLowerCase()) ? 3 : 0), 0)
+           + (item.title?.length > 30 ? 1 : 0)
+           + (item.body?.length > 100 ? 1 : 0);
+    };
+    return score(b) - score(a);
+  });
+
   for (const poolDoc of poolItems) {
     if (generated >= needed) break;
 
@@ -621,8 +668,10 @@ async function fillQueue(needed, log) {
     let jpgUrl = '';
     if (needsImg) {
       try {
-        const titleForCard = item.title.slice(0, 55);
-        const bodyForCard  = caption.slice(0, 150);
+        const titleForCard = item.title || '';
+        const bodyForCard  = caption.replace(/^[^
+]*
+/, '').replace(/#[^\s]+/g, '').trim().slice(0, 400);
         const svg          = buildSVGCard(titleForCard, bodyForCard, format);
         const pid          = `joaf_viral_${format}_${Date.now()}`;
         jpgUrl             = await uploadToCloudinary(svg, pid);
