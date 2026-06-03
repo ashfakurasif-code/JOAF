@@ -438,10 +438,7 @@ function makeVariants(baseCaption, format) {
 // ★ Exact JOAF website fonts — BenSen for titles, Noto for body
 const BENGALI_FONT_TITLE = "'BenSen Handwriting', 'Noto Sans Bengali', Arial, sans-serif";
 const BENGALI_FONT_BODY  = "'Noto Sans Bengali', 'Hind Siliguri', Arial, sans-serif";
-const FONT_IMPORT = [
-  "@import url('https://fonts.maateen.me/bensen-handwriting/font.css');",
-  "@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&family=Hind+Siliguri:wght@400;600;700&display=swap');",
-].join('\n');
+const FONT_IMPORT = "@import url('https://fonts.maateen.me/bensen-handwriting/font.css');\n@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&amp;family=Hind+Siliguri:wght@400;600;700&amp;display=swap');";
 
 function wrapText(text, maxCharsPerLine) {
   // Smart wrap for Bengali — break at spaces, max chars per line
