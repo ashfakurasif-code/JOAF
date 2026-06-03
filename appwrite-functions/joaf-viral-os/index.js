@@ -26,6 +26,8 @@ const AW_PROJECT  = process.env.APPWRITE_PROJECT_ID || process.env.AW_PROJECT ||
 const AW_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.AW_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const CDN_CLOUD   = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD || 'dou71pfe1';
 const CDN_PRESET  = process.env.CLOUDINARY_UPLOAD_PRESET || process.env.CLOUDINARY_PRESET || 'kf483px5';
+const CDN_API_KEY    = process.env.CLOUDINARY_API_KEY    || '629623956125173';
+const CDN_API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
 const OR_KEY      = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY || '';
 const GEM_KEY     = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY || '';
 const GROQ_KEY    = process.env.GROQ_API_KEY || process.env.GROQ_KEY || '';
@@ -730,6 +732,34 @@ async function publishNext(log) {
       await awUpdate(COL_QUEUE, item.$id, { status: 'failed', results: JSON.stringify(results) });
     }
   } catch {}
+
+  // Auto-cleanup: delete pool doc + Cloudinary image after successful publish
+  if (success) {
+    // Delete pool source doc by fp match
+    try {
+      const poolDocs = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100`);
+      const match = (poolDocs.documents || []).find(d => d.fp === item.fp);
+      if (match) await awDelete(COL_POOL, match.$id);
+    } catch {}
+    // Delete Cloudinary image (not needed after FB post)
+    if (item.jpg_url && CDN_CLOUD && CDN_API_SECRET) {
+      try {
+        const pubId = item.jpg_url.split('/upload/')[1]?.replace(/\.[^.]+$/, '').replace(/^f_jpg,q_90\//, '');
+        if (pubId) {
+          const ts = Math.floor(Date.now()/1000);
+          const sigStr = `public_id=${pubId}&timestamp=${ts}${CDN_API_SECRET}`;
+          const crypto = await import('node:crypto');
+          const sig = crypto.createHash('sha256').update(sigStr).digest('hex');
+          await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/destroy`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({public_id:pubId,timestamp:ts,api_key:CDN_API_KEY,signature:sig}).toString(),
+            signal: AbortSignal.timeout(10000),
+          });
+        }
+      } catch {}
+    }
+  }
 
   log(`publish: ${success ? '✅' : '❌'} pages_ok=${results.ok} pages_fail=${results.fail}`);
   return success;
