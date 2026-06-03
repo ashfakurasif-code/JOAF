@@ -213,6 +213,7 @@ export default async ({ req, res, log, error }) => {
       }
       results.push({ id: page.id, name: page.name, ok: true, postId: post.id || post.post_id });
       log(`post → ${page.name}: ${post.id || post.post_id}`);
+      await new Promise(r => setTimeout(r, 1500)); // 1.5s gap — avoid FB rate limit
     } catch (e) {
       const msg = e.name === 'AbortError' ? 'timeout after 15s' : e.message;
       results.push({ id: page.id, name: page.name, ok: false, error: msg });
