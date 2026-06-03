@@ -1,6 +1,6 @@
 // Appwrite Function: joaf-viral-os
 // Runtime: node-18.0
-// CRON: "*/15 * * * *"  (every 15 minutes, 24/7)
+// CRON: "*/5 * * * *"   (every 5 minutes, 24/7 — set in Appwrite Console)
 // Autonomous Bengali-first publishing OS for 17 JOAF FB pages
 //
 // This function is ADDITIVE — it does NOT replace:
@@ -400,89 +400,149 @@ function buildTemplate(format, item, evergreenItem) {
 }
 
 // ── Caption variation for 17 pages (anti-clone) ───────────────────────────────
+// ── 3-structural-variant caption engine for 17-page anti-clone distribution ──
+const HOOK_URGENT   = ['🔴 ','⚡ ','🚨 ','❗ ','🔥 ','📢 '];
+const HOOK_INFO     = ['💡 ','📌 ','✅ ','📊 ','🎯 ','📰 '];
+const HOOK_CIVIC    = ['🇧🇩 ','❤️ ','⚖️ ','🗣️ ','🌟 ','🙏 '];
+function swapLeadEmoji(text, hook) {
+  return text.replace(/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{1F300}-\u{1F9FF}][\uFE0F]?[\u20D0-\u20FF]?\s?/u, hook);
+}
 function makeVariants(baseCaption, format) {
-  const hooks = [
-    '🔴 ', '📢 ', '💡 ', '⚡ ', '🇧🇩 ', '❗ ', '👉 ', '📌 ', '🔥 ', '',
-    '✅ ', '🗣️ ', '📰 ', '🌟 ', '⚖️ ', '🎯 ', '💬 ',
-  ];
-  // Create 3 caption variants by rotating hook emoji
-  return [0, 1, 2].map(i => {
-    const hook = hooks[Math.floor(Math.random() * hooks.length)];
-    // Swap first emoji if caption already starts with one
-    return baseCaption.replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}⚡📢💡🔴❗👉📌🔥✅🗣️📰🌟⚖️🎯💬❓📅🗳️]\s?/u, hook);
-  });
+  const lines = baseCaption.split('\n');
+  // Variant A — urgent hook (pages 1-6)
+  const hA = HOOK_URGENT[Math.floor(Math.random()*HOOK_URGENT.length)];
+  const varA = swapLeadEmoji(baseCaption, hA);
+  // Variant B — question-first reorder (pages 7-12)
+  // Move the engagement question line to the top for curiosity-first structure
+  const qIdx = lines.findIndex(l => /\?|কমেন্ট|মতামত|জানান|আপনি কি/.test(l) && l.length > 5);
+  let varB;
+  if (qIdx > 0 && qIdx < lines.length - 1) {
+    const qLine = lines[qIdx];
+    const rest  = lines.filter((_, i) => i !== qIdx).join('\n');
+    const hB = HOOK_INFO[Math.floor(Math.random()*HOOK_INFO.length)];
+    varB = hB + qLine + '\n\n' + rest;
+  } else {
+    const hB = HOOK_INFO[Math.floor(Math.random()*HOOK_INFO.length)];
+    varB = swapLeadEmoji(baseCaption, hB);
+  }
+  // Variant C — civic/emotional hook (pages 13-17)
+  const hC = HOOK_CIVIC[Math.floor(Math.random()*HOOK_CIVIC.length)];
+  const varC = swapLeadEmoji(baseCaption, hC);
+  return [varA, varB, varC];
 }
 
 // ── SVG card builder ──────────────────────────────────────────────────────────
-function wrapText(text, maxChars) {
-  // Split text into lines of maxChars
-  const words = text.split(' ');
+// ── Enhanced SVG card with Bengali font support ─────────────────────────────
+// Uses Google Fonts CSS import (rendered by Cloudinary's SVG renderer)
+// Falls back to Arial for ASCII content
+// ★ Exact JOAF website fonts — BenSen for titles, Noto for body
+const BENGALI_FONT_TITLE = "'BenSen Handwriting', 'Noto Sans Bengali', Arial, sans-serif";
+const BENGALI_FONT_BODY  = "'Noto Sans Bengali', 'Hind Siliguri', Arial, sans-serif";
+const FONT_IMPORT = [
+  "@import url('https://fonts.maateen.me/bensen-handwriting/font.css');",
+  "@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&family=Hind+Siliguri:wght@400;600;700&display=swap');",
+].join('\n');
+
+function wrapText(text, maxCharsPerLine) {
+  // Smart wrap for Bengali — break at spaces, max chars per line
+  const words = text.split(/\s+/);
   const lines = [];
   let cur = '';
   for (const w of words) {
-    if ((cur + ' ' + w).trim().length > maxChars) {
-      if (cur) lines.push(cur.trim());
-      cur = w;
+    if (!w) continue;
+    if ((cur + ' ' + w).trim().length <= maxCharsPerLine) {
+      cur = (cur + ' ' + w).trim();
     } else {
-      cur = cur ? cur + ' ' + w : w;
+      if (cur) lines.push(cur);
+      cur = w;
     }
   }
-  if (cur) lines.push(cur.trim());
+  if (cur) lines.push(cur);
   return lines;
 }
 
 function buildSVGCard(title, body, format) {
-  const colors = {
-    breaking_news:     ['#0f172a', '#dc2626'],
-    poll_post:         ['#0f172a', '#7c3aed'],
-    question_post:     ['#0f172a', '#0ea5e9'],
-    community_question:['#0f172a', '#0ea5e9'],
-    civic_rights:      ['#0f172a', '#059669'],
-    constitution_fact: ['#0f172a', '#059669'],
-    bangladesh_history:['#1a0a00', '#d97706'],
-    this_day_history:  ['#1a0a00', '#d97706'],
-    did_you_know:      ['#0f172a', '#0891b2'],
-    youth_engagement:  ['#0f172a', '#ea580c'],
-    fact_check:        ['#0f172a', '#16a34a'],
-    myth_vs_fact:      ['#0f172a', '#9333ea'],
-    awareness_post:    ['#0f172a', '#0284c7'],
-    default:           ['#0f172a', '#f59e0b'],
+  const palettes = {
+    breaking_news:      { bg1:'#0a0008', bg2:'#1a0014', acc:'#ef4444', acc2:'#dc2626', txt:'#ffffff', sub:'#fecaca' },
+    news_summary:       { bg1:'#030712', bg2:'#0f172a', acc:'#38bdf8', acc2:'#0284c7', txt:'#ffffff', sub:'#bae6fd' },
+    educational:        { bg1:'#052e16', bg2:'#064e24', acc:'#22c55e', acc2:'#16a34a', txt:'#ffffff', sub:'#bbf7d0' },
+    learning_engine:    { bg1:'#052e16', bg2:'#064e24', acc:'#22c55e', acc2:'#16a34a', txt:'#ffffff', sub:'#bbf7d0' },
+    fact_check:         { bg1:'#1c1917', bg2:'#292524', acc:'#fbbf24', acc2:'#d97706', txt:'#ffffff', sub:'#fde68a' },
+    myth_vs_fact:       { bg1:'#1c1917', bg2:'#292524', acc:'#fbbf24', acc2:'#d97706', txt:'#ffffff', sub:'#fde68a' },
+    civic_rights:       { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
+    constitution_fact:  { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
+    civic_knowledge:    { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
+    bangladesh_history: { bg1:'#1a0a00', bg2:'#2d1500', acc:'#f97316', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
+    this_day_history:   { bg1:'#1a0a00', bg2:'#2d1500', acc:'#f97316', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
+    question_post:      { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
+    poll_post:          { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
+    community_question: { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
+    quote_card:         { bg1:'#0d0118', bg2:'#1a0030', acc:'#e879f9', acc2:'#a21caf', txt:'#ffffff', sub:'#f5d0fe' },
+    image_quote:        { bg1:'#0d0118', bg2:'#1a0030', acc:'#e879f9', acc2:'#a21caf', txt:'#ffffff', sub:'#f5d0fe' },
+    data_insight:       { bg1:'#030712', bg2:'#0f172a', acc:'#60a5fa', acc2:'#2563eb', txt:'#ffffff', sub:'#bfdbfe' },
+    statistic_post:     { bg1:'#030712', bg2:'#0f172a', acc:'#60a5fa', acc2:'#2563eb', txt:'#ffffff', sub:'#bfdbfe' },
+    youth_engagement:   { bg1:'#0f172a', bg2:'#1e293b', acc:'#fb923c', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
+    awareness_post:     { bg1:'#0f172a', bg2:'#1e293b', acc:'#fb923c', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
+    infographic:        { bg1:'#030712', bg2:'#0f172a', acc:'#38bdf8', acc2:'#0284c7', txt:'#ffffff', sub:'#bae6fd' },
   };
-  const e = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const [bg, accent] = colors[format] || colors.default;
+  const pal = palettes[format] || palettes['news_summary'];
 
+  const e = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const cleanBody = (body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/<[^>]*>/g,'').trim();
 
-  // Title: wrap at 22 chars/line, max 4 lines, font 44px, lh 58
-  const titleLines = wrapText(e(title||''), 22).slice(0, 4);
-  const titleY = 160;
-  const titleLH = 58;
-  const titleBlock = titleLines.map((l,i) =>
-    `<text x="60" y="${titleY + i*titleLH}" font-family="Arial,sans-serif" font-size="44" font-weight="800" fill="#f8fafc">${l}</text>`
-  ).join('\n  ');
-  const titleEnd = titleY + titleLines.length * titleLH + 20;
+  const W = 1080, H = 1080;
+  const tLines = wrapText(title || '', 20).slice(0, 4);
+  const bLines = wrapText(cleanBody, 30).slice(0, 8);
 
-  // Body: wrap at 36 chars/line, max 10 lines, font 28px, lh 42
-  const bodyLines = wrapText(e(cleanBody), 36).slice(0, 10);
-  const bodyY = titleEnd + 30;
-  const bodyLH = 42;
-  const bodyBlock = bodyLines.map((l,i) =>
-    `<text x="60" y="${bodyY + i*bodyLH}" font-family="Arial,sans-serif" font-size="28" fill="#cbd5e1">${l}</text>`
+  const titleY = 320;
+  const titleLH = 72;
+  const titleEls = tLines.map((l, i) =>
+    `<text x="540" y="${titleY + i*titleLH}" font-family="${BENGALI_FONT_TITLE}" font-size="52" font-weight="900" fill="${pal.txt}" text-anchor="middle" filter="url(#shadow)">${e(l)}</text>`
   ).join('\n  ');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
-  <rect width="1080" height="1080" fill="${bg}"/>
-  <rect x="0" y="0" width="1080" height="8" fill="${accent}"/>
-  <rect x="0" y="0" width="8" height="1080" fill="${accent}"/>
-  <text x="60" y="80" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="${accent}">JOAF · julyforum.com</text>
-  <rect x="60" y="100" width="200" height="3" fill="${accent}"/>
-  ${titleBlock}
-  <rect x="60" y="${titleEnd}" width="960" height="2" fill="${accent}" opacity="0.4"/>
-  ${bodyBlock}
-  <rect x="0" y="1030" width="1080" height="50" fill="rgba(0,0,0,0.6)"/>
-  <text x="540" y="1062" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="${accent}">#JOAF #জুলাইফোরাম #BangladeshNews</text>
+  const bodyY = titleY + tLines.length * titleLH + 50;
+  const bodyLH = 48;
+  const bodyEls = bLines.map((l, i) =>
+    `<text x="540" y="${bodyY + i*bodyLH}" font-family="${BENGALI_FONT_BODY}" font-size="30" font-weight="400" fill="${pal.sub}" text-anchor="middle">${e(l)}</text>`
+  ).join('\n  ');
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <defs>
+    <style>${FONT_IMPORT}</style>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${pal.bg1}"/>
+      <stop offset="100%" stop-color="${pal.bg2}"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="${pal.acc}"/>
+      <stop offset="100%" stop-color="${pal.acc2}"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.8)"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <rect width="${W}" height="${H}" fill="url(#bg)"/>
+  <rect width="${W}" height="8" fill="url(#acc)"/>
+  <circle cx="${W*0.85}" cy="${H*0.2}" r="200" fill="${pal.acc}" opacity="0.05"/>
+  <circle cx="${W*0.15}" cy="${H*0.8}" r="160" fill="${pal.acc2}" opacity="0.05"/>
+  <rect x="0" y="0" width="${W}" height="110" fill="rgba(0,0,0,0.5)"/>
+  <text x="48" y="72" font-family="${BENGALI_FONT_TITLE}" font-size="42" font-weight="900" fill="${pal.acc}" filter="url(#glow)">JOAF ⚡</text>
+  <text x="${W-48}" y="72" font-family="${BENGALI_FONT_BODY}" font-size="22" fill="${pal.sub}" text-anchor="end">julyforum.com</text>
+  <rect x="48" y="130" width="${W-96}" height="3" fill="url(#acc)" rx="2"/>
+  ${titleEls}
+  <rect x="${W/2-60}" y="${bodyY - 22}" width="120" height="3" fill="url(#acc)" rx="2"/>
+  ${bodyEls}
+  <rect x="0" y="${H-110}" width="${W}" height="110" fill="rgba(0,0,0,0.75)"/>
+  <rect x="0" y="${H-110}" width="${W}" height="3" fill="url(#acc)"/>
+  <text x="${W/2}" y="${H-60}" font-family="${BENGALI_FONT_BODY}" font-size="26" font-weight="700" fill="${pal.acc}" text-anchor="middle">#JOAF #জুলাইফোরাম #বাংলাদেশ</text>
+  <text x="${W/2}" y="${H-28}" font-family="${BENGALI_FONT_BODY}" font-size="18" fill="${pal.sub}" text-anchor="middle">julyforum.com | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</text>
 </svg>`;
 }
+
 
 // ── Upload SVG to Cloudinary → JPG ────────────────────────────────────────────
 async function uploadToCloudinary(svgContent, publicId) {
@@ -495,7 +555,7 @@ async function uploadToCloudinary(svgContent, publicId) {
   const endPart = `--${boundary}--${nl}`;
   const body = Buffer.concat([
     Buffer.from(filePart), svgBytes,
-    Buffer.from(nl + part('upload_preset', CDN_PRESET) + part('public_id', safeId) + endPart),
+    Buffer.from(nl + part('upload_preset', CDN_PRESET) + part('public_id', safeId + '-' + Date.now()) + endPart),
   ]);
   const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
     method: 'POST',
@@ -522,9 +582,13 @@ async function callFbAutopost(action, payload, log = () => {}) {
   // Fire async — fb-autopost runs independently (17 pages ~30s)
   // We don't poll because that eats into our 300s timeout budget
   try {
-    const outer = JSON.stringify({
-      async: true, path: '/', method: 'POST', headers: {},
-      body: JSON.stringify({ action, ...payload }),
+    // Pass INTERNAL_API_KEY if configured (fb-autopost auth guard)
+    const INT_KEY = process.env.INTERNAL_API_KEY || process.env.JOAF_INTERNAL_KEY || '';
+    const fbBody  = JSON.stringify({ action, ...payload });
+    const outer   = JSON.stringify({
+      async: true, path: '/', method: 'POST',
+      headers: INT_KEY ? { 'x-joaf-key': INT_KEY, 'x-internal-key': INT_KEY } : {},
+      body: fbBody,
     });
     const r = await fetch(`${AW_ENDPOINT}/functions/${FN_FB}/executions`, {
       method: 'POST',
@@ -610,6 +674,51 @@ async function collectSources(log) {
   return newItems;
 }
 
+// ── Learning Engine: read fb-insights calibration ────────────────────────────
+let _calibCache = null;
+let _calibFetchTime = 0;
+async function getCalibrationHint() {
+  const now = Date.now();
+  // Cache for 30 min
+  if (_calibCache && (now - _calibFetchTime) < 30 * 60000) return _calibCache;
+  try {
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/ai_calibration/documents?limit=3`);
+    const docs = (r.documents || []).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    if (docs.length) {
+      const latest = docs[0];
+      _calibCache = latest.hint || '';
+      _calibFetchTime = now;
+      return _calibCache;
+    }
+  } catch { /* collection may not exist yet */ }
+  return '';
+}
+
+// ── FB Insights: what formats performed best ─────────────────────────────────
+async function getTopPerformingFormats(limit = 5) {
+  try {
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=50`);
+    const docs = r.documents || [];
+    // Group by format, compute avg pages_ok from results JSON
+    const formatScores = {};
+    for (const d of docs) {
+      if (!d.format || !d.results) continue;
+      try {
+        const res = JSON.parse(d.results);
+        const ok = res.ok || 0;
+        if (!formatScores[d.format]) formatScores[d.format] = { total: 0, count: 0 };
+        formatScores[d.format].total += ok;
+        formatScores[d.format].count += 1;
+      } catch {}
+    }
+    return Object.entries(formatScores)
+      .map(([fmt, s]) => ({ fmt, avg: s.count ? s.total/s.count : 0 }))
+      .sort((a,b) => b.avg - a.avg)
+      .slice(0, limit)
+      .map(x => x.fmt);
+  } catch { return []; }
+}
+
 // ── MAIN: Generate queue items from pool ─────────────────────────────────────
 async function fillQueue(needed, log) {
   needed = Math.min(needed, FILL_PER_RUN);
@@ -631,6 +740,22 @@ async function fillQueue(needed, log) {
   const lastFormats = await getLastFormats(5);
   let generated = 0;
 
+  // ★ Learning engine context
+  const [calibHint, topFormats] = await Promise.all([
+    getCalibrationHint().catch(() => ''),
+    getTopPerformingFormats(5).catch(() => []),
+  ]);
+  if (calibHint) log(`learning: calibration="${calibHint}"`);
+  if (topFormats.length) log(`learning: top formats=${topFormats.join(',')}`);
+
+  // ★ Dedupe pool items by fp (same news shouldn't generate 2 queue items in one run)
+  const seenFps = new Set();
+  poolItems = poolItems.filter(d => {
+    if (seenFps.has(d.fp)) return false;
+    seenFps.add(d.fp);
+    return true;
+  });
+
   // Viral scoring — prioritize items with keywords that signal high engagement
   const VIRAL_KEYWORDS = ['হত্যা','গ্রেফতার','ধর্ষণ','আন্দোলন','বিস্ফোরণ','দুর্ঘটনা','শহীদ','যুদ্ধ','অভ্যুত্থান','নির্বাচন','বন্যা','ভূমিকম্প','attack','arrest','protest','explosion','killed','crisis','breaking','exclusive','urgent'];
   poolItems.sort((a, b) => {
@@ -646,12 +771,18 @@ async function fillQueue(needed, log) {
   for (const poolDoc of poolItems) {
     if (generated >= needed) break;
 
-    const format    = pickFormat(lastFormats);
+    // Bias format selection toward top-performing formats (learning engine)
+    const format = (topFormats.length && Math.random() < 0.4)
+      ? topFormats[Math.floor(Math.random() * topFormats.length)]
+      : pickFormat(lastFormats);
     const item      = { title: poolDoc.title, body: poolDoc.body, source: poolDoc.source };
     const needsImg  = IMAGE_FORMATS.has(format);
 
-    // AI generation
-    const prompt  = buildPrompt(format, item);
+    // AI generation — inject calibration hint into prompt
+    const promptBase = buildPrompt(format, item);
+    const prompt = calibHint
+      ? promptBase + `\n\n[Learning Engine Note: ${calibHint} পোস্টের ধরন অনুযায়ী বাংলায় সেরা engagement এর জন্য optimize করো।]`
+      : promptBase;
     let caption   = await generateAI(prompt);
     let aiUsed    = !!caption;
 
@@ -694,6 +825,8 @@ async function fillQueue(needed, log) {
       lastFormats.push(format);
       generated++;
       log(`queue+: format=${format} ai=${aiUsed} img=${!!jpgUrl}`);
+      // ★ Mark pool item as queued so it's never reused across cycles
+      try { await awUpdate(COL_POOL, poolDoc.$id, { queued: 'true' }); } catch {}
     } catch (e) { log(`queue create error: ${e.message}`); }
   }
 
@@ -796,7 +929,7 @@ async function publishNext(log) {
           const ts = Math.floor(Date.now()/1000);
           const sigStr = `public_id=${pubId}&timestamp=${ts}${CDN_API_SECRET}`;
           const crypto = await import('node:crypto');
-          const sig = crypto.createHash('sha256').update(sigStr).digest('hex');
+          const sig = crypto.createHash('sha1').update(sigStr).digest('hex');
           await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/destroy`, {
             method: 'POST',
             headers: {'Content-Type':'application/x-www-form-urlencoded'},
@@ -857,9 +990,14 @@ export default async ({ req, res, log, error }) => {
     } catch (e) { error(`fill error: ${e.message}`); }
   }
 
-  // Step 3: Publish next item
+  // Step 3: Publish up to 3 items per cycle (drain queue faster than fill rate)
   if (action === 'cycle' || action === 'publish') {
-    await publishNext(log).catch(e => error(`publish error: ${e.message}`));
+    const maxPub = action === 'publish' ? 1 : 3;
+    for (let _p = 0; _p < maxPub; _p++) {
+      const ok = await publishNext(log).catch(() => false);
+      if (!ok) break;
+      if (_p < maxPub - 1) await new Promise(r => setTimeout(r, 2000));
+    }
   }
 
   return res.json({ ok: true, action, time: new Date().toISOString() });

@@ -652,7 +652,7 @@
                 "any"
             ],
             "events": [],
-            "schedule": "*/15 * * * *",
+            "schedule": "*/5 * * * *",
             "timeout": 300,
             "enabled": true,
             "logging": true,
