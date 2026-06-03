@@ -77,6 +77,7 @@ async function updateAppwriteVariable(key, value) {
 
 export default async ({ req, res, log, error }) => {
   if (req.method === 'OPTIONS') return res.empty();
+  if (req.method === 'GET') return res.json({ ok: true, status: 'fb-autopost running', pages: getPages().length });
   if (req.method !== 'POST') return res.json({ error: 'Method not allowed' }, 405);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
