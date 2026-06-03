@@ -670,8 +670,6 @@ async function fillQueue(needed, log) {
       try {
         const titleForCard = item.title || '';
         const bodyForCard  = caption.split('\n').slice(1).join('\n').replace(/#[^ \t\n\r]+/g, '').trim().slice(0, 400);
-]*
-/, '').replace(/#[^\s]+/g, '').trim().slice(0, 400);
         const svg          = buildSVGCard(titleForCard, bodyForCard, format);
         const pid          = `joaf_viral_${format}_${Date.now()}`;
         jpgUrl             = await uploadToCloudinary(svg, pid);
