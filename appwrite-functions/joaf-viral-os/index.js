@@ -21,13 +21,13 @@
 import crypto from 'crypto';
 
 // ── Config ───────────────────────────────────────────────────────────────────
-const AW_KEY      = process.env.APPWRITE_API_KEY || process.env.AW_KEY || '';
+const AW_KEY      = process.env.APPWRITE_API_KEY || process.env.AW_KEY || 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b';
 const AW_PROJECT  = process.env.APPWRITE_PROJECT_ID || process.env.AW_PROJECT || '6a11b6cd000b59f318eb';
 const AW_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.AW_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const CDN_CLOUD   = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD || 'dou71pfe1';
 const CDN_PRESET  = process.env.CLOUDINARY_UPLOAD_PRESET || process.env.CLOUDINARY_PRESET || 'kf483px5';
 const CDN_API_KEY    = process.env.CLOUDINARY_API_KEY    || '629623956125173';
-const CDN_API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
+const CDN_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'SynV9B5Dw4OvXjhzoOhUKucFGHM';
 const OR_KEY      = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY || '';
 const GEM_KEY     = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY || '';
 const GROQ_KEY    = process.env.GROQ_API_KEY || process.env.GROQ_KEY || '';
@@ -546,22 +546,19 @@ function buildSVGCard(title, body, format) {
 
 // ── Upload SVG to Cloudinary → JPG ────────────────────────────────────────────
 async function uploadToCloudinary(svgContent, publicId) {
-  const safeId = publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 80);
-  const boundary = 'JOAF' + Date.now();
-  const svgBytes = Buffer.from(svgContent, 'utf8');
-  const nl = '\r\n';
-  const part = (name, val) => `--${boundary}${nl}Content-Disposition: form-data; name="${name}"${nl}${nl}${val}${nl}`;
-  const filePart = `--${boundary}${nl}Content-Disposition: form-data; name="file"; filename="${safeId}.svg"${nl}Content-Type: image/svg+xml${nl}${nl}`;
-  const endPart = `--${boundary}--${nl}`;
-  const body = Buffer.concat([
-    Buffer.from(filePart), svgBytes,
-    Buffer.from(nl + part('upload_preset', CDN_PRESET) + part('public_id', safeId + '-' + Date.now()) + endPart),
-  ]);
+  const safeId = (publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 60)) + '_' + Date.now();
+  // base64 data URI approach — most reliable for Cloudinary unsigned upload
+  const b64 = Buffer.from(svgContent, 'utf8').toString('base64');
+  const dataUri = 'data:image/svg+xml;base64,' + b64;
+  const params = new URLSearchParams();
+  params.set('file', dataUri);
+  params.set('upload_preset', CDN_PRESET);
+  params.set('public_id', safeId);
   const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
     method: 'POST',
-    headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
-    body,
-    signal: AbortSignal.timeout(30000),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+    signal: AbortSignal.timeout(40000),
   });
   const d = await r.json();
   if (d.error) throw new Error(`Cloudinary: ${d.error.message}`);
