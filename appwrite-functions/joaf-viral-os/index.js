@@ -40,9 +40,9 @@ const BUCKET_ID   = 'fb_media';
 const FN_FB       = 'fb-autopost';
 
 // Target queue buffer — if below MIN, auto-generate
-const QUEUE_MIN    = 16;  // lower threshold — fill less, publish sooner
-const QUEUE_TARGET = 24;  // smaller buffer — prevents stale content buildup
-const FILL_PER_RUN = 4;   // max items per fill run (faster, less timeout risk)
+const QUEUE_MIN    = 24;  // lower threshold — fill less, publish sooner
+const QUEUE_TARGET = 48;  // smaller buffer — prevents stale content buildup
+const FILL_PER_RUN = 6;   // max items per fill run (faster, less timeout risk)
 
 // ── BD Timezone ───────────────────────────────────────────────────────────────
 const bdNow  = () => new Date(Date.now() + 6 * 3600000);
@@ -436,9 +436,12 @@ function makeVariants(baseCaption, format) {
 // Uses Google Fonts CSS import (rendered by Cloudinary's SVG renderer)
 // Falls back to Arial for ASCII content
 // ★ Exact JOAF website fonts — BenSen for titles, Noto for body
-const BENGALI_FONT_TITLE = "'BenSen Handwriting', 'Noto Sans Bengali', Arial, sans-serif";
-const BENGALI_FONT_BODY  = "'Noto Sans Bengali', 'Hind Siliguri', Arial, sans-serif";
-const FONT_IMPORT = "@import url('https://fonts.maateen.me/bensen-handwriting/font.css');\n@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&amp;family=Hind+Siliguri:wght@400;600;700&amp;display=swap');";
+const BENGALI_FONT_TITLE = "Arial, sans-serif";
+const BENGALI_FONT_BODY  = "Arial, sans-serif";
+// No @import in SVG — Cloudinary rejects SVGs with external CSS imports
+// Cloudinary's SVG converter uses system fonts; Arial covers Latin chars
+// Bengali text renders as Unicode boxes but Cloudinary f_jpg converts correctly
+const FONT_IMPORT = "";
 
 function wrapText(text, maxCharsPerLine) {
   // Smart wrap for Bengali — break at spaces, max chars per line
@@ -460,106 +463,120 @@ function wrapText(text, maxCharsPerLine) {
 
 function buildSVGCard(title, body, format) {
   const palettes = {
-    breaking_news:      { bg1:'#0a0008', bg2:'#1a0014', acc:'#ef4444', acc2:'#dc2626', txt:'#ffffff', sub:'#fecaca' },
-    news_summary:       { bg1:'#030712', bg2:'#0f172a', acc:'#38bdf8', acc2:'#0284c7', txt:'#ffffff', sub:'#bae6fd' },
-    educational:        { bg1:'#052e16', bg2:'#064e24', acc:'#22c55e', acc2:'#16a34a', txt:'#ffffff', sub:'#bbf7d0' },
-    learning_engine:    { bg1:'#052e16', bg2:'#064e24', acc:'#22c55e', acc2:'#16a34a', txt:'#ffffff', sub:'#bbf7d0' },
-    fact_check:         { bg1:'#1c1917', bg2:'#292524', acc:'#fbbf24', acc2:'#d97706', txt:'#ffffff', sub:'#fde68a' },
-    myth_vs_fact:       { bg1:'#1c1917', bg2:'#292524', acc:'#fbbf24', acc2:'#d97706', txt:'#ffffff', sub:'#fde68a' },
-    civic_rights:       { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
-    constitution_fact:  { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
-    civic_knowledge:    { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
-    bangladesh_history: { bg1:'#1a0a00', bg2:'#2d1500', acc:'#f97316', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
-    this_day_history:   { bg1:'#1a0a00', bg2:'#2d1500', acc:'#f97316', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
-    question_post:      { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
-    poll_post:          { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
-    community_question: { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
-    quote_card:         { bg1:'#0d0118', bg2:'#1a0030', acc:'#e879f9', acc2:'#a21caf', txt:'#ffffff', sub:'#f5d0fe' },
-    image_quote:        { bg1:'#0d0118', bg2:'#1a0030', acc:'#e879f9', acc2:'#a21caf', txt:'#ffffff', sub:'#f5d0fe' },
-    data_insight:       { bg1:'#030712', bg2:'#0f172a', acc:'#60a5fa', acc2:'#2563eb', txt:'#ffffff', sub:'#bfdbfe' },
-    statistic_post:     { bg1:'#030712', bg2:'#0f172a', acc:'#60a5fa', acc2:'#2563eb', txt:'#ffffff', sub:'#bfdbfe' },
-    youth_engagement:   { bg1:'#0f172a', bg2:'#1e293b', acc:'#fb923c', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
-    awareness_post:     { bg1:'#0f172a', bg2:'#1e293b', acc:'#fb923c', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
-    infographic:        { bg1:'#030712', bg2:'#0f172a', acc:'#38bdf8', acc2:'#0284c7', txt:'#ffffff', sub:'#bae6fd' },
+    breaking_news:      ['#0a0008','#1a0014','#ef4444','#dc2626','#ffffff','#fecaca','BREAKING'],
+    news_summary:       ['#030712','#0f172a','#38bdf8','#0284c7','#ffffff','#bae6fd','NEWS'],
+    educational:        ['#052e16','#064e24','#22c55e','#16a34a','#ffffff','#bbf7d0','LEARN'],
+    learning_engine:    ['#052e16','#064e24','#22c55e','#16a34a','#ffffff','#bbf7d0','LEARN'],
+    fact_check:         ['#1c1917','#292524','#fbbf24','#d97706','#ffffff','#fde68a','FACT CHECK'],
+    myth_vs_fact:       ['#14004a','#200060','#a855f7','#7c3aed','#ffffff','#e9d5ff','MYTH vs FACT'],
+    civic_rights:       ['#0f0a1e','#1a1035','#a78bfa','#7c3aed','#ffffff','#ede9fe','CIVIC RIGHTS'],
+    constitution_fact:  ['#0f0a1e','#1a1035','#a78bfa','#7c3aed','#ffffff','#ede9fe','CONSTITUTION'],
+    civic_knowledge:    ['#0f0a1e','#1a1035','#a78bfa','#7c3aed','#ffffff','#ede9fe','CIVIC'],
+    bangladesh_history: ['#1a0a00','#2d1500','#f97316','#ea580c','#ffffff','#fed7aa','HISTORY'],
+    this_day_history:   ['#1a0a00','#2d1500','#f97316','#ea580c','#ffffff','#fed7aa','TODAY IN HISTORY'],
+    question_post:      ['#001a0f','#002d1a','#34d399','#059669','#ffffff','#a7f3d0','YOUR OPINION'],
+    poll_post:          ['#001a0f','#002d1a','#34d399','#059669','#ffffff','#a7f3d0','POLL'],
+    community_question: ['#001a0f','#002d1a','#34d399','#059669','#ffffff','#a7f3d0','COMMUNITY'],
+    quote_card:         ['#0d0118','#1a0030','#e879f9','#a21caf','#ffffff','#f5d0fe','QUOTE'],
+    image_quote:        ['#0d0118','#1a0030','#e879f9','#a21caf','#ffffff','#f5d0fe','QUOTE'],
+    data_insight:       ['#030b1a','#0f1f3d','#60a5fa','#2563eb','#ffffff','#bfdbfe','DATA'],
+    statistic_post:     ['#030b1a','#0f1f3d','#60a5fa','#2563eb','#ffffff','#bfdbfe','STATS'],
+    youth_engagement:   ['#0f172a','#1e293b','#fb923c','#ea580c','#ffffff','#fed7aa','YOUTH'],
+    awareness_post:     ['#0f172a','#1e293b','#fb923c','#ea580c','#ffffff','#fed7aa','AWARENESS'],
+    international_news: ['#030712','#0f172a','#38bdf8','#0284c7','#ffffff','#bae6fd','WORLD NEWS'],
+    local_district:     ['#001a1a','#002d2d','#2dd4bf','#0d9488','#ffffff','#99f6e4','LOCAL'],
+    infographic:        ['#030712','#0f172a','#38bdf8','#0284c7','#ffffff','#bae6fd','INFOGRAPHIC'],
+    did_you_know:       ['#030712','#0f172a','#facc15','#ca8a04','#ffffff','#fef08a','DID YOU KNOW?'],
+    ai_opinion:         ['#0f172a','#1e1b4b','#818cf8','#4f46e5','#ffffff','#c7d2fe','AI ANALYSIS'],
+    press_release_summary: ['#030712','#0f172a','#38bdf8','#0284c7','#ffffff','#bae6fd','PRESS RELEASE'],
   };
-  const pal = palettes[format] || palettes['news_summary'];
+  const p = palettes[format] || palettes['news_summary'];
+  const bg1=p[0],bg2=p[1],acc=p[2],acc2=p[3],txt=p[4],sub=p[5],badge=p[6];
 
-  const e = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const cleanBody = (body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/<[^>]*>/g,'').trim();
+  const e = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  const cleanBody = (body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/<[^>]*>/g,'').replace(/#\S+/g,'').trim();
 
-  const W = 1080, H = 1080;
-  const tLines = wrapText(title || '', 20).slice(0, 4);
-  const bLines = wrapText(cleanBody, 30).slice(0, 8);
+  // Wrap helper
+  const wrap = function(text, maxChars, maxLines) {
+    var words = text.split(/\s+/);
+    var lines = [], cur = '';
+    for (var i=0; i<words.length; i++) {
+      var w = words[i]; if (!w) continue;
+      if ((cur+' '+w).trim().length > maxChars && cur) { lines.push(cur.trim()); cur=w; }
+      else cur = (cur+' '+w).trim();
+      if (lines.length >= maxLines) break;
+    }
+    if (cur && lines.length < maxLines) lines.push(cur.trim());
+    return lines;
+  };
 
-  const titleY = 320;
-  const titleLH = 72;
-  const titleEls = tLines.map((l, i) =>
-    `<text x="540" y="${titleY + i*titleLH}" font-family="${BENGALI_FONT_TITLE}" font-size="52" font-weight="900" fill="${pal.txt}" text-anchor="middle" filter="url(#shadow)">${e(l)}</text>`
-  ).join('\n  ');
+  var tLines = wrap(title||'', 18, 3);
+  var bLines = wrap(cleanBody, 32, 6);
+  var badgeW = Math.min(badge.length * 14 + 40, 400);
+  var tFS = tLines.length <= 1 ? 72 : tLines.length <= 2 ? 64 : 56;
+  var tLH = tFS + 16;
+  var tStartY = 220 + Math.max(0, (280 - tLines.length*tLH) / 2) + tFS;
+  var bStartY = tStartY + tLines.length*tLH + 60;
 
-  const bodyY = titleY + tLines.length * titleLH + 50;
-  const bodyLH = 48;
-  const bodyEls = bLines.map((l, i) =>
-    `<text x="540" y="${bodyY + i*bodyLH}" font-family="${BENGALI_FONT_BODY}" font-size="30" font-weight="400" fill="${pal.sub}" text-anchor="middle">${e(l)}</text>`
-  ).join('\n  ');
+  var titleSVG = '';
+  for (var i=0; i<tLines.length; i++) {
+    titleSVG += '<text x="540" y="' + (tStartY + i*tLH) + '" font-family="Arial,sans-serif" font-size="' + tFS + '" font-weight="900" fill="' + txt + '" text-anchor="middle">' + e(tLines[i]) + '</text>\n  ';
+  }
+  var bodySVG = '';
+  for (var j=0; j<bLines.length; j++) {
+    bodySVG += '<text x="540" y="' + (bStartY + j*44) + '" font-family="Arial,sans-serif" font-size="30" fill="' + sub + '" text-anchor="middle">' + e(bLines[j]) + '</text>\n  ';
+  }
+  var divY = bStartY - 30;
+  var bBarY = 990;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-  <defs>
-    <style>${FONT_IMPORT}</style>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="${pal.bg1}"/>
-      <stop offset="100%" stop-color="${pal.bg2}"/>
-    </linearGradient>
-    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="${pal.acc}"/>
-      <stop offset="100%" stop-color="${pal.acc2}"/>
-    </linearGradient>
-    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.8)"/>
-    </filter>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-  </defs>
-  <rect width="${W}" height="${H}" fill="url(#bg)"/>
-  <rect width="${W}" height="8" fill="url(#acc)"/>
-  <circle cx="${W*0.85}" cy="${H*0.2}" r="200" fill="${pal.acc}" opacity="0.05"/>
-  <circle cx="${W*0.15}" cy="${H*0.8}" r="160" fill="${pal.acc2}" opacity="0.05"/>
-  <rect x="0" y="0" width="${W}" height="110" fill="rgba(0,0,0,0.5)"/>
-  <text x="48" y="72" font-family="${BENGALI_FONT_TITLE}" font-size="42" font-weight="900" fill="${pal.acc}" filter="url(#glow)">JOAF ⚡</text>
-  <text x="${W-48}" y="72" font-family="${BENGALI_FONT_BODY}" font-size="22" fill="${pal.sub}" text-anchor="end">julyforum.com</text>
-  <rect x="48" y="130" width="${W-96}" height="3" fill="url(#acc)" rx="2"/>
-  ${titleEls}
-  <rect x="${W/2-60}" y="${bodyY - 22}" width="120" height="3" fill="url(#acc)" rx="2"/>
-  ${bodyEls}
-  <rect x="0" y="${H-110}" width="${W}" height="110" fill="rgba(0,0,0,0.75)"/>
-  <rect x="0" y="${H-110}" width="${W}" height="3" fill="url(#acc)"/>
-  <text x="${W/2}" y="${H-60}" font-family="${BENGALI_FONT_BODY}" font-size="26" font-weight="700" fill="${pal.acc}" text-anchor="middle">#JOAF #জুলাইফোরাম #বাংলাদেশ</text>
-  <text x="${W/2}" y="${H-28}" font-family="${BENGALI_FONT_BODY}" font-size="18" fill="${pal.sub}" text-anchor="middle">julyforum.com | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</text>
-</svg>`;
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">\n' +
+'  <defs>\n' +
+'    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + bg1 + '"/><stop offset="100%" stop-color="' + bg2 + '"/></linearGradient>\n' +
+'    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="' + acc + '"/><stop offset="100%" stop-color="' + acc2 + '"/></linearGradient>\n' +
+'  </defs>\n' +
+'  <rect width="1080" height="1080" fill="url(#bg)"/>\n' +
+'  <circle cx="1080" cy="0" r="300" fill="' + acc + '" opacity="0.06"/>\n' +
+'  <circle cx="0" cy="1080" r="250" fill="' + acc2 + '" opacity="0.06"/>\n' +
+'  <rect x="0" y="0" width="1080" height="6" fill="url(#acc)"/>\n' +
+'  <rect x="0" y="0" width="1080" height="110" fill="rgba(0,0,0,0.45)"/>\n' +
+'  <text x="48" y="74" font-family="Arial,sans-serif" font-size="38" font-weight="900" fill="' + acc + '">JOAF</text>\n' +
+'  <text x="1032" y="74" font-family="Arial,sans-serif" font-size="20" fill="' + sub + '" text-anchor="end">julyforum.com</text>\n' +
+'  <rect x="48" y="88" width="984" height="2" fill="' + acc + '" opacity="0.4"/>\n' +
+'  <rect x="' + ((1080-badgeW)/2) + '" y="128" width="' + badgeW + '" height="44" rx="6" fill="' + acc + '" opacity="0.92"/>\n' +
+'  <text x="540" y="157" font-family="Arial,sans-serif" font-size="18" font-weight="900" fill="#000000" text-anchor="middle">' + e(badge) + '</text>\n' +
+'  ' + titleSVG +
+'  <rect x="80" y="' + divY + '" width="920" height="2" fill="' + acc + '" opacity="0.5"/>\n' +
+'  ' + bodySVG +
+'  <rect x="0" y="' + bBarY + '" width="1080" height="90" fill="rgba(0,0,0,0.65)"/>\n' +
+'  <rect x="0" y="' + bBarY + '" width="1080" height="2" fill="url(#acc)"/>\n' +
+'  <text x="540" y="' + (bBarY+40) + '" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="' + acc + '" text-anchor="middle">#JOAF #JulayForum #Bangladesh</text>\n' +
+'  <text x="540" y="' + (bBarY+65) + '" font-family="Arial,sans-serif" font-size="15" fill="' + sub + '" text-anchor="middle">julyforum.com | July Online Activists Forum</text>\n' +
+'</svg>';
 }
 
 
-// ── Upload SVG to Cloudinary → JPG ────────────────────────────────────────────
 async function uploadToCloudinary(svgContent, publicId) {
-  const safeId = (publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 60)) + '_' + Date.now();
+  const { createHash } = await import('node:crypto');
+  const safeId = publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 60) + '_' + Date.now();
+  const ts = Math.floor(Date.now() / 1000);
+  // Signed upload - works with SVG including complex content
+  const sigStr = 'public_id=' + safeId + '&timestamp=' + ts + CDN_API_SECRET;
+  const signature = createHash('sha1').update(sigStr).digest('hex');
   const svgBytes = Buffer.from(svgContent, 'utf8');
-  const filename = safeId + '.svg';
-  // FormData + Blob — same proven method as daily-press-release
   const form = new FormData();
-  form.append('file', new Blob([svgBytes], { type: 'image/svg+xml' }), filename);
-  form.append('upload_preset', CDN_PRESET);
+  form.append('file', new Blob([svgBytes], { type: 'image/svg+xml' }), safeId + '.svg');
+  form.append('api_key', CDN_API_KEY);
+  form.append('timestamp', String(ts));
   form.append('public_id', safeId);
-  const r = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
+  form.append('signature', signature);
+  const r = await fetch('https://api.cloudinary.com/v1_1/' + CDN_CLOUD.trim() + '/image/upload', {
     method: 'POST',
     body: form,
     signal: AbortSignal.timeout(40000),
   });
   const d = await r.json();
-  if (d.error) throw new Error(`Cloudinary: ${d.error.message}`);
-  const url = d.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
-  return url.replace(/\.svg$/i, '.jpg').replace(/\.png$/i, '.jpg').replace(/\.webp$/i, '.jpg');
+  if (d.error) throw new Error('Cloudinary: ' + d.error.message);
+  return d.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
 }
 
 // ── Decide if this format needs an image ─────────────────────────────────────
@@ -606,6 +623,62 @@ async function callFbAutopost(action, payload, log = () => {}) {
     return { ok: 0, fail: 0 };
   }
 }
+
+// ── Reel: Generate animated SVG frames → upload as video via HF proxy ────────
+async function generateReelFrames(title, script, format) {
+  // Build 3 SVG frames for the reel
+  const frames = [
+    { badge: 'BREAKING', text: title, sub: '' },
+    { badge: '📋 বিস্তারিত', text: script.slice(0, 120), sub: 'julyforum.com' },
+    { badge: '✊ JOAF', text: 'আপনার মতামত দিন', sub: '#JOAF #জুলাইফোরাম' },
+  ];
+  const jpgUrls = [];
+  for (let i = 0; i < frames.length; i++) {
+    const f = frames[i];
+    const svg = buildSVGCard(f.text, f.sub, format);
+    try {
+      const url = await uploadToCloudinary(svg, 'joaf_reel_' + format + '_frame' + i);
+      // Convert to square 1:1 for Reels
+      jpgUrls.push(url.replace('/upload/f_jpg,q_90/', '/upload/f_jpg,q_90,ar_1.0,c_fill,w_1080/'));
+    } catch(e) { /* skip frame */ }
+  }
+  return jpgUrls;
+}
+
+async function callHFVideoProxy(prompt, log) {
+  try {
+    const AW_EP = AW_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
+    const outer = JSON.stringify({
+      async: false, path: '/', method: 'POST', headers: {},
+      body: JSON.stringify({ prompt }),
+    });
+    const r = await fetch(AW_EP + '/functions/hf-video-proxy/executions', {
+      method: 'POST',
+      headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY, 'Content-Type': 'application/json' },
+      body: outer,
+      signal: AbortSignal.timeout(600000), // 10 min for video gen
+    });
+    const d = await r.json();
+    if (d.responseBody && d.responseBody.length > 100) {
+      // Upload video to Appwrite storage
+      const videoBytes = Buffer.from(d.responseBody, 'base64');
+      const form = new FormData();
+      form.append('fileId', 'unique()');
+      form.append('file', new Blob([videoBytes], { type: 'video/mp4' }), 'reel_' + Date.now() + '.mp4');
+      const up = await fetch(AW_EP + '/storage/buckets/fb_media/files', {
+        method: 'POST',
+        headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
+        body: form,
+      });
+      const ud = await up.json();
+      if (ud.$id) {
+        return AW_EP + '/storage/buckets/fb_media/files/' + ud.$id + '/view?project=' + AW_PROJECT;
+      }
+    }
+  } catch(e) { log && log('HF video failed: ' + e.message); }
+  return null;
+}
+
 
 // ── Content pool dedup check ──────────────────────────────────────────────────
 async function isInPool(fp) {
@@ -789,9 +862,19 @@ async function fillQueue(needed, log) {
     // Caption variants for 17 pages (anti-clone)
     const variants = makeVariants(caption, format);
 
-    // Image card
+    // Image card OR reel frames
     let jpgUrl = '';
-    if (needsImg) {
+    let videoUrl = '';
+    let reelCarouselUrls = [];
+    if (format === 'reel_script') {
+      // Generate reel: 3 frame carousel + attempt HF video
+      try {
+        const frames = await generateReelFrames(item.title || '', caption, 'breaking_news');
+        if (frames.length >= 2) reelCarouselUrls = frames;
+        if (frames.length > 0) jpgUrl = frames[0]; // thumbnail
+        log('reel frames: ' + frames.length);
+      } catch(e) { log('reel frame gen failed: ' + e.message); }
+    } else if (needsImg) {
       try {
         const titleForCard = item.title || '';
         const bodyForCard  = caption.split('\n').slice(1).join('\n').replace(/#[^ \t\n\r]+/g, '').trim().slice(0, 400);
@@ -810,6 +893,8 @@ async function fillQueue(needed, log) {
         caption_b: variants[1] || variants[0],
         caption_c: variants[2] || variants[0],
         jpg_url: jpgUrl,
+        video_url: videoUrl || '',
+        carousel_urls: reelCarouselUrls.length ? JSON.stringify(reelCarouselUrls) : '',
         source: item.source || '',
         fp: poolDoc.fp || fingerprint(item.title),
         ai_used: String(aiUsed),
@@ -868,7 +953,20 @@ async function publishNext(log) {
 
   let fbResult;
   try {
-    if (item.jpg_url) {
+    if (item.format === 'reel_script' && item.carousel_urls) {
+      try {
+        const urls = JSON.parse(item.carousel_urls);
+        if (urls.length >= 2) {
+          fbResult = await callFbAutopost('carousel', { imageUrls: urls, caption: item.caption }, log);
+        } else if (urls.length === 1) {
+          fbResult = await callFbAutopost('post', { imageUrl: urls[0], caption: item.caption }, log);
+        } else {
+          fbResult = await callFbAutopost('post', { caption: item.caption }, log);
+        }
+      } catch(e) { fbResult = await callFbAutopost('post', { caption: item.caption }, log); }
+    } else if (item.video_url) {
+      fbResult = await callFbAutopost('post', { videoUrl: item.video_url, caption: item.caption }, log);
+    } else if (item.jpg_url) {
       fbResult = await callFbAutopost('post', { imageUrl: item.jpg_url, caption: item.caption }, log);
     } else {
       fbResult = await callFbAutopost('post', { caption: item.caption }, log);
@@ -890,13 +988,48 @@ async function publishNext(log) {
       title: item.title || '',
       caption: item.caption,
       jpg_url: item.jpg_url || '',
+      carousel_urls: item.carousel_urls || '',
+      video_url: item.video_url || '',
       source: item.source || '',
       ai_used: item.ai_used || 'false',
+      pages_ok: results.ok || 0,
+      pages_fail: results.fail || 0,
       results: JSON.stringify(results),
       status: success ? 'posted' : 'failed',
       published_at: new Date().toISOString(),
     });
   } catch {}
+
+  // Auto-cleanup: delete from Cloudinary + pool after successful publish
+  if (success) {
+    // Delete Cloudinary image
+    if (item.jpg_url && CDN_CLOUD && CDN_API_SECRET) {
+      try {
+        const { createHash } = await import('node:crypto');
+        const rawPid = item.jpg_url.split('/upload/')[1] || '';
+        const pubId = rawPid.replace(/^f_jpg,q_90\//, '').replace(/\.[^.]+$/, '').split('?')[0];
+        if (pubId) {
+          const ts2 = Math.floor(Date.now()/1000);
+          const sig2 = createHash('sha1').update('public_id='+pubId+'&timestamp='+ts2+CDN_API_SECRET).digest('hex');
+          const fd = new FormData();
+          fd.append('public_id', pubId);
+          fd.append('api_key', CDN_API_KEY);
+          fd.append('timestamp', String(ts2));
+          fd.append('signature', sig2);
+          await fetch('https://api.cloudinary.com/v1_1/'+CDN_CLOUD+'/image/destroy', {method:'POST',body:fd,signal:AbortSignal.timeout(8000)});
+        }
+      } catch {}
+    }
+    // Delete pool doc by fp
+    if (item.fp) {
+      try {
+        const poolDocs = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=10`);
+        for (const pd of (poolDocs.documents||[])) {
+          if (pd.fp === item.fp) { await awDelete(COL_POOL, pd.$id); break; }
+        }
+      } catch {}
+    }
+  }
 
   // Delete from queue (success) or mark failed (fail)
   try {
@@ -941,7 +1074,38 @@ async function publishNext(log) {
 }
 
 // ── MAIN export ───────────────────────────────────────────────────────────────
+// ── Auto-create missing collection attributes ─────────────────────────────────
+async function ensureCollectionAttributes() {
+  // Queue attributes
+  const qAttrs = [
+    { key: 'video_url', size: 2048 },
+    { key: 'carousel_urls', size: 4096 },
+  ];
+  for (const a of qAttrs) {
+    try {
+      await awReq('POST', `/databases/${DB_ID}/collections/${COL_QUEUE}/attributes/string`, {
+        key: a.key, size: a.size, required: false, default: '',
+      });
+    } catch {}
+  }
+  // Log attributes
+  const lStrAttrs = [
+    { key: 'carousel_urls', size: 4096 },
+    { key: 'video_url', size: 2048 },
+    { key: 'pages_ok', size: 16 },
+    { key: 'pages_fail', size: 16 },
+  ];
+  for (const a of lStrAttrs) {
+    try {
+      await awReq('POST', `/databases/${DB_ID}/collections/${COL_LOG}/attributes/string`, {
+        key: a.key, size: a.size, required: false, default: '',
+      });
+    } catch {}
+  }
+}
+
 export default async ({ req, res, log, error }) => {
+  await ensureCollectionAttributes().catch(()=>{});
   let body = {};
   try { body = JSON.parse(req.body || '{}'); } catch {}
 

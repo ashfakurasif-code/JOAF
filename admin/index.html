@@ -1515,11 +1515,12 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         </div>
 
         <!-- ── VIRAL OS PIPELINE ── -->
-        <div class="studio-panel" id="sp-viral-os" style="padding:0;overflow:hidden;">
+        <div class="studio-panel" id="sp-viral-os" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
           <iframe
             src="/tools/viral-os-dashboard.html"
-            style="width:100%;height:100%;border:none;background:var(--bg2);"
+            style="width:100%;flex:1;border:none;background:#060810;"
             id="viral-os-frame"
+            allow="same-origin"
           ></iframe>
         </div>
 
@@ -1654,6 +1655,15 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
       </div>
     </div>
     <!-- /page-sysconfig -->
+    <!-- AUTO PUBLISHER PAGE -->
+    <div class="page" id="page-autopub" style="overflow-y:auto;padding:0;">
+      <iframe
+        src="/tools/viral-os-dashboard.html"
+        style="width:100%;height:calc(100vh - 48px);border:none;"
+        id="autopub-main-frame"
+      ></iframe>
+    </div><!-- /page-autopub -->
+
     <!-- FB AUTO POST -->
     <div class="page" id="page-fbpost">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;height:100%;overflow:hidden;">

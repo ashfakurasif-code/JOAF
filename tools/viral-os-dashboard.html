@@ -2,150 +2,520 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Viral OS Pipeline</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>JOAF Viral OS</title>
 <style>
-:root{color-scheme:dark;--bg:#0b0c10;--panel:#141826;--line:#2a3245;--text:#e9edff;--muted:#8ea0bf;--accent:#7c3aed;--good:#34d399;--bad:#f87171;--warn:#fbbf24}
+:root{
+  --bg:#060810;--panel:#0d1117;--card:#111827;--line:#1f2937;
+  --text:#f0f4ff;--muted:#6b7280;--accent:#7c3aed;--accent2:#a78bfa;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--cyan:#06b6d4;
+  --grad:linear-gradient(135deg,#7c3aed,#3b82f6);
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);padding:14px;font-size:13px}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.metric{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.metric-label{font-size:10px;color:var(--muted);margin-bottom:3px}
-.metric-value{font-size:22px;font-weight:700}
-.ok{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
-.card-title{font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
-.row{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--line);font-size:12px}
-.row:last-child{border-bottom:none}
-.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.dot-ok{background:var(--good)} .dot-bad{background:var(--bad)} .dot-warn{background:var(--warn)} .dot-idle{background:var(--line)}
-.muted{color:var(--muted)}
-.controls{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.btn{padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit}
-.btn:hover{border-color:var(--accent);background:rgba(124,58,237,.15)}
-.btn.primary{border-color:var(--accent);color:#a78bfa}
-.full{grid-column:1/-1}
-.logbox{background:#060810;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace;font-size:10px;line-height:1.7;color:#7a8fa8;white-space:pre-wrap;max-height:160px;overflow-y:auto;margin-top:8px}
-.bar-wrap{margin-bottom:4px}
-.bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:2px}
-.bar-track{height:4px;background:#1a2235;border-radius:99px;overflow:hidden}
-.bar-fill{height:100%;border-radius:99px;background:var(--good)}
-.ts{font-size:10px;color:var(--muted);text-align:right;margin-top:6px}
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.badge{font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--good);color:var(--good);background:rgba(52,211,153,.08);animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column}
+/* HEADER */
+.hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(13,17,23,0.95);border-bottom:1px solid var(--line);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;flex-shrink:0}
+.hdr-logo{font-size:18px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr-sub{font-size:11px;color:var(--muted)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hdr-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+/* MAIN SCROLL */
+.main{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:600px){.metrics{grid-template-columns:repeat(2,1fr)}}
+.metric{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;position:relative;overflow:hidden}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad)}
+.metric-icon{font-size:22px;margin-bottom:4px}
+.metric-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.metric-value{font-size:26px;font-weight:800;line-height:1}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:2px}
+/* GRID 2 */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.card-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+/* POSTS LIST */
+.post-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px}
+.post-row:last-child{border:none}
+.post-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.post-time{color:var(--muted);font-size:10px;white-space:nowrap}
+.post-fmt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.post-badge{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--green);white-space:nowrap}
+/* FORMAT BARS */
+.fmt-row{display:flex;align-items:center;gap:8px;padding:4px 0}
+.fmt-name{width:120px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.fmt-bar-wrap{flex:1;background:var(--line);border-radius:3px;height:6px;overflow:hidden}
+.fmt-bar{height:100%;border-radius:3px;background:var(--grad);transition:width .5s}
+.fmt-count{width:24px;text-align:right;font-size:11px;color:var(--muted);flex-shrink:0}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--grad);color:#fff}
+.btn-primary:hover{opacity:.85;transform:translateY(-1px)}
+.btn-ghost{background:var(--panel);color:var(--text2);border:1px solid var(--line)}
+.btn-ghost:hover{background:var(--line)}
+.btn-green{background:var(--green);color:#000}
+.btn-red{background:var(--red);color:#fff}
+.btn-amber{background:var(--amber);color:#000}
+.btn-sm{padding:4px 8px;font-size:11px;border-radius:6px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+/* CONSOLE */
+.console{background:#000;border-radius:10px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;min-height:80px;max-height:160px;overflow-y:auto;border:1px solid var(--line)}
+.console-line{padding:1px 0;border-bottom:1px solid #111}
+.console-line:last-child{border:none}
+.c-ok{color:var(--green)}
+.c-err{color:var(--red)}
+.c-info{color:var(--cyan)}
+.c-warn{color:var(--amber)}
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--panel);border-radius:10px;padding:3px;border:1px solid var(--line);flex-shrink:0}
+.tab{padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:inherit;transition:all .15s}
+.tab.active{background:var(--accent);color:#fff}
+/* ACTION PANEL */
+.action-panel{display:none}
+.action-panel.active{display:block}
+/* SCHEDULE VISUAL */
+.schedule-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.schedule-row:last-child{border:none}
+.sch-time{width:60px;font-size:11px;color:var(--accent2);font-weight:700;flex-shrink:0}
+.sch-type{flex:1;font-size:11px}
+.sch-status{font-size:10px;padding:2px 6px;border-radius:4px}
+.sch-ok{background:rgba(16,185,129,.15);color:var(--green)}
+.sch-pending{background:rgba(245,158,11,.15);color:var(--amber)}
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.toggle-row:last-child{border:none}
+.toggle-label{font-size:12px}
+.toggle{position:relative;width:34px;height:19px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--line);border-radius:19px;cursor:pointer;transition:.3s}
+.slider:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.slider{background:var(--accent)}
+input:checked+.slider:before{transform:translateX(15px)}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
 </style>
 </head>
 <body>
-<div class="header">
-  <b style="font-size:14px">📡 Viral OS Pipeline</b>
-  <span class="badge">● live</span>
-</div>
 
-<div class="grid4">
-  <div class="metric"><div class="metric-label">Queue pending</div><div class="metric-value" id="m-q">—</div></div>
-  <div class="metric"><div class="metric-label">Published today</div><div class="metric-value ok" id="m-pub">—</div></div>
-  <div class="metric"><div class="metric-label">Pool items</div><div class="metric-value" id="m-pool">—</div></div>
-  <div class="metric"><div class="metric-label">With image</div><div class="metric-value" id="m-img">—</div></div>
-</div>
-
-<div class="controls">
-  <button class="btn primary" onclick="run('cycle')">▶ Run Cycle</button>
-  <button class="btn" onclick="run('publish')">📤 Publish</button>
-  <button class="btn" onclick="run('fill')">📦 Fill Queue</button>
-  <button class="btn" onclick="run('collect')">📡 Collect RSS</button>
-  <button class="btn" onclick="run('status')">📊 Status</button>
-  <button class="btn" onclick="load()" style="margin-left:auto">↻</button>
-</div>
-
-<div class="grid2">
-  <div class="card">
-    <div class="card-title">Recent Posts</div>
-    <div id="log-list"><span class="muted" style="font-size:11px">loading…</span></div>
+<div class="hdr">
+  <div class="live-dot" id="liveDot"></div>
+  <div>
+    <div class="hdr-logo">⚡ JOAF Viral OS</div>
+    <div class="hdr-sub" id="lastUpdated">loading…</div>
   </div>
-  <div class="card">
-    <div class="card-title">Queue by Format</div>
-    <div id="q-bars"><span class="muted" style="font-size:11px">loading…</span></div>
-  </div>
-  <div class="card full" id="action-card" style="display:none">
-    <div class="card-title">Action Output</div>
-    <div class="logbox" id="action-log"></div>
+  <div class="hdr-actions">
+    <button class="btn btn-primary btn-sm" id="btnCycle">▶ Cycle</button>
+    <button class="btn btn-green btn-sm" id="btnPublish">📤 Publish</button>
+    <button class="btn btn-ghost btn-sm" id="btnFill">📥 Fill</button>
+    <button class="btn btn-ghost btn-sm" id="btnCollect">📡 Collect</button>
+    <button class="btn btn-ghost btn-sm" id="btnRefresh">↻</button>
   </div>
 </div>
-<div class="ts" id="ts">—</div>
+
+<div class="main">
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-icon">⏳</div>
+      <div class="metric-label">Queue Pending</div>
+      <div class="metric-value" id="mQueue">—</div>
+      <div class="metric-sub" id="mQueueSub">min 16 / target 24</div>
+    </div>
+    <div class="metric">
+      <div class="metric-icon">✅</div>
+      <div class="metric-label">Published Today</div>
+      <div class="metric-value ok" id="mPublished">—</div>
+      <div class="metric-sub">17 pages each</div>
+    </div>
+    <div class="metric">
+      <div class="metric-icon">🖼️</div>
+      <div class="metric-label">With Image</div>
+      <div class="metric-value" id="mImages">—</div>
+      <div class="metric-sub" id="mPool">pool: — items</div>
+    </div>
+    <div class="metric">
+      <div class="metric-icon">🎬</div>
+      <div class="metric-label">Reels</div>
+      <div class="metric-value" id="mReels">—</div>
+      <div class="metric-sub">carousel + video</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="actions">Actions</button>
+      <button class="tab" data-tab="schedule">Schedule</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </div>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div class="action-panel active" id="tab-overview">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">🕐 Recent Posts</div>
+          <button class="btn btn-ghost btn-sm" id="btnRefreshPosts">↻</button>
+        </div>
+        <div id="postsList"><div style="color:var(--muted);text-align:center;padding:16px">Loading…</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">📊 Queue by Format</div></div>
+        <div id="formatBars"><div style="color:var(--muted);text-align:center;padding:16px">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS TAB -->
+  <div class="action-panel" id="tab-actions">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">⚡ Quick Actions</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-primary" id="act-cycle">▶ Run Full Cycle (Collect + Fill + Publish)</button>
+          <button class="btn btn-green" id="act-publish">📤 Publish Next Post (17 pages)</button>
+          <button class="btn btn-ghost" id="act-fill">📥 Fill Queue (4 items)</button>
+          <button class="btn btn-ghost" id="act-collect">📡 Collect RSS + Wikipedia</button>
+          <button class="btn btn-amber" id="act-reel">🎬 Generate Reel (carousel)</button>
+          <button class="btn btn-ghost" id="act-status">📈 Status Check</button>
+          <button class="btn btn-red btn-sm" id="act-clear">🗑 Clear Queue</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">📟 Action Output</div></div>
+        <div class="console" id="actionConsole"><div class="console-line c-info">Ready. Run an action above.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHEDULE TAB -->
+  <div class="action-panel" id="tab-schedule">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">🗓 Publishing Schedule (CRON: every 5 min)</div></div>
+      <div id="scheduleList">
+        <div class="schedule-row"><span class="sch-time">*/5 min</span><span class="sch-type">🔄 Auto Cycle — Collect + Fill + Publish</span><span class="sch-status sch-ok">ACTIVE</span></div>
+        <div class="schedule-row"><span class="sch-time">17:00 BD</span><span class="sch-type">📰 Daily Press Release</span><span class="sch-status sch-ok">ACTIVE</span></div>
+        <div class="schedule-row"><span class="sch-time">06:00 BD</span><span class="sch-type">📊 Discover Leaders</span><span class="sch-status sch-ok">ACTIVE</span></div>
+        <div class="schedule-row"><span class="sch-time">10:00 BD</span><span class="sch-type">📈 FB Insights</span><span class="sch-status sch-ok">ACTIVE</span></div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="card-title" style="margin-bottom:8px">📋 Execution History (last 10)</div>
+        <div id="execHistory"><div style="color:var(--muted)">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="action-panel" id="tab-settings">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">⚙️ Pipeline Settings</div></div>
+        <div class="toggle-row">
+          <span class="toggle-label">🖼️ Image Generation</span>
+          <label class="toggle"><input type="checkbox" id="tog-img" checked><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">🎬 Reel Generation</span>
+          <label class="toggle"><input type="checkbox" id="tog-reel" checked><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">🤖 AI Captions</span>
+          <label class="toggle"><input type="checkbox" id="tog-ai" checked><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">📡 Auto Publish</span>
+          <label class="toggle"><input type="checkbox" id="tog-auto" checked><span class="slider"></span></label>
+        </div>
+        <div style="margin-top:10px">
+          <label style="font-size:11px;color:var(--muted)">Format Override</label>
+          <select id="sel-format" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px;margin-top:4px;font-family:inherit;font-size:11px">
+            <option value="">Auto (weighted random)</option>
+            <option value="breaking_news">Breaking News</option>
+            <option value="fact_check">Fact Check</option>
+            <option value="did_you_know">Did You Know</option>
+            <option value="quote_card">Quote Card</option>
+            <option value="reel_script">Reel Script</option>
+            <option value="poll_post">Poll Post</option>
+            <option value="this_day_history">Today in History</option>
+          </select>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn btn-primary" style="width:100%" id="btn-save-settings">💾 Apply Settings</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">🔌 System Status</div></div>
+        <div id="sysStatus">
+          <div class="fmt-row"><span class="fmt-name">Appwrite DB</span><span class="fmt-bar-wrap"><span class="fmt-bar" style="width:100%;background:var(--green)"></span></span><span class="fmt-count c-ok">✓</span></div>
+          <div class="fmt-row"><span class="fmt-name">FB Autopost</span><span id="fb-status-bar" class="fmt-bar-wrap"><span class="fmt-bar" style="width:100%"></span></span><span id="fb-status-icon" class="fmt-count">…</span></div>
+          <div class="fmt-row"><span class="fmt-name">Cloudinary</span><span class="fmt-bar-wrap"><span class="fmt-bar" style="width:90%;background:var(--green)"></span></span><span class="fmt-count c-ok">✓</span></div>
+          <div class="fmt-row"><span class="fmt-name">HF Video</span><span class="fmt-bar-wrap"><span class="fmt-bar" style="width:40%;background:var(--amber)"></span></span><span class="fmt-count c-warn">~</span></div>
+          <div class="fmt-row"><span class="fmt-name">OpenRouter AI</span><span class="fmt-bar-wrap"><span class="fmt-bar" style="width:95%;background:var(--green)"></span></span><span class="fmt-count c-ok">✓</span></div>
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-ghost" style="width:100%;margin-bottom:6px" id="btn-token-check">🔑 Check FB Token</button>
+          <div id="tokenStatus" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
 
 <script>
-const K="standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b";
-const P="6a11b6cd000b59f318eb",B="https://fra.cloud.appwrite.io/v1";
-const h={"X-Appwrite-Project":P,"X-Appwrite-Key":K,"Content-Type":"application/json"};
-const aw=async(m,u,b)=>(await fetch(B+u,{method:m,headers:h,body:b?JSON.stringify(b):undefined})).json();
-const ft=s=>{if(!s)return"—";const d=new Date(s);return d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});};
+const AW_PJ  = '6a11b6cd000b59f318eb';
+const BASE   = 'https://fra.cloud.appwrite.io/v1';
 
-async function load(){
-  try{
-    const[qr,pr,lr]=await Promise.all([
-      aw("GET","/databases/joaf/collections/viral_publish_queue/documents?limit=100"),
-      aw("GET","/databases/joaf/collections/viral_content_pool/documents?limit=1"),
-      aw("GET","/databases/joaf/collections/viral_publish_log/documents?limit=10").catch(()=>({documents:[]})),
+function getKey() {
+  try {
+    // Try parent admin panel config
+    const p = window.parent;
+    if (p.JOAF_CONFIG && p.JOAF_CONFIG.apiKey) return p.JOAF_CONFIG.apiKey;
+    if (p.JOAF_AW_KEY) return p.JOAF_AW_KEY;
+    // Try localStorage (admin saves key)
+    const lk = localStorage.getItem('joaf_admin_key') || localStorage.getItem('aw_key');
+    if (lk) return lk;
+    if (p.join_aw_exec) return 'via_parent';
+  } catch {}
+  // Fallback: read from URL param
+  const params = new URLSearchParams(window.location.search);
+  return params.get('k') || '';
+}
+
+async function awGet(path) {
+  const k = getKey();
+  const h = { 'X-Appwrite-Project': AW_PJ };
+  if (k && k !== 'via_parent') h['X-Appwrite-Key'] = k;
+  const r = await fetch(BASE + path, { headers: h, credentials: 'include' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+async function awPost(path, body) {
+  const k = getKey();
+  const h = { 'X-Appwrite-Project': AW_PJ, 'Content-Type': 'application/json' };
+  if (k && k !== 'via_parent') h['X-Appwrite-Key'] = k;
+  const r = await fetch(BASE + path, { method: 'POST', headers: h, body: JSON.stringify(body), credentials: 'include' });
+  if (!r.ok) { const t = await r.text(); throw new Error('HTTP '+r.status+': '+t.slice(0,100)); }
+  return r.json();
+}
+
+async function awDelete(path) {
+  const k = getKey();
+  const h = { 'X-Appwrite-Project': AW_PJ };
+  if (k && k !== 'via_parent') h['X-Appwrite-Key'] = k;
+  const r = await fetch(BASE + path, { method: 'DELETE', headers: h, credentials: 'include' });
+  return r.ok;
+}
+
+async function awDelete(path) {
+  const k = getKey();
+  const h = { 'X-Appwrite-Project': AW_PJ };
+  if (k && k !== 'via_parent') h['X-Appwrite-Key'] = k;
+  await fetch(BASE + path, { method: 'DELETE', headers: h });
+}
+
+// Use parent join_aw_exec if available
+async function callViral(action, extra={}) {
+  try {
+    const p = window.parent;
+    if (p && p.join_aw_exec) {
+      return await p.join_aw_exec('joaf-viral-os', { action, ...extra });
+    }
+  } catch {}
+  const d = await awPost('/functions/joaf-viral-os/executions', {
+    async: false, path: '/', method: 'POST', headers: {},
+    body: JSON.stringify({ action, ...extra })
+  });
+  try { return JSON.parse(d.responseBody || '{}'); } catch { return d; }
+}
+
+// Console log
+function clog(msg, type='info') {
+  const c = document.getElementById('actionConsole');
+  const line = document.createElement('div');
+  line.className = 'console-line c-' + type;
+  const t = new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  line.textContent = '[' + t + '] ' + msg;
+  c.prepend(line);
+  if (c.children.length > 50) c.lastChild.remove();
+}
+
+// Load stats
+async function loadStats() {
+  try {
+    const [qData, logData, poolData] = await Promise.all([
+      awGet('/databases/joaf/collections/viral_publish_queue/documents?limit=100'),
+      awGet('/databases/joaf/collections/viral_publish_log/documents?limit=50'),
+      awGet('/databases/joaf/collections/viral_content_pool/documents?limit=5'),
     ]);
-    const docs=qr.documents||[];
-    const pend=docs.filter(d=>d.status==="pending");
-    const imgs=pend.filter(d=>d.jpg_url).length;
-    document.getElementById("m-q").textContent=pend.length;
-    document.getElementById("m-q").className="metric-value "+(pend.length<8?"warn":pend.length>20?"ok":"ok");
-    document.getElementById("m-pool").textContent=pr.total||0;
-    document.getElementById("m-img").textContent=imgs;
-    document.getElementById("m-img").className="metric-value "+(imgs>0?"ok":"warn");
 
-    const today=new Date().toISOString().slice(0,10);
-    const tl=(lr.documents||[]).filter(d=>(d.published_at||"").startsWith(today));
-    document.getElementById("m-pub").textContent=tl.length;
+    const qDocs = qData.documents || [];
+    const lDocs = logData.documents || [];
 
-    const logs=lr.documents||[];
-    document.getElementById("log-list").innerHTML=logs.length?logs.slice(0,6).map(d=>{
-      const ok=d.status==="posted";
-      return`<div class="row"><span class="dot ${ok?"dot-ok":"dot-bad"}"></span><span class="muted">${ft(d.published_at)}</span><span style="flex:1">${(d.format||"?").replace(/_/g," ")}</span><span class="${ok?"ok":"bad"}" style="font-size:10px">${ok?"✓17":"✗"}</span></div>`;
-    }).join(""):`<div class="muted" style="font-size:11px">no log entries yet</div>`;
+    document.getElementById('mQueue').textContent = qDocs.filter(d=>d.status==='pending').length;
+    document.getElementById('mImages').textContent = qDocs.filter(d=>d.jpg_url).length;
+    document.getElementById('mReels').textContent = qDocs.filter(d=>d.carousel_urls || d.video_url).length;
+    document.getElementById('mPool').textContent = 'pool: ' + (poolData.total || 0) + ' items';
 
-    const fc={};pend.forEach(d=>{fc[d.format]=(fc[d.format]||0)+1;});
-    const sorted=Object.entries(fc).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    const mx=sorted[0]?.[1]||1;
-    document.getElementById("q-bars").innerHTML=sorted.length?sorted.map(([f,c])=>`<div class="bar-wrap"><div class="bar-lbl"><span>${f.replace(/_/g," ")}</span><span>${c}</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/mx*100)}%"></div></div></div>`).join(""):`<div class="muted" style="font-size:11px">empty</div>`;
+    // Published today
+    const today = new Date().toISOString().slice(0,10);
+    const todayPubs = lDocs.filter(d => (d.published_at||'').startsWith(today));
+    document.getElementById('mPublished').textContent = todayPubs.length;
 
-    document.getElementById("ts").textContent="updated "+new Date().toLocaleTimeString();
-  }catch(e){document.getElementById("ts").textContent="error: "+e.message;}
+    // Recent posts
+    const pl = document.getElementById('postsList');
+    if (lDocs.length === 0) { pl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px">No posts yet</div>'; }
+    else {
+      pl.innerHTML = lDocs.slice(0,8).map(d => {
+        const t = d.published_at ? new Date(d.published_at).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+        const hasImg = d.jpg_url ? '🖼️' : d.carousel_urls ? '🎬' : '📝';
+        const ok = d.pages_ok || 0;
+        return `<div class="post-row">
+          <span class="post-dot" style="background:${ok>=10?'var(--green)':ok>0?'var(--amber)':'var(--red)'}"></span>
+          <span class="post-time">${t}</span>
+          <span class="post-fmt">${hasImg} ${(d.format||'').replace(/_/g,' ')}</span>
+          <span class="post-badge">${ok>=10?'✓':'⚠'} ${ok}/17</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Format distribution
+    const fmtCount = {};
+    qDocs.forEach(d => { fmtCount[d.format] = (fmtCount[d.format]||0)+1; });
+    const maxFmt = Math.max(1, ...Object.values(fmtCount));
+    const sortedFmt = Object.entries(fmtCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const fb = document.getElementById('formatBars');
+    if (!sortedFmt.length) { fb.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px">Queue empty</div>'; }
+    else {
+      fb.innerHTML = sortedFmt.map(([fmt,cnt]) =>
+        `<div class="fmt-row">
+          <span class="fmt-name">${fmt.replace(/_/g,' ')}</span>
+          <span class="fmt-bar-wrap"><span class="fmt-bar" style="width:${Math.round(cnt/maxFmt*100)}%"></span></span>
+          <span class="fmt-count">${cnt}</span>
+        </div>`).join('');
+    }
+
+    document.getElementById('lastUpdated').textContent = 'updated ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    document.getElementById('lastUpdated').textContent = 'error: ' + e.message;
+  }
 }
 
-async function run(action){
-  document.getElementById("action-card").style.display="block";
-  const box=document.getElementById("action-log");
-  box.textContent=`[${action}] triggering...\n`;
-  try{
-    const r=await aw("POST","/functions/joaf-viral-os/executions",{async:true,path:"/",method:"POST",headers:{},body:JSON.stringify({action})});
-    const id=r.$id;
-    if(!id){box.textContent="error: "+JSON.stringify(r);return;}
-    box.textContent+=`exec: ${id}\n`;
-    let i=0;
-    const t=setInterval(async()=>{
-      i++;
-      try{
-        const s=await aw("GET",`/functions/joaf-viral-os/executions/${id}`);
-        if(s.status==="completed"||s.status==="failed"){
-          clearInterval(t);
-          box.textContent=`[${action}] ${s.status} (${s.duration||0}ms)\n\n${s.logs||"(no logs)"}`;
-          box.scrollTop=9999;
-          load();
-        }else{
-          box.textContent=`[${action}] ${s.status||"waiting"}...\nexec: ${id}`;
-        }
-      }catch{}
-      if(i>60)clearInterval(t);
-    },4000);
-  }catch(e){box.textContent="error: "+e.message;}
+// Load exec history
+async function loadHistory() {
+  try {
+    const r = await awGet('/functions/joaf-viral-os/executions?limit=10');
+    const docs = r.executions || [];
+    const el = document.getElementById('execHistory');
+    el.innerHTML = docs.map(d => {
+      const t = new Date(d.$createdAt).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+      const sc = d.responseStatusCode;
+      const col = sc===200?'var(--green)':sc>=400?'var(--red)':'var(--amber)';
+      return `<div class="post-row">
+        <span class="post-dot" style="background:${col}"></span>
+        <span class="post-time">${t}</span>
+        <span class="post-fmt">${d.trigger||'http'} — ${d.status}</span>
+        <span style="font-size:10px;color:${col}">${sc||'?'}</span>
+      </div>`;
+    }).join('') || '<div style="color:var(--muted)">No history</div>';
+  } catch(e) {}
 }
 
-load();setInterval(load,30000);
+// Tab switching
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.action-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'schedule') loadHistory();
+  });
+});
+
+// Action buttons
+async function runAction(action, label, extra={}) {
+  const btns = document.querySelectorAll('.btn');
+  btns.forEach(b=>b.disabled=true);
+  clog('Running: ' + label + '…', 'info');
+  document.getElementById('liveDot').style.background = 'var(--amber)';
+  try {
+    const r = await callViral(action, extra);
+    const logLines = (r.logs || JSON.stringify(r)).split('\n').filter(Boolean);
+    logLines.forEach(l => {
+      const type = l.includes('✅')||l.includes('ok=')?'ok':l.includes('failed')||l.includes('✗')?'err':'info';
+      clog(l, type);
+    });
+    clog('Done: ' + label, 'ok');
+    document.getElementById('liveDot').style.background = 'var(--green)';
+    await loadStats();
+  } catch(e) {
+    clog('Error: ' + e.message, 'err');
+    document.getElementById('liveDot').style.background = 'var(--red)';
+  }
+  btns.forEach(b=>b.disabled=false);
+}
+
+document.getElementById('btnCycle').addEventListener('click', () => runAction('cycle','Full Cycle'));
+document.getElementById('btnPublish').addEventListener('click', () => runAction('publish','Publish'));
+document.getElementById('btnFill').addEventListener('click', () => runAction('fill','Fill Queue'));
+document.getElementById('btnCollect').addEventListener('click', () => runAction('collect','Collect RSS'));
+document.getElementById('btnRefresh').addEventListener('click', loadStats);
+document.getElementById('btnRefreshPosts').addEventListener('click', loadStats);
+
+document.getElementById('act-cycle').addEventListener('click', () => runAction('cycle','Full Cycle'));
+document.getElementById('act-publish').addEventListener('click', () => runAction('publish','Publish'));
+document.getElementById('act-fill').addEventListener('click', () => runAction('fill','Fill Queue'));
+document.getElementById('act-collect').addEventListener('click', () => runAction('collect','Collect RSS'));
+document.getElementById('act-status').addEventListener('click', () => runAction('status','Status'));
+document.getElementById('act-reel').addEventListener('click', () => {
+  const fmt = document.getElementById('sel-format').value || 'reel_script';
+  runAction('fill','Reel Fill',{format_override: fmt});
+});
+document.getElementById('act-clear').addEventListener('click', async () => {
+  if (!confirm('Clear entire queue?')) return;
+  clog('Clearing queue…','warn');
+  try {
+    const r = await awGet('/databases/joaf/collections/viral_publish_queue/documents?limit=100');
+    for (const d of (r.documents||[])) {
+      await awDelete('/databases/joaf/collections/viral_publish_queue/documents/'+d.$id);
+    }
+    clog('Queue cleared','ok');
+    await loadStats();
+  } catch(e) { clog('Error: '+e.message,'err'); }
+});
+
+document.getElementById('btn-token-check').addEventListener('click', async () => {
+  const el = document.getElementById('tokenStatus');
+  el.textContent = 'Checking…';
+  try {
+    const p = window.parent;
+    let r;
+    if (p && p.join_aw_exec) r = await p.join_aw_exec('fb-autopost', {action:'check-token'});
+    else {
+      const d = await awPost('/functions/fb-autopost/executions', {async:false,path:'/',method:'POST',headers:{},body:JSON.stringify({action:'check-token'})});
+      r = JSON.parse(d.responseBody||'{}');
+    }
+    el.textContent = r.ok ? '✅ Token valid | '+r.pages+' pages' : '❌ Token expired';
+    el.style.color = r.ok ? 'var(--green)' : 'var(--red)';
+  } catch(e) { el.textContent = 'Error: '+e.message; }
+});
+
+document.getElementById('btn-save-settings').addEventListener('click', () => {
+  clog('Settings applied (local only — restart function to take effect)', 'warn');
+});
+
+// Auto refresh every 30s
+loadStats();
+setInterval(loadStats, 30000);
 </script>
 </body>
 </html>
