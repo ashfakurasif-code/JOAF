@@ -10,15 +10,17 @@ function getResvgMod() {
   if (_resvgMod) return _resvgMod;
   try { _resvgMod = _require('@resvg/resvg-js'); return _resvgMod; } catch(e) { return null; }
 }
-const FONT_PATH = '/tmp/joaf_noto_bengali.ttf';
+const FONT_PATH_BOLD = '/tmp/joaf_noto_bold.ttf';
+const FONT_PATH_REG  = '/tmp/joaf_noto_reg.ttf';
 let _fontReady = false;
 async function ensureFont() {
   if (_fontReady) return true;
-  if (existsSync(FONT_PATH)) { _fontReady = true; return true; }
-  // Font is in ./fonts/ from postinstall
   try {
-    const p = new URL('./fonts/NotoSansBengali-Bold.ttf', import.meta.url).pathname;
-    if (existsSync(p)) { writeFileSync(FONT_PATH, readFileSync(p)); _fontReady = true; return true; }
+    const boldSrc = new URL('./fonts/NotoSansBengali-Bold.ttf', import.meta.url).pathname;
+    const regSrc  = new URL('./fonts/NotoSansBengali-Regular.ttf', import.meta.url).pathname;
+    if (existsSync(boldSrc)) { if (!existsSync(FONT_PATH_BOLD)) writeFileSync(FONT_PATH_BOLD, readFileSync(boldSrc)); }
+    if (existsSync(regSrc))  { if (!existsSync(FONT_PATH_REG))  writeFileSync(FONT_PATH_REG,  readFileSync(regSrc)); }
+    if (existsSync(FONT_PATH_BOLD)) { _fontReady = true; return true; }
   } catch(e) {}
   return false;
 }
@@ -573,8 +575,9 @@ async function uploadToCloudinary(svgContent, publicId) {
   const fontOk = resvgMod ? await ensureFont() : false;
   if (resvgMod && fontOk) {
     try {
+      const fontFiles = [FONT_PATH_BOLD, FONT_PATH_REG].filter(f => existsSync(f));
       const inst = new resvgMod.Resvg(svgContent, {
-        font: { fontFiles: [FONT_PATH], loadSystemFonts: false, defaultFontFamily: 'Noto Sans Bengali' },
+        font: { fontFiles, loadSystemFonts: false, defaultFontFamily: 'Noto Sans Bengali' },
         fitTo: { mode: 'width', value: 1080 },
         background: '#0a0a0a',
         logLevel: 'error',
