@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
+  "scripts": {
+    "postinstall": "node -e \"const fs=require('fs'),https=require('https'),path=require('path');const dir=path.join(__dirname,'fonts');if(!fs.existsSync(dir))fs.mkdirSync(dir,{recursive:true});const f=path.join(dir,'NotoSansBengali-Bold.ttf');if(fs.existsSync(f)){console.log('font exists');process.exit(0);}const url='https://github.com/google/fonts/raw/main/ofl/notosansbengali/NotoSansBengali%5Bwdth%2Cwght%5D.ttf';const file=fs.createWriteStream(f);https.get(url,res=>{if(res.statusCode===302||res.statusCode===301){https.get(res.headers.location,r2=>{r2.pipe(file);file.on('finish',()=>{console.log('font downloaded');file.close();});}).on('error',e=>{console.log('font dl failed:',e.message);});}else{res.pipe(file);file.on('finish',()=>{console.log('font downloaded');file.close();});}}).on('error',e=>{console.log('font dl failed:',e.message);});\""
+  },
   "dependencies": {
-    "node-appwrite": "^14.0.0"
+    "node-appwrite": "^14.0.0",
+    "@resvg/resvg-js": "2.6.2"
   }
 }
