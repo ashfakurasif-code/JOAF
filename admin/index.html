@@ -1515,7 +1515,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
         </div>
 
         <!-- ── VIRAL OS PIPELINE ── -->
-        <div class="studio-panel" id="sp-viral-os" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+        <div class="studio-panel" id="sp-viral-os" style="padding:0;overflow:hidden;">
           <iframe
             src="/tools/viral-os-dashboard.html"
             style="width:100%;flex:1;border:none;background:#060810;"
@@ -6276,9 +6276,16 @@ document.addEventListener('input', function(e) {
 window.switchStudioTab = function(tab, el) {
   document.querySelectorAll('.studio-tab').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
-  document.querySelectorAll('.studio-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.studio-panel').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
   const panel = document.getElementById('sp-' + tab);
-  if (panel) panel.classList.add('active');
+  if (panel) {
+    panel.classList.add('active');
+    panel.style.display = 'flex';
+    panel.style.flexDirection = 'column';
+  }
   // Lazy-load reel engine
   if (tab === 'reel') {
     const rf = document.getElementById('reel-engine-frame');
@@ -7243,15 +7250,20 @@ window._storeCaptionResult = function(result) {
       setTimeout(sysconfigLoad, 80);
     }
     if(id === 'joaf-studio'){
-      // Activate first tab if none active
-      const activePanels = document.querySelectorAll('.studio-panel.active');
-      if(!activePanels.length){
-        const firstTab = document.querySelector('.studio-tab');
-        const firstPanel = document.getElementById('sp-viral');
-        document.querySelectorAll('.studio-tab').forEach(b=>b.classList.remove('active'));
-        document.querySelectorAll('.studio-panel').forEach(p=>p.classList.remove('active'));
-        if(firstTab) firstTab.classList.add('active');
-        if(firstPanel) firstPanel.classList.add('active');
+      // Reset all panels to hidden (clear any inline display overrides)
+      document.querySelectorAll('.studio-panel').forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+      });
+      // Activate first tab
+      const firstTab = document.querySelector('.studio-tab');
+      const firstPanel = document.getElementById('sp-viral');
+      document.querySelectorAll('.studio-tab').forEach(b => b.classList.remove('active'));
+      if(firstTab) firstTab.classList.add('active');
+      if(firstPanel) {
+        firstPanel.classList.add('active');
+        firstPanel.style.display = 'flex';
+        firstPanel.style.flexDirection = 'column';
       }
     }
   };
