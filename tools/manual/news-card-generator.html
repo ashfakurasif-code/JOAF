@@ -653,6 +653,18 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 // ══════════════════════════════════════════
 // SHARED CONFIG
 // ══════════════════════════════════════════
+// ── Appwrite exec wrapper (server-side key, CORS-safe) ────────
+async function _awExec(fnId, body) {
+  const r = await fetch('https://fra.cloud.appwrite.io/v1/functions/'+fnId+'/executions', {
+    method:'POST',
+    headers:{'X-Appwrite-Project':'6a11b6cd000b59f318eb','X-Appwrite-Key':'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b','Content-Type':'application/json'},
+    body:JSON.stringify({async:false,path:'/',method:'POST',headers:{},body:JSON.stringify(body)})
+  });
+  const d = await r.json();
+  try{return JSON.parse(d.responseBody||'{}');}catch(e){return {error:d.responseBody};}
+}
+function getProxy(){ return '_awExec'; } // legacy compat
+// ─────────────────────────────────────────────────────────────
 const PROXY_DEFAULT = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions';
 let cfg = {
   fbToken:'', fbEndpoint:'https://fra.cloud.appwrite.io/v1/functions/fb-autopost/executions',
@@ -874,19 +886,12 @@ async function runOCR(item){
 }
 async function runVisionOCR(item){
   const resp=await fetch(getProxy(), { headers: {'X-Appwrite-Project': '6a11b6cd000b59f318eb', 'X-Appwrite-Key': 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b', 'Content-Type': 'application/json'},
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({messages:[{role:'user',content:[
-      {type:'image_url',image_url:{url:item.imgSrc}},
-      {type:'text',text:'Extract all visible text from this image exactly. Return only the extracted text, no explanation.'}
-    ]}],max_tokens:800})
-  });
   const d=await resp.json();
   return d.choices?.[0]?.message?.content||'';
 }
 async function runAIAnalysis(item, text){
   const prompt=`তুমি বাংলাদেশী news card designer AI।\nTEXT:\n${text.substring(0,1500)}\n\nশুধু JSON দাও:\n{"headline":"মূল headline বাংলায় সর্বোচ্চ ৮০ অক্ষর","sub":"sub-headline বা খালি string","category":"breaking|exclusive|update|analysis|alert|positive","source":"সূত্র নাম","location":"স্থান বা খালি string","style":0,"overlay":55}`;
   const resp=await fetch(getProxy(), { headers: {'X-Appwrite-Project': '6a11b6cd000b59f318eb', 'X-Appwrite-Key': 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b', 'Content-Type': 'application/json'},method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:400,temperature:0.3})});
   const d=await resp.json();
   const txt=d.choices?.[0]?.message?.content||'{}';
   const m=txt.match(/\{[\s\S]*\}/);
@@ -897,7 +902,6 @@ async function runAIAnalysis(item, text){
 async function generateCaption(item){
   const prompt=`বাংলায় engaging Facebook caption লিখো:\nHeadline: ${item.headline}\nCategory: ${item.category}\n৩-৫ লাইন, ৪-৬ hashtag শেষে, #জুলাইবিপ্লব #JOAF অবশ্যই থাকবে। শুধু caption text দাও।`;
   const resp=await fetch(getProxy(), { headers: {'X-Appwrite-Project': '6a11b6cd000b59f318eb', 'X-Appwrite-Key': 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b', 'Content-Type': 'application/json'},method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:500,temperature:0.7})});
   const d=await resp.json();
   return d.choices?.[0]?.message?.content||'';
 }
