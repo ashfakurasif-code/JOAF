@@ -601,10 +601,10 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
     <div class="scard">
       <div class="scard-h">🌐 Netlify Endpoints</div>
       <div class="sf"><span class="sfl">FB Autopost Endpoint</span>
-        <input class="sfi" id="fbEndpoint" placeholder="/.netlify/functions/fb-autopost" oninput="saveSetting('fbEndpoint',this.value)">
+        <input class="sfi" id="fbEndpoint" placeholder="https://fra.cloud.appwrite.io/v1/functions/fb-autopost/executions" oninput="saveSetting('fbEndpoint',this.value)">
       </div>
       <div class="sf"><span class="sfl">Image Upload Endpoint</span>
-        <input class="sfi" id="imgEndpoint" placeholder="/.netlify/functions/github-upload" oninput="saveSetting('imgEndpoint',this.value)">
+        <input class="sfi" id="imgEndpoint" placeholder="(not used)" oninput="saveSetting('imgEndpoint',this.value)">
       </div>
       <div class="sf"><span class="sfl">Groq Proxy Endpoint</span>
         <input class="sfi" id="groqEndpoint" value="https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions" oninput="saveSetting('groqEndpoint',this.value)">
@@ -656,7 +656,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 const PROXY_DEFAULT = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions';
 let cfg = {
   fbToken:'', fbEndpoint:'https://fra.cloud.appwrite.io/v1/functions/fb-autopost/executions',
-  imgEndpoint:'/.netlify/functions/github-upload',
+  imgEndpoint:'',
   groqEndpoint: PROXY_DEFAULT,
   footerText:'JOAF • দেশ আগে, দল পরে',
   footerUrl:'www.julyforum.com',
@@ -666,7 +666,19 @@ function getProxy(){ return cfg.groqEndpoint || PROXY_DEFAULT; }
 
 function showT(msg,t='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+t;el.style.display='block';setTimeout(()=>el.style.display='none',3500);}
 function saveSetting(k,v){cfg[k]=v;localStorage.setItem('joafCfg',JSON.stringify(cfg));}
-function loadSettings(){const s=localStorage.getItem('joafCfg');if(s){cfg={...cfg,...JSON.parse(s)};applySettings();}}
+function loadSettings(){
+  const s=localStorage.getItem('joafCfg');
+  if(s){cfg={...cfg,...JSON.parse(s)};}
+  const AW='https://fra.cloud.appwrite.io/v1';
+  if(!cfg.groqEndpoint||cfg.groqEndpoint.includes('netlify')||cfg.groqEndpoint.includes('localhost'))
+    cfg.groqEndpoint=AW+'/functions/groq-proxy/executions';
+  if(!cfg.fbEndpoint||cfg.fbEndpoint.includes('netlify')||cfg.fbEndpoint.includes('localhost'))
+    cfg.fbEndpoint=AW+'/functions/fb-autopost/executions';
+  if(cfg.imgEndpoint&&(cfg.imgEndpoint.includes('netlify')||cfg.imgEndpoint.includes('github-upload')))
+    cfg.imgEndpoint='';
+  localStorage.setItem('joafCfg',JSON.stringify(cfg));
+  applySettings();
+}
 function applySettings(){
   ['fbToken','fbEndpoint','imgEndpoint','groqEndpoint','footerText','footerUrl'].forEach(k=>{const el=document.getElementById(k);if(el)el.value=cfg[k]||'';});
   if(cfg.pages?.length) renderPageList();
