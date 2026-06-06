@@ -1271,6 +1271,9 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
           <button class="studio-tab" onclick="switchStudioTab('reel',this)">🎬 Reel Engine</button>
           <button class="studio-tab" onclick="switchStudioTab('learning',this)">📚 Learning Engine</button>
           <button class="studio-tab" onclick="switchStudioTab('viral-os',this)" style="color:#22c55e;">📡 Viral OS</button>
+          <button class="studio-tab" onclick="switchStudioTab('manual-news',this)" style="color:#f59e0b;">🗞️ News Card</button>
+          <button class="studio-tab" onclick="switchStudioTab('manual-smart',this)" style="color:#f59e0b;">📘 Smart Post</button>
+          <button class="studio-tab" onclick="switchStudioTab('manual-reel',this)" style="color:#f59e0b;">🎬 Reel Studio</button>
         </div>
         <div style="margin-left:auto;font-size:10px;color:var(--text3);padding:0 8px;white-space:nowrap;">JOAF Studio v2</div>
       </div>
@@ -1524,6 +1527,24 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
           ></iframe>
         </div>
 
+        <!-- ── MANUAL NEWS CARD ── -->
+        <div class="studio-panel" id="sp-manual-news" style="padding:0;overflow:hidden;">
+          <iframe src="/tools/manual/news-card-generator.html"
+            style="width:100%;height:100%;border:none;background:#0b0c10;"
+            id="manual-news-frame" loading="lazy"></iframe>
+        </div>
+        <!-- ── MANUAL SMART POST ── -->
+        <div class="studio-panel" id="sp-manual-smart" style="padding:0;overflow:hidden;">
+          <iframe src="/tools/manual/fb-smart-studio.html"
+            style="width:100%;height:100%;border:none;background:#0b0c10;"
+            id="manual-smart-frame" loading="lazy"></iframe>
+        </div>
+        <!-- ── MANUAL REEL STUDIO ── -->
+        <div class="studio-panel" id="sp-manual-reel" style="padding:0;overflow:hidden;">
+          <iframe src="/tools/manual/fb-reel-studio.html"
+            style="width:100%;height:100%;border:none;background:#0b0c10;"
+            id="manual-reel-frame" loading="lazy"></iframe>
+        </div>
       </div><!-- /studio-panels -->
     </div><!-- /page-joaf-studio -->
 
