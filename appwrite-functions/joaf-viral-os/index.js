@@ -1,30 +1,6 @@
 // Appwrite Function: joaf-viral-os
 // Runtime: node-18.0
 // CRON: "*/5 * * * *"   (every 5 minutes, 24/7 — set in Appwrite Console)
-import { createRequire } from 'module';
-import { readFileSync, existsSync, writeFileSync } from 'fs';
-const _require = createRequire(import.meta.url);
-
-let _resvgMod = null;
-function getResvgMod() {
-  if (_resvgMod) return _resvgMod;
-  try { _resvgMod = _require('@resvg/resvg-js'); return _resvgMod; } catch(e) { return null; }
-}
-const FONT_PATH_BOLD = '/tmp/joaf_noto_bold.ttf';
-const FONT_PATH_REG  = '/tmp/joaf_noto_reg.ttf';
-let _fontReady = false;
-async function ensureFont() {
-  if (_fontReady) return true;
-  try {
-    const boldSrc = new URL('./fonts/NotoSansBengali-Bold.ttf', import.meta.url).pathname;
-    const regSrc  = new URL('./fonts/NotoSansBengali-Regular.ttf', import.meta.url).pathname;
-    if (existsSync(boldSrc)) { if (!existsSync(FONT_PATH_BOLD)) writeFileSync(FONT_PATH_BOLD, readFileSync(boldSrc)); }
-    if (existsSync(regSrc))  { if (!existsSync(FONT_PATH_REG))  writeFileSync(FONT_PATH_REG,  readFileSync(regSrc)); }
-    if (existsSync(FONT_PATH_BOLD)) { _fontReady = true; return true; }
-  } catch(e) {}
-  return false;
-}
-
 // Autonomous Bengali-first publishing OS for 17 JOAF FB pages
 //
 // This function is ADDITIVE — it does NOT replace:
@@ -460,9 +436,9 @@ function makeVariants(baseCaption, format) {
 // Uses Google Fonts CSS import (rendered by Cloudinary's SVG renderer)
 // Falls back to Arial for ASCII content
 // ★ Exact JOAF website fonts — BenSen for titles, Noto for body
-const BENGALI_FONT_TITLE = "'Noto Sans Bengali'";
-const BENGALI_FONT_BODY  = "'Noto Sans Bengali'";
-const FONT_IMPORT = ''; // resvg uses fontFiles directly — no @import needed
+const BENGALI_FONT_TITLE = "'BenSen Handwriting', 'Noto Sans Bengali', Arial, sans-serif";
+const BENGALI_FONT_BODY  = "'Noto Sans Bengali', 'Hind Siliguri', Arial, sans-serif";
+const FONT_IMPORT = "@import url('https://fonts.maateen.me/bensen-handwriting/font.css');\n@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&amp;family=Hind+Siliguri:wght@400;600;700&amp;display=swap');";
 
 function wrapText(text, maxCharsPerLine) {
   // Smart wrap for Bengali — break at spaces, max chars per line
@@ -568,70 +544,48 @@ function buildSVGCard(title, body, format) {
 // ── Upload SVG to Cloudinary → JPG ────────────────────────────────────────────
 async function uploadToCloudinary(svgContent, publicId) {
   const safeId = (publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 60)) + '_' + Date.now();
-
-  // Step 1: SVG → PNG via resvg (proper Bengali font rendering)
-  let imageBuffer = null;
-  const resvgMod = getResvgMod();
-  const fontOk = resvgMod ? await ensureFont() : false;
-  if (resvgMod && fontOk) {
-    try {
-      const fontFiles = [FONT_PATH_BOLD, FONT_PATH_REG].filter(f => existsSync(f));
-      const inst = new resvgMod.Resvg(svgContent, {
-        font: { fontFiles, loadSystemFonts: false, defaultFontFamily: 'Noto Sans Bengali' },
-        fitTo: { mode: 'width', value: 1080 },
-        background: '#0a0a0a',
-        logLevel: 'error',
-      });
-      imageBuffer = Buffer.from(inst.render().asPng());
-    } catch(e) { imageBuffer = null; }
-  }
-
-  // Step 2: Upload PNG to Cloudinary via multipart (binary, no encoding issues)
-  if (imageBuffer) {
-    const boundary = 'JOAF' + Date.now();
-    const nl = '\r\n';
-    const field = (n, v) => `--${boundary}${nl}Content-Disposition: form-data; name="${n}"${nl}${nl}${v}${nl}`;
-    const filePart = `--${boundary}${nl}Content-Disposition: form-data; name="file"; filename="${safeId}.png"${nl}Content-Type: image/png${nl}${nl}`;
-    const body = Buffer.concat([
-      Buffer.from(filePart), imageBuffer,
-      Buffer.from(`${nl}${field('upload_preset', CDN_PRESET)}${field('public_id', safeId)}--${boundary}--${nl}`),
-    ]);
-    const cdnRes = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
-      method: 'POST',
-      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
-      body, signal: AbortSignal.timeout(40000),
-    });
-    const cdnData = await cdnRes.json();
-    if (!cdnData.error) return cdnData.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
-  }
-
-  // Fallback: upload SVG to Appwrite Storage → Cloudinary URL fetch
   const svgBytes = Buffer.from(svgContent, 'utf8');
+
+  // Step 1: Upload SVG to Appwrite Storage (FormData+Blob works here — Appwrite accepts it)
   const storageForm = new FormData();
   storageForm.append('fileId', 'unique()');
   storageForm.append('file', new Blob([svgBytes], { type: 'image/svg+xml' }), safeId + '.svg');
   const storageRes = await fetch(`${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files`, {
     method: 'POST',
     headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
-    body: storageForm, signal: AbortSignal.timeout(20000),
+    body: storageForm,
+    signal: AbortSignal.timeout(20000),
   });
-  if (!storageRes.ok) throw new Error(`Storage upload failed: ${storageRes.status}`);
-  const { $id: tempFileId } = await storageRes.json();
+  if (!storageRes.ok) {
+    const t = await storageRes.text().catch(() => '');
+    throw new Error(`Appwrite Storage upload failed: ${storageRes.status} ${t.slice(0,100)}`);
+  }
+  const storageData = await storageRes.json();
+  const tempFileId = storageData.$id;
+  // Public URL that Cloudinary can fetch
   const svgPublicUrl = `${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${tempFileId}/view?project=${AW_PROJECT}`;
+
+  // Step 2: Tell Cloudinary to fetch from that URL — no binary upload, no encoding issues
   const cdnParams = new URLSearchParams();
   cdnParams.set('file', svgPublicUrl);
   cdnParams.set('upload_preset', CDN_PRESET);
   cdnParams.set('public_id', safeId);
-  const cdnRes2 = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
-    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: cdnParams.toString(), signal: AbortSignal.timeout(40000),
+  const cdnRes = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: cdnParams.toString(),
+    signal: AbortSignal.timeout(40000),
   });
-  const cdnData2 = await cdnRes2.json();
+  const cdnData = await cdnRes.json();
+
+  // Step 3: Delete temp file from Appwrite Storage (best-effort)
   fetch(`${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${tempFileId}`, {
-    method: 'DELETE', headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
+    method: 'DELETE',
+    headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
   }).catch(() => {});
-  if (cdnData2.error) throw new Error(`Cloudinary: ${cdnData2.error.message}`);
-  return cdnData2.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
+
+  if (cdnData.error) throw new Error(`Cloudinary: ${cdnData.error.message}`);
+  return cdnData.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
 }
 // ── Decide if this format needs an image ─────────────────────────────────────
 const IMAGE_FORMATS = new Set([
