@@ -1,524 +1,1318 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>JOAF Viral OS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOAF Viral OS — Dashboard</title>
 <style>
-:root{
-  --bg:#060810;--panel:#0d1117;--card:#111827;--line:#1f2937;
-  --text:#f0f4ff;--muted:#6b7280;--accent:#7c3aed;--accent2:#a78bfa;
-  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--cyan:#06b6d4;
-  --grad:linear-gradient(135deg,#7c3aed,#3b82f6);
+:root {
+  --bg: #070b14;
+  --bg2: #0d1220;
+  --bg3: #121826;
+  --panel: #141a2e;
+  --panel2: #1a2340;
+  --line: #1e2d4a;
+  --line2: #263554;
+  --text: #e4ecff;
+  --text2: #8ba3cc;
+  --text3: #4d6a9a;
+  --accent: #6d28d9;
+  --accent2: #7c3aed;
+  --accentl: #a78bfa;
+  --good: #10b981;
+  --goodl: #34d399;
+  --bad: #ef4444;
+  --badl: #f87171;
+  --warn: #f59e0b;
+  --warnl: #fbbf24;
+  --info: #3b82f6;
+  --infl: #60a5fa;
+  --news: #06b6d4;
+  --newsl: #67e8f9;
+  --pink: #ec4899;
+  --pinkl: #f9a8d4;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column}
-/* HEADER */
-.hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(13,17,23,0.95);border-bottom:1px solid var(--line);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;flex-shrink:0}
-.hdr-logo{font-size:18px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hdr-sub{font-size:11px;color:var(--muted)}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.hdr-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-/* MAIN SCROLL */
-.main{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-/* METRICS */
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-@media(max-width:600px){.metrics{grid-template-columns:repeat(2,1fr)}}
-.metric{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;position:relative;overflow:hidden}
-.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad)}
-.metric-icon{font-size:22px;margin-bottom:4px}
-.metric-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-.metric-value{font-size:26px;font-weight:800;line-height:1}
-.metric-sub{font-size:10px;color:var(--muted);margin-top:2px}
-/* GRID 2 */
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media(max-width:600px){.grid2{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
-.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.card-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
-/* POSTS LIST */
-.post-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px}
-.post-row:last-child{border:none}
-.post-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.post-time{color:var(--muted);font-size:10px;white-space:nowrap}
-.post-fmt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.post-badge{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--green);white-space:nowrap}
-/* FORMAT BARS */
-.fmt-row{display:flex;align-items:center;gap:8px;padding:4px 0}
-.fmt-name{width:120px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
-.fmt-bar-wrap{flex:1;background:var(--line);border-radius:3px;height:6px;overflow:hidden}
-.fmt-bar{height:100%;border-radius:3px;background:var(--grad);transition:width .5s}
-.fmt-count{width:24px;text-align:right;font-size:11px;color:var(--muted);flex-shrink:0}
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
-.btn-primary{background:var(--grad);color:#fff}
-.btn-primary:hover{opacity:.85;transform:translateY(-1px)}
-.btn-ghost{background:var(--panel);color:var(--text2);border:1px solid var(--line)}
-.btn-ghost:hover{background:var(--line)}
-.btn-green{background:var(--green);color:#000}
-.btn-red{background:var(--red);color:#fff}
-.btn-amber{background:var(--amber);color:#000}
-.btn-sm{padding:4px 8px;font-size:11px;border-radius:6px}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-/* CONSOLE */
-.console{background:#000;border-radius:10px;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;min-height:80px;max-height:160px;overflow-y:auto;border:1px solid var(--line)}
-.console-line{padding:1px 0;border-bottom:1px solid #111}
-.console-line:last-child{border:none}
-.c-ok{color:var(--green)}
-.c-err{color:var(--red)}
-.c-info{color:var(--cyan)}
-.c-warn{color:var(--amber)}
-/* TABS */
-.tabs{display:flex;gap:4px;background:var(--panel);border-radius:10px;padding:3px;border:1px solid var(--line);flex-shrink:0}
-.tab{padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:inherit;transition:all .15s}
-.tab.active{background:var(--accent);color:#fff}
-/* ACTION PANEL */
-.action-panel{display:none}
-.action-panel.active{display:block}
-/* SCHEDULE VISUAL */
-.schedule-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
-.schedule-row:last-child{border:none}
-.sch-time{width:60px;font-size:11px;color:var(--accent2);font-weight:700;flex-shrink:0}
-.sch-type{flex:1;font-size:11px}
-.sch-status{font-size:10px;padding:2px 6px;border-radius:4px}
-.sch-ok{background:rgba(16,185,129,.15);color:var(--green)}
-.sch-pending{background:rgba(245,158,11,.15);color:var(--amber)}
-/* TOGGLE */
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
-.toggle-row:last-child{border:none}
-.toggle-label{font-size:12px}
-.toggle{position:relative;width:34px;height:19px;flex-shrink:0}
-.toggle input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:var(--line);border-radius:19px;cursor:pointer;transition:.3s}
-.slider:before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
-input:checked+.slider{background:var(--accent)}
-input:checked+.slider:before{transform:translateX(15px)}
-/* SCROLLBAR */
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  overflow-x: hidden;
+}
+
+/* ── Layout ── */
+.shell { display: flex; height: 100vh; }
+.sidebar {
+  width: 56px;
+  background: var(--bg2);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.main { flex: 1; overflow-y: auto; padding: 16px; }
+
+/* ── Sidebar ── */
+.nav-ico {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text3);
+  border: 1px solid transparent;
+  transition: all .15s;
+}
+.nav-ico:hover { background: var(--panel); color: var(--text2); }
+.nav-ico.active { background: rgba(109,40,217,.2); color: var(--accentl); border-color: rgba(109,40,217,.3); }
+.nav-sep { width: 28px; height: 1px; background: var(--line); margin: 4px 0; }
+
+/* ── Header ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.topbar-title { font-size: 15px; font-weight: 700; }
+.badge-live {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 99px;
+  border: 1px solid var(--good);
+  color: var(--goodl);
+  background: rgba(16,185,129,.08);
+  animation: pulse 2s ease-in-out infinite;
+}
+.badge-off {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 99px;
+  border: 1px solid var(--bad);
+  color: var(--badl);
+  background: rgba(239,68,68,.08);
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.refresh-btn {
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 11px;
+  transition: all .15s;
+}
+.refresh-btn:hover { border-color: var(--accentl); color: var(--text); }
+
+/* ── Metric grid ── */
+.metrics { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 14px; }
+@media (max-width: 900px) { .metrics { grid-template-columns: repeat(3, 1fr); } }
+.metric-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.metric-card:hover { border-color: var(--line2); }
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--stripe, var(--accent));
+  border-radius: 99px 99px 0 0;
+}
+.metric-lbl { font-size: 10px; color: var(--text3); margin-bottom: 4px; letter-spacing: .04em; text-transform: uppercase; }
+.metric-val { font-size: 24px; font-weight: 800; line-height: 1; }
+.metric-sub { font-size: 10px; color: var(--text3); margin-top: 3px; }
+.c-good { color: var(--goodl); }
+.c-bad  { color: var(--badl); }
+.c-warn { color: var(--warnl); }
+.c-info { color: var(--infl); }
+.c-news { color: var(--newsl); }
+.c-pink { color: var(--pinkl); }
+.c-acc  { color: var(--accentl); }
+
+/* ── Section grid ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+@media (max-width: 900px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+.full { grid-column: 1 / -1; }
+
+/* ── Cards ── */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+.card-title {
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-title-ico { font-size: 13px; }
+
+/* ── Action buttons ── */
+.actions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  display: flex; align-items: center; gap: 5px;
+  transition: all .15s;
+  font-weight: 500;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { border-color: var(--accent2); color: var(--accentl); background: rgba(109,40,217,.12); }
+.btn-primary:hover { background: rgba(109,40,217,.22); border-color: var(--accentl); }
+.btn-good   { border-color: var(--good); color: var(--goodl); background: rgba(16,185,129,.08); }
+.btn-good:hover { background: rgba(16,185,129,.15); }
+.btn-info   { border-color: var(--info); color: var(--infl); background: rgba(59,130,246,.08); }
+.btn-info:hover { background: rgba(59,130,246,.15); }
+.btn-news   { border-color: var(--news); color: var(--newsl); background: rgba(6,182,212,.08); }
+.btn-news:hover { background: rgba(6,182,212,.15); }
+.btn-warn   { border-color: var(--warn); color: var(--warnl); background: rgba(245,158,11,.08); }
+.btn-warn:hover { background: rgba(245,158,11,.15); }
+.btn-bad    { border-color: var(--bad); color: var(--badl); background: rgba(239,68,68,.08); }
+.btn-bad:hover { background: rgba(239,68,68,.15); }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+/* ── Log box ── */
+.logbox {
+  background: #040810;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 10.5px;
+  line-height: 1.8;
+  color: #6a8fba;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+.logbox .log-ok   { color: var(--goodl); }
+.logbox .log-err  { color: var(--badl); }
+.logbox .log-warn { color: var(--warnl); }
+.logbox .log-info { color: var(--infl); }
+
+/* ── Table / rows ── */
+.row-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11.5px;
+}
+.row-item:last-child { border-bottom: none; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-ok   { background: var(--good); box-shadow: 0 0 6px var(--goodl); }
+.dot-bad  { background: var(--bad); }
+.dot-warn { background: var(--warn); }
+.dot-idle { background: var(--line2); }
+.dot-info { background: var(--info); }
+.muted { color: var(--text3); }
+.tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  border: 1px solid;
+  font-weight: 600;
+  letter-spacing: .03em;
+}
+.tag-ok   { border-color: var(--good); color: var(--goodl); background: rgba(16,185,129,.1); }
+.tag-bad  { border-color: var(--bad);  color: var(--badl);  background: rgba(239,68,68,.1); }
+.tag-warn { border-color: var(--warn); color: var(--warnl); background: rgba(245,158,11,.1); }
+.tag-info { border-color: var(--info); color: var(--infl);  background: rgba(59,130,246,.1); }
+.tag-ai   { border-color: var(--accentl); color: var(--accentl); background: rgba(124,58,237,.1); }
+
+/* ── Progress bars ── */
+.prog-wrap { margin-bottom: 6px; }
+.prog-lbl {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--text3); margin-bottom: 3px;
+}
+.prog-track {
+  height: 5px;
+  background: var(--line);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--good), var(--goodl));
+  transition: width .4s ease;
+}
+.prog-fill-acc { background: linear-gradient(90deg, var(--accent), var(--accentl)); }
+.prog-fill-info { background: linear-gradient(90deg, var(--info), var(--infl)); }
+.prog-fill-warn { background: linear-gradient(90deg, var(--warn), var(--warnl)); }
+
+/* ── Pipeline flow ── */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.pipe-step {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: var(--panel2);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text2);
+  transition: all .2s;
+}
+.pipe-step.active { border-color: var(--accent); color: var(--accentl); background: rgba(109,40,217,.15); }
+.pipe-step.done   { border-color: var(--good); color: var(--goodl); background: rgba(16,185,129,.1); }
+.pipe-step.error  { border-color: var(--bad); color: var(--badl); background: rgba(239,68,68,.1); }
+.pipe-arrow { color: var(--text3); font-size: 12px; }
+
+/* ── Source grid ── */
+.source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 5px;
+}
+.source-item {
+  background: var(--bg3);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: 10px;
+  display: flex; align-items: center; gap: 5px;
+  transition: border-color .15s;
+}
+.source-item:hover { border-color: var(--line2); }
+.source-item .dot { width: 5px; height: 5px; }
+
+/* ── Format pills ── */
+.format-grid {
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.fmt-pill {
+  font-size: 9.5px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid var(--line2);
+  color: var(--text3);
+  background: var(--bg3);
+  cursor: default;
+  transition: all .15s;
+}
+.fmt-pill:hover { border-color: var(--accentl); color: var(--accentl); }
+.fmt-pill.active { border-color: var(--goodl); color: var(--goodl); background: rgba(52,211,153,.08); }
+
+/* ── AI provider status ── */
+.provider-list { display: flex; flex-direction: column; gap: 5px; }
+.provider-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--line);
+}
+.provider-name { flex: 1; font-size: 11px; font-weight: 600; }
+.provider-model { font-size: 9px; color: var(--text3); margin-top: 1px; }
+.provider-priority { font-size: 9px; color: var(--text3); }
+
+/* ── Timestamp ── */
+.ts { font-size: 10px; color: var(--text3); text-align: right; margin-top: 10px; }
+
+/* ── Spinner ── */
+.spin {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid var(--line2);
+  border-top-color: var(--accentl);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Post preview ── */
+.post-preview {
+  background: var(--bg3);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.post-preview:hover { border-color: var(--line2); }
+.post-preview-head {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 5px;
+  font-size: 10px; color: var(--text3);
+}
+.post-img-thumb {
+  width: 40px; height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.post-caption {
+  font-size: 10.5px;
+  color: var(--text2);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  max-height: 50px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── Section tabs ── */
+.tabs { display: flex; gap: 2px; margin-bottom: 12px; }
+.tab {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  transition: all .15s;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { border-color: var(--line2); color: var(--text); background: var(--panel2); }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(--line); margin: 10px 0; }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 20px; color: var(--text3); font-size: 11px; }
 </style>
 </head>
 <body>
+<div class="shell">
 
-<div class="hdr">
-  <div class="live-dot" id="liveDot"></div>
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="nav-ico active" onclick="showSection('dashboard')" title="Dashboard">📊</div>
+  <div class="nav-ico" onclick="showSection('pipeline')" title="Pipeline">⚙️</div>
+  <div class="nav-ico" onclick="showSection('queue')" title="Queue">📦</div>
+  <div class="nav-ico" onclick="showSection('sources')" title="Sources">📡</div>
+  <div class="nav-ico" onclick="showSection('formats')" title="Formats">🎨</div>
+  <div class="nav-ico" onclick="showSection('analytics')" title="Analytics">📈</div>
+  <div class="nav-sep"></div>
+  <div class="nav-ico" onclick="showSection('logs')" title="Logs">🗒️</div>
+</div>
+
+<!-- Main -->
+<div class="main" id="main-content">
+
+<!-- ─────── DASHBOARD ─────── -->
+<div id="sec-dashboard">
+
+<div class="topbar">
   <div>
-    <div class="hdr-logo">⚡ JOAF Viral OS</div>
-    <div class="hdr-sub" id="lastUpdated">loading…</div>
+    <div class="topbar-title">⚡ JOAF Viral OS</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:1px">Autonomous Bengali Publishing System</div>
   </div>
-  <div class="hdr-actions">
-    <button class="btn btn-primary btn-sm" id="btnCycle">▶ Cycle</button>
-    <button class="btn btn-green btn-sm" id="btnPublish">📤 Publish</button>
-    <button class="btn btn-ghost btn-sm" id="btnFill">📥 Fill</button>
-    <button class="btn btn-ghost btn-sm" id="btnCollect">📡 Collect</button>
-    <button class="btn btn-ghost btn-sm" id="btnRefresh">↻</button>
+  <span id="live-badge" class="badge-live">● CRON Active</span>
+  <div class="topbar-right">
+    <span id="next-cycle" style="font-size:10px;color:var(--text3)"></span>
+    <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
   </div>
 </div>
 
-<div class="main">
-  <!-- METRICS -->
-  <div class="metrics">
-    <div class="metric">
-      <div class="metric-icon">⏳</div>
-      <div class="metric-label">Queue Pending</div>
-      <div class="metric-value" id="mQueue">—</div>
-      <div class="metric-sub" id="mQueueSub">min 16 / target 24</div>
+<!-- Metrics row -->
+<div class="metrics" id="metrics-row">
+  <div class="metric-card" style="--stripe:var(--goodl)">
+    <div class="metric-lbl">Queue Pending</div>
+    <div class="metric-val c-good" id="m-q">—</div>
+    <div class="metric-sub">min 48 · target 96</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--accentl)">
+    <div class="metric-lbl">Published Today</div>
+    <div class="metric-val c-acc" id="m-pub">—</div>
+    <div class="metric-sub" id="m-pub-sub">—</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--infl)">
+    <div class="metric-lbl">Pool Items</div>
+    <div class="metric-val c-info" id="m-pool">—</div>
+    <div class="metric-sub">raw content sources</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--newsl)">
+    <div class="metric-lbl">With Image</div>
+    <div class="metric-val c-news" id="m-img">—</div>
+    <div class="metric-sub">in queue</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--pinkl)">
+    <div class="metric-lbl">AI Success Rate</div>
+    <div class="metric-val c-pink" id="m-ai">—</div>
+    <div class="metric-sub">last 25 posts</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--warnl)">
+    <div class="metric-lbl">Total Published</div>
+    <div class="metric-val c-warn" id="m-total">—</div>
+    <div class="metric-sub">all time</div>
+  </div>
+</div>
+
+<!-- Queue progress -->
+<div class="card" style="margin-bottom:10px">
+  <div class="card-title"><span class="card-title-ico">📊</span> Queue Health</div>
+  <div class="prog-wrap">
+    <div class="prog-lbl"><span>Queue Buffer</span><span id="q-pct-lbl">0 / 96</span></div>
+    <div class="prog-track"><div class="prog-fill" id="q-prog" style="width:0%"></div></div>
+  </div>
+  <div class="prog-wrap" style="margin-top:6px">
+    <div class="prog-lbl"><span>With Images</span><span id="img-pct-lbl">—</span></div>
+    <div class="prog-track"><div class="prog-fill prog-fill-acc" id="img-prog" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="card" style="margin-bottom:10px">
+  <div class="card-title"><span class="card-title-ico">🎮</span> Quick Actions</div>
+  <div class="actions" style="margin-bottom:0">
+    <button class="btn btn-primary" onclick="runAction('cycle')" id="btn-cycle">▶ Full Cycle</button>
+    <button class="btn btn-good"    onclick="runAction('publish')" id="btn-publish">📤 Publish 1</button>
+    <button class="btn btn-info"    onclick="runAction('fill')" id="btn-fill">📦 Fill Queue</button>
+    <button class="btn btn-news"    onclick="runAction('collect')" id="btn-collect">📡 Collect RSS</button>
+    <button class="btn btn-warn"    onclick="runAction('status')" id="btn-status">ℹ Status</button>
+    <button class="btn"             onclick="resetDB()" id="btn-reset" style="margin-left:auto">🗑 Reset All</button>
+  </div>
+</div>
+
+<div class="grid2">
+  <!-- Recent posts -->
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">📰</span> Recent Published Posts</div>
+    <div id="recent-posts"><div class="empty"><span class="spin"></span></div></div>
+  </div>
+
+  <!-- Queue by format -->
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">🎭</span> Queue by Format</div>
+    <div id="q-formats"><div class="empty"><span class="spin"></span></div></div>
+  </div>
+
+  <!-- Action output -->
+  <div class="card full" id="action-card" style="display:none">
+    <div class="card-title">
+      <span class="card-title-ico" id="action-ico">⚙️</span>
+      <span id="action-title">Action Output</span>
+      <span id="action-spin" class="spin" style="display:none"></span>
+      <span id="action-status" style="margin-left:auto;font-size:10px"></span>
     </div>
-    <div class="metric">
-      <div class="metric-icon">✅</div>
-      <div class="metric-label">Published Today</div>
-      <div class="metric-value ok" id="mPublished">—</div>
-      <div class="metric-sub">17 pages each</div>
-    </div>
-    <div class="metric">
-      <div class="metric-icon">🖼️</div>
-      <div class="metric-label">With Image</div>
-      <div class="metric-value" id="mImages">—</div>
-      <div class="metric-sub" id="mPool">pool: — items</div>
-    </div>
-    <div class="metric">
-      <div class="metric-icon">🎬</div>
-      <div class="metric-label">Reels</div>
-      <div class="metric-value" id="mReels">—</div>
-      <div class="metric-sub">carousel + video</div>
+    <div class="logbox" id="action-log"></div>
+  </div>
+</div>
+
+</div><!-- /sec-dashboard -->
+
+<!-- ─────── PIPELINE ─────── -->
+<div id="sec-pipeline" style="display:none">
+<div class="topbar">
+  <div class="topbar-title">⚙️ Pipeline Architecture</div>
+  <button class="refresh-btn" onclick="refreshAll()">↻</button>
+</div>
+
+<!-- Pipeline flow -->
+<div class="card" style="margin-bottom:10px">
+  <div class="card-title"><span class="card-title-ico">🔄</span> Publishing Pipeline</div>
+  <div class="pipeline">
+    <div class="pipe-step" id="pipe-collect"><span>📡</span> Collect RSS</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="pipe-dedup"><span>🔍</span> Dedup Filter</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="pipe-pool"><span>📦</span> Content Pool</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="pipe-ai"><span>🤖</span> AI Generate</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="pipe-img"><span>🖼</span> Image Card</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="pipe-queue"><span>📋</span> Queue Buffer</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="pipe-pub"><span>📤</span> FB 17 Pages</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step" id="pipe-clean"><span>🗑</span> Auto Cleanup</div>
+  </div>
+</div>
+
+<!-- AI providers -->
+<div class="grid2" style="margin-bottom:10px">
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">🤖</span> AI Provider Chain</div>
+    <div class="provider-list">
+      <div class="provider-item">
+        <div class="dot dot-ok"></div>
+        <div>
+          <div class="provider-name">OpenRouter</div>
+          <div class="provider-model">Llama 3.3 70B Instruct</div>
+        </div>
+        <div class="provider-priority">Priority 1</div>
+        <span class="tag tag-ok">PRIMARY</span>
+      </div>
+      <div class="provider-item">
+        <div class="dot dot-warn"></div>
+        <div>
+          <div class="provider-name">Gemini</div>
+          <div class="provider-model">gemini-2.0-flash</div>
+        </div>
+        <div class="provider-priority">Priority 2</div>
+        <span class="tag tag-warn">FALLBACK</span>
+      </div>
+      <div class="provider-item">
+        <div class="dot dot-ok"></div>
+        <div>
+          <div class="provider-name">Groq</div>
+          <div class="provider-model">llama-3.3-70b-versatile</div>
+        </div>
+        <div class="provider-priority">Priority 3</div>
+        <span class="tag tag-warn">FALLBACK</span>
+      </div>
+      <div class="provider-item">
+        <div class="dot dot-info"></div>
+        <div>
+          <div class="provider-name">Template Engine</div>
+          <div class="provider-model">30 format templates</div>
+        </div>
+        <div class="provider-priority">Priority 4</div>
+        <span class="tag tag-info">NO AI</span>
+      </div>
+      <div class="provider-item">
+        <div class="dot dot-info"></div>
+        <div>
+          <div class="provider-name">Evergreen Emergency</div>
+          <div class="provider-model">18 knowledge items</div>
+        </div>
+        <div class="provider-priority">Priority 5</div>
+        <span class="tag tag-info">ZERO-AI</span>
+      </div>
     </div>
   </div>
 
-  <!-- TABS -->
-  <div style="display:flex;gap:8px;align-items:center">
-    <div class="tabs">
-      <button class="tab active" data-tab="overview">Overview</button>
-      <button class="tab" data-tab="actions">Actions</button>
-      <button class="tab" data-tab="schedule">Schedule</button>
-      <button class="tab" data-tab="settings">Settings</button>
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">📈</span> Pipeline Stats</div>
+    <div id="pipe-stats"><div class="empty"><span class="spin"></span></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="card-title-ico">🎯</span> 17 Pages Distribution Strategy</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+    <div style="background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:10px">
+      <div style="color:var(--accentl);font-weight:700;margin-bottom:4px">Variant A — Pages 1–6</div>
+      <div style="color:var(--text3)">Urgent hook (🔴⚡🚨❗🔥📢)</div>
+      <div style="color:var(--text3);margin-top:2px">Direct, breaking-news style</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:10px">
+      <div style="color:var(--infl);font-weight:700;margin-bottom:4px">Variant B — Pages 7–12</div>
+      <div style="color:var(--text3)">Question-first reorder (💡📌✅📊🎯📰)</div>
+      <div style="color:var(--text3);margin-top:2px">Curiosity gap, engagement-first</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:10px">
+      <div style="color:var(--goodl);font-weight:700;margin-bottom:4px">Variant C — Pages 13–17</div>
+      <div style="color:var(--text3)">Civic/emotional hook (🇧🇩❤️⚖️🗣️🌟)</div>
+      <div style="color:var(--text3);margin-top:2px">Community, national identity</div>
     </div>
   </div>
+  <div style="font-size:10px;color:var(--text3)">Each page receives a structurally different post — prevents Facebook clone detection and maximizes organic reach signals.</div>
+</div>
+</div><!-- /sec-pipeline -->
 
-  <!-- OVERVIEW TAB -->
-  <div class="action-panel active" id="tab-overview">
-    <div class="grid2">
-      <div class="card">
-        <div class="card-hdr">
-          <div class="card-title">🕐 Recent Posts</div>
-          <button class="btn btn-ghost btn-sm" id="btnRefreshPosts">↻</button>
-        </div>
-        <div id="postsList"><div style="color:var(--muted);text-align:center;padding:16px">Loading…</div></div>
+<!-- ─────── QUEUE ─────── -->
+<div id="sec-queue" style="display:none">
+<div class="topbar">
+  <div class="topbar-title">📦 Queue Manager</div>
+  <button class="refresh-btn" onclick="loadQueue()">↻ Refresh</button>
+</div>
+
+<div class="grid3" style="margin-bottom:10px">
+  <div class="metric-card" style="--stripe:var(--goodl)">
+    <div class="metric-lbl">Pending</div>
+    <div class="metric-val c-good" id="q-pending">—</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--infl)">
+    <div class="metric-lbl">With Image</div>
+    <div class="metric-val c-info" id="q-withimg">—</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--accentl)">
+    <div class="metric-lbl">AI Generated</div>
+    <div class="metric-val c-acc" id="q-ai">—</div>
+  </div>
+</div>
+
+<div class="actions" style="margin-bottom:10px">
+  <button class="btn btn-info"  onclick="runAction('fill')">📦 Fill Queue</button>
+  <button class="btn btn-good"  onclick="runAction('publish')">📤 Publish Next</button>
+  <button class="btn btn-primary" onclick="runAction('cycle')">▶ Full Cycle</button>
+  <button class="btn btn-bad"   onclick="clearQueue()">🗑 Clear Queue</button>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="card-title-ico">📋</span> Queue Items <span id="q-count-lbl" style="margin-left:auto;color:var(--text3)"></span></div>
+  <div id="queue-items"><div class="empty"><span class="spin"></span></div></div>
+</div>
+</div><!-- /sec-queue -->
+
+<!-- ─────── SOURCES ─────── -->
+<div id="sec-sources" style="display:none">
+<div class="topbar">
+  <div class="topbar-title">📡 Content Sources</div>
+  <button class="refresh-btn" onclick="runAction('collect')">▶ Collect Now</button>
+</div>
+
+<div class="grid2" style="margin-bottom:10px">
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">📰</span> RSS News Sources (10)</div>
+    <div class="source-grid">
+      <div class="source-item"><div class="dot dot-ok"></div>প্রথম আলো</div>
+      <div class="source-item"><div class="dot dot-ok"></div>BBC বাংলা</div>
+      <div class="source-item"><div class="dot dot-ok"></div>DW বাংলা</div>
+      <div class="source-item"><div class="dot dot-ok"></div>যুগান্তর</div>
+      <div class="source-item"><div class="dot dot-ok"></div>ইত্তেফাক</div>
+      <div class="source-item"><div class="dot dot-ok"></div>সমকাল</div>
+      <div class="source-item"><div class="dot dot-ok"></div>কালের কণ্ঠ</div>
+      <div class="source-item"><div class="dot dot-ok"></div>Bangla Tribune</div>
+      <div class="source-item"><div class="dot dot-ok"></div>Dhaka Tribune</div>
+      <div class="source-item"><div class="dot dot-ok"></div>The Daily Star</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">🌐</span> Knowledge Sources</div>
+    <div class="source-grid">
+      <div class="source-item"><div class="dot dot-ok"></div>Wikipedia API</div>
+      <div class="source-item"><div class="dot dot-ok"></div>On This Day</div>
+      <div class="source-item"><div class="dot dot-ok"></div>Evergreen DB</div>
+      <div class="source-item"><div class="dot dot-warn"></div>Google Trends</div>
+      <div class="source-item"><div class="dot dot-ok"></div>BD Constitution</div>
+      <div class="source-item"><div class="dot dot-ok"></div>BD History</div>
+      <div class="source-item"><div class="dot dot-ok"></div>Civic Rights</div>
+      <div class="source-item"><div class="dot dot-ok"></div>Learning Engine</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="card-title-ico">📊</span> Content Pool — Recent Items</div>
+  <div id="pool-items"><div class="empty"><span class="spin"></span></div></div>
+</div>
+</div><!-- /sec-sources -->
+
+<!-- ─────── FORMATS ─────── -->
+<div id="sec-formats" style="display:none">
+<div class="topbar">
+  <div class="topbar-title">🎨 Content Formats (30)</div>
+</div>
+
+<div class="grid2" style="margin-bottom:10px">
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">🎭</span> All 30 Formats</div>
+    <div class="format-grid" id="all-formats">
+      <!-- filled by JS -->
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">📊</span> Format Distribution Weights</div>
+    <div id="format-weights"><div class="empty"><span class="spin"></span></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><span class="card-title-ico">🗓️</span> Recommended Daily Mix (per spec)</div>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+    <div style="text-align:center;padding:8px;background:var(--bg3);border-radius:8px;border:1px solid var(--line)">
+      <div style="font-size:18px;margin-bottom:4px">📰</div>
+      <div style="font-size:11px;font-weight:700">30%</div>
+      <div style="font-size:9px;color:var(--text3)">News</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg3);border-radius:8px;border:1px solid var(--line)">
+      <div style="font-size:18px;margin-bottom:4px">📚</div>
+      <div style="font-size:11px;font-weight:700">25%</div>
+      <div style="font-size:9px;color:var(--text3)">Learning</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg3);border-radius:8px;border:1px solid var(--line)">
+      <div style="font-size:18px;margin-bottom:4px">🕰️</div>
+      <div style="font-size:11px;font-weight:700">10%</div>
+      <div style="font-size:9px;color:var(--text3)">History</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg3);border-radius:8px;border:1px solid var(--line)">
+      <div style="font-size:18px;margin-bottom:4px">❓</div>
+      <div style="font-size:11px;font-weight:700">10%</div>
+      <div style="font-size:9px;color:var(--text3)">Questions</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg3);border-radius:8px;border:1px solid var(--line)">
+      <div style="font-size:18px;margin-bottom:4px">🗳️</div>
+      <div style="font-size:11px;font-weight:700">10%</div>
+      <div style="font-size:9px;color:var(--text3)">Polls</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg3);border-radius:8px;border:1px solid var(--line)">
+      <div style="font-size:18px;margin-bottom:4px">⚖️</div>
+      <div style="font-size:11px;font-weight:700">10%</div>
+      <div style="font-size:9px;color:var(--text3)">Civic</div>
+    </div>
+    <div style="text-align:center;padding:8px;background:var(--bg3);border-radius:8px;border:1px solid var(--line)">
+      <div style="font-size:18px;margin-bottom:4px">📊</div>
+      <div style="font-size:11px;font-weight:700">5%</div>
+      <div style="font-size:9px;color:var(--text3)">Data</div>
+    </div>
+  </div>
+</div>
+</div><!-- /sec-formats -->
+
+<!-- ─────── ANALYTICS ─────── -->
+<div id="sec-analytics" style="display:none">
+<div class="topbar">
+  <div class="topbar-title">📈 Analytics & Performance</div>
+  <button class="refresh-btn" onclick="loadAnalytics()">↻ Refresh</button>
+</div>
+
+<div class="grid3" style="margin-bottom:10px">
+  <div class="metric-card" style="--stripe:var(--goodl)">
+    <div class="metric-lbl">Total Published</div>
+    <div class="metric-val c-good" id="an-total">—</div>
+    <div class="metric-sub">all time</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--accentl)">
+    <div class="metric-lbl">AI Used</div>
+    <div class="metric-val c-acc" id="an-ai-rate">—</div>
+    <div class="metric-sub">of recent 25</div>
+  </div>
+  <div class="metric-card" style="--stripe:var(--infl)">
+    <div class="metric-lbl">Success Rate</div>
+    <div class="metric-val c-info" id="an-success">—</div>
+    <div class="metric-sub">posted / attempted</div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">🏆</span> Top Performing Formats</div>
+    <div id="top-formats"><div class="empty"><span class="spin"></span></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="card-title-ico">⏱️</span> Publishing Timeline (last 10)</div>
+    <div id="pub-timeline"><div class="empty"><span class="spin"></span></div></div>
+  </div>
+  <div class="card full">
+    <div class="card-title"><span class="card-title-ico">🎯</span> Facebook Optimization Signals</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+      <div style="background:var(--bg3);border:1px solid var(--good);border-radius:8px;padding:8px;font-size:10px">
+        <div style="color:var(--goodl);font-size:16px;margin-bottom:3px">💬</div>
+        <div style="font-weight:700;margin-bottom:2px">Comments</div>
+        <div style="color:var(--text3)">Primary engagement signal — questions & debates drive reach</div>
       </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">📊 Queue by Format</div></div>
-        <div id="formatBars"><div style="color:var(--muted);text-align:center;padding:16px">Loading…</div></div>
+      <div style="background:var(--bg3);border:1px solid var(--good);border-radius:8px;padding:8px;font-size:10px">
+        <div style="color:var(--goodl);font-size:16px;margin-bottom:3px">🔁</div>
+        <div style="font-weight:700;margin-bottom:2px">Shares</div>
+        <div style="color:var(--text3)">Breaking news & civic content triggers sharing behavior</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--info);border-radius:8px;padding:8px;font-size:10px">
+        <div style="color:var(--infl);font-size:16px;margin-bottom:3px">🔖</div>
+        <div style="font-weight:700;margin-bottom:2px">Saves</div>
+        <div style="color:var(--text3)">Educational & civic content gets saved for reference</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--info);border-radius:8px;padding:8px;font-size:10px">
+        <div style="color:var(--infl);font-size:16px;margin-bottom:3px">⏱️</div>
+        <div style="font-weight:700;margin-bottom:2px">Retention</div>
+        <div style="color:var(--text3)">Consistent publishing keeps audience coming back</div>
       </div>
     </div>
   </div>
+</div>
+</div><!-- /sec-analytics -->
 
-  <!-- ACTIONS TAB -->
-  <div class="action-panel" id="tab-actions">
-    <div class="grid2">
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">⚡ Quick Actions</div></div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="btn btn-primary" id="act-cycle">▶ Run Full Cycle (Collect + Fill + Publish)</button>
-          <button class="btn btn-green" id="act-publish">📤 Publish Next Post (17 pages)</button>
-          <button class="btn btn-ghost" id="act-fill">📥 Fill Queue (4 items)</button>
-          <button class="btn btn-ghost" id="act-collect">📡 Collect RSS + Wikipedia</button>
-          <button class="btn btn-amber" id="act-reel">🎬 Generate Reel (carousel)</button>
-          <button class="btn btn-ghost" id="act-status">📈 Status Check</button>
-          <button class="btn btn-red btn-sm" id="act-clear">🗑 Clear Queue</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">📟 Action Output</div></div>
-        <div class="console" id="actionConsole"><div class="console-line c-info">Ready. Run an action above.</div></div>
-      </div>
-    </div>
+<!-- ─────── LOGS ─────── -->
+<div id="sec-logs" style="display:none">
+<div class="topbar">
+  <div class="topbar-title">🗒️ Execution Logs</div>
+  <button class="refresh-btn" onclick="loadLogs()">↻ Refresh</button>
+</div>
+
+<div class="actions" style="margin-bottom:10px">
+  <button class="btn btn-primary" onclick="runAction('cycle')">▶ Run Cycle</button>
+  <button class="btn btn-info"    onclick="runAction('collect')">📡 Collect</button>
+  <button class="btn btn-good"    onclick="runAction('fill')">📦 Fill</button>
+  <button class="btn btn-warn"    onclick="runAction('publish')">📤 Publish</button>
+  <button class="btn btn-warn"    onclick="runAction('status')">ℹ Status</button>
+</div>
+
+<div class="card" id="live-log-card" style="display:none">
+  <div class="card-title">
+    <span class="card-title-ico" id="ll-ico">⚙️</span>
+    <span id="ll-title">Running...</span>
+    <span id="ll-spin" class="spin"></span>
+    <span id="ll-status" style="margin-left:auto;font-size:10px"></span>
   </div>
+  <div class="logbox" id="ll-box" style="max-height:300px"></div>
+</div>
 
-  <!-- SCHEDULE TAB -->
-  <div class="action-panel" id="tab-schedule">
-    <div class="card">
-      <div class="card-hdr"><div class="card-title">🗓 Publishing Schedule (CRON: every 5 min)</div></div>
-      <div id="scheduleList">
-        <div class="schedule-row"><span class="sch-time">*/5 min</span><span class="sch-type">🔄 Auto Cycle — Collect + Fill + Publish</span><span class="sch-status sch-ok">ACTIVE</span></div>
-        <div class="schedule-row"><span class="sch-time">17:00 BD</span><span class="sch-type">📰 Daily Press Release</span><span class="sch-status sch-ok">ACTIVE</span></div>
-        <div class="schedule-row"><span class="sch-time">06:00 BD</span><span class="sch-type">📊 Discover Leaders</span><span class="sch-status sch-ok">ACTIVE</span></div>
-        <div class="schedule-row"><span class="sch-time">10:00 BD</span><span class="sch-type">📈 FB Insights</span><span class="sch-status sch-ok">ACTIVE</span></div>
-      </div>
-      <div style="margin-top:12px">
-        <div class="card-title" style="margin-bottom:8px">📋 Execution History (last 10)</div>
-        <div id="execHistory"><div style="color:var(--muted)">Loading…</div></div>
-      </div>
-    </div>
-  </div>
+<div class="card" style="margin-top:10px">
+  <div class="card-title"><span class="card-title-ico">📜</span> Publish Log History</div>
+  <div id="log-history"><div class="empty"><span class="spin"></span></div></div>
+</div>
+</div><!-- /sec-logs -->
 
-  <!-- SETTINGS TAB -->
-  <div class="action-panel" id="tab-settings">
-    <div class="grid2">
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">⚙️ Pipeline Settings</div></div>
-        <div class="toggle-row">
-          <span class="toggle-label">🖼️ Image Generation</span>
-          <label class="toggle"><input type="checkbox" id="tog-img" checked><span class="slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">🎬 Reel Generation</span>
-          <label class="toggle"><input type="checkbox" id="tog-reel" checked><span class="slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">🤖 AI Captions</span>
-          <label class="toggle"><input type="checkbox" id="tog-ai" checked><span class="slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">📡 Auto Publish</span>
-          <label class="toggle"><input type="checkbox" id="tog-auto" checked><span class="slider"></span></label>
-        </div>
-        <div style="margin-top:10px">
-          <label style="font-size:11px;color:var(--muted)">Format Override</label>
-          <select id="sel-format" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px;margin-top:4px;font-family:inherit;font-size:11px">
-            <option value="">Auto (weighted random)</option>
-            <option value="breaking_news">Breaking News</option>
-            <option value="fact_check">Fact Check</option>
-            <option value="did_you_know">Did You Know</option>
-            <option value="quote_card">Quote Card</option>
-            <option value="reel_script">Reel Script</option>
-            <option value="poll_post">Poll Post</option>
-            <option value="this_day_history">Today in History</option>
-          </select>
-        </div>
-        <div style="margin-top:8px">
-          <button class="btn btn-primary" style="width:100%" id="btn-save-settings">💾 Apply Settings</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">🔌 System Status</div></div>
-        <div id="sysStatus">
-          <div class="fmt-row"><span class="fmt-name">Appwrite DB</span><span class="fmt-bar-wrap"><span class="fmt-bar" style="width:100%;background:var(--green)"></span></span><span class="fmt-count c-ok">✓</span></div>
-          <div class="fmt-row"><span class="fmt-name">FB Autopost</span><span id="fb-status-bar" class="fmt-bar-wrap"><span class="fmt-bar" style="width:100%"></span></span><span id="fb-status-icon" class="fmt-count">…</span></div>
-          <div class="fmt-row"><span class="fmt-name">Cloudinary</span><span class="fmt-bar-wrap"><span class="fmt-bar" style="width:90%;background:var(--green)"></span></span><span class="fmt-count c-ok">✓</span></div>
-          <div class="fmt-row"><span class="fmt-name">HF Video</span><span class="fmt-bar-wrap"><span class="fmt-bar" style="width:40%;background:var(--amber)"></span></span><span class="fmt-count c-warn">~</span></div>
-          <div class="fmt-row"><span class="fmt-name">OpenRouter AI</span><span class="fmt-bar-wrap"><span class="fmt-bar" style="width:95%;background:var(--green)"></span></span><span class="fmt-count c-ok">✓</span></div>
-        </div>
-        <div style="margin-top:10px">
-          <button class="btn btn-ghost" style="width:100%;margin-bottom:6px" id="btn-token-check">🔑 Check FB Token</button>
-          <div id="tokenStatus" style="font-size:11px;color:var(--muted)"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="ts" id="ts">—</div>
 
-</div><!-- /main -->
+</div><!-- /main-content -->
+</div><!-- /shell -->
 
 <script>
-const AW_PJ  = '6a11b6cd000b59f318eb';
-const BASE   = 'https://fra.cloud.appwrite.io/v1';
-
-function getKey() {
-    // Hardcoded API key for Appwrite — same as used across all JOAF functions
-    return 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b';
-    // eslint-disable-next-line no-unreachable
-  try {
-    // Try parent admin panel config
-    const p = window.parent;
-    if (p.JOAF_CONFIG && p.JOAF_CONFIG.apiKey) return p.JOAF_CONFIG.apiKey;
-    if (p.JOAF_AW_KEY) return p.JOAF_AW_KEY;
-    // Try localStorage (admin saves key)
-    const lk = localStorage.getItem('joaf_admin_key') || localStorage.getItem('aw_key');
-    if (lk) return lk;
-    if (p.join_aw_exec) return 'via_parent';
-  } catch {}
-  // Fallback: read from URL param
-  const params = new URLSearchParams(window.location.search);
-  return params.get('k') || '';
-}
-
-async function awGet(path) {
-  const k = getKey();
-  const h = { 'X-Appwrite-Project': AW_PJ };
-  if (k && k !== 'via_parent') h['X-Appwrite-Key'] = k;
-  const r = await fetch(BASE + path, { headers: h, credentials: 'include' });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+// ── Config ──
+const K = "standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b";
+const P = "6a11b6cd000b59f318eb";
+const B = "https://fra.cloud.appwrite.io/v1";
+const h = { "X-Appwrite-Project": P, "X-Appwrite-Key": K, "Content-Type": "application/json" };
+const aw = async (m, u, b) => {
+  const r = await fetch(B + u, { method: m, headers: h, body: b ? JSON.stringify(b) : undefined });
   return r.json();
-}
+};
 
-async function awPost(path, body) {
-  const k = getKey();
-  const h = { 'X-Appwrite-Project': AW_PJ, 'Content-Type': 'application/json' };
-  if (k && k !== 'via_parent') h['X-Appwrite-Key'] = k;
-  const r = await fetch(BASE + path, { method: 'POST', headers: h, body: JSON.stringify(body), credentials: 'include' });
-  if (!r.ok) { const t = await r.text(); throw new Error('HTTP '+r.status+': '+t.slice(0,100)); }
-  return r.json();
-}
+const FORMATS_ALL = [
+  'breaking_news','news_summary','fact_check','civic_rights',
+  'constitution_fact','bangladesh_history','this_day_history',
+  'quote_card','poll_post','question_post','did_you_know',
+  'myth_vs_fact','timeline','educational','learning_engine',
+  'press_release_summary','data_insight','statistic_post',
+  'awareness_post','international_news','local_district',
+  'youth_engagement','comment_debate','community_question',
+  'image_quote','carousel_post','infographic','reel_script',
+  'ai_opinion','civic_knowledge'
+];
 
-async function awDelete(path) {
-  const k = getKey();
-  const h = { 'X-Appwrite-Project': AW_PJ };
-  if (k && k !== 'via_parent') h['X-Appwrite-Key'] = k;
-  const r = await fetch(BASE + path, { method: 'DELETE', headers: h, credentials: 'include' });
-  return r.ok;
-}
+const FORMAT_WEIGHTS = {
+  breaking_news:8,news_summary:7,international_news:6,local_district:5,press_release_summary:4,
+  learning_engine:7,educational:5,civic_knowledge:5,civic_rights:4,constitution_fact:4,
+  bangladesh_history:4,this_day_history:3,timeline:3,
+  question_post:5,community_question:5,poll_post:5,
+  fact_check:3,myth_vs_fact:3,did_you_know:3,awareness_post:3,
+  data_insight:2,statistic_post:2,quote_card:2,image_quote:2,
+  youth_engagement:2,comment_debate:2,carousel_post:2,infographic:2,
+  reel_script:1,ai_opinion:1
+};
 
-async function awDelete(path) {
-  const k = getKey();
-  const h = { 'X-Appwrite-Project': AW_PJ };
-  if (k && k !== 'via_parent') h['X-Appwrite-Key'] = k;
-  await fetch(BASE + path, { method: 'DELETE', headers: h });
-}
+// ── Utils ──
+const ft = s => {
+  if (!s) return "—";
+  const d = new Date(s);
+  return d.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }) + " " +
+         d.toLocaleDateString("bn-BD", { month: "short", day: "numeric" });
+};
+const fmt = s => (s || "?").replace(/_/g, " ");
+const n = id => document.getElementById(id);
+const today = () => new Date().toISOString().slice(0, 10);
 
-// Use parent join_aw_exec if available
-async function callViral(action, extra={}) {
-  try {
-    const p = window.parent;
-    if (p && p.join_aw_exec) {
-      return await p.join_aw_exec('joaf-viral-os', { action, ...extra });
-    }
-  } catch {}
-  const d = await awPost('/functions/joaf-viral-os/executions', {
-    async: false, path: '/', method: 'POST', headers: {},
-    body: JSON.stringify({ action, ...extra })
+// ── Section nav ──
+let currentSection = 'dashboard';
+const sections = ['dashboard','pipeline','queue','sources','formats','analytics','logs'];
+function showSection(sec) {
+  sections.forEach(s => {
+    n('sec-' + s).style.display = s === sec ? '' : 'none';
   });
-  try { return JSON.parse(d.responseBody || '{}'); } catch { return d; }
+  document.querySelectorAll('.nav-ico').forEach((el, i) => {
+    el.classList.toggle('active', ['dashboard','pipeline','queue','sources','formats','analytics','logs'][i] === sec);
+  });
+  currentSection = sec;
+  if (sec === 'queue') loadQueue();
+  else if (sec === 'sources') loadSources();
+  else if (sec === 'formats') loadFormats();
+  else if (sec === 'analytics') loadAnalytics();
+  else if (sec === 'logs') loadLogs();
 }
 
-// Console log
-function clog(msg, type='info') {
-  const c = document.getElementById('actionConsole');
-  const line = document.createElement('div');
-  line.className = 'console-line c-' + type;
-  const t = new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  line.textContent = '[' + t + '] ' + msg;
-  c.prepend(line);
-  if (c.children.length > 50) c.lastChild.remove();
+// ── Main data load ──
+let _cacheQ = null, _cacheL = null, _cacheP = null;
+async function refreshAll() {
+  _cacheQ = null; _cacheL = null; _cacheP = null;
+  await loadDashboard();
 }
 
-// Load stats
-async function loadStats() {
+async function loadDashboard() {
   try {
-    const [qData, logData, poolData] = await Promise.all([
-      awGet('/databases/joaf/collections/viral_publish_queue/documents?limit=100'),
-      awGet('/databases/joaf/collections/viral_publish_log/documents?limit=50'),
-      awGet('/databases/joaf/collections/viral_content_pool/documents?limit=5'),
+    const [qr, pr, lr] = await Promise.all([
+      aw("GET", "/databases/joaf/collections/viral_publish_queue/documents?limit=100"),
+      aw("GET", "/databases/joaf/collections/viral_content_pool/documents?limit=200"),
+      aw("GET", "/databases/joaf/collections/viral_publish_log/documents?limit=50").catch(() => ({ documents: [] })),
     ]);
 
-    const qDocs = qData.documents || [];
-    const lDocs = logData.documents || [];
+    _cacheQ = qr; _cacheL = lr; _cacheP = pr;
 
-    document.getElementById('mQueue').textContent = qDocs.filter(d=>d.status==='pending').length;
-    document.getElementById('mImages').textContent = qDocs.filter(d=>d.jpg_url).length;
-    document.getElementById('mReels').textContent = qDocs.filter(d=>d.carousel_urls || d.video_url).length;
-    document.getElementById('mPool').textContent = 'pool: ' + (poolData.total || 0) + ' items';
+    const docs = qr.documents || [];
+    const pend = docs.filter(d => d.status === "pending");
+    const imgs = pend.filter(d => d.jpg_url).length;
+    const logDocs = lr.documents || [];
+    const todayPub = logDocs.filter(d => (d.published_at || "").startsWith(today()));
+    const aiUsed = logDocs.slice(0, 25).filter(d => d.ai_used === "true").length;
+    const aiRate = logDocs.slice(0, 25).length ? Math.round(aiUsed / Math.min(25, logDocs.length) * 100) : 0;
 
-    // Published today
-    const today = new Date().toISOString().slice(0,10);
-    const todayPubs = lDocs.filter(d => (d.published_at||'').startsWith(today));
-    document.getElementById('mPublished').textContent = todayPubs.length;
+    // Metrics
+    const qv = n("m-q");
+    qv.textContent = pend.length;
+    qv.className = "metric-val " + (pend.length < 10 ? "c-bad" : pend.length < 30 ? "c-warn" : "c-good");
+
+    n("m-pub").textContent = todayPub.length;
+    n("m-pub-sub").textContent = "since midnight BD time";
+    n("m-pool").textContent = pr.total || 0;
+    const imgEl = n("m-img");
+    imgEl.textContent = imgs;
+    imgEl.className = "metric-val " + (imgs > 5 ? "c-news" : imgs > 0 ? "c-warn" : "c-bad");
+    n("m-ai").textContent = aiRate + "%";
+    n("m-total").textContent = lr.total || 0;
+
+    // Queue progress bars
+    const qpct = Math.min(100, Math.round(pend.length / 96 * 100));
+    n("q-prog").style.width = qpct + "%";
+    n("q-pct-lbl").textContent = pend.length + " / 96";
+    const ipct = pend.length > 0 ? Math.round(imgs / pend.length * 100) : 0;
+    n("img-prog").style.width = ipct + "%";
+    n("img-pct-lbl").textContent = imgs + " of " + pend.length + " (" + ipct + "%)";
 
     // Recent posts
-    const pl = document.getElementById('postsList');
-    if (lDocs.length === 0) { pl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px">No posts yet</div>'; }
-    else {
-      pl.innerHTML = lDocs.slice(0,8).map(d => {
-        const t = d.published_at ? new Date(d.published_at).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-        const hasImg = d.jpg_url ? '🖼️' : d.carousel_urls ? '🎬' : '📝';
-        const ok = d.pages_ok || 0;
-        return `<div class="post-row">
-          <span class="post-dot" style="background:${ok>=10?'var(--green)':ok>0?'var(--amber)':'var(--red)'}"></span>
-          <span class="post-time">${t}</span>
-          <span class="post-fmt">${hasImg} ${(d.format||'').replace(/_/g,' ')}</span>
-          <span class="post-badge">${ok>=10?'✓':'⚠'} ${ok}/17</span>
+    const postsEl = n("recent-posts");
+    if (logDocs.length === 0) {
+      postsEl.innerHTML = '<div class="empty">No posts yet</div>';
+    } else {
+      postsEl.innerHTML = logDocs.slice(0, 8).map(d => {
+        const ok = d.status === "posted";
+        const hasImg = d.jpg_url;
+        return `<div class="post-preview" onclick="showPostDetail(${JSON.stringify(d).replace(/"/g, '&quot;')})">
+          <div class="post-preview-head">
+            <span class="dot ${ok ? 'dot-ok' : 'dot-bad'}"></span>
+            <span class="muted">${ft(d.published_at)}</span>
+            <span style="flex:1;color:var(--text2)">${fmt(d.format)}</span>
+            ${hasImg ? '<span class="tag tag-info">IMG</span>' : ''}
+            ${d.ai_used === 'true' ? '<span class="tag tag-ai">AI</span>' : ''}
+            <span class="tag ${ok ? 'tag-ok' : 'tag-bad'}">${ok ? '✓17' : '✗FAIL'}</span>
+          </div>
+          <div class="post-caption">${(d.caption || "").slice(0, 120)}</div>
         </div>`;
-      }).join('');
+      }).join("");
     }
 
-    // Format distribution
-    const fmtCount = {};
-    qDocs.forEach(d => { fmtCount[d.format] = (fmtCount[d.format]||0)+1; });
-    const maxFmt = Math.max(1, ...Object.values(fmtCount));
-    const sortedFmt = Object.entries(fmtCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
-    const fb = document.getElementById('formatBars');
-    if (!sortedFmt.length) { fb.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px">Queue empty</div>'; }
-    else {
-      fb.innerHTML = sortedFmt.map(([fmt,cnt]) =>
-        `<div class="fmt-row">
-          <span class="fmt-name">${fmt.replace(/_/g,' ')}</span>
-          <span class="fmt-bar-wrap"><span class="fmt-bar" style="width:${Math.round(cnt/maxFmt*100)}%"></span></span>
-          <span class="fmt-count">${cnt}</span>
-        </div>`).join('');
-    }
+    // Queue by format bars
+    const fc = {};
+    pend.forEach(d => { fc[d.format] = (fc[d.format] || 0) + 1; });
+    const sorted = Object.entries(fc).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const mx = sorted[0]?.[1] || 1;
+    n("q-formats").innerHTML = sorted.length
+      ? sorted.map(([f, c]) => `
+          <div class="prog-wrap">
+            <div class="prog-lbl"><span>${fmt(f)}</span><span>${c}</span></div>
+            <div class="prog-track"><div class="prog-fill prog-fill-acc" style="width:${Math.round(c/mx*100)}%"></div></div>
+          </div>`).join("")
+      : '<div class="empty">Queue is empty</div>';
 
-    document.getElementById('lastUpdated').textContent = 'updated ' + new Date().toLocaleTimeString();
-  } catch(e) {
-    document.getElementById('lastUpdated').textContent = 'error: ' + e.message;
+    n("ts").textContent = "Last updated: " + new Date().toLocaleTimeString();
+  } catch (e) {
+    n("ts").textContent = "Error: " + e.message;
   }
 }
 
-// Load exec history
-async function loadHistory() {
-  try {
-    const r = await awGet('/functions/joaf-viral-os/executions?limit=10');
-    const docs = r.executions || [];
-    const el = document.getElementById('execHistory');
-    el.innerHTML = docs.map(d => {
-      const t = new Date(d.$createdAt).toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
-      const sc = d.responseStatusCode;
-      const col = sc===200?'var(--green)':sc>=400?'var(--red)':'var(--amber)';
-      return `<div class="post-row">
-        <span class="post-dot" style="background:${col}"></span>
-        <span class="post-time">${t}</span>
-        <span class="post-fmt">${d.trigger||'http'} — ${d.status}</span>
-        <span style="font-size:10px;color:${col}">${sc||'?'}</span>
-      </div>`;
-    }).join('') || '<div style="color:var(--muted)">No history</div>';
-  } catch(e) {}
+// ── Queue ──
+async function loadQueue() {
+  const qr = _cacheQ || await aw("GET", "/databases/joaf/collections/viral_publish_queue/documents?limit=100");
+  const docs = qr.documents || [];
+  const pend = docs.filter(d => d.status === "pending");
+  const imgs = pend.filter(d => d.jpg_url).length;
+  const aiC = pend.filter(d => d.ai_used === "true").length;
+
+  if (n("q-pending")) n("q-pending").textContent = pend.length;
+  if (n("q-withimg")) n("q-withimg").textContent = imgs;
+  if (n("q-ai")) n("q-ai").textContent = aiC;
+  if (n("q-count-lbl")) n("q-count-lbl").textContent = pend.length + " pending";
+
+  const el = n("queue-items");
+  if (!el) return;
+  if (pend.length === 0) { el.innerHTML = '<div class="empty">Queue is empty — click Fill Queue to add items</div>'; return; }
+  el.innerHTML = pend.slice(0, 20).map(d => `
+    <div class="row-item">
+      <span class="dot ${d.jpg_url ? 'dot-ok' : 'dot-idle'}"></span>
+      <span style="color:var(--text2);width:130px;flex-shrink:0">${fmt(d.format)}</span>
+      <span class="muted" style="flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${(d.title || d.caption || "").slice(0, 60)}</span>
+      ${d.jpg_url ? '<span class="tag tag-info">IMG</span>' : ''}
+      ${d.ai_used === 'true' ? '<span class="tag tag-ai">AI</span>' : '<span class="tag tag-info">TPL</span>'}
+      <span class="muted" style="font-size:9px;white-space:nowrap">${ft(d.created_at)}</span>
+    </div>`).join("");
+  if (pend.length > 20) el.innerHTML += `<div class="empty" style="padding:8px">+${pend.length-20} more items</div>`;
 }
 
-// Tab switching
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.action-panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'schedule') loadHistory();
-  });
-});
+// ── Sources ──
+async function loadSources() {
+  const pr = _cacheP || await aw("GET", "/databases/joaf/collections/viral_content_pool/documents?limit=50");
+  const docs = (pr.documents || []);
+  const el = n("pool-items");
+  if (!el) return;
+  if (docs.length === 0) { el.innerHTML = '<div class="empty">Pool is empty — click Collect RSS</div>'; return; }
+  el.innerHTML = docs.slice(0, 15).map(d => `
+    <div class="row-item">
+      <span class="dot ${d.queued === 'true' ? 'dot-warn' : 'dot-ok'}"></span>
+      <span style="width:80px;flex-shrink:0;font-size:10px" class="muted">${d.source || "?"}</span>
+      <span style="flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--text2)">${d.title || "—"}</span>
+      <span class="tag ${d.queued === 'true' ? 'tag-warn' : 'tag-ok'}">${d.queued === 'true' ? 'QUEUED' : 'FRESH'}</span>
+      <span class="muted" style="font-size:9px;white-space:nowrap">${ft(d.created_at)}</span>
+    </div>`).join("");
+}
 
-// Action buttons
-async function runAction(action, label, extra={}) {
-  const btns = document.querySelectorAll('.btn');
-  btns.forEach(b=>b.disabled=true);
-  clog('Running: ' + label + '…', 'info');
-  document.getElementById('liveDot').style.background = 'var(--amber)';
+// ── Formats ──
+function loadFormats() {
+  const fg = n("all-formats");
+  if (fg) {
+    fg.innerHTML = FORMATS_ALL.map(f => `<div class="fmt-pill">${fmt(f)}</div>`).join("");
+  }
+  const fw = n("format-weights");
+  if (fw) {
+    const entries = Object.entries(FORMAT_WEIGHTS).sort((a,b) => b[1]-a[1]).slice(0, 10);
+    const max = entries[0][1];
+    fw.innerHTML = entries.map(([f, w]) => `
+      <div class="prog-wrap">
+        <div class="prog-lbl"><span>${fmt(f)}</span><span>weight ${w}</span></div>
+        <div class="prog-track"><div class="prog-fill prog-fill-acc" style="width:${Math.round(w/max*100)}%"></div></div>
+      </div>`).join("");
+  }
+}
+
+// ── Analytics ──
+async function loadAnalytics() {
+  const lr = _cacheL || await aw("GET", "/databases/joaf/collections/viral_publish_log/documents?limit=50").catch(() => ({ documents: [] }));
+  const docs = lr.documents || [];
+
+  if (n("an-total")) n("an-total").textContent = lr.total || docs.length;
+  const aiC = docs.slice(0,25).filter(d => d.ai_used === "true").length;
+  const aiRate = docs.slice(0,25).length ? Math.round(aiC / Math.min(25, docs.length) * 100) : 0;
+  if (n("an-ai-rate")) n("an-ai-rate").textContent = aiRate + "%";
+  const succ = docs.filter(d => d.status === "posted").length;
+  const succRate = docs.length ? Math.round(succ / docs.length * 100) : 0;
+  if (n("an-success")) n("an-success").textContent = succRate + "%";
+
+  // Top formats
+  const fc = {};
+  docs.forEach(d => { if (d.format) fc[d.format] = (fc[d.format] || 0) + 1; });
+  const sorted = Object.entries(fc).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  const mx = sorted[0]?.[1] || 1;
+  const tf = n("top-formats");
+  if (tf) tf.innerHTML = sorted.length
+    ? sorted.map(([f,c]) => `
+        <div class="prog-wrap">
+          <div class="prog-lbl"><span>${fmt(f)}</span><span>${c} posts</span></div>
+          <div class="prog-track"><div class="prog-fill" style="width:${Math.round(c/mx*100)}%"></div></div>
+        </div>`).join("")
+    : '<div class="empty">No data yet</div>';
+
+  // Timeline
+  const tl = n("pub-timeline");
+  if (tl) tl.innerHTML = docs.slice(0, 10).length
+    ? docs.slice(0, 10).map(d => {
+        const ok = d.status === "posted";
+        return `<div class="row-item">
+          <span class="dot ${ok ? 'dot-ok' : 'dot-bad'}"></span>
+          <span class="muted" style="width:80px;flex-shrink:0;font-size:10px">${ft(d.published_at)}</span>
+          <span style="flex:1;color:var(--text2)">${fmt(d.format)}</span>
+          ${d.jpg_url ? '<span class="tag tag-info" style="font-size:8px">IMG</span>' : ''}
+          ${d.ai_used === 'true' ? '<span class="tag tag-ai" style="font-size:8px">AI</span>' : ''}
+          <span class="tag ${ok ? 'tag-ok' : 'tag-bad'}" style="font-size:8px">${ok ? '✓17' : '✗'}</span>
+        </div>`;
+      }).join("")
+    : '<div class="empty">No publish history yet</div>';
+}
+
+// ── Logs ──
+async function loadLogs() {
+  const lr = await aw("GET", "/databases/joaf/collections/viral_publish_log/documents?limit=25").catch(() => ({ documents: [] }));
+  const el = n("log-history");
+  if (!el) return;
+  const docs = lr.documents || [];
+  el.innerHTML = docs.length
+    ? docs.map(d => {
+        const ok = d.status === "posted";
+        return `<div class="row-item">
+          <span class="dot ${ok ? 'dot-ok' : 'dot-bad'}"></span>
+          <span class="muted" style="width:90px;flex-shrink:0;font-size:9px">${ft(d.published_at)}</span>
+          <span style="flex:1;color:var(--text2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${fmt(d.format)}: ${(d.title || d.caption || "").slice(0, 50)}</span>
+          ${d.jpg_url ? '<span class="tag tag-info" style="font-size:8px">IMG</span>' : ''}
+          ${d.ai_used === 'true' ? '<span class="tag tag-ai" style="font-size:8px">AI</span>' : ''}
+          <span class="tag ${ok ? 'tag-ok' : 'tag-bad'}">${ok ? 'POSTED' : 'FAILED'}</span>
+        </div>`;
+      }).join("")
+    : '<div class="empty">No publish history yet</div>';
+}
+
+// ── Run action ──
+async function runAction(action) {
+  // Show in both dashboard and logs section
+  const logEls = [n("action-log"), n("ll-box")].filter(Boolean);
+  const spinEls = [n("action-spin"), n("ll-spin")].filter(Boolean);
+  const statEls = [n("action-status"), n("ll-status")].filter(Boolean);
+  const titleEls = [n("action-title"), n("ll-title")].filter(Boolean);
+  const icoEls = [n("action-ico"), n("ll-ico")].filter(Boolean);
+  const cardEls = [n("action-card"), n("live-log-card")].filter(Boolean);
+
+  const icons = { cycle:'▶', publish:'📤', fill:'📦', collect:'📡', status:'ℹ️' };
+  cardEls.forEach(el => el.style.display = "");
+  logEls.forEach(el => el.textContent = `[${action}] Triggering...\n`);
+  spinEls.forEach(el => el.style.display = "");
+  statEls.forEach(el => el.textContent = "running");
+  titleEls.forEach(el => el.textContent = action.toUpperCase());
+  icoEls.forEach(el => el.textContent = icons[action] || "⚙️");
+
+  // Disable all action buttons
+  document.querySelectorAll(".btn[id^='btn-']").forEach(b => b.disabled = true);
+
   try {
-    const r = await callViral(action, extra);
-    const logLines = (r.logs || JSON.stringify(r)).split('\n').filter(Boolean);
-    logLines.forEach(l => {
-      const type = l.includes('✅')||l.includes('ok=')?'ok':l.includes('failed')||l.includes('✗')?'err':'info';
-      clog(l, type);
+    const r = await aw("POST", "/functions/joaf-viral-os/executions", {
+      async: true, path: "/", method: "POST", headers: {}, body: JSON.stringify({ action })
     });
-    clog('Done: ' + label, 'ok');
-    document.getElementById('liveDot').style.background = 'var(--green)';
-    await loadStats();
-  } catch(e) {
-    clog('Error: ' + e.message, 'err');
-    document.getElementById('liveDot').style.background = 'var(--red)';
+    const id = r.$id;
+    if (!id) {
+      logEls.forEach(el => el.textContent = "Error: " + JSON.stringify(r));
+      spinEls.forEach(el => el.style.display = "none");
+      statEls.forEach(el => { el.textContent = "error"; el.style.color = "var(--badl)"; });
+      return;
+    }
+    logEls.forEach(el => el.textContent += `exec: ${id}\nWaiting for result...\n`);
+
+    let i = 0;
+    const t = setInterval(async () => {
+      i++;
+      try {
+        const s = await aw("GET", `/functions/joaf-viral-os/executions/${id}`);
+        if (s.status === "completed" || s.status === "failed") {
+          clearInterval(t);
+          spinEls.forEach(el => el.style.display = "none");
+          const ok = s.status === "completed";
+          statEls.forEach(el => {
+            el.textContent = s.status + " (" + Math.round((s.duration||0)/1000*10)/10 + "s)";
+            el.style.color = ok ? "var(--goodl)" : "var(--badl)";
+          });
+          const raw = s.logs || "(no logs)";
+          logEls.forEach(el => {
+            el.textContent = `[${action}] ${s.status}\n\n` + raw;
+            el.scrollTop = 9999;
+          });
+          document.querySelectorAll(".btn[id^='btn-']").forEach(b => b.disabled = false);
+          await loadDashboard();
+          if (currentSection === 'queue') loadQueue();
+          if (currentSection === 'analytics') loadAnalytics();
+          if (currentSection === 'logs') loadLogs();
+        } else {
+          logEls.forEach(el => el.textContent = `[${action}] ${s.status || "waiting"}...\nexec: ${id}`);
+        }
+      } catch(e) {}
+      if (i > 90) { clearInterval(t); document.querySelectorAll(".btn[id^='btn-']").forEach(b => b.disabled = false); }
+    }, 4000);
+  } catch (e) {
+    logEls.forEach(el => el.textContent = "Error: " + e.message);
+    spinEls.forEach(el => el.style.display = "none");
+    document.querySelectorAll(".btn[id^='btn-']").forEach(b => b.disabled = false);
   }
-  btns.forEach(b=>b.disabled=false);
 }
 
-document.getElementById('btnCycle').addEventListener('click', () => runAction('cycle','Full Cycle'));
-document.getElementById('btnPublish').addEventListener('click', () => runAction('publish','Publish'));
-document.getElementById('btnFill').addEventListener('click', () => runAction('fill','Fill Queue'));
-document.getElementById('btnCollect').addEventListener('click', () => runAction('collect','Collect RSS'));
-document.getElementById('btnRefresh').addEventListener('click', loadStats);
-document.getElementById('btnRefreshPosts').addEventListener('click', loadStats);
-
-document.getElementById('act-cycle').addEventListener('click', () => runAction('cycle','Full Cycle'));
-document.getElementById('act-publish').addEventListener('click', () => runAction('publish','Publish'));
-document.getElementById('act-fill').addEventListener('click', () => runAction('fill','Fill Queue'));
-document.getElementById('act-collect').addEventListener('click', () => runAction('collect','Collect RSS'));
-document.getElementById('act-status').addEventListener('click', () => runAction('status','Status'));
-document.getElementById('act-reel').addEventListener('click', () => {
-  const fmt = document.getElementById('sel-format').value || 'reel_script';
-  runAction('fill','Reel Fill',{format_override: fmt});
-});
-document.getElementById('act-clear').addEventListener('click', async () => {
-  if (!confirm('Clear entire queue?')) return;
-  clog('Clearing queue…','warn');
-  try {
-    const r = await awGet('/databases/joaf/collections/viral_publish_queue/documents?limit=100');
-    for (const d of (r.documents||[])) {
-      await awDelete('/databases/joaf/collections/viral_publish_queue/documents/'+d.$id);
+// ── Reset DB ──
+async function resetDB() {
+  if (!confirm("Clear viral_publish_queue + viral_content_pool + viral_publish_log?\nThis will reset all data for a fresh start.")) return;
+  const cols = ["viral_publish_queue","viral_content_pool","viral_publish_log"];
+  let total = 0;
+  for (const col of cols) {
+    let done = false;
+    while (!done) {
+      const r = await aw("GET", `/databases/joaf/collections/${col}/documents?limit=100`);
+      const docs = r.documents || [];
+      if (docs.length === 0) { done = true; break; }
+      for (const d of docs) {
+        try {
+          await fetch(B + `/databases/joaf/collections/${col}/documents/${d.$id}`, { method: "DELETE", headers: h });
+          total++;
+        } catch {}
+      }
+      if (docs.length < 100) done = true;
     }
-    clog('Queue cleared','ok');
-    await loadStats();
-  } catch(e) { clog('Error: '+e.message,'err'); }
-});
+  }
+  alert(`Deleted ${total} documents. Running fresh cycle...`);
+  await runAction("cycle");
+}
 
-document.getElementById('btn-token-check').addEventListener('click', async () => {
-  const el = document.getElementById('tokenStatus');
-  el.textContent = 'Checking…';
-  try {
-    const p = window.parent;
-    let r;
-    if (p && p.join_aw_exec) r = await p.join_aw_exec('fb-autopost', {action:'check-token'});
-    else {
-      const d = await awPost('/functions/fb-autopost/executions', {async:false,path:'/',method:'POST',headers:{},body:JSON.stringify({action:'check-token'})});
-      r = JSON.parse(d.responseBody||'{}');
-    }
-    el.textContent = r.ok ? '✅ Token valid | '+r.pages+' pages' : '❌ Token expired';
-    el.style.color = r.ok ? 'var(--green)' : 'var(--red)';
-  } catch(e) { el.textContent = 'Error: '+e.message; }
-});
+// ── Clear queue only ──
+async function clearQueue() {
+  if (!confirm("Clear viral_publish_queue?")) return;
+  const r = await aw("GET", "/databases/joaf/collections/viral_publish_queue/documents?limit=100");
+  const docs = r.documents || [];
+  for (const d of docs) {
+    try { await fetch(B + `/databases/joaf/collections/viral_publish_queue/documents/${d.$id}`, { method:"DELETE", headers:h }); }
+    catch {}
+  }
+  await loadQueue();
+  await loadDashboard();
+}
 
-document.getElementById('btn-save-settings').addEventListener('click', () => {
-  clog('Settings applied (local only — restart function to take effect)', 'warn');
-});
+// ── Post detail ──
+function showPostDetail(data) {
+  if (typeof data === 'string') { try { data = JSON.parse(data); } catch { return; } }
+  const ac = n("action-card");
+  if (ac) {
+    ac.style.display = "";
+    n("action-title").textContent = "Post Detail — " + fmt(data.format);
+    n("action-ico").textContent = data.jpg_url ? "🖼️" : "📝";
+    if (n("action-spin")) n("action-spin").style.display = "none";
+    n("action-log").textContent = [
+      `Format: ${fmt(data.format)}`,
+      `Time: ${ft(data.published_at)}`,
+      `AI: ${data.ai_used === 'true' ? 'yes' : 'no'}`,
+      `Image: ${data.jpg_url ? data.jpg_url : 'none'}`,
+      `Status: ${data.status}`,
+      `FP: ${data.fp}`,
+      ``,
+      `━━ Caption ━━`,
+      data.caption || "(no caption)"
+    ].join("\n");
+  }
+}
 
-// Auto refresh every 30s
-loadStats();
-setInterval(loadStats, 30000);
+// ── Next cycle countdown ──
+function updateNextCycle() {
+  const now = new Date();
+  const secs = now.getSeconds();
+  const mins = now.getMinutes() % 5;
+  const remaining = (4 - mins) * 60 + (60 - secs);
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  const el = n("next-cycle");
+  if (el) el.textContent = `Next CRON: ${m}m ${s}s`;
+}
+
+// ── Init ──
+loadDashboard();
+loadFormats();
+setInterval(loadDashboard, 30000);
+setInterval(updateNextCycle, 1000);
+updateNextCycle();
 </script>
 </body>
 </html>

@@ -594,6 +594,7 @@ const IMAGE_FORMATS = new Set([
   'educational','learning_engine','data_insight','statistic_post','awareness_post',
   'international_news','local_district','youth_engagement','image_quote',
   'carousel_post','infographic','civic_knowledge','ai_opinion',
+  'reel_script', // reel posts as storyboard image card
 ]);
 
 // ── Call fb-autopost (fire-and-forget async) ─────────────────────────────────
