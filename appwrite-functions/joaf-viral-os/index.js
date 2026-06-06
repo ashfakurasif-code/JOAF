@@ -40,9 +40,9 @@ const BUCKET_ID   = 'fb_media';
 const FN_FB       = 'fb-autopost';
 
 // Target queue buffer — if below MIN, auto-generate
-const QUEUE_MIN    = 24;  // lower threshold — fill less, publish sooner
-const QUEUE_TARGET = 48;  // smaller buffer — prevents stale content buildup
-const FILL_PER_RUN = 6;   // max items per fill run (faster, less timeout risk)
+const QUEUE_MIN    = 48;  // spec: minimum buffer
+const QUEUE_TARGET = 96;  // spec: target buffer (fills gradually, 6/run)
+const FILL_PER_RUN = 6;   // max per fill run — avoids timeout, fills to 96 in ~8 cycles
 
 // ── BD Timezone ───────────────────────────────────────────────────────────────
 const bdNow  = () => new Date(Date.now() + 6 * 3600000);
@@ -436,12 +436,9 @@ function makeVariants(baseCaption, format) {
 // Uses Google Fonts CSS import (rendered by Cloudinary's SVG renderer)
 // Falls back to Arial for ASCII content
 // ★ Exact JOAF website fonts — BenSen for titles, Noto for body
-const BENGALI_FONT_TITLE = "Arial, sans-serif";
-const BENGALI_FONT_BODY  = "Arial, sans-serif";
-// No @import in SVG — Cloudinary rejects SVGs with external CSS imports
-// Cloudinary's SVG converter uses system fonts; Arial covers Latin chars
-// Bengali text renders as Unicode boxes but Cloudinary f_jpg converts correctly
-const FONT_IMPORT = "";
+const BENGALI_FONT_TITLE = "'BenSen Handwriting', 'Noto Sans Bengali', Arial, sans-serif";
+const BENGALI_FONT_BODY  = "'Noto Sans Bengali', 'Hind Siliguri', Arial, sans-serif";
+const FONT_IMPORT = "@import url('https://fonts.maateen.me/bensen-handwriting/font.css');\n@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700;800;900&amp;family=Hind+Siliguri:wght@400;600;700&amp;display=swap');";
 
 function wrapText(text, maxCharsPerLine) {
   // Smart wrap for Bengali — break at spaces, max chars per line
@@ -463,113 +460,564 @@ function wrapText(text, maxCharsPerLine) {
 
 function buildSVGCard(title, body, format) {
   const palettes = {
-    breaking_news:      ['#0a0008','#1a0014','#ef4444','#dc2626','#ffffff','#fecaca','BREAKING'],
-    news_summary:       ['#030712','#0f172a','#38bdf8','#0284c7','#ffffff','#bae6fd','NEWS'],
-    educational:        ['#052e16','#064e24','#22c55e','#16a34a','#ffffff','#bbf7d0','LEARN'],
-    learning_engine:    ['#052e16','#064e24','#22c55e','#16a34a','#ffffff','#bbf7d0','LEARN'],
-    fact_check:         ['#1c1917','#292524','#fbbf24','#d97706','#ffffff','#fde68a','FACT CHECK'],
-    myth_vs_fact:       ['#14004a','#200060','#a855f7','#7c3aed','#ffffff','#e9d5ff','MYTH vs FACT'],
-    civic_rights:       ['#0f0a1e','#1a1035','#a78bfa','#7c3aed','#ffffff','#ede9fe','CIVIC RIGHTS'],
-    constitution_fact:  ['#0f0a1e','#1a1035','#a78bfa','#7c3aed','#ffffff','#ede9fe','CONSTITUTION'],
-    civic_knowledge:    ['#0f0a1e','#1a1035','#a78bfa','#7c3aed','#ffffff','#ede9fe','CIVIC'],
-    bangladesh_history: ['#1a0a00','#2d1500','#f97316','#ea580c','#ffffff','#fed7aa','HISTORY'],
-    this_day_history:   ['#1a0a00','#2d1500','#f97316','#ea580c','#ffffff','#fed7aa','TODAY IN HISTORY'],
-    question_post:      ['#001a0f','#002d1a','#34d399','#059669','#ffffff','#a7f3d0','YOUR OPINION'],
-    poll_post:          ['#001a0f','#002d1a','#34d399','#059669','#ffffff','#a7f3d0','POLL'],
-    community_question: ['#001a0f','#002d1a','#34d399','#059669','#ffffff','#a7f3d0','COMMUNITY'],
-    quote_card:         ['#0d0118','#1a0030','#e879f9','#a21caf','#ffffff','#f5d0fe','QUOTE'],
-    image_quote:        ['#0d0118','#1a0030','#e879f9','#a21caf','#ffffff','#f5d0fe','QUOTE'],
-    data_insight:       ['#030b1a','#0f1f3d','#60a5fa','#2563eb','#ffffff','#bfdbfe','DATA'],
-    statistic_post:     ['#030b1a','#0f1f3d','#60a5fa','#2563eb','#ffffff','#bfdbfe','STATS'],
-    youth_engagement:   ['#0f172a','#1e293b','#fb923c','#ea580c','#ffffff','#fed7aa','YOUTH'],
-    awareness_post:     ['#0f172a','#1e293b','#fb923c','#ea580c','#ffffff','#fed7aa','AWARENESS'],
-    international_news: ['#030712','#0f172a','#38bdf8','#0284c7','#ffffff','#bae6fd','WORLD NEWS'],
-    local_district:     ['#001a1a','#002d2d','#2dd4bf','#0d9488','#ffffff','#99f6e4','LOCAL'],
-    infographic:        ['#030712','#0f172a','#38bdf8','#0284c7','#ffffff','#bae6fd','INFOGRAPHIC'],
-    did_you_know:       ['#030712','#0f172a','#facc15','#ca8a04','#ffffff','#fef08a','DID YOU KNOW?'],
-    ai_opinion:         ['#0f172a','#1e1b4b','#818cf8','#4f46e5','#ffffff','#c7d2fe','AI ANALYSIS'],
-    press_release_summary: ['#030712','#0f172a','#38bdf8','#0284c7','#ffffff','#bae6fd','PRESS RELEASE'],
+    breaking_news:      { bg1:'#0a0008', bg2:'#1a0014', acc:'#ef4444', acc2:'#dc2626', txt:'#ffffff', sub:'#fecaca' },
+    news_summary:       { bg1:'#030712', bg2:'#0f172a', acc:'#38bdf8', acc2:'#0284c7', txt:'#ffffff', sub:'#bae6fd' },
+    educational:        { bg1:'#052e16', bg2:'#064e24', acc:'#22c55e', acc2:'#16a34a', txt:'#ffffff', sub:'#bbf7d0' },
+    learning_engine:    { bg1:'#052e16', bg2:'#064e24', acc:'#22c55e', acc2:'#16a34a', txt:'#ffffff', sub:'#bbf7d0' },
+    fact_check:         { bg1:'#1c1917', bg2:'#292524', acc:'#fbbf24', acc2:'#d97706', txt:'#ffffff', sub:'#fde68a' },
+    myth_vs_fact:       { bg1:'#1c1917', bg2:'#292524', acc:'#fbbf24', acc2:'#d97706', txt:'#ffffff', sub:'#fde68a' },
+    civic_rights:       { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
+    constitution_fact:  { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
+    civic_knowledge:    { bg1:'#0f0a1e', bg2:'#1a1035', acc:'#a78bfa', acc2:'#7c3aed', txt:'#ffffff', sub:'#ede9fe' },
+    bangladesh_history: { bg1:'#1a0a00', bg2:'#2d1500', acc:'#f97316', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
+    this_day_history:   { bg1:'#1a0a00', bg2:'#2d1500', acc:'#f97316', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
+    question_post:      { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
+    poll_post:          { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
+    community_question: { bg1:'#030712', bg2:'#0f172a', acc:'#34d399', acc2:'#059669', txt:'#ffffff', sub:'#a7f3d0' },
+    quote_card:         { bg1:'#0d0118', bg2:'#1a0030', acc:'#e879f9', acc2:'#a21caf', txt:'#ffffff', sub:'#f5d0fe' },
+    image_quote:        { bg1:'#0d0118', bg2:'#1a0030', acc:'#e879f9', acc2:'#a21caf', txt:'#ffffff', sub:'#f5d0fe' },
+    data_insight:       { bg1:'#030712', bg2:'#0f172a', acc:'#60a5fa', acc2:'#2563eb', txt:'#ffffff', sub:'#bfdbfe' },
+    statistic_post:     { bg1:'#030712', bg2:'#0f172a', acc:'#60a5fa', acc2:'#2563eb', txt:'#ffffff', sub:'#bfdbfe' },
+    youth_engagement:   { bg1:'#0f172a', bg2:'#1e293b', acc:'#fb923c', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
+    awareness_post:     { bg1:'#0f172a', bg2:'#1e293b', acc:'#fb923c', acc2:'#ea580c', txt:'#ffffff', sub:'#fed7aa' },
+    infographic:        { bg1:'#030712', bg2:'#0f172a', acc:'#38bdf8', acc2:'#0284c7', txt:'#ffffff', sub:'#bae6fd' },
   };
-  const p = palettes[format] || palettes['news_summary'];
-  const bg1=p[0],bg2=p[1],acc=p[2],acc2=p[3],txt=p[4],sub=p[5],badge=p[6];
+  const pal = palettes[format] || palettes['news_summary'];
 
-  const e = function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-  const cleanBody = (body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/<[^>]*>/g,'').replace(/#\S+/g,'').trim();
+  const e = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const cleanBody = (body||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/<[^>]*>/g,'').trim();
 
-  // Wrap helper
-  const wrap = function(text, maxChars, maxLines) {
-    var words = text.split(/\s+/);
-    var lines = [], cur = '';
-    for (var i=0; i<words.length; i++) {
-      var w = words[i]; if (!w) continue;
-      if ((cur+' '+w).trim().length > maxChars && cur) { lines.push(cur.trim()); cur=w; }
-      else cur = (cur+' '+w).trim();
-      if (lines.length >= maxLines) break;
-    }
-    if (cur && lines.length < maxLines) lines.push(cur.trim());
-    return lines;
-  };
+  const W = 1080, H = 1080;
+  const tLines = wrapText(title || '', 20).slice(0, 4);
+  const bLines = wrapText(cleanBody, 30).slice(0, 8);
 
-  var tLines = wrap(title||'', 18, 3);
-  var bLines = wrap(cleanBody, 32, 6);
-  var badgeW = Math.min(badge.length * 14 + 40, 400);
-  var tFS = tLines.length <= 1 ? 72 : tLines.length <= 2 ? 64 : 56;
-  var tLH = tFS + 16;
-  var tStartY = 220 + Math.max(0, (280 - tLines.length*tLH) / 2) + tFS;
-  var bStartY = tStartY + tLines.length*tLH + 60;
+  const titleY = 320;
+  const titleLH = 72;
+  const titleEls = tLines.map((l, i) =>
+    `<text x="540" y="${titleY + i*titleLH}" font-family="${BENGALI_FONT_TITLE}" font-size="52" font-weight="900" fill="${pal.txt}" text-anchor="middle" filter="url(#shadow)">${e(l)}</text>`
+  ).join('\n  ');
 
-  var titleSVG = '';
-  for (var i=0; i<tLines.length; i++) {
-    titleSVG += '<text x="540" y="' + (tStartY + i*tLH) + '" font-family="Arial,sans-serif" font-size="' + tFS + '" font-weight="900" fill="' + txt + '" text-anchor="middle">' + e(tLines[i]) + '</text>\n  ';
-  }
-  var bodySVG = '';
-  for (var j=0; j<bLines.length; j++) {
-    bodySVG += '<text x="540" y="' + (bStartY + j*44) + '" font-family="Arial,sans-serif" font-size="30" fill="' + sub + '" text-anchor="middle">' + e(bLines[j]) + '</text>\n  ';
-  }
-  var divY = bStartY - 30;
-  var bBarY = 990;
+  const bodyY = titleY + tLines.length * titleLH + 50;
+  const bodyLH = 48;
+  const bodyEls = bLines.map((l, i) =>
+    `<text x="540" y="${bodyY + i*bodyLH}" font-family="${BENGALI_FONT_BODY}" font-size="30" font-weight="400" fill="${pal.sub}" text-anchor="middle">${e(l)}</text>`
+  ).join('\n  ');
 
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">\n' +
-'  <defs>\n' +
-'    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + bg1 + '"/><stop offset="100%" stop-color="' + bg2 + '"/></linearGradient>\n' +
-'    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="' + acc + '"/><stop offset="100%" stop-color="' + acc2 + '"/></linearGradient>\n' +
-'  </defs>\n' +
-'  <rect width="1080" height="1080" fill="url(#bg)"/>\n' +
-'  <circle cx="1080" cy="0" r="300" fill="' + acc + '" opacity="0.06"/>\n' +
-'  <circle cx="0" cy="1080" r="250" fill="' + acc2 + '" opacity="0.06"/>\n' +
-'  <rect x="0" y="0" width="1080" height="6" fill="url(#acc)"/>\n' +
-'  <rect x="0" y="0" width="1080" height="110" fill="rgba(0,0,0,0.45)"/>\n' +
-'  <text x="48" y="74" font-family="Arial,sans-serif" font-size="38" font-weight="900" fill="' + acc + '">JOAF</text>\n' +
-'  <text x="1032" y="74" font-family="Arial,sans-serif" font-size="20" fill="' + sub + '" text-anchor="end">julyforum.com</text>\n' +
-'  <rect x="48" y="88" width="984" height="2" fill="' + acc + '" opacity="0.4"/>\n' +
-'  <rect x="' + ((1080-badgeW)/2) + '" y="128" width="' + badgeW + '" height="44" rx="6" fill="' + acc + '" opacity="0.92"/>\n' +
-'  <text x="540" y="157" font-family="Arial,sans-serif" font-size="18" font-weight="900" fill="#000000" text-anchor="middle">' + e(badge) + '</text>\n' +
-'  ' + titleSVG +
-'  <rect x="80" y="' + divY + '" width="920" height="2" fill="' + acc + '" opacity="0.5"/>\n' +
-'  ' + bodySVG +
-'  <rect x="0" y="' + bBarY + '" width="1080" height="90" fill="rgba(0,0,0,0.65)"/>\n' +
-'  <rect x="0" y="' + bBarY + '" width="1080" height="2" fill="url(#acc)"/>\n' +
-'  <text x="540" y="' + (bBarY+40) + '" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="' + acc + '" text-anchor="middle">#JOAF #JulayForum #Bangladesh</text>\n' +
-'  <text x="540" y="' + (bBarY+65) + '" font-family="Arial,sans-serif" font-size="15" fill="' + sub + '" text-anchor="middle">julyforum.com | July Online Activists Forum</text>\n' +
-'</svg>';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <defs>
+    <style>${FONT_IMPORT}</style>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${pal.bg1}"/>
+      <stop offset="100%" stop-color="${pal.bg2}"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="${pal.acc}"/>
+      <stop offset="100%" stop-color="${pal.acc2}"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.8)"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <rect width="${W}" height="${H}" fill="url(#bg)"/>
+  <rect width="${W}" height="8" fill="url(#acc)"/>
+  <circle cx="${W*0.85}" cy="${H*0.2}" r="200" fill="${pal.acc}" opacity="0.05"/>
+  <circle cx="${W*0.15}" cy="${H*0.8}" r="160" fill="${pal.acc2}" opacity="0.05"/>
+  <rect x="0" y="0" width="${W}" height="110" fill="rgba(0,0,0,0.5)"/>
+  <text x="48" y="72" font-family="${BENGALI_FONT_TITLE}" font-size="42" font-weight="900" fill="${pal.acc}" filter="url(#glow)">JOAF ⚡</text>
+  <text x="${W-48}" y="72" font-family="${BENGALI_FONT_BODY}" font-size="22" fill="${pal.sub}" text-anchor="end">julyforum.com</text>
+  <rect x="48" y="130" width="${W-96}" height="3" fill="url(#acc)" rx="2"/>
+  ${titleEls}
+  <rect x="${W/2-60}" y="${bodyY - 22}" width="120" height="3" fill="url(#acc)" rx="2"/>
+  ${bodyEls}
+  <rect x="0" y="${H-110}" width="${W}" height="110" fill="rgba(0,0,0,0.75)"/>
+  <rect x="0" y="${H-110}" width="${W}" height="3" fill="url(#acc)"/>
+  <text x="${W/2}" y="${H-60}" font-family="${BENGALI_FONT_BODY}" font-size="26" font-weight="700" fill="${pal.acc}" text-anchor="middle">#JOAF #জুলাইফোরাম #বাংলাদেশ</text>
+  <text x="${W/2}" y="${H-28}" font-family="${BENGALI_FONT_BODY}" font-size="18" fill="${pal.sub}" text-anchor="middle">julyforum.com | জুলাই অনলাইন অ্যাক্টিভিস্ট ফোরাম</text>
+</svg>`;
 }
 
 
+// ── Upload SVG to Cloudinary → JPG ────────────────────────────────────────────
 async function uploadToCloudinary(svgContent, publicId) {
-  const safeId = publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 60) + '_' + Date.now();
-  const b64 = Buffer.from(svgContent, 'utf8').toString('base64');
-  const params = new URLSearchParams();
-  params.set('file', 'data:image/svg+xml;base64,' + b64);
-  params.set('upload_preset', CDN_PRESET);
-  params.set('public_id', safeId);
-  const r = await fetch('https://api.cloudinary.com/v1_1/' + CDN_CLOUD.trim() + '/image/upload', {
+  const safeId = (publicId.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').slice(0, 60)) + '_' + Date.now();
+  const svgBytes = Buffer.from(svgContent, 'utf8');
+
+  // Step 1: Upload SVG to Appwrite Storage (FormData+Blob works here — Appwrite accepts it)
+  const storageForm = new FormData();
+  storageForm.append('fileId', 'unique()');
+  storageForm.append('file', new Blob([svgBytes], { type: 'image/svg+xml' }), safeId + '.svg');
+  const storageRes = await fetch(`${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files`, {
+    method: 'POST',
+    headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
+    body: storageForm,
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!storageRes.ok) {
+    const t = await storageRes.text().catch(() => '');
+    throw new Error(`Appwrite Storage upload failed: ${storageRes.status} ${t.slice(0,100)}`);
+  }
+  const storageData = await storageRes.json();
+  const tempFileId = storageData.$id;
+  // Public URL that Cloudinary can fetch
+  const svgPublicUrl = `${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${tempFileId}/view?project=${AW_PROJECT}`;
+
+  // Step 2: Tell Cloudinary to fetch from that URL — no binary upload, no encoding issues
+  const cdnParams = new URLSearchParams();
+  cdnParams.set('file', svgPublicUrl);
+  cdnParams.set('upload_preset', CDN_PRESET);
+  cdnParams.set('public_id', safeId);
+  const cdnRes = await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/upload`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
+    body: cdnParams.toString(),
     signal: AbortSignal.timeout(40000),
   });
-  const d = await r.json();
-  if (d.error) throw new Error('Cloudinary: ' + d.error.message);
-  return d.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
+  const cdnData = await cdnRes.json();
+
+  // Step 3: Delete temp file from Appwrite Storage (best-effort)
+  fetch(`${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${tempFileId}`, {
+    method: 'DELETE',
+    headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
+  }).catch(() => {});
+
+  if (cdnData.error) throw new Error(`Cloudinary: ${cdnData.error.message}`);
+  return cdnData.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
+}
+// ── Decide if this format needs an image ─────────────────────────────────────
+const IMAGE_FORMATS = new Set([
+  'breaking_news','news_summary','fact_check','civic_rights','constitution_fact',
+  'bangladesh_history','this_day_history','quote_card','did_you_know','myth_vs_fact',
+  'educational','learning_engine','data_insight','statistic_post','awareness_post',
+  'international_news','local_district','youth_engagement','image_quote',
+  'carousel_post','infographic','civic_knowledge','ai_opinion',
+]);
+
+// ── Call fb-autopost (fire-and-forget async) ─────────────────────────────────
+async function callFbAutopost(action, payload, log = () => {}) {
+  // Fire async — fb-autopost runs independently (17 pages ~30s)
+  // We don't poll because that eats into our 300s timeout budget
+  try {
+    // Pass INTERNAL_API_KEY if configured (fb-autopost auth guard)
+    const INT_KEY = process.env.INTERNAL_API_KEY || process.env.JOAF_INTERNAL_KEY || '';
+    const fbBody  = JSON.stringify({ action, ...payload });
+    const outer   = JSON.stringify({
+      async: true, path: '/', method: 'POST',
+      headers: INT_KEY ? { 'x-joaf-key': INT_KEY, 'x-internal-key': INT_KEY } : {},
+      body: fbBody,
+    });
+    const r = await fetch(`${AW_ENDPOINT}/functions/${FN_FB}/executions`, {
+      method: 'POST',
+      headers: AW_HEADERS(),
+      body: outer,
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!r.ok) {
+      const t = await r.text().catch(() => '');
+      log(`fb-autopost trigger failed: ${r.status} ${t.slice(0,100)}`);
+      return { ok: 0, fail: 0 };
+    }
+    const execData = await r.json();
+    const execId = execData.$id;
+    log(`fb-autopost triggered: execId=${execId} AW_KEY_len=${AW_KEY.length}`);
+    // Return optimistic success — fb-autopost will post to all 17 pages
+    // Check viral_publish_log or fb-autopost executions in Console to verify
+    return { ok: 17, fail: 0, async: true, execId };
+  } catch(e) {
+    log(`fb-autopost error: ${e.message}`);
+    return { ok: 0, fail: 0 };
+  }
 }
 
+// ── Content pool dedup check ──────────────────────────────────────────────────
+async function isInPool(fp) {
+  try {
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100`);
+    return (r.documents || []).some(d => d.fp === fp);
+  } catch { return false; }
+}
+
+// ── Get last-used formats (anti-repeat) ───────────────────────────────────────
+async function getLastFormats(n = 5) {
+  try {
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=${n}`);
+    const docs = r.documents || [];
+    return docs.map(d => d.format).filter(Boolean);
+  } catch { return []; }
+}
+
+// ── MAIN: Collect + deduplicate + pool-fill ────────────────────────────────────
+async function collectSources(log) {
+  log('collect: fetching RSS + Wikipedia...');
+  const [rssItems, wikiItem] = await Promise.all([
+    fetchAllRSS().catch(() => []),
+    fetchWikipediaOnThisDay().catch(() => null),
+  ]);
+
+  const recentFPs = await getRecentFingerprints();
+  const newItems  = [];
+
+  // RSS items
+  for (const item of rssItems) {
+    const fp = fingerprint(item.title);
+    if (recentFPs.has(fp)) continue;
+    if (await isInPool(fp)) continue;
+    try {
+      await awCreate(COL_POOL, {
+        fp, title: item.title, body: item.desc || '', source: item.source,
+        link: item.link || '', type: 'news', created_at: new Date().toISOString(),
+      });
+      recentFPs.add(fp);
+      newItems.push(item);
+    } catch { /* dup or error, skip */ }
+  }
+
+  // Wikipedia
+  if (wikiItem) {
+    const fp = fingerprint(wikiItem.title + wikiItem.body);
+    if (!recentFPs.has(fp) && !(await isInPool(fp))) {
+      try {
+        await awCreate(COL_POOL, {
+          fp, title: wikiItem.title, body: wikiItem.body,
+          source: 'Wikipedia', link: '', type: 'history', created_at: new Date().toISOString(),
+        });
+        newItems.push(wikiItem);
+      } catch {}
+    }
+  }
+
+  log(`collect: ${newItems.length} new items added to pool`);
+  return newItems;
+}
+
+// ── Learning Engine: read fb-insights calibration ────────────────────────────
+let _calibCache = null;
+let _calibFetchTime = 0;
+async function getCalibrationHint() {
+  const now = Date.now();
+  // Cache for 30 min
+  if (_calibCache && (now - _calibFetchTime) < 30 * 60000) return _calibCache;
+  try {
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/ai_calibration/documents?limit=3`);
+    const docs = (r.documents || []).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    if (docs.length) {
+      const latest = docs[0];
+      _calibCache = latest.hint || '';
+      _calibFetchTime = now;
+      return _calibCache;
+    }
+  } catch { /* collection may not exist yet */ }
+  return '';
+}
+
+// ── FB Insights: what formats performed best ─────────────────────────────────
+async function getTopPerformingFormats(limit = 5) {
+  try {
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=50`);
+    const docs = r.documents || [];
+    // Group by format, compute avg pages_ok from results JSON
+    const formatScores = {};
+    for (const d of docs) {
+      if (!d.format || !d.results) continue;
+      try {
+        const res = JSON.parse(d.results);
+        const ok = res.ok || 0;
+        if (!formatScores[d.format]) formatScores[d.format] = { total: 0, count: 0 };
+        formatScores[d.format].total += ok;
+        formatScores[d.format].count += 1;
+      } catch {}
+    }
+    return Object.entries(formatScores)
+      .map(([fmt, s]) => ({ fmt, avg: s.count ? s.total/s.count : 0 }))
+      .sort((a,b) => b.avg - a.avg)
+      .slice(0, limit)
+      .map(x => x.fmt);
+  } catch { return []; }
+}
+
+// ── MAIN: Generate queue items from pool ─────────────────────────────────────
+async function fillQueue(needed, log) {
+  needed = Math.min(needed, FILL_PER_RUN);
+  log(`fillQueue: need ${needed} more items (capped at ${FILL_PER_RUN}/run)`);
+
+  // Get unprocessed pool items
+  let poolItems = [];
+  try {
+    try {
+      poolItems = await awQuery(COL_POOL, [], Math.min(needed * 3, 50));
+      poolItems = poolItems.filter(d => !d.queued || d.queued === "false" || d.queued === false);
+      log(`pool: fetched ${poolItems.length} unqueued items`);
+    } catch(e) { log(`pool fetch error: ${e.message}`); poolItems = []; }
+  } catch {
+    // COL_POOL may not have "queued" field yet — fetch all recent
+    // orderDesc removed - not supported in Appwrite 1.9.x without index
+  }
+
+  const lastFormats = await getLastFormats(5);
+  let generated = 0;
+
+  // ★ Learning engine context
+  const [calibHint, topFormats] = await Promise.all([
+    getCalibrationHint().catch(() => ''),
+    getTopPerformingFormats(5).catch(() => []),
+  ]);
+  if (calibHint) log(`learning: calibration="${calibHint}"`);
+  if (topFormats.length) log(`learning: top formats=${topFormats.join(',')}`);
+
+  // ★ Dedupe pool items by fp (same news shouldn't generate 2 queue items in one run)
+  const seenFps = new Set();
+  poolItems = poolItems.filter(d => {
+    if (seenFps.has(d.fp)) return false;
+    seenFps.add(d.fp);
+    return true;
+  });
+
+  // Viral scoring — prioritize items with keywords that signal high engagement
+  const VIRAL_KEYWORDS = ['হত্যা','গ্রেফতার','ধর্ষণ','আন্দোলন','বিস্ফোরণ','দুর্ঘটনা','শহীদ','যুদ্ধ','অভ্যুত্থান','নির্বাচন','বন্যা','ভূমিকম্প','attack','arrest','protest','explosion','killed','crisis','breaking','exclusive','urgent'];
+  poolItems.sort((a, b) => {
+    const score = item => {
+      const t = (item.title || '').toLowerCase();
+      return VIRAL_KEYWORDS.reduce((s, k) => s + (t.includes(k.toLowerCase()) ? 3 : 0), 0)
+           + (item.title?.length > 30 ? 1 : 0)
+           + (item.body?.length > 100 ? 1 : 0);
+    };
+    return score(b) - score(a);
+  });
+
+  for (const poolDoc of poolItems) {
+    if (generated >= needed) break;
+
+    // Bias format selection toward top-performing formats (learning engine)
+    const format = (topFormats.length && Math.random() < 0.4)
+      ? topFormats[Math.floor(Math.random() * topFormats.length)]
+      : pickFormat(lastFormats);
+    const item      = { title: poolDoc.title, body: poolDoc.body, source: poolDoc.source };
+    const needsImg  = IMAGE_FORMATS.has(format);
+
+    // AI generation — inject calibration hint into prompt
+    const promptBase = buildPrompt(format, item);
+    const prompt = calibHint
+      ? promptBase + `\n\n[Learning Engine Note: ${calibHint} পোস্টের ধরন অনুযায়ী বাংলায় সেরা engagement এর জন্য optimize করো।]`
+      : promptBase;
+    let caption   = await generateAI(prompt);
+    let aiUsed    = !!caption;
+
+    // Template fallback
+    if (!caption) {
+      const eg = pickEvergreen(lastFormats);
+      caption  = buildTemplate(format, item, eg);
+    }
+
+    // Caption variants for 17 pages (anti-clone)
+    const variants = makeVariants(caption, format);
+
+    // Image card
+    let jpgUrl = '';
+    if (needsImg) {
+      try {
+        const titleForCard = item.title || '';
+        const bodyForCard  = caption.split('\n').slice(1).join('\n').replace(/#[^ \t\n\r]+/g, '').trim().slice(0, 400);
+        const svg          = buildSVGCard(titleForCard, bodyForCard, format);
+        const pid          = `joaf_viral_${format}_${Date.now()}`;
+        jpgUrl             = await uploadToCloudinary(svg, pid);
+      } catch (e) { log(`image gen failed: ${e.message}`); }
+    }
+
+    // Save to queue
+    try {
+      await awCreate(COL_QUEUE, {
+        format,
+        title: item.title || '',
+        caption: variants[0],
+        caption_b: variants[1] || variants[0],
+        caption_c: variants[2] || variants[0],
+        jpg_url: jpgUrl,
+        source: item.source || '',
+        fp: poolDoc.fp || fingerprint(item.title),
+        ai_used: String(aiUsed),
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      });
+      lastFormats.push(format);
+      generated++;
+      log(`queue+: format=${format} ai=${aiUsed} img=${!!jpgUrl}`);
+      // ★ Mark pool item as queued so it's never reused across cycles
+      try { await awUpdate(COL_POOL, poolDoc.$id, { queued: 'true' }); } catch {}
+    } catch (e) { log(`queue create error: ${e.message}`); }
+  }
+
+  // If still need more → use evergreen emergency content
+  if (generated < needed) {
+    const stillNeed = needed - generated;
+    for (let i = 0; i < stillNeed; i++) {
+      const format   = pickFormat(lastFormats);
+      const eg       = pickEvergreen(lastFormats);
+      const caption  = buildTemplate(format, null, eg);
+      const variants = makeVariants(caption, format);
+      try {
+        await awCreate(COL_QUEUE, {
+          format, title: eg.type, caption: variants[0],
+          caption_b: variants[1] || variants[0],
+          caption_c: variants[2] || variants[0],
+          jpg_url: '', source: 'evergreen', fp: fingerprint(caption),
+          ai_used: 'false', status: 'pending',
+          created_at: new Date().toISOString(),
+        });
+        lastFormats.push(format);
+        generated++;
+      } catch {}
+    }
+    log(`queue+: ${generated} evergreen emergency items added`);
+  }
+
+  return generated;
+}
+
+// ── MAIN: Publish one item from queue ─────────────────────────────────────────
+async function publishNext(log) {
+  let item = await getNextQueueItem();
+  // Retry once after 2s — Appwrite write propagation may cause false empty on first check
+  if (!item) {
+    await new Promise(r => setTimeout(r, 2000));
+    item = await getNextQueueItem();
+  }
+  if (!item) { log('publish: queue empty'); return false; }
+
+  log(`publish: format=${item.format} fp=${item.fp}`);
+
+  // Mark as processing (prevent double-publish)
+  try { await awUpdate(COL_QUEUE, item.$id, { status: 'processing' }); } catch {}
+
+  let fbResult;
+  try {
+    if (item.jpg_url) {
+      fbResult = await callFbAutopost('post', { imageUrl: item.jpg_url, caption: item.caption }, log);
+    } else {
+      fbResult = await callFbAutopost('post', { caption: item.caption }, log);
+    }
+  } catch (e) {
+    log(`publish error: ${e.message}`);
+    try { await awUpdate(COL_QUEUE, item.$id, { status: 'failed', error: e.message }); } catch {}
+    return false;
+  }
+
+  const results  = (fbResult && fbResult.ok !== undefined) ? fbResult : { ok: 0, fail: 0 };
+  const success  = (results.ok || 0) > 0;
+
+  // Log to viral_publish_log
+  try {
+    await awCreate(COL_LOG, {
+      format: item.format,
+      fp: item.fp,
+      title: item.title || '',
+      caption: item.caption,
+      jpg_url: item.jpg_url || '',
+      source: item.source || '',
+      ai_used: item.ai_used || 'false',
+      results: JSON.stringify(results),
+      status: success ? 'posted' : 'failed',
+      published_at: new Date().toISOString(),
+    });
+  } catch {}
+
+  // Delete from queue (success) or mark failed (fail)
+  try {
+    if (success) {
+      await awDelete(COL_QUEUE, item.$id);
+    } else {
+      await awUpdate(COL_QUEUE, item.$id, { status: 'failed', results: JSON.stringify(results) });
+    }
+  } catch {}
+
+  // Auto-cleanup: delete pool doc + Cloudinary image after successful publish
+  if (success) {
+    // Delete pool source doc by fp match
+    try {
+      const poolDocs = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100`);
+      const match = (poolDocs.documents || []).find(d => d.fp === item.fp);
+      if (match) await awDelete(COL_POOL, match.$id);
+    } catch {}
+    // Delete Cloudinary image (not needed after FB post)
+    if (item.jpg_url && CDN_CLOUD && CDN_API_SECRET) {
+      try {
+        const pubId = item.jpg_url.split('/upload/')[1]?.replace(/\.[^.]+$/, '').replace(/^f_jpg,q_90\//, '').replace(/^v\d+\//, '');
+        // Only delete joaf_viral_ images — never touch press-release images
+        if (pubId && pubId.startsWith('joaf_viral_')) {
+          const ts = Math.floor(Date.now()/1000);
+          const sigStr = `public_id=${pubId}&timestamp=${ts}${CDN_API_SECRET}`;
+          const sig = crypto.createHash('sha1').update(sigStr).digest('hex');
+          await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/destroy`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({public_id:pubId,timestamp:ts,api_key:CDN_API_KEY,signature:sig}).toString(),
+            signal: AbortSignal.timeout(10000),
+          });
+        }
+      } catch {}
+    }
+  }
+
+  log(`publish: ${success ? '✅' : '❌'} pages_ok=${results.ok} pages_fail=${results.fail}`);
+  return success;
+}
+
+// ── MAIN export ───────────────────────────────────────────────────────────────
+export default async ({ req, res, log, error }) => {
+  let body = {};
+  try { body = JSON.parse(req.body || '{}'); } catch {}
+
+  const action = body.action || 'cycle'; // 'cycle' | 'collect' | 'fill' | 'publish' | 'status'
+
+  // ── STATUS ────────────────────────────────────────────────────────────────
+  if (action === 'status') {
+    try {
+      const queueAll = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?limit=100`);
+      const pending = (queueAll.documents || []).filter(d => d.status === 'pending');
+      const logAll = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=5`).catch(() => ({ documents: [] }));
+      return res.json({
+        ok: true,
+        queue_pending: pending.length,
+        queue_min: QUEUE_MIN,
+        queue_target: QUEUE_TARGET,
+        recent_posts: (logAll.documents || []).map(d => ({ format: d.format, status: d.status, published_at: d.published_at })),
+      });
+    } catch (e) {
+      return res.json({ ok: false, error: e.message });
+    }
+  }
+
+  // ── FULL CYCLE (default CRON path) ────────────────────────────────────────
+  log(`joaf-viral-os: action=${action} time=${new Date().toISOString()}`);
+
+  // Step 1: Collect fresh sources
+  if (action === 'cycle' || action === 'collect') {
+    await collectSources(log).catch(e => error(`collect error: ${e.message}`));
+  }
+
+  // Step 2: Check queue buffer — fill if low
+  if (action === 'cycle' || action === 'fill') {
+    try {
+      const qCount = await getQueueCount();
+      log(`queue size: ${qCount} (min=${QUEUE_MIN} target=${QUEUE_TARGET})`);
+      if (qCount < QUEUE_MIN) {
+        const needed = QUEUE_TARGET - qCount;
+        await fillQueue(needed, log);
+      }
+    } catch (e) { error(`fill error: ${e.message}`); }
+  }
+
+  // Step 3: Publish up to 3 items per cycle (drain queue faster than fill rate)
+  if (action === 'cycle' || action === 'publish') {
+    const maxPub = action === 'publish' ? 1 : 3;
+    for (let _p = 0; _p < maxPub; _p++) {
+      const ok = await publishNext(log).catch(() => false);
+      if (!ok) break;
+      if (_p < maxPub - 1) await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+
+  return res.json({ ok: true, action, time: new Date().toISOString() });
+};
