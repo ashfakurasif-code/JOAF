@@ -313,7 +313,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-d
 <div class="toast" id="toast"></div>
 
 <script>
-const PROXY = '/.netlify/functions/groq-proxy';
+const PROXY = 'https://fra.cloud.appwrite.io/v1/functions/groq-proxy/executions';
 
 // ── Tag selections ──
 function initTags(rowId, multiSelect=false) {
@@ -466,20 +466,29 @@ async function generate() {
   try {
     const res = await fetch(PROXY, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': '6a11b6cd000b59f318eb',
+        'X-Appwrite-Key': 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b'
+      },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 2500,
-        temperature: 0.85,
-        messages: [
-          {role: 'system', content: systemPrompt},
-          {role: 'user', content: userPrompt}
-        ]
+        async: false, path: '/', method: 'POST', headers: {},
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 2500,
+          temperature: 0.85,
+          messages: [
+            {role: 'system', content: systemPrompt},
+            {role: 'user', content: userPrompt}
+          ]
+        })
       })
     });
 
     clearInterval(iv);
-    const data = await res.json();
+    const execResp = await res.json();
+    let data;
+    try { data = JSON.parse(execResp.responseBody || '{}'); } catch { data = {}; }
     
     if (!res.ok || data.error) throw new Error(data.error?.message || 'API Error');
     
