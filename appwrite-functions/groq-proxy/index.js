@@ -81,9 +81,15 @@ async function tryGroq(key, body) {
   return data;
 }
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Appwrite-Project, X-Appwrite-Key, x-joaf-key, x-internal-key',
+};
+
 export default async ({ req, res, log, error }) => {
-  if (req.method === 'OPTIONS') return res.empty();
-  if (req.method !== 'POST') return res.json({ error: 'Method not allowed' }, 405);
+  if (req.method === 'OPTIONS') return res.send('', 204, CORS);
+  if (req.method !== 'POST') return res.json({ error: 'Method not allowed' }, 405, CORS);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const INTERNAL_KEY = process.env.INTERNAL_API_KEY;
@@ -91,16 +97,16 @@ export default async ({ req, res, log, error }) => {
     const provided = req.headers['x-joaf-key'] || req.headers['x-internal-key'];
     if (!provided || provided !== INTERNAL_KEY) {
       error('groq-proxy: unauthorized');
-      return res.json({ error: 'Unauthorized' }, 401);
+      return res.json({ error: 'Unauthorized' }, 401, CORS);
     }
   }
 
   let body;
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
-  catch { return res.json({ error: 'Invalid JSON' }, 400); }
+  catch { return res.json({ error: 'Invalid JSON' }, 400, CORS); }
 
-  if (!body?.messages?.length) return res.json({ error: 'messages required' }, 400);
-  if (body._ping) return res.json({ ok: true, pong: true });
+  if (!body?.messages?.length) return res.json({ error: 'messages required' }, 400, CORS);
+  if (body._ping) return res.json({ ok: true, pong: true }, 200, CORS);
 
   const OR_KEY     = process.env.OPENROUTER_API_KEY;
   const GEMINI_KEY = process.env.GEMINI_API_KEY;
@@ -111,7 +117,7 @@ export default async ({ req, res, log, error }) => {
     try {
       const data = await tryOpenRouter(OR_KEY, body);
       log('groq-proxy: OpenRouter OK');
-      return res.json(data);
+      return res.json(data, 200, CORS);
     } catch (e) { log('groq-proxy: OpenRouter failed — ' + e.message); }
   }
 
@@ -119,17 +125,17 @@ export default async ({ req, res, log, error }) => {
     try {
       const data = await tryGemini(GEMINI_KEY, body);
       log('groq-proxy: Gemini OK');
-      return res.json(data);
+      return res.json(data, 200, CORS);
     } catch (e) { log('groq-proxy: Gemini failed — ' + e.message); }
   }
 
-  if (!GROQ_KEY) return res.json({ error: 'No AI provider configured' }, 500);
+  if (!GROQ_KEY) return res.json({ error: 'No AI provider configured' }, 500, CORS);
   try {
     const data = await tryGroq(GROQ_KEY, body);
     log('groq-proxy: Groq OK');
-    return res.json(data);
+    return res.json(data, 200, CORS);
   } catch (e) {
     error('groq-proxy: all providers failed — ' + e.message);
-    return res.json({ error: 'AI unavailable: ' + e.message }, 503);
+    return res.json({ error: 'AI unavailable: ' + e.message }, 503, CORS);
   }
 };
