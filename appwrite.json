@@ -210,7 +210,10 @@
                 }
             ],
             "ignore": [],
-            "path": "appwrite-functions/fb-autopost"
+            "path": "appwrite-functions/fb-autopost",
+            "deploymentRetention": 0,
+            "buildSpecification": "s-0.5vcpu-512mb",
+            "runtimeSpecification": "s-0.5vcpu-512mb"
         },
         {
             "$id": "send-notification",
@@ -660,7 +663,10 @@
             "commands": "npm install",
             "path": "appwrite-functions/joaf-viral-os",
             "ignore": [],
-            "vars": []
+            "vars": [],
+            "deploymentRetention": 0,
+            "buildSpecification": "s-0.5vcpu-512mb",
+            "runtimeSpecification": "s-0.5vcpu-512mb"
         },
         {
             "$id": "joaf-image-gen",
@@ -675,7 +681,10 @@
             "timeout": 120,
             "enabled": true,
             "logging": true,
-            "scopes": []
+            "scopes": [],
+            "deploymentRetention": 0,
+            "buildSpecification": "s-0.5vcpu-512mb",
+            "runtimeSpecification": "s-0.5vcpu-512mb"
         },
         {
             "$id": "joaf-video-gen",
@@ -690,7 +699,10 @@
             "timeout": 300,
             "enabled": true,
             "logging": true,
-            "scopes": []
+            "scopes": [],
+            "deploymentRetention": 0,
+            "buildSpecification": "s-0.5vcpu-512mb",
+            "runtimeSpecification": "s-0.5vcpu-512mb"
         },
         {
             "$id": "joaf-analytics",
@@ -705,7 +717,10 @@
             "timeout": 120,
             "enabled": true,
             "logging": true,
-            "scopes": []
+            "scopes": [],
+            "deploymentRetention": 0,
+            "buildSpecification": "s-0.5vcpu-512mb",
+            "runtimeSpecification": "s-0.5vcpu-512mb"
         }
     ],
     "sites": [
