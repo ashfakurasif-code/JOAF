@@ -621,6 +621,7 @@ body  { overflow-x:hidden; }
       <div class="ni" onclick="goPage('blood',this)"><span class="ic">🩸</span>রক্তদাতা <span class="nbadge green" id="b-blood">—</span></div>
       <div class="ni" onclick="goPage('press',this)"><span class="ic">📰</span>Press Release</div>
       <div class="ni" onclick="goPage('joaf-studio',this)" style="color:var(--amber)"><span class="ic">🚀</span>JOAF Studio</div>
+      <div class="ni" onclick="goPage('publisher',this)" style="color:#38bdf8"><span class="ic">📡</span>Publisher</div>
 
       <div class="nsec">Data</div>
       <div class="ni" onclick="goPage('leader',this)"><span class="ic">🏛️</span>নেতা ট্র্যাকার</div>
@@ -1548,6 +1549,16 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
       </div><!-- /studio-panels -->
     </div><!-- /page-joaf-studio -->
 
+    <!-- ── JOAF PUBLISHER PAGE ──────────────────────────────────────── -->
+    <div class="page" id="page-publisher" style="padding:0;overflow:hidden;height:calc(100vh - 48px);display:none;">
+      <iframe
+        id="publisherFrame"
+        src="/tools/publisher-dashboard.html"
+        style="width:100%;height:100%;border:none;display:block;"
+        allow="clipboard-write"
+      ></iframe>
+    </div><!-- /page-publisher -->
+
     <div class="page" id="page-sysconfig">
       <div class="card" style="margin-bottom:14px">
         <div class="card-header">
@@ -1915,6 +1926,7 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
       .fb-tone-btn{padding:5px 11px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text2);transition:.12s;}
       .fb-tone-btn:hover,.fb-tone-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
       #page-fbpost{overflow:hidden;}
+      #page-publisher{overflow:hidden;}
       </style>
     </div>
   </div><!-- /main -->
@@ -2210,7 +2222,7 @@ window.goPage = function(id, el) {
     'alert-page':'🚨 সতর্কতা',blood:'🩸 রক্তদাতা',press:'📰 Press Release',
     leader:'🏛️ নেতা ট্র্যাকার',warrior:'✊ জুলাই যোদ্ধা',bajar:'🛒 বাজার দর',
     medicine:'💊 ওষুধের দাম',members:'👥 Members',polls:'🗳️ Polls',
-    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',sysconfig:'🔧 System Configuration','joaf-studio':'🚀 JOAF Studio'};
+    forum:'💬 Forum',analytics:'📈 Analytics',settings:'⚙️ Settings',sysconfig:'🔧 System Configuration','joaf-studio':'🚀 JOAF Studio',publisher:'📡 JOAF Publisher'};
   document.getElementById('pageTitle').textContent = titles[id] || id;
   // Lazy load page data
   const loaders = {
@@ -7257,6 +7269,23 @@ window._storeCaptionResult = function(result) {
   window._captionEngineResult = result;
 };
 
+// ── Fix: Force override any stale Netlify localStorage values ───────────
+(function fixStaleEndpoints(){
+  const AW_BASE = 'https://fra.cloud.appwrite.io/v1';
+  const fixes = {
+    groqEndpoint:  AW_BASE + '/functions/groq-proxy/executions',
+    fbEndpoint:    AW_BASE + '/functions/fb-autopost/executions',
+  };
+  // Only fix if value contains netlify
+  for (const [k,v] of Object.entries(fixes)) {
+    const stored = localStorage.getItem(k);
+    if (stored && stored.includes('netlify')) {
+      localStorage.setItem(k, v);
+      console.log('[JOAF] Fixed stale endpoint:', k, '→', v);
+    }
+  }
+})();
+
 // ── Unified goPage extension (sysconfig + joaf-studio) ──────────────
 (function patchGoPageUnified(){
   const _base = window.goPage;
@@ -7269,6 +7298,10 @@ window._storeCaptionResult = function(result) {
     }
     if(id === 'sysconfig'){
       setTimeout(sysconfigLoad, 80);
+    }
+    if(id === 'publisher'){
+      const pubPage = document.getElementById('page-publisher');
+      if(pubPage) pubPage.style.display = 'flex';
     }
     if(id === 'joaf-studio'){
       // Reset all panels to hidden (clear any inline display overrides)
