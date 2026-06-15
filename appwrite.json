@@ -661,6 +661,51 @@
             "path": "appwrite-functions/joaf-viral-os",
             "ignore": [],
             "vars": []
+        },
+        {
+            "$id": "joaf-image-gen",
+            "name": "JOAF Image Gen",
+            "runtime": "node-18.0",
+            "entrypoint": "index.js",
+            "execute": [
+                "any"
+            ],
+            "events": [],
+            "schedule": "",
+            "timeout": 120,
+            "enabled": true,
+            "logging": true,
+            "scopes": []
+        },
+        {
+            "$id": "joaf-video-gen",
+            "name": "JOAF Video Gen",
+            "runtime": "node-18.0",
+            "entrypoint": "index.js",
+            "execute": [
+                "any"
+            ],
+            "events": [],
+            "schedule": "",
+            "timeout": 300,
+            "enabled": true,
+            "logging": true,
+            "scopes": []
+        },
+        {
+            "$id": "joaf-analytics",
+            "name": "JOAF Analytics",
+            "runtime": "node-18.0",
+            "entrypoint": "index.js",
+            "execute": [
+                "any"
+            ],
+            "events": [],
+            "schedule": "0 */6 * * *",
+            "timeout": 120,
+            "enabled": true,
+            "logging": true,
+            "scopes": []
         }
     ],
     "sites": [

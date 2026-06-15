@@ -1,0 +1,10 @@
+{
+  "name": "joaf-image-gen",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.53",
+    "node-appwrite": "^14.0.0"
+  }
+}

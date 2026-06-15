@@ -187,7 +187,93 @@ export default async ({ req, res, log, error }) => {
     return res.json({ ok, fail: results.length - ok, total: results.length, results });
   }
 
-  // ── post (text | image | video) ──────────────────────────────────────────
+  // ── video (Appwrite Storage file → FB Reels) ────────────────────────────
+  if (action === 'video') {
+    const { videoStorageFileId, caption: vidCaption = '' } = body;
+    if (!videoStorageFileId) return res.json({ error: 'videoStorageFileId required' }, 400);
+    if (!AW_KEY) return res.json({ error: 'APPWRITE_API_KEY not set' }, 500);
+
+    // Download video buffer from Appwrite Storage
+    let videoBuffer;
+    try {
+      const dlRes = await fetch(
+        `${AW_EP}/storage/buckets/fb_media/files/${videoStorageFileId}/download?project=${AW_PJ}`,
+        { headers: { 'X-Appwrite-Project': AW_PJ, 'X-Appwrite-Key': AW_KEY }, signal: AbortSignal.timeout(60000) }
+      );
+      if (!dlRes.ok) throw new Error(`Storage download failed: ${dlRes.status}`);
+      videoBuffer = Buffer.from(await dlRes.arrayBuffer());
+      log(`video: downloaded ${videoBuffer.length} bytes from Storage`);
+    } catch (e) {
+      return res.json({ error: `Video download failed: ${e.message}` }, 500);
+    }
+
+    const vidResults = [];
+    for (const page of activePages) {
+      try {
+        // FB resumable video upload
+        // Step 1: Initialize upload session
+        const initRes = await fetch(`https://graph.facebook.com/${page.id}/video_reels`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            upload_phase: 'start',
+            access_token: page.token,
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+        const initData = await initRes.json();
+        if (initData.error) throw new Error(initData.error.message);
+        const uploadSessionId = initData.upload_session_id;
+        const videoId = initData.video_id;
+
+        // Step 2: Upload video binary
+        const uploadRes = await fetch(
+          `https://rupload.facebook.com/video-upload/v21.0/${uploadSessionId}`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `OAuth ${page.token}`,
+              'offset': '0',
+              'file_size': String(videoBuffer.length),
+              'Content-Type': 'video/mp4',
+            },
+            body: videoBuffer,
+            signal: AbortSignal.timeout(120000),
+          }
+        );
+        const uploadData = await uploadRes.json();
+        if (!uploadData.success) throw new Error('Upload failed: ' + JSON.stringify(uploadData));
+
+        // Step 3: Publish reel
+        const pubRes = await fetch(`https://graph.facebook.com/${page.id}/video_reels`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            upload_phase: 'finish',
+            video_id: videoId,
+            access_token: page.token,
+            description: vidCaption,
+            video_state: 'PUBLISHED',
+          }),
+          signal: AbortSignal.timeout(30000),
+        });
+        const pubData = await pubRes.json();
+        if (pubData.error) throw new Error(pubData.error.message);
+
+        vidResults.push({ id: page.id, name: page.name, ok: true, videoId });
+        log(`video reel → ${page.name}: ${videoId}`);
+        await new Promise(r => setTimeout(r, 2000));
+      } catch (e) {
+        vidResults.push({ id: page.id, name: page.name, ok: false, error: e.message });
+        error(`video ✗ ${page.name}: ${e.message}`);
+      }
+    }
+
+    const okCount = vidResults.filter(r => r.ok).length;
+    return res.json({ ok: okCount, fail: vidResults.length - okCount, total: vidResults.length, results: vidResults });
+  }
+
+  // ── post (text | image) ──────────────────────────────────────────────────
   const unixTs = scheduledAt ? Math.floor(new Date(scheduledAt).getTime() / 1000) : null;
 
   for (const page of activePages) {

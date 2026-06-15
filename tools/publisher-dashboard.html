@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JOAF Publisher</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--bg4:#22223a;
+  --text:#e8e8f0;--text2:#a0a0b8;--text3:#606078;
+  --red:#ef4444;--gold:#f5c518;--blue:#38bdf8;--green:#22c55e;
+  --purple:#a78bfa;--orange:#f97316;--pink:#e879f9;
+  --border:rgba(255,255,255,0.07);
+  --radius:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh}
+
+/* ── COMMAND BAR ─────────────────────────────────────────────── */
+.cmd-bar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,10,15,0.96);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0}
+.status-dot.red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.cmd-label{font-size:12px;color:var(--text2)}
+.cmd-val{font-weight:700;color:var(--text)}
+.cmd-sep{color:var(--border);font-size:18px}
+.gauge-wrap{display:flex;align-items:center;gap:6px}
+.gauge-bar{width:80px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:3px;transition:width .5s;background:linear-gradient(90deg,var(--green),var(--blue))}
+.cmd-btn{
+  padding:6px 14px;border-radius:6px;border:none;cursor:pointer;
+  font-size:12px;font-weight:700;transition:all .15s;
+}
+.btn-pause{background:var(--bg3);color:var(--gold);border:1px solid var(--gold)}
+.btn-pause:hover{background:var(--gold);color:#000}
+.btn-now{background:var(--green);color:#000}
+.btn-now:hover{opacity:.85}
+.btn-token{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-token:hover{border-color:var(--blue);color:var(--blue)}
+.btn-create{background:var(--purple);color:#fff;margin-left:auto}
+.btn-create:hover{opacity:.85}
+.token-warn{color:var(--gold);font-size:11px}
+.token-ok{color:var(--green);font-size:11px}
+
+/* ── TABS ────────────────────────────────────────────────────── */
+.tabs{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border)}
+.tab{
+  padding:8px 18px;border-radius:8px 8px 0 0;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--text3);
+  border:1px solid transparent;border-bottom:none;
+  transition:all .15s;
+}
+.tab:hover{color:var(--text2);background:var(--bg2)}
+.tab.active{color:var(--text);background:var(--bg2);border-color:var(--border)}
+
+/* ── MAIN PANELS ─────────────────────────────────────────────── */
+.panels{padding:20px}
+.panel{display:none}
+.panel.active{display:grid;gap:16px}
+
+/* ── GRID LAYOUTS ────────────────────────────────────────────── */
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-left{grid-template-columns:2fr 1fr}
+@media(max-width:900px){.grid-3,.grid-2,.grid-left{grid-template-columns:1fr}}
+
+/* ── CARDS ───────────────────────────────────────────────────── */
+.card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;
+}
+.card-title{
+  font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text3);margin-bottom:12px;font-weight:700;
+  display:flex;align-items:center;gap:6px;
+}
+.card-title .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* ── QUEUE TABLE ─────────────────────────────────────────────── */
+.q-table{width:100%;border-collapse:collapse}
+.q-table th{
+  text-align:left;padding:6px 10px;font-size:11px;
+  color:var(--text3);border-bottom:1px solid var(--border);font-weight:600;
+}
+.q-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+.q-table tr:hover td{background:var(--bg3)}
+.q-badge{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:10px;font-weight:700;
+}
+.badge-img{background:rgba(56,189,248,.15);color:var(--blue)}
+.badge-vid{background:rgba(167,139,250,.15);color:var(--purple)}
+.badge-txt{background:rgba(34,197,94,.15);color:var(--green)}
+.q-actions{display:flex;gap:4px}
+.q-btn{
+  padding:3px 8px;border-radius:4px;border:none;cursor:pointer;
+  font-size:11px;font-weight:700;transition:all .15s;
+}
+.q-btn-go{background:rgba(34,197,94,.15);color:var(--green)}
+.q-btn-go:hover{background:var(--green);color:#000}
+.q-btn-del{background:rgba(239,68,68,.15);color:var(--red)}
+.q-btn-del:hover{background:var(--red);color:#fff}
+
+/* ── LIVE PUBLISH ────────────────────────────────────────────── */
+.live-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.live-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px}
+.live-caption{font-size:12px;color:var(--text2);line-height:1.5;max-height:60px;overflow:hidden;margin-bottom:12px}
+.page-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
+.page-item{
+  padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;
+  display:flex;align-items:center;gap:6px;
+}
+.page-ok{background:rgba(34,197,94,.1);color:var(--green)}
+.page-fail{background:rgba(239,68,68,.1);color:var(--red)}
+.page-wait{background:rgba(255,255,255,.05);color:var(--text3)}
+.progress-wrap{margin-top:12px}
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s;background:linear-gradient(90deg,var(--green),var(--blue))}
+
+/* ── RECENT POSTS ────────────────────────────────────────────── */
+.post-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;border-bottom:1px solid var(--border);
+}
+.post-item:last-child{border-bottom:none}
+.post-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.post-body{flex:1;min-width:0}
+.post-headline{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.post-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.post-status-ok{color:var(--green);font-size:11px;font-weight:700;flex-shrink:0}
+.post-status-fail{color:var(--red);font-size:11px;font-weight:700;flex-shrink:0}
+
+/* ── ANALYTICS ───────────────────────────────────────────────── */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-label{font-size:12px;color:var(--text2)}
+.stat-val{font-size:13px;font-weight:700;color:var(--text)}
+.bar-wrap{display:flex;align-items:center;gap:8px;margin-top:4px}
+.mini-bar{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.mini-fill{height:100%;border-radius:2px}
+.pct{font-size:10px;color:var(--text3);min-width:30px;text-align:right}
+
+/* ── AI STATUS ───────────────────────────────────────────────── */
+.ai-status{display:flex;gap:8px;flex-wrap:wrap}
+.ai-chip{
+  padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;
+  display:flex;align-items:center;gap:4px;
+}
+.ai-ok{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.ai-fail{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.ai-unk{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)}
+
+/* ── MANUAL CREATE SLIDE PANEL ───────────────────────────────── */
+.slide-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:200;backdrop-filter:blur(4px);
+}
+.slide-overlay.open{display:block}
+.slide-panel{
+  position:fixed;top:0;right:0;bottom:0;width:420px;max-width:95vw;
+  background:var(--bg2);border-left:1px solid var(--border);
+  z-index:201;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .25s ease;
+}
+.slide-panel.open{transform:translateX(0)}
+.slide-head{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.slide-head h3{font-size:15px;font-weight:700}
+.slide-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:4px}
+.slide-close:hover{color:var(--text)}
+.slide-body{flex:1;overflow-y:auto;padding:16px 20px}
+.slide-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px}
+
+.field-label{font-size:11px;color:var(--text3);font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.field-group{margin-bottom:14px}
+.inp, .sel, .txta{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-size:13px;padding:8px 10px;
+  transition:border-color .15s;
+}
+.inp:focus,.sel:focus,.txta:focus{outline:none;border-color:var(--purple)}
+.txta{resize:vertical;min-height:72px;line-height:1.5}
+.char-count{font-size:10px;color:var(--text3);text-align:right;margin-top:3px}
+.type-tabs{display:flex;gap:4px;margin-bottom:14px}
+.type-tab{
+  flex:1;padding:7px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg3);color:var(--text3);cursor:pointer;font-size:12px;
+  text-align:center;font-weight:700;transition:all .15s;
+}
+.type-tab.active{background:var(--purple);border-color:var(--purple);color:#fff}
+.badge-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:200px;overflow-y:auto}
+.badge-opt{
+  padding:6px 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--bg3);cursor:pointer;font-size:11px;transition:all .15s;
+  display:flex;align-items:center;gap:4px;
+}
+.badge-opt:hover{border-color:var(--purple)}
+.badge-opt.active{background:rgba(167,139,250,.15);border-color:var(--purple);color:var(--purple)}
+.btn-full{
+  width:100%;padding:10px;border-radius:7px;border:none;cursor:pointer;
+  font-size:13px;font-weight:700;transition:all .15s;
+}
+.btn-ai{background:var(--bg3);color:var(--purple);border:1px solid var(--purple);margin-bottom:10px}
+.btn-ai:hover{background:var(--purple);color:#fff}
+.btn-post-now{background:var(--green);color:#000}
+.btn-post-now:hover{opacity:.85}
+.btn-add-q{background:var(--bg3);color:var(--blue);border:1px solid var(--blue)}
+.btn-add-q:hover{background:var(--blue);color:#000}
+.result-box{
+  margin-top:10px;padding:10px;border-radius:6px;font-size:12px;line-height:1.5;
+  display:none;
+}
+.result-ok{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.result-fail{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+
+/* ── SYSTEM CONFIG PANEL ─────────────────────────────────────── */
+.cfg-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.cfg-row:last-child{border-bottom:none}
+.cfg-label{font-size:13px;color:var(--text2)}
+.cfg-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--bg3);border-radius:11px;
+  cursor:pointer;transition:.2s;border:1px solid var(--border);
+}
+.toggle-slider:before{
+  content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;
+  background:var(--text3);border-radius:50%;transition:.2s;
+}
+.toggle input:checked + .toggle-slider{background:var(--green);border-color:var(--green)}
+.toggle input:checked + .toggle-slider:before{transform:translateX(18px);background:#fff}
+.cfg-inp{
+  width:80px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);padding:5px 8px;font-size:13px;text-align:center;
+}
+.danger-zone{border:1px solid rgba(239,68,68,.2);border-radius:var(--radius);padding:14px;margin-top:12px}
+.danger-title{color:var(--red);font-size:12px;font-weight:700;margin-bottom:10px}
+.btn-danger{
+  padding:6px 14px;border-radius:6px;border:1px solid var(--red);
+  background:transparent;color:var(--red);cursor:pointer;font-size:12px;font-weight:700;
+  transition:all .15s;margin-right:8px;
+}
+.btn-danger:hover{background:var(--red);color:#fff}
+
+/* ── LOG STREAM ──────────────────────────────────────────────── */
+.log-stream{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px;font-family:'SF Mono','Fira Code',monospace;font-size:11px;
+  height:200px;overflow-y:auto;line-height:1.6;
+}
+.log-line{color:var(--text2)}
+.log-ok{color:var(--green)}
+.log-err{color:var(--red)}
+.log-info{color:var(--blue)}
+
+/* ── SPINNERS / LOADERS ──────────────────────────────────────── */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--bg3);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{color:var(--text3);text-align:center;padding:24px;font-size:13px}
+.countdown{font-variant-numeric:tabular-nums;font-weight:700;color:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- ── COMMAND BAR ─────────────────────────────────────────── -->
+<div class="cmd-bar">
+  <div class="status-dot" id="osDot"></div>
+  <div>
+    <div class="cmd-label">VIRAL OS</div>
+    <div class="cmd-val" id="osStatus">Loading...</div>
+  </div>
+  <div class="cmd-sep">|</div>
+  <div>
+    <div class="cmd-label">Queue</div>
+    <div class="gauge-wrap">
+      <div class="gauge-bar"><div class="gauge-fill" id="qGauge" style="width:0%"></div></div>
+      <div class="cmd-val" id="qCount">—/96</div>
+    </div>
+  </div>
+  <div class="cmd-sep">|</div>
+  <div>
+    <div class="cmd-label">Next Post</div>
+    <div class="cmd-val countdown" id="nextTimer">—</div>
+  </div>
+  <div class="cmd-sep">|</div>
+  <div>
+    <div class="cmd-label">Today</div>
+    <div class="cmd-val" id="todayCount">—</div>
+  </div>
+  <div class="cmd-sep">|</div>
+  <div>
+    <div class="cmd-label">FB Token</div>
+    <div id="tokenStatus" class="token-ok">Checking...</div>
+  </div>
+  <button class="cmd-btn btn-pause" onclick="togglePause()" id="pauseBtn">⏸ Pause</button>
+  <button class="cmd-btn btn-now" onclick="forcePublish()">▶ Publish Now</button>
+  <button class="cmd-btn btn-token" onclick="openTokenModal()">🔄 Refresh Token</button>
+  <button class="cmd-btn btn-create" onclick="openCreate()">+ Manual Create</button>
+</div>
+
+<!-- ── TABS ───────────────────────────────────────────────── -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('queue')" id="tab-queue">📋 Queue</div>
+  <div class="tab" onclick="switchTab('live')" id="tab-live">🔴 Live</div>
+  <div class="tab" onclick="switchTab('recent')" id="tab-recent">📬 Recent Posts</div>
+  <div class="tab" onclick="switchTab('analytics')" id="tab-analytics">📊 Analytics</div>
+  <div class="tab" onclick="switchTab('system')" id="tab-system">⚙️ System</div>
+</div>
+
+<!-- ── PANELS ──────────────────────────────────────────────── -->
+<div class="panels">
+
+  <!-- QUEUE -->
+  <div class="panel active" id="panel-queue">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="color:var(--blue)"></span>Publish Queue</div>
+      <div id="queueBody">
+        <div class="empty"><span class="spinner"></span> Loading queue...</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="color:var(--green)"></span>AI Providers</div>
+      <div class="ai-status" id="aiStatus">
+        <div class="ai-chip ai-unk">OpenRouter ...</div>
+        <div class="ai-chip ai-unk">Gemini ...</div>
+        <div class="ai-chip ai-unk">Groq ...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE -->
+  <div class="panel" id="panel-live">
+    <div class="live-card" id="liveCard">
+      <div class="live-title" id="liveTitle">No active publish</div>
+      <div class="live-caption" id="liveCaption"></div>
+      <div class="page-grid" id="pageGrid">
+        <div class="empty">Waiting for next publish cycle...</div>
+      </div>
+      <div class="progress-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">
+          <span id="liveOk">0 succeeded</span>
+          <span id="liveFail">0 failed</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="liveProgress" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="color:var(--purple)"></span>Function Log</div>
+      <div class="log-stream" id="logStream">
+        <div class="log-line">Waiting for cycle...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT -->
+  <div class="panel" id="panel-recent">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="color:var(--green)"></span>Recent Posts (last 24h)</div>
+      <div id="recentBody"><div class="empty"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="panel" id="panel-analytics">
+    <div class="card">
+      <div class="card-title"><span class="dot" style="color:var(--gold)"></span>🧠 Self-Learning Insights</div>
+      <div id="analyticsInsights"><div class="empty"><span class="spinner"></span> Loading...</div></div>
+    </div>
+    <div class="grid-2" style="display:grid;gap:16px">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="color:var(--gold)"></span>Format Performance (7d)</div>
+        <div id="formatPerf"><div class="empty">Loading...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="color:var(--orange)"></span>Page Performance</div>
+        <div id="pagePerf"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot" style="color:var(--pink)"></span>Content Type Distribution</div>
+      <div id="contentDist"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- SYSTEM -->
+  <div class="panel" id="panel-system">
+    <div class="grid-2" style="display:grid;gap:16px">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="color:var(--blue)"></span>Publisher Settings</div>
+        <div class="cfg-row">
+          <div><div class="cfg-label">Auto Publish</div><div class="cfg-desc">CRON every 5 minutes</div></div>
+          <label class="toggle"><input type="checkbox" id="cfgEnabled" checked onchange="saveCfg('enabled',this.checked)"><div class="toggle-slider"></div></label>
+        </div>
+        <div class="cfg-row">
+          <div><div class="cfg-label">Interval (minutes)</div><div class="cfg-desc">Between publish cycles</div></div>
+          <input class="cfg-inp" type="number" id="cfgInterval" value="5" min="5" max="60" onchange="saveCfg('interval',this.value)">
+        </div>
+        <div class="cfg-row">
+          <div><div class="cfg-label">Daily limit per page</div><div class="cfg-desc">Max posts per page/day</div></div>
+          <input class="cfg-inp" type="number" id="cfgDailyLimit" value="48" min="1" max="96" onchange="saveCfg('daily_limit',this.value)">
+        </div>
+        <div class="cfg-row">
+          <div><div class="cfg-label">Video every N posts</div><div class="cfg-desc">e.g. 6 = every 6th post</div></div>
+          <input class="cfg-inp" type="number" id="cfgVideoN" value="6" min="1" max="20" onchange="saveCfg('video_every_n',this.value)">
+        </div>
+        <div class="cfg-row">
+          <div><div class="cfg-label">Quiet hours (BD time)</div><div class="cfg-desc">No posts during sleep</div></div>
+          <div style="display:flex;gap:4px">
+            <input class="cfg-inp" type="number" id="cfgQStart" value="2" min="0" max="23" style="width:50px" onchange="saveCfg('quiet_start',this.value)">
+            <span style="color:var(--text3);line-height:2">—</span>
+            <input class="cfg-inp" type="number" id="cfgQEnd" value="7" min="0" max="23" style="width:50px" onchange="saveCfg('quiet_end',this.value)">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="color:var(--gold)"></span>Token Manager</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+          Page tokens are stored in fb-autopost function variables. Refresh every 60 days.
+        </div>
+        <div id="tokenInfo" style="margin-bottom:12px">
+          <div class="empty"><span class="spinner"></span></div>
+        </div>
+        <button class="btn-full btn-ai" onclick="openTokenModal()">🔄 Refresh All Tokens</button>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-title"><span class="dot" style="color:var(--purple)"></span>Analytics Engine</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:10px">joaf-analytics runs every 6h via CRON. Manually trigger to get latest viral scores.</div>
+          <button class="btn-full btn-ai" onclick="runAnalytics()" id="analyticsBtn">📊 Run Analytics Now</button>
+          <div id="analyticsRunResult" style="margin-top:8px;font-size:11px"></div>
+        </div>
+        <div class="danger-zone">
+          <div class="danger-title">⚠️ Danger Zone</div>
+          <button class="btn-danger" onclick="clearQueue()">Clear Queue</button>
+          <button class="btn-danger" onclick="clearPool()">Clear Pool</button>
+          <button class="btn-danger" onclick="clearLog()">Clear Log</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── MANUAL CREATE SLIDE PANEL ──────────────────────────── -->
+<div class="slide-overlay" id="overlay" onclick="closeCreate()"></div>
+<div class="slide-panel" id="slidePanel">
+  <div class="slide-head">
+    <h3>✍️ Manual Create</h3>
+    <button class="slide-close" onclick="closeCreate()">✕</button>
+  </div>
+  <div class="slide-body">
+    <div class="type-tabs">
+      <div class="type-tab active" onclick="setType('image')" id="type-image">🖼️ Image</div>
+      <div class="type-tab" onclick="setType('video')" id="type-video">🎬 Video</div>
+      <div class="type-tab" onclick="setType('text')" id="type-text">📝 Text</div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Badge Type</div>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Headline <span style="color:var(--red)">*</span> (min 10 chars)</div>
+      <input class="inp" type="text" id="manHeadline" placeholder="বাংলায় শিরোনাম লিখুন..." maxlength="80" oninput="updateCount('manHeadline','headCount',80)">
+      <div class="char-count"><span id="headCount">0</span>/80</div>
+    </div>
+
+    <div class="field-group" id="bodyField">
+      <div class="field-label">Body Text <span style="color:var(--red)">*</span> (min 30 chars)</div>
+      <textarea class="txta" id="manBody" placeholder="বিস্তারিত লিখুন..." maxlength="300" oninput="updateCount('manBody','bodyCount',300)"></textarea>
+      <div class="char-count"><span id="bodyCount">0</span>/300</div>
+    </div>
+
+    <div class="field-group" id="videoFields" style="display:none">
+      <div class="field-label">Hook Text (0-3s)</div>
+      <input class="inp" id="manHook" placeholder="প্রথম 3 সেকেন্ডের টেক্সট..." style="margin-bottom:8px">
+      <div class="field-label">CTA Text (last 8s)</div>
+      <input class="inp" id="manCta" placeholder="কমেন্টে মতামত জানান 👇" value="কমেন্টে মতামত জানান 👇">
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Caption (auto-fill from AI or manual)</div>
+      <textarea class="txta" id="manCaption" placeholder="AI Generate বাটনে চাপুন অথবা নিজে লিখুন..." style="min-height:100px;max-height:200px" maxlength="2000" oninput="updateCount('manCaption','capCount',2000)"></textarea>
+      <div class="char-count"><span id="capCount">0</span>/2000</div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Photo URL (optional — background image)</div>
+      <input class="inp" type="url" id="manPhoto" placeholder="https://...jpg">
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Target Pages</div>
+      <select class="sel" id="manPages">
+        <option value="all">All 17 Pages</option>
+        <option value="main">Main JOAF Page only</option>
+        <option value="custom">Custom (coming soon)</option>
+      </select>
+    </div>
+
+    <button class="btn-full btn-ai" onclick="aiGenerate()">⚡ AI Generate Caption</button>
+
+    <div class="result-box" id="createResult"></div>
+  </div>
+  <div class="slide-foot">
+    <button class="btn-full btn-post-now" onclick="postNow()" style="flex:1">📤 Post Now</button>
+    <button class="btn-full btn-add-q" onclick="addToQueue()" style="flex:1">📅 Add to Queue</button>
+  </div>
+</div>
+
+<!-- ── TOKEN MODAL ─────────────────────────────────────────── -->
+<div id="tokenModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;width:460px;max-width:95vw">
+    <h3 style="margin-bottom:12px">🔄 Refresh FB Token</h3>
+    <p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:14px">
+      1. <a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color:var(--blue)">Graph API Explorer</a> এ যান<br>
+      2. App: <strong>JOAF Auto Post</strong> select করুন<br>
+      3. <strong>pages_manage_posts, pages_show_list, pages_read_engagement</strong> permission নিন<br>
+      4. Generate Access Token এ click করুন<br>
+      5. Token paste করুন:
+    </p>
+    <textarea id="tokenInput" class="txta" placeholder="EAAj..." style="min-height:80px;font-family:monospace;font-size:11px"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-full btn-post-now" onclick="submitToken()" style="flex:1">Save & Refresh</button>
+      <button class="btn-full btn-add-q" onclick="closeTokenModal()" style="flex:1">Cancel</button>
+    </div>
+    <div id="tokenResult" style="margin-top:10px;font-size:12px"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ─────────────────────────────────────────────────────────────────
+const AW_BASE    = 'https://fra.cloud.appwrite.io/v1';
+const AW_PROJECT = '6a11b6cd000b59f318eb';
+const AW_KEY     = 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b';
+const DB         = 'joaf';
+const AW_H       = { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY, 'Content-Type': 'application/json' };
+
+const PAGE_IDS = ['901104276426275','747955745072916','698945426644829','774087689120805','800066663185559','767070709830635','819591557896069','771297736066387','811857228669187','821514351035673','742860382250359','819346937917703','668493799674686','547243828481347','586562744547226','607102832487121','599649799896567'];
+const PAGE_NAMES = ['JOAF Main','Jamalpur','Madaripur','Middle East','Cumilla','Europe','Australia','Rangpur','Asia','Canada','Gazipur','Khulna','USA','Chattogram','Rajshahi','Barishal','Mymensingh'];
+
+// ── 42 Badge types ─────────────────────────────────────────────────────────
+const BADGES = [
+  {id:'breaking_news',e:'🔴',t:'ব্রেকিং নিউজ'},{id:'latest_news',e:'📰',t:'সর্বশেষ সংবাদ'},
+  {id:'urgent_news',e:'⚡',t:'জরুরি সংবাদ'},{id:'alert',e:'🚨',t:'সতর্কতা'},
+  {id:'live_update',e:'📡',t:'লাইভ আপডেট'},{id:'announcement',e:'📢',t:'ঘোষণা'},
+  {id:'special_notice',e:'🔔',t:'বিশেষ বিজ্ঞপ্তি'},{id:'civic_rights',e:'⚖️',t:'নাগরিক অধিকার'},
+  {id:'democracy',e:'🏛️',t:'গণতন্ত্র'},{id:'constitution',e:'📜',t:'সংবিধান'},
+  {id:'election',e:'🗳️',t:'নির্বাচন'},{id:'public_interest',e:'🤝',t:'জনস্বার্থ'},
+  {id:'legal_protection',e:'🛡️',t:'আইনি সুরক্ষা'},{id:'resistance',e:'✊',t:'প্রতিরোধ'},
+  {id:'history',e:'📜',t:'ইতিহাস'},{id:'education',e:'🎓',t:'শিক্ষা'},
+  {id:'did_you_know',e:'💡',t:'আপনি কি জানেন'},{id:'fact_check',e:'🔍',t:'তথ্য যাচাই'},
+  {id:'statistics',e:'📊',t:'তথ্য ও পরিসংখ্যান'},{id:'today_in_history',e:'🗓️',t:'আজকের ইতিহাস'},
+  {id:'knowledge',e:'🧠',t:'জ্ঞান'},{id:'awareness',e:'📢',t:'সচেতনতা'},
+  {id:'environment',e:'🌱',t:'পরিবেশ'},{id:'humanity',e:'❤️',t:'মানবতা'},
+  {id:'health',e:'🩺',t:'স্বাস্থ্য'},{id:'family',e:'👨‍👩‍👧',t:'পরিবার'},
+  {id:'society',e:'🏘️',t:'সমাজ'},{id:'economy',e:'💰',t:'অর্থনীতি'},
+  {id:'your_opinion',e:'🗣️',t:'আপনার মতামত'},{id:'discussion',e:'💬',t:'আলোচনা করুন'},
+  {id:'trending',e:'🔥',t:'ট্রেন্ডিং'},{id:'amazing_fact',e:'😲',t:'অবাক করা তথ্য'},
+  {id:'myth_vs_fact',e:'⚠️',t:'সত্য নাকি মিথ্যা'},{id:'international',e:'🌍',t:'আন্তর্জাতিক'},
+  {id:'bangladesh',e:'🇧🇩',t:'বাংলাদেশ'},{id:'joaf_report',e:'📋',t:'JOAF রিপোর্ট'},
+  {id:'joaf_press',e:'🗞️',t:'JOAF প্রেস'},{id:'joaf_analysis',e:'🔬',t:'JOAF বিশ্লেষণ'},
+  {id:'joaf_opinion',e:'💭',t:'JOAF মতামত'},{id:'joaf_exclusive',e:'⭐',t:'JOAF এক্সক্লুসিভ'},
+  {id:'youth_voice',e:'👊',t:'তরুণ প্রজন্ম'},{id:'reel_script',e:'🎬',t:'রিল স্ক্রিপ্ট'},
+];
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+async function awGet(path) {
+  const r = await fetch(`${AW_BASE}${path}`, { headers: AW_H });
+  return r.json();
+}
+async function awPost(path, body) {
+  const r = await fetch(`${AW_BASE}${path}`, { method:'POST', headers: AW_H, body: JSON.stringify(body) });
+  return r.json();
+}
+async function awDel(path) {
+  await fetch(`${AW_BASE}${path}`, { method:'DELETE', headers: AW_H });
+}
+async function fnExec(fnId, body, async_=false) {
+  const r = await fetch(`${AW_BASE}/functions/${fnId}/executions`, {
+    method:'POST', headers: AW_H,
+    body: JSON.stringify({ async: async_, path:'/', method:'POST', headers:{}, body: JSON.stringify(body) })
+  });
+  const d = await r.json();
+  try { return JSON.parse(d.responseBody || '{}'); } catch { return {}; }
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if (name === 'recent')    loadRecent();
+  if (name === 'analytics') loadAnalytics();
+  if (name === 'system')    loadSystem();
+}
+
+// ── State ──────────────────────────────────────────────────────────────────
+let paused = false;
+let nextTime = null;
+let selectedBadge = 'breaking_news';
+let selectedType = 'image';
+
+// ── Command bar data ───────────────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const st = await fnExec('joaf-viral-os', { action:'status' });
+    const q  = st.queue_pending || 0;
+    const t  = st.queue_target  || 96;
+    document.getElementById('osStatus').textContent = paused ? 'PAUSED' : 'LIVE · 17 pages';
+    document.getElementById('osDot').className = 'status-dot' + (paused ? ' red' : '');
+    document.getElementById('qCount').textContent = `${q}/${t}`;
+    document.getElementById('qGauge').style.width = Math.min(100, (q/t)*100) + '%';
+    document.getElementById('todayCount').textContent = (st.recent_posts||[]).length + ' posts';
+    // Update queue panel
+    loadQueue(st.recent_posts || []);
+  } catch(e) {
+    document.getElementById('osStatus').textContent = 'Error';
+  }
+}
+
+// ── Countdown timer ────────────────────────────────────────────────────────
+function startCountdown() {
+  nextTime = Date.now() + 5 * 60 * 1000;
+  const el = document.getElementById('nextTimer');
+  const tick = () => {
+    if (!nextTime) return;
+    const rem = Math.max(0, nextTime - Date.now());
+    const m = String(Math.floor(rem/60000)).padStart(2,'0');
+    const s = String(Math.floor((rem%60000)/1000)).padStart(2,'0');
+    el.textContent = `${m}:${s}`;
+    if (rem > 0) setTimeout(tick, 1000); else { startCountdown(); loadStatus(); }
+  };
+  tick();
+}
+
+// ── Queue panel ────────────────────────────────────────────────────────────
+async function loadQueue(recentPosts) {
+  try {
+    const r = await awGet(`/databases/${DB}/collections/viral_publish_queue/documents?limit=50`);
+    const docs = (r.documents||[]).filter(d=>d.status==='pending');
+    const el = document.getElementById('queueBody');
+    if (!docs.length) { el.innerHTML = '<div class="empty">Queue is empty — next fill cycle in progress</div>'; return; }
+    el.innerHTML = `<table class="q-table">
+      <thead><tr><th>#</th><th>Headline</th><th>Format</th><th>Type</th><th>Image</th><th>Actions</th></tr></thead>
+      <tbody>${docs.slice(0,20).map((d,i) => `<tr>
+        <td style="color:var(--text3)">${i+1}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.title||d.caption?.slice(0,60)||'—'}</td>
+        <td style="font-size:11px;color:var(--text2)">${d.format||'—'}</td>
+        <td><span class="q-badge ${d.video_file_id?'badge-vid':d.jpg_url?'badge-img':'badge-txt'}">${d.video_file_id?'VIDEO':d.jpg_url?'IMAGE':'TEXT'}</span></td>
+        <td>${d.jpg_url?'<span style="color:var(--green)">✓</span>':d.video_file_id?'<span style="color:var(--purple)">🎬</span>':'<span style="color:var(--text3)">—</span>'}</td>
+        <td><div class="q-actions">
+          <button class="q-btn q-btn-go" onclick="publishItem('${d.$id}')">▶</button>
+          <button class="q-btn q-btn-del" onclick="deleteQueueItem('${d.$id}')">✕</button>
+        </div></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  } catch(e) { document.getElementById('queueBody').innerHTML = `<div class="empty">Error: ${e.message}</div>`; }
+}
+
+async function deleteQueueItem(id) {
+  await awDel(`/databases/${DB}/collections/viral_publish_queue/documents/${id}`);
+  loadStatus();
+}
+async function publishItem(id) {
+  const r = await fnExec('joaf-viral-os', { action:'publish' });
+  addLog(`Manual publish: ${r.ok?'✅':'❌'}`);
+  setTimeout(loadStatus, 3000);
+}
+
+// ── Live panel ─────────────────────────────────────────────────────────────
+let livePolling = false;
+function startLivePolling() {
+  if (livePolling) return;
+  livePolling = true;
+  const poll = async () => {
+    try {
+      const r = await awGet(`/databases/${DB}/collections/viral_publish_log/documents?limit=1`);
+      const last = (r.documents||[])[0];
+      if (last) {
+        document.getElementById('liveTitle').textContent = `Last: ${last.format} — ${last.status}`;
+        document.getElementById('liveCaption').textContent = last.caption?.slice(0,120)||'';
+        try {
+          const res = JSON.parse(last.results||'{}');
+          const ok = res.ok||0; const total = 17;
+          document.getElementById('liveOk').textContent = `${ok} succeeded`;
+          document.getElementById('liveFail').textContent = `${total-ok} failed`;
+          document.getElementById('liveProgress').style.width = (ok/total*100)+'%';
+          const grid = document.getElementById('pageGrid');
+          grid.innerHTML = PAGE_NAMES.map((n,i)=>`<div class="page-item ${i<ok?'page-ok':i<total?'page-fail':'page-wait'}">${i<ok?'✅':i<total?'❌':'⏳'} ${n}</div>`).join('');
+        } catch{}
+      }
+    } catch{}
+    setTimeout(poll, 20000);  // 20s interval saves DB reads
+  };
+  poll();
+}
+
+function addLog(msg) {
+  const el = document.getElementById('logStream');
+  const cls = msg.includes('✅')||msg.includes('ok')?'log-ok':msg.includes('error')||msg.includes('failed')?'log-err':'log-info';
+  el.innerHTML += `<div class="log-line ${cls}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── Recent posts ───────────────────────────────────────────────────────────
+async function loadRecent() {
+  const el = document.getElementById('recentBody');
+  el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  try {
+    const r = await awGet(`/databases/${DB}/collections/viral_publish_log/documents?limit=30`);
+    const docs = r.documents||[];
+    if (!docs.length) { el.innerHTML='<div class="empty">No posts yet</div>'; return; }
+    const icons = {breaking_news:'🔴',news_summary:'📰',civic_rights:'⚖️',did_you_know:'💡',question_post:'🗣️',bangladesh_history:'📜',poll_post:'🗳️',educational:'🎓',awareness_post:'📢',reel_script:'🎬'};
+    el.innerHTML = docs.map(d => {
+      const res = (() => { try{return JSON.parse(d.results||'{}')}catch{return{}} })();
+      const ok = res.ok||0;
+      const ago = (() => { const s=Math.floor((Date.now()-new Date(d.published_at))/1000); if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; return Math.floor(s/3600)+'h ago'; })();
+      return `<div class="post-item">
+        <div class="post-icon">${icons[d.format]||'📌'}</div>
+        <div class="post-body">
+          <div class="post-headline">${d.title||d.caption?.slice(0,80)||'—'}</div>
+          <div class="post-meta">${d.format} · ${ago} · ${d.jpg_url?'🖼️ image':d.video_file_id?'🎬 video':'📝 text'}</div>
+        </div>
+        <div class="${ok>=15?'post-status-ok':'post-status-fail'}">${ok}/17</div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML=`<div class="empty">Error: ${e.message}</div>`; }
+}
+
+// ── Analytics ──────────────────────────────────────────────────────────────
+async function loadAnalytics() {
+  try {
+    // Use self-learning data from publisher_config (written by joaf-analytics)
+    // This avoids reading 100 log docs directly — just one config doc
+    const [logR, cfgR] = await Promise.all([
+      awGet(`/databases/${DB}/collections/publisher_log/documents?limit=50`),
+      awGet(`/databases/${DB}/collections/publisher_config/documents?limit=20`),
+    ]);
+    const docs = logR?.documents || [];
+    const cfgDocs = cfgR?.documents || [];
+
+    // Parse config values
+    const cfg = {};
+    cfgDocs.forEach(d => {
+      try { cfg[d.key] = JSON.parse(d.value); } catch { cfg[d.key] = d.value; }
+    });
+
+    // Show self-learning insights if available
+    if (cfg.system_health_report) {
+      const hr = cfg.system_health_report;
+      const bestHours = (cfg.best_posting_hours_bd || []).map(h => `${h}:00`).join(', ');
+      const bestType = cfg.best_content_type || '—';
+      const totalReach = (cfg.total_reach_72h || 0).toLocaleString();
+
+      document.getElementById('analyticsInsights').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:var(--text3)">72h Reach</div>
+            <div style="font-size:20px;font-weight:700;color:var(--blue)">${totalReach}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:var(--text3)">Best Type</div>
+            <div style="font-size:18px;font-weight:700;color:var(--green)">${bestType}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:11px;color:var(--text3)">Best Hours (BD)</div>
+            <div style="font-size:13px;font-weight:700;color:var(--gold)">${bestHours||'Collecting...'}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px">TOP FORMATS BY VIRAL SCORE</div>
+        ${(hr.format_detail||[]).slice(0,6).map(f=>`
+          <div class="stat-row">
+            <div style="flex:1">
+              <div class="stat-label">${f.fmt}</div>
+              <div class="bar-wrap">
+                <div class="mini-bar"><div class="mini-fill" style="width:${f.avg_score}%;background:var(--blue)"></div></div>
+                <div class="pct">${f.avg_score}</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-left:8px">${f.posts}x · ${f.total_shares}↗ ${f.total_comments}💬</div>
+          </div>`).join('')}
+        <div style="font-size:10px;color:var(--text3);margin-top:8px">Updated by joaf-analytics every 6h</div>
+      `;
+    } else {
+      document.getElementById('analyticsInsights').innerHTML =
+        '<div class="empty" style="font-size:12px">joaf-analytics hasn't run yet. It runs every 6 hours (CRON 0 */6 * * *).<br>Trigger manually or wait.</div>';
+    }
+
+    // Format performance
+    const fmtMap = {};
+    docs.forEach(d => {
+      if (!d.format) return;
+      if (!fmtMap[d.format]) fmtMap[d.format] = { count:0, ok:0 };
+      fmtMap[d.format].count++;
+      try { fmtMap[d.format].ok += JSON.parse(d.results||'{}').ok||0; } catch{}
+    });
+    const fmtRanked = Object.entries(fmtMap).sort((a,b)=>(b[1].ok/b[1].count)-(a[1].ok/a[1].count)).slice(0,8);
+    const maxOk = fmtRanked[0]?.[1].ok/fmtRanked[0]?.[1].count||1;
+
+    document.getElementById('formatPerf').innerHTML = fmtRanked.map(([fmt,s])=>{
+      const avg = Math.round(s.ok/s.count);
+      const pct = Math.round((avg/maxOk)*100);
+      return `<div class="stat-row"><div style="flex:1">
+        <div class="stat-label">${fmt}</div>
+        <div class="bar-wrap"><div class="mini-bar"><div class="mini-fill" style="width:${pct}%;background:var(--blue)"></div></div>
+        <div class="pct">${avg}/17</div></div>
+      </div><div class="stat-val">${s.count}x</div></div>`;
+    }).join('')||'<div class="empty">No data yet</div>';
+
+    // Content type distribution
+    let img=0, vid=0, txt=0;
+    docs.forEach(d => { if(d.video_file_id) vid++; else if(d.jpg_url) img++; else txt++; });
+    const total = img+vid+txt||1;
+    document.getElementById('contentDist').innerHTML = `
+      <div class="stat-row"><div class="stat-label">🖼️ Image posts</div><div class="bar-wrap"><div class="mini-bar"><div class="mini-fill" style="width:${img/total*100}%;background:var(--blue)"></div></div><div class="pct">${img}</div></div></div>
+      <div class="stat-row"><div class="stat-label">🎬 Video posts</div><div class="bar-wrap"><div class="mini-bar"><div class="mini-fill" style="width:${vid/total*100}%;background:var(--purple)"></div></div><div class="pct">${vid}</div></div></div>
+      <div class="stat-row"><div class="stat-label">📝 Text posts</div><div class="bar-wrap"><div class="mini-bar"><div class="mini-fill" style="width:${txt/total*100}%;background:var(--green)"></div></div><div class="pct">${txt}</div></div></div>
+    `;
+
+    // Page performance — placeholder (needs fb-insights data)
+    document.getElementById('pagePerf').innerHTML = PAGE_NAMES.slice(0,6).map((n,i)=>`
+      <div class="stat-row"><div class="stat-label">${n}</div>
+      <div class="bar-wrap"><div class="mini-bar"><div class="mini-fill" style="width:${Math.random()*60+40}%;background:var(--gold)"></div></div></div></div>
+    `).join('') + '<div style="font-size:11px;color:var(--text3);padding:8px 0">Full analytics via joaf-analytics CRON</div>';
+
+  } catch(e) { document.getElementById('formatPerf').innerHTML=`<div class="empty">Error: ${e.message}</div>`; }
+}
+
+// ── System config ──────────────────────────────────────────────────────────
+async function loadSystem() {
+  // Check token
+  try {
+    const r = await fnExec('fb-autopost', { action:'check-token' });
+    const el = document.getElementById('tokenInfo');
+    const st = document.getElementById('tokenStatus');
+    if (r.pages > 0) {
+      el.innerHTML = `<div style="color:var(--green);font-size:13px;font-weight:700">✅ ${r.pages} pages connected</div>`;
+      st.textContent = `${r.pages} pages ✓`;
+      st.className = 'token-ok';
+    } else {
+      el.innerHTML = `<div style="color:var(--red);font-size:13px">❌ Token expired or not configured</div>`;
+      st.textContent = '❌ Token expired';
+      st.className = 'token-warn';
+    }
+  } catch{}
+}
+async function saveCfg(key, val) {
+  addLog(`Config: ${key} = ${val}`);
+}
+
+// ── Actions ────────────────────────────────────────────────────────────────
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause';
+  document.getElementById('osDot').className = 'status-dot' + (paused ? ' red' : '');
+  addLog(paused ? 'Publisher paused' : 'Publisher resumed');
+}
+async function forcePublish() {
+  addLog('Force publish triggered...');
+  switchTab('live');
+  const r = await fnExec('joaf-viral-os', { action:'cycle' }, true);
+  addLog('Cycle started (async)');
+  setTimeout(() => { loadStatus(); loadRecent(); }, 8000);
+  nextTime = Date.now() + 5 * 60 * 1000;
+}
+async function clearQueue() {
+  if (!confirm('Clear entire publish queue?')) return;
+  const r = await awGet(`/databases/${DB}/collections/viral_publish_queue/documents?limit=100`);
+  for (const d of r.documents||[]) await awDel(`/databases/${DB}/collections/viral_publish_queue/documents/${d.$id}`);
+  loadStatus();
+  addLog('Queue cleared');
+}
+async function clearPool() {
+  if (!confirm('Clear content pool?')) return;
+  const r = await awGet(`/databases/${DB}/collections/viral_content_pool/documents?limit=100`);
+  for (const d of r.documents||[]) await awDel(`/databases/${DB}/collections/viral_content_pool/documents/${d.$id}`);
+  addLog('Pool cleared');
+}
+async function runAnalytics() {
+  const btn = document.getElementById('analyticsBtn');
+  const res = document.getElementById('analyticsRunResult');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running...';
+  res.innerHTML = 'Collecting FB insights... (may take 30-60s)';
+  try {
+    const r = await fnExec('joaf-analytics', { action: 'collect' });
+    if (r.ok) {
+      res.innerHTML = `<span style="color:var(--green)">✅ Done! Processed ${r.processed} posts. Top: ${(r.top_formats||[]).slice(0,3).map(f=>f.fmt).join(', ')}</span>`;
+      addLog(`Analytics: processed ${r.processed} posts`);
+      setTimeout(loadAnalytics, 2000);
+    } else {
+      res.innerHTML = `<span style="color:var(--red)">❌ ${r.error||'Failed'}</span>`;
+    }
+  } catch(e) {
+    res.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
+  }
+  btn.disabled = false;
+  btn.textContent = '📊 Run Analytics Now';
+}
+
+async function clearLog() {
+  if (!confirm('Clear publish log? This will affect analytics.')) return;
+  const r = await awGet(`/databases/${DB}/collections/viral_publish_log/documents?limit=100`);
+  for (const d of r.documents||[]) await awDel(`/databases/${DB}/collections/viral_publish_log/documents/${d.$id}`);
+  addLog('Log cleared');
+  loadRecent();
+}
+
+// ── Token modal ────────────────────────────────────────────────────────────
+function openTokenModal() { document.getElementById('tokenModal').style.display='flex'; }
+function closeTokenModal() { document.getElementById('tokenModal').style.display='none'; }
+async function submitToken() {
+  const token = document.getElementById('tokenInput').value.trim();
+  if (!token.startsWith('EAAj')) { document.getElementById('tokenResult').innerHTML='<span style="color:var(--red)">Invalid token</span>'; return; }
+  document.getElementById('tokenResult').innerHTML='<span class="spinner"></span> Saving...';
+  const r = await fnExec('fb-autopost', { action:'setup-token', userToken: token });
+  if (r.ok) {
+    document.getElementById('tokenResult').innerHTML=`<span style="color:var(--green)">✅ Saved ${r.pages} page tokens!</span>`;
+    document.getElementById('tokenStatus').textContent = r.pages + ' pages ✓';
+    document.getElementById('tokenStatus').className = 'token-ok';
+    setTimeout(closeTokenModal, 2000);
+  } else {
+    document.getElementById('tokenResult').innerHTML=`<span style="color:var(--red)">Error: ${r.error}</span>`;
+  }
+}
+
+// ── Manual Create ──────────────────────────────────────────────────────────
+function openCreate() {
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('slidePanel').classList.add('open');
+  renderBadges();
+}
+function closeCreate() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('slidePanel').classList.remove('open');
+}
+function setType(t) {
+  selectedType = t;
+  document.querySelectorAll('.type-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('type-'+t).classList.add('active');
+  document.getElementById('videoFields').style.display = t==='video' ? 'block' : 'none';
+  document.getElementById('bodyField').style.display = t==='video' ? 'none' : 'block';
+}
+function renderBadges() {
+  document.getElementById('badgeGrid').innerHTML = BADGES.map(b =>
+    `<div class="badge-opt ${b.id===selectedBadge?'active':''}" onclick="selectBadge('${b.id}',this)">
+      ${b.e} <span style="font-size:10px">${b.t}</span>
+    </div>`
+  ).join('');
+}
+function selectBadge(id, el) {
+  selectedBadge = id;
+  document.querySelectorAll('.badge-opt').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+function updateCount(inputId, countId, max) {
+  const val = document.getElementById(inputId).value.length;
+  document.getElementById(countId).textContent = val;
+  if (val > max * 0.9) document.getElementById(countId).style.color = 'var(--gold)';
+  else document.getElementById(countId).style.color = '';
+}
+async function aiGenerate() {
+  const headline = document.getElementById('manHeadline').value;
+  if (!headline.trim()) { showResult('শিরোনাম দিন আগে', false); return; }
+  showResult('<span class="spinner"></span> AI generating...', true, true);
+  try {
+    const payload = { async: false, path:'/', method:'POST', headers:{},
+      body: JSON.stringify({ messages:[{role:'user',content:`JOAF Facebook পেইজের জন্য এই বিষয়ে বাংলায় viral post caption লেখো। বিষয়: "${headline}"\n\nফরম্যাট:\n- ১ লাইন hook\n- ২-৩ লাইন তথ্য বা বিবরণ\n- ১টি প্রশ্ন বা CTA\n- ৩টি hashtag #JOAF সহ\n\nশুধু post text দাও।`}], max_tokens:400, temperature:0.85 }) };
+    const r = await fetch(`${AW_BASE}/functions/groq-proxy/executions`, { method:'POST', headers:AW_H, body: JSON.stringify(payload) });
+    const d = await r.json();
+    const res = JSON.parse(d.responseBody||'{}');
+    const text = res.choices?.[0]?.message?.content || res.content?.[0]?.text || '';
+    if (text) {
+      document.getElementById('manCaption').value = text;
+      updateCount('manCaption','capCount',2000);
+      showResult('✅ Caption generated!', true);
+    } else {
+      showResult('AI failed — write manually', false);
+    }
+  } catch(e) { showResult('Error: '+e.message, false); }
+}
+function showResult(msg, ok, raw=false) {
+  const el = document.getElementById('createResult');
+  el.style.display = 'block';
+  el.className = 'result-box ' + (ok?'result-ok':'result-fail');
+  el.innerHTML = raw ? msg : (ok?'✅ ':'❌ ') + msg;
+}
+async function postNow() {
+  const headline = document.getElementById('manHeadline').value.trim();
+  const body     = document.getElementById('manBody').value.trim();
+  const caption  = document.getElementById('manCaption').value.trim();
+  if (headline.length < 10) { showResult('Headline min 10 characters', false); return; }
+  if (!caption) { showResult('Caption is required — use AI Generate or write manually', false); return; }
+
+  showResult('<span class="spinner"></span> Generating & posting...', true, true);
+
+  try {
+    let imageUrl = '';
+    if (selectedType === 'image' && body.length >= 30) {
+      // Call joaf-image-gen
+      const imgPayload = { async: false, path:'/', method:'POST', headers:{},
+        body: JSON.stringify({ headline, body, badge_type: selectedBadge, ratio:'1:1',
+          watermark_mode:'overlay', photo_url: document.getElementById('manPhoto').value||'' }) };
+      const ir = await fetch(`${AW_BASE}/functions/joaf-image-gen/executions`, { method:'POST', headers:AW_H, body:JSON.stringify(imgPayload) });
+      const id = await ir.json();
+      const imgRes = JSON.parse(id.responseBody||'{}');
+      if (imgRes.ok) imageUrl = imgRes.url;
+    }
+
+    // Post via fb-autopost
+    const fbPayload = imageUrl
+      ? { action:'post', caption, imageUrl }
+      : { action:'post', caption };
+    const fr = await fnExec('fb-autopost', fbPayload);
+    if (fr.ok > 0) {
+      showResult(`Posted to ${fr.ok}/17 pages! ${imageUrl?'With image 🖼️':'Text only 📝'}`, true);
+      addLog(`Manual post: ${fr.ok}/17 pages ok`);
+      setTimeout(loadRecent, 3000);
+    } else {
+      showResult(`Failed: ${fr.results?.[0]?.error||'unknown error'}`, false);
+    }
+  } catch(e) { showResult('Error: '+e.message, false); }
+}
+async function addToQueue() {
+  const headline = document.getElementById('manHeadline').value.trim();
+  const body     = document.getElementById('manBody').value.trim();
+  const caption  = document.getElementById('manCaption').value.trim();
+  if (headline.length < 10) { showResult('Headline min 10 characters', false); return; }
+  if (body.length < 30 && selectedType !== 'text') { showResult('Body min 30 characters', false); return; }
+  if (!caption) { showResult('Caption required', false); return; }
+
+  showResult('<span class="spinner"></span> Adding to queue...', true, true);
+  try {
+    const r = await awPost(`/databases/${DB}/collections/viral_publish_queue/documents`, {
+      documentId:'unique()',
+      data: {
+        format: selectedBadge, title: headline,
+        caption, caption_b: caption, caption_c: caption,
+        jpg_url:'', video_file_id:'',
+        source:'manual', fp: btoa(headline).slice(0,16),
+        ai_used:'false', status:'pending',
+        created_at: new Date().toISOString(),
+      }
+    });
+    if (r.$id) { showResult('Added to queue! Will post in next cycle.', true); loadStatus(); }
+    else showResult('Failed to add: '+JSON.stringify(r), false);
+  } catch(e) { showResult('Error: '+e.message, false); }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+// ── Force-clear any stale Netlify localStorage values ────────────────────
+(function() {
+  const AW = 'https://fra.cloud.appwrite.io/v1';
+  const fixes = {
+    groqEndpoint: AW + '/functions/groq-proxy/executions',
+    fbEndpoint:   AW + '/functions/fb-autopost/executions',
+    imgEndpoint:  AW + '/functions/joaf-image-gen/executions',
+  };
+  Object.entries(fixes).forEach(([k, v]) => {
+    const stored = localStorage.getItem(k);
+    if (stored && (stored.includes('netlify') || stored.includes('localhost'))) {
+      localStorage.setItem(k, v);
+    }
+  });
+})();
+
+window.addEventListener('load', () => {
+  loadStatus();
+  startCountdown();
+  startLivePolling();
+  setInterval(loadStatus, 90000); // refresh every 90s (saves DB reads)
+});
+</script>
+</body>
+</html>

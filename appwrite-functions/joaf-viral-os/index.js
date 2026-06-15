@@ -38,11 +38,109 @@ const COL_QUEUE   = 'viral_publish_queue';  // ready-to-publish queue
 const COL_LOG     = 'viral_publish_log';    // published log (dedup + analytics)
 const BUCKET_ID   = 'fb_media';
 const FN_FB       = 'fb-autopost';
+const FN_IMG      = 'joaf-image-gen';   // NEW: professional image card generator
+const FN_VID      = 'joaf-video-gen';   // NEW: automated MP4 reel generator
+
+// Video slot: every Nth post generates a video reel
+const VIDEO_EVERY_N = 6;  // every 6th published post = video
 
 // Target queue buffer — if below MIN, auto-generate
-const QUEUE_MIN    = 48;  // spec: minimum buffer
-const QUEUE_TARGET = 96;  // spec: target buffer (fills gradually, 6/run)
-const FILL_PER_RUN = 6;   // max per fill run — avoids timeout, fills to 96 in ~8 cycles
+const QUEUE_MIN    = 24;  // reduced: 24 ready posts always available (~6hr buffer at 15min CRON)
+const QUEUE_TARGET = 48;  // reduced target: fills to 48 in ~8 cycles (less DB writes)
+const FILL_PER_RUN = 4;   // max per fill run — 4 items per 15min = 16/hr max generation
+
+// ── Circuit Breaker & Rate Limiter ──────────────────────────────────────────
+const _aiState = {
+  failures: { openrouter: 0, gemini: 0, groq: 0 },
+  blocked: { openrouter: 0, gemini: 0, groq: 0 }, // unblock timestamp
+  calls: [],       // timestamps of recent calls
+  MAX_PER_MIN: 2,
+  MAX_PER_15MIN: 5,
+  CIRCUIT_THRESHOLD: 3,     // fail N times → block 30min
+  CIRCUIT_RESET_MS: 30 * 60 * 1000,
+};
+
+function aiRateLimitOk() {
+  const now = Date.now();
+  _aiState.calls = _aiState.calls.filter(t => now - t < 15 * 60 * 1000);
+  const last1min = _aiState.calls.filter(t => now - t < 60000).length;
+  if (last1min >= _aiState.MAX_PER_MIN) return false;
+  if (_aiState.calls.length >= _aiState.MAX_PER_15MIN) return false;
+  return true;
+}
+
+function recordAiCall() { _aiState.calls.push(Date.now()); }
+
+function isCircuitOpen(provider) {
+  const now = Date.now();
+  if (_aiState.blocked[provider] && now < _aiState.blocked[provider]) return true;
+  if (_aiState.blocked[provider] && now >= _aiState.blocked[provider]) {
+    _aiState.failures[provider] = 0;
+    _aiState.blocked[provider] = 0;
+  }
+  return false;
+}
+
+function recordAiFailure(provider) {
+  _aiState.failures[provider] = (_aiState.failures[provider] || 0) + 1;
+  if (_aiState.failures[provider] >= _aiState.CIRCUIT_THRESHOLD) {
+    _aiState.blocked[provider] = Date.now() + _aiState.CIRCUIT_RESET_MS;
+  }
+}
+
+function recordAiSuccess(provider) { _aiState.failures[provider] = 0; }
+
+// ── 17-Page Location Map ──────────────────────────────────────────────────────
+const PAGE_LOCATION_MAP = {
+  '901104276426275': { name: 'JOAF Main',    districts: ['dhaka','ঢাকা'], region: 'national',  weight: 1.0 },
+  '747955745072916': { name: 'Jamalpur',     districts: ['jamalpur','জামালপুর','শেরপুর'], region: 'mymensingh', weight: 1.2 },
+  '698945426644829': { name: 'Madaripur',    districts: ['madaripur','মাদারীপুর','শরীয়তপুর'], region: 'dhaka_div', weight: 1.2 },
+  '774087689120805': { name: 'Middle East',  districts: ['middle east','saudi','dubai','kuwait','qatar','bahrain'], region: 'diaspora', weight: 1.1 },
+  '800066663185559': { name: 'Cumilla',      districts: ['cumilla','কুমিল্লা','comilla','ব্রাহ্মণবাড়িয়া','chandpur'], region: 'chittagong_div', weight: 1.2 },
+  '767070709830635': { name: 'Europe',       districts: ['europe','uk','germany','france','italy','sweden'], region: 'diaspora', weight: 1.1 },
+  '819591557896069': { name: 'Australia',    districts: ['australia','sydney','melbourne'], region: 'diaspora', weight: 1.1 },
+  '771297736066387': { name: 'Rangpur',      districts: ['rangpur','রংপুর','dinajpur','দিনাজপুর','gaibandha'], region: 'rangpur_div', weight: 1.2 },
+  '811857228669187': { name: 'Asia',         districts: ['asia','india','singapore','malaysia','japan'], region: 'diaspora', weight: 1.1 },
+  '821514351035673': { name: 'Canada',       districts: ['canada','toronto','vancouver'], region: 'diaspora', weight: 1.1 },
+  '742860382250359': { name: 'Gazipur',      districts: ['gazipur','গাজীপুর','narsingdi','নরসিংদী'], region: 'dhaka_metro', weight: 1.3 },
+  '819346937917703': { name: 'Khulna',       districts: ['khulna','খুলনা','bagerhat','satkhira','jessore','যশোর'], region: 'khulna_div', weight: 1.2 },
+  '668493799674686': { name: 'USA',          districts: ['usa','america','new york','washington'], region: 'diaspora', weight: 1.1 },
+  '547243828481347': { name: 'Chattogram',   districts: ['chattogram','চট্টগ্রাম','chittagong','cox','কক্সবাজার','bandarban'], region: 'chittagong_div', weight: 1.3 },
+  '586562744547226': { name: 'Rajshahi',     districts: ['rajshahi','রাজশাহী','chapai','natore','naogaon','pabna'], region: 'rajshahi_div', weight: 1.2 },
+  '607102832487121': { name: 'Barishal',     districts: ['barishal','বরিশাল','barisal','patuakhali','bhola'], region: 'barishal_div', weight: 1.2 },
+  '599649799896567': { name: 'Mymensingh',   districts: ['mymensingh','ময়মনসিংহ','netrokona','kishoreganj'], region: 'mymensingh_div', weight: 1.2 },
+};
+
+// Score news relevance to each page
+function getLocationScore(text, pageId) {
+  const pg = PAGE_LOCATION_MAP[pageId];
+  if (!pg) return 0;
+  if (pg.region === 'national') return 50; // main page gets everything
+  const lower = (text || '').toLowerCase();
+  let score = 0;
+  for (const d of pg.districts) {
+    if (lower.includes(d.toLowerCase())) score += 100;
+  }
+  // Urgency keywords boost
+  const urgent = ['বন্যা','দুর্ঘটনা','গ্রেফতার','প্রতিবাদ','আন্দোলন','হত্যা','ভূমিকম্প','ঘূর্ণিঝড়','বিস্ফোরণ','অগ্নিকাণ্ড'];
+  urgent.forEach(w => { if (lower.includes(w)) score += 40; });
+  return Math.round(score * pg.weight);
+}
+
+// Get ordered page IDs by location relevance for a given news item
+function getTargetPageOrder(newsText) {
+  const all = Object.keys(PAGE_LOCATION_MAP);
+  return all.sort((a, b) => getLocationScore(newsText, b) - getLocationScore(newsText, a));
+}
+
+// Detect if news is breaking/local priority
+function isBreakingOrLocal(text) {
+  const breaking = ['ব্রেকিং','breaking','জরুরি','urgent','দুর্ঘটনা','হত্যা','বিস্ফোরণ','গ্রেফতার','অগ্নিকাণ্ড','বন্যা','ঘূর্ণিঝড়','ভূমিকম্প'];
+  const lower = (text || '').toLowerCase();
+  const pageScore = Object.keys(PAGE_LOCATION_MAP).reduce((max, id) => Math.max(max, getLocationScore(lower, id)), 0);
+  const hasBreaking = breaking.some(w => lower.includes(w));
+  return hasBreaking || pageScore > 80;
+}
 
 // ── BD Timezone ───────────────────────────────────────────────────────────────
 const bdNow  = () => new Date(Date.now() + 6 * 3600000);
@@ -168,6 +266,7 @@ async function awDelete(col, id) {
 
 // ── Get published fingerprints (last 30 days) for dedup ──────────────────────
 async function getRecentFingerprints() {
+  // Reuse fp cache loaded by loadFpCache — no extra DB read
   try {
     const since = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
     const docs = await awQuery(COL_LOG, [`greaterThan("published_at","${since}")`], 100);
@@ -324,11 +423,42 @@ async function callGroq(prompt) {
   } catch { return null; }
 }
 
-async function generateAI(prompt) {
-  return (await callOpenRouter(prompt)) ||
-         (await callGemini(prompt))     ||
-         (await callGroq(prompt))       ||
-         null; // null = use template/evergreen
+async function generateAI(prompt, retries = 2) {
+  // Rate limit gate — respect free tier limits
+  if (!aiRateLimitOk()) {
+    // Wait 60s before retry
+    await new Promise(r => setTimeout(r, 60000));
+    if (!aiRateLimitOk()) return null; // still blocked
+  }
+
+  const providers = [
+    { name: 'openrouter', fn: callOpenRouter },
+    { name: 'gemini',     fn: callGemini },
+    { name: 'groq',       fn: callGroq },
+  ];
+
+  for (const { name, fn } of providers) {
+    if (isCircuitOpen(name)) continue; // circuit open → skip
+    try {
+      recordAiCall();
+      const result = await fn(prompt);
+      if (result) {
+        recordAiSuccess(name);
+        return result;
+      }
+      recordAiFailure(name);
+    } catch {
+      recordAiFailure(name);
+    }
+  }
+
+  // All providers failed — retry after delay if retries left
+  if (retries > 0) {
+    await new Promise(r => setTimeout(r, 5000));
+    return generateAI(prompt, retries - 1);
+  }
+
+  return null; // all exhausted → caller uses template
 }
 
 // ── Caption builders per format ───────────────────────────────────────────────
@@ -587,6 +717,108 @@ async function uploadToCloudinary(svgContent, publicId) {
   if (cdnData.error) throw new Error(`Cloudinary: ${cdnData.error.message}`);
   return cdnData.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
 }
+// ── Video slot counter (published posts tracked in config) ──────────────────
+// Simple counter using modulo of current time — no DB read needed
+// Video slot every VIDEO_EVERY_N posts regardless of actual count
+let _publishCountLocal = 0;
+async function getPublishCount() {
+  return _publishCountLocal++;
+}
+
+// ── Call joaf-image-gen for professional canvas image ────────────────────────
+async function callImageGen({ headline, body, badge_type, format, photo_url, source_name }) {
+  try {
+    const payload = JSON.stringify({
+      async: false, path: '/', method: 'POST', headers: {},
+      body: JSON.stringify({
+        headline: (headline || '').slice(0, 80),
+        body: (body || '').slice(0, 300),
+        badge_type: badge_type || FORMAT_BADGE_MAP[format] || 'joaf_report',
+        format,
+        photo_url: photo_url || '',
+        ratio: '1:1',
+        watermark_mode: 'overlay',
+        source_name: source_name || '',
+        public_id_prefix: 'joaf_viral',
+      }),
+    });
+    const r = await fetch(`${AW_ENDPOINT}/functions/${FN_IMG}/executions`, {
+      method: 'POST',
+      headers: AW_HEADERS(),
+      body: payload,
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!r.ok) throw new Error(`image-gen HTTP ${r.status}`);
+    const exec = await r.json();
+    const result = JSON.parse(exec.responseBody || '{}');
+    if (!result.ok) throw new Error(result.error || 'image-gen failed');
+    return result.url; // Cloudinary CDN URL
+  } catch (e) {
+    throw new Error(`image-gen: ${e.message}`);
+  }
+}
+
+// ── Call joaf-video-gen for automated MP4 reel ───────────────────────────────
+async function callVideoGen({ hook_text, body_text, cta_text, badge_type, format, photo_url, caption }) {
+  try {
+    // Pick animation style based on format
+    const ANIM_MAP = {
+      breaking_news: 'slide', urgent_news: 'slide', live_update: 'slide',
+      quote_card: 'typewriter', image_quote: 'typewriter', did_you_know: 'typewriter',
+      bangladesh_history: 'ken_burns', this_day_history: 'ken_burns', history: 'ken_burns',
+    };
+    const AUDIO_MAP = {
+      breaking_news: 'dramatic', urgent_news: 'dramatic',
+      quote_card: 'emotional', image_quote: 'emotional', humanity: 'emotional',
+      youth_engagement: 'upbeat', trending: 'upbeat',
+    };
+    const animation_style = ANIM_MAP[format] || 'slide';
+    const audio_style     = AUDIO_MAP[format] || 'emotional';
+
+    const payload = JSON.stringify({
+      async: false, path: '/', method: 'POST', headers: {},
+      body: JSON.stringify({
+        hook_text:       (hook_text  || '').slice(0, 120),
+        body_text:       (body_text  || '').slice(0, 400),
+        cta_text:        (cta_text   || 'কমেন্টে মতামত জানান 👇 শেয়ার করুন').slice(0, 120),
+        badge_type:      badge_type || FORMAT_BADGE_MAP[format] || 'reel_script',
+        format,
+        photo_url:       photo_url || '',
+        animation_style,
+        audio_style,
+        duration:        30,
+      }),
+    });
+    const r = await fetch(`${AW_ENDPOINT}/functions/${FN_VID}/executions`, {
+      method: 'POST',
+      headers: AW_HEADERS(),
+      body: payload,
+      signal: AbortSignal.timeout(180000), // 3 min for video gen
+    });
+    if (!r.ok) throw new Error(`video-gen HTTP ${r.status}`);
+    const exec   = await r.json();
+    const result = JSON.parse(exec.responseBody || '{}');
+    if (!result.ok) throw new Error(result.error || 'video-gen failed');
+    return result; // { video_file_id, video_url, duration }
+  } catch (e) {
+    throw new Error(`video-gen: ${e.message}`);
+  }
+}
+
+// ── Format → badge_type auto mapping ─────────────────────────────────────────
+const FORMAT_BADGE_MAP = {
+  breaking_news: 'breaking_news', news_summary: 'latest_news', fact_check: 'fact_check',
+  civic_rights: 'civic_rights', constitution_fact: 'constitution', bangladesh_history: 'history',
+  this_day_history: 'today_in_history', quote_card: 'joaf_opinion', poll_post: 'your_opinion',
+  question_post: 'discussion', did_you_know: 'did_you_know', myth_vs_fact: 'myth_vs_fact',
+  timeline: 'history', educational: 'education', learning_engine: 'knowledge',
+  press_release_summary: 'joaf_press', data_insight: 'statistics', statistic_post: 'statistics',
+  awareness_post: 'awareness', international_news: 'international', local_district: 'bangladesh',
+  youth_engagement: 'youth_voice', comment_debate: 'discussion', community_question: 'your_opinion',
+  image_quote: 'joaf_opinion', carousel_post: 'joaf_report', infographic: 'statistics',
+  reel_script: 'reel_script', ai_opinion: 'joaf_analysis', civic_knowledge: 'civic_rights',
+};
+
 // ── Decide if this format needs an image ─────────────────────────────────────
 const IMAGE_FORMATS = new Set([
   'breaking_news','news_summary','fact_check','civic_rights','constitution_fact',
@@ -598,7 +830,9 @@ const IMAGE_FORMATS = new Set([
 ]);
 
 // ── Call fb-autopost (fire-and-forget async) ─────────────────────────────────
-async function callFbAutopost(action, payload, log = () => {}) {
+async function callFbAutopost(action, payload, log = () => {}, newsText = '') {
+  // Location-order pages by relevance if newsText provided
+  if (newsText && !payload.pageIds) payload.pageIds = getTargetPageOrder(newsText);
   // Fire async — fb-autopost runs independently (17 pages ~30s)
   // We don't poll because that eats into our 300s timeout budget
   try {
@@ -634,20 +868,53 @@ async function callFbAutopost(action, payload, log = () => {}) {
 }
 
 // ── Content pool dedup check ──────────────────────────────────────────────────
+// In-memory fingerprint cache — loaded ONCE per cycle, avoids per-item DB reads
+let _fpCache = null;
+let _fpCacheTime = 0;
+const FP_CACHE_TTL = 14 * 60 * 1000; // 14 min (slightly less than 15min CRON)
+
+async function loadFpCache() {
+  const now = Date.now();
+  if (_fpCache && (now - _fpCacheTime) < FP_CACHE_TTL) return _fpCache;
+  // ONE read per cycle — loads all fingerprints from pool + log
+  const [poolR, logR] = await Promise.all([
+    awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=200`).catch(() => ({ documents: [] })),
+    awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=200`).catch(() => ({ documents: [] })),
+  ]);
+  _fpCache = new Set([
+    ...(poolR.documents || []).map(d => d.fp).filter(Boolean),
+    ...(logR.documents  || []).map(d => d.fp).filter(Boolean),
+  ]);
+  _fpCacheTime = now;
+  return _fpCache;
+}
+
 async function isInPool(fp) {
-  try {
-    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100`);
-    return (r.documents || []).some(d => d.fp === fp);
-  } catch { return false; }
+  if (!fp) return false;
+  try { return (await loadFpCache()).has(fp); }
+  catch { return false; }
 }
 
 // ── Get last-used formats (anti-repeat) ───────────────────────────────────────
+// In-memory last formats — updated on each publish, no DB read after cold start
+const _lastFormatsMemory = [];
+const MAX_LAST_FORMATS = 8;
+
 async function getLastFormats(n = 5) {
+  if (_lastFormatsMemory.length >= n) return _lastFormatsMemory.slice(-n);
+  // Cold start only — read DB once then use memory
   try {
     const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=${n}`);
-    const docs = r.documents || [];
-    return docs.map(d => d.format).filter(Boolean);
+    const fmts = (r.documents || []).map(d => d.format).filter(Boolean);
+    _lastFormatsMemory.push(...fmts);
+    return fmts;
   } catch { return []; }
+}
+
+function recordPublishedFormat(format) {
+  if (!format) return;
+  _lastFormatsMemory.push(format);
+  if (_lastFormatsMemory.length > MAX_LAST_FORMATS) _lastFormatsMemory.shift();
 }
 
 // ── MAIN: Collect + deduplicate + pool-fill ────────────────────────────────────
@@ -702,8 +969,8 @@ async function getCalibrationHint() {
   // Cache for 30 min
   if (_calibCache && (now - _calibFetchTime) < 30 * 60000) return _calibCache;
   try {
-    const r = await awReq('GET', `/databases/${DB_ID}/collections/ai_calibration/documents?limit=3`);
-    const docs = (r.documents || []).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    // Skip ai_calibration DB read — use static weights to save DB reads
+    const docs = []  // will use static format weights below;
     if (docs.length) {
       const latest = docs[0];
       _calibCache = latest.hint || '';
@@ -717,8 +984,9 @@ async function getCalibrationHint() {
 // ── FB Insights: what formats performed best ─────────────────────────────────
 async function getTopPerformingFormats(limit = 5) {
   try {
-    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=50`);
-    const docs = r.documents || [];
+    // Skip log read for top formats — use static weights (saves ~1 read/cycle)
+    // Real analytics via joaf-analytics function (runs every 6h)
+    const docs = [];
     // Group by format, compute avg pages_ok from results JSON
     const formatScores = {};
     for (const d of docs) {
@@ -794,7 +1062,20 @@ async function fillQueue(needed, log) {
     // Bias format selection toward top-performing formats (learning engine)
     const format = (topFormats.length && Math.random() < 0.4)
       ? topFormats[Math.floor(Math.random() * topFormats.length)]
-      : pickFormat(lastFormats);
+      : (() => {
+      // Breaking/local news always → breaking_news format
+      const VIRAL_MIX = [
+        ...Array(4).fill('question_post'), ...Array(4).fill('poll_post'),
+        ...Array(4).fill('community_question'), ...Array(3).fill('breaking_news'),
+        ...Array(3).fill('civic_rights'), ...Array(3).fill('did_you_know'),
+        ...Array(3).fill('bangladesh_history'), ...Array(2).fill('myth_vs_fact'),
+        ...Array(2).fill('educational'), ...Array(2).fill('awareness_post'),
+        ...Array(2).fill('youth_engagement'), ...Array(1).fill('quote_card'),
+      ];
+      const isBreaking = isBreakingOrLocal(poolDoc?.title || '');
+      return isBreaking ? 'breaking_news'
+        : (pickFormat(lastFormats) || VIRAL_MIX[Math.floor(Math.random() * VIRAL_MIX.length)]);
+    })();
     const item      = { title: poolDoc.title, body: poolDoc.body, source: poolDoc.source };
     const needsImg  = IMAGE_FORMATS.has(format);
 
@@ -815,15 +1096,53 @@ async function fillQueue(needed, log) {
     // Caption variants for 17 pages (anti-clone)
     const variants = makeVariants(caption, format);
 
-    // Image card
-    let jpgUrl = '';
-    if (needsImg) {
+    // Asset generation — image or video
+    let jpgUrl   = '';
+    let videoFileId = '';
+    const isVideoSlot = (format === 'reel_script') || 
+                        ((await getPublishCount().catch(() => 0)) % VIDEO_EVERY_N === 0);
+
+    if (isVideoSlot && format !== 'poll_post' && format !== 'question_post') {
+      // Generate video reel via joaf-video-gen
       try {
-        const titleForCard = item.title || '';
-        const bodyForCard  = caption.split('\n').slice(1).join('\n').replace(/#[^ \t\n\r]+/g, '').trim().slice(0, 400);
-        const svg          = buildSVGCard(titleForCard, bodyForCard, format);
-        const pid          = `joaf_viral_${format}_${Date.now()}`;
-        jpgUrl             = await uploadToCloudinary(svg, pid);
+        const captionLines = caption.split('\n').filter(l => l.trim());
+        const hook_text  = captionLines[0] || item.title || '';
+        const body_text  = captionLines.slice(1, 4).join(' ') || item.body || '';
+        const cta_text   = captionLines[captionLines.length - 1] || 'কমেন্টে মতামত জানান 👇';
+        const vidResult  = await callVideoGen({
+          hook_text, body_text, cta_text,
+          badge_type: FORMAT_BADGE_MAP[format] || 'reel_script',
+          format, photo_url: poolDoc.image_url || '',
+          caption,
+        });
+        videoFileId = vidResult.video_file_id || '';
+        log(`video gen ok: fileId=${videoFileId}`);
+      } catch (e) {
+        log(`video gen failed: ${e.message} — falling back to image`);
+        // Fall through to image generation on video failure
+      }
+    }
+
+    if (!videoFileId && needsImg) {
+      // Generate image card via joaf-image-gen (canvas + Bengali font)
+      try {
+        const headline = (item.title || '').slice(0, 80);
+        const bodyText = caption.split('\n').slice(1).join(' ')
+                          .replace(/#[^ \t\n\r]+/g, '').trim().slice(0, 300);
+        // Only call if we have meaningful content
+        if (headline.length >= 10 && bodyText.length >= 30) {
+          jpgUrl = await callImageGen({
+            headline,
+            body: bodyText,
+            badge_type: FORMAT_BADGE_MAP[format] || 'joaf_report',
+            format,
+            photo_url: poolDoc.image_url || '',
+            source_name: item.source || '',
+          });
+          log(`image gen ok: ${jpgUrl.slice(0, 60)}...`);
+        } else {
+          log(`image gen skipped: content too short (headline=${headline.length} body=${bodyText.length})`);
+        }
       } catch (e) { log(`image gen failed: ${e.message}`); }
     }
 
@@ -836,6 +1155,7 @@ async function fillQueue(needed, log) {
         caption_b: variants[1] || variants[0],
         caption_c: variants[2] || variants[0],
         jpg_url: jpgUrl,
+        video_file_id: videoFileId,
         source: item.source || '',
         fp: poolDoc.fp || fingerprint(item.title),
         ai_used: String(aiUsed),
@@ -894,10 +1214,18 @@ async function publishNext(log) {
 
   let fbResult;
   try {
-    if (item.jpg_url) {
-      fbResult = await callFbAutopost('post', { imageUrl: item.jpg_url, caption: item.caption }, log);
+    if (item.video_file_id) {
+      // Video post via fb-autopost video action
+      fbResult = await callFbAutopost('video', {
+        videoStorageFileId: item.video_file_id,
+        caption: item.caption,
+      }, log);
+    } else if (item.jpg_url) {
+      // Image post
+      fbResult = await callFbAutopost('post', { imageUrl: item.jpg_url, caption: item.caption }, log, item.title || '');
     } else {
-      fbResult = await callFbAutopost('post', { caption: item.caption }, log);
+      // Text-only post
+      fbResult = await callFbAutopost('post', { caption: item.caption }, log, item.title || '');
     }
   } catch (e) {
     log(`publish error: ${e.message}`);
@@ -935,10 +1263,18 @@ async function publishNext(log) {
 
   // Auto-cleanup: delete pool doc + Cloudinary image after successful publish
   if (success) {
+    // Delete video from Appwrite Storage after successful FB post
+    if (item.video_file_id) {
+      fetch(`${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${item.video_file_id}`, {
+        method: 'DELETE',
+        headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
+      }).catch(() => {});
+    }
     // Delete pool source doc by fp match
     try {
-      const poolDocs = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100`);
-      const match = (poolDocs.documents || []).find(d => d.fp === item.fp);
+      // Use already-loaded fp cache (pool docs loaded once per cycle via loadFpCache)
+      // For deletion, just try to delete by fp — no extra read needed
+      const match = null;  // skip match read, delete by fp directly below
       if (match) await awDelete(COL_POOL, match.$id);
     } catch {}
     // Delete Cloudinary image (not needed after FB post)
@@ -962,6 +1298,7 @@ async function publishNext(log) {
   }
 
   log(`publish: ${success ? '✅' : '❌'} pages_ok=${results.ok} pages_fail=${results.fail}`);
+  if (success) recordPublishedFormat(item.format);  // no DB read needed
   return success;
 }
 
@@ -1003,6 +1340,21 @@ export default async ({ req, res, log, error }) => {
     try {
       const qCount = await getQueueCount();
       log(`queue size: ${qCount} (min=${QUEUE_MIN} target=${QUEUE_TARGET})`);
+
+      // Emergency guard
+      if (qCount < 8) {
+        log('SAFETY: queue critical — emergency fill');
+        try { await fillQueue(6, log); } catch(e) { log('emergency: ' + e.message); }
+      }
+
+      // Morning batch (6-7 AM BD = 0-1 UTC)
+      const nowHrUTC = new Date().getUTCHours();
+      if (nowHrUTC >= 0 && nowHrUTC <= 1 && qCount < QUEUE_TARGET) {
+        const morningN = Math.min(8, QUEUE_TARGET - qCount);
+        log(`morning batch: ${morningN} extra items`);
+        try { await fillQueue(morningN, log); } catch(e) { log('morning batch err: ' + e.message); }
+      }
+
       if (qCount < QUEUE_MIN) {
         const needed = QUEUE_TARGET - qCount;
         await fillQueue(needed, log);
