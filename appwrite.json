@@ -684,7 +684,8 @@
             "scopes": [],
             "deploymentRetention": 0,
             "buildSpecification": "s-0.5vcpu-512mb",
-            "runtimeSpecification": "s-0.5vcpu-512mb"
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "path": "appwrite-functions/joaf-image-gen"
         },
         {
             "$id": "joaf-video-gen",
@@ -702,7 +703,8 @@
             "scopes": [],
             "deploymentRetention": 0,
             "buildSpecification": "s-0.5vcpu-512mb",
-            "runtimeSpecification": "s-0.5vcpu-512mb"
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "path": "appwrite-functions/joaf-video-gen"
         },
         {
             "$id": "joaf-analytics",
@@ -720,7 +722,8 @@
             "scopes": [],
             "deploymentRetention": 0,
             "buildSpecification": "s-0.5vcpu-512mb",
-            "runtimeSpecification": "s-0.5vcpu-512mb"
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "path": "appwrite-functions/joaf-analytics"
         }
     ],
     "sites": [
