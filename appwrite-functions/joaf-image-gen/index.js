@@ -17,7 +17,8 @@
 //   format: string,          (optional, for theme auto-pick)
 // }
 
-import { createCanvas, loadImage, registerFont, GlobalFonts } from '@napi-rs/canvas';
+import pkg from '@napi-rs/canvas';
+const { createCanvas, loadImage, registerFont, GlobalFonts } = pkg;
 import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
