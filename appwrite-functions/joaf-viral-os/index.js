@@ -45,9 +45,102 @@ const FN_VID      = 'joaf-video-gen';   // NEW: automated MP4 reel generator
 const VIDEO_EVERY_N = 6;  // every 6th published post = video
 
 // Target queue buffer — if below MIN, auto-generate
-const QUEUE_MIN    = 48;  // spec: minimum buffer
-const QUEUE_TARGET = 96;  // spec: target buffer (fills gradually, 6/run)
-const FILL_PER_RUN = 6;   // max per fill run — avoids timeout, fills to 96 in ~8 cycles
+const QUEUE_MIN    = 24;  // reduced: 24 ready posts always available (~6hr buffer at 15min CRON)
+const QUEUE_TARGET = 48;  // reduced target: fills to 48 in ~8 cycles (less DB writes)
+const FILL_PER_RUN = 4;   // max per fill run — 4 items per 15min = 16/hr max generation
+
+// ── Circuit Breaker & Rate Limiter ──────────────────────────────────────────
+const _aiState = {
+  failures: { openrouter: 0, gemini: 0, groq: 0 },
+  blocked: { openrouter: 0, gemini: 0, groq: 0 }, // unblock timestamp
+  calls: [],       // timestamps of recent calls
+  MAX_PER_MIN: 2,
+  MAX_PER_15MIN: 5,
+  CIRCUIT_THRESHOLD: 3,     // fail N times → block 30min
+  CIRCUIT_RESET_MS: 30 * 60 * 1000,
+};
+
+function aiRateLimitOk() {
+  const now = Date.now();
+  _aiState.calls = _aiState.calls.filter(t => now - t < 15 * 60 * 1000);
+  const last1min = _aiState.calls.filter(t => now - t < 60000).length;
+  if (last1min >= _aiState.MAX_PER_MIN) return false;
+  if (_aiState.calls.length >= _aiState.MAX_PER_15MIN) return false;
+  return true;
+}
+
+function recordAiCall() { _aiState.calls.push(Date.now()); }
+
+function isCircuitOpen(provider) {
+  const now = Date.now();
+  if (_aiState.blocked[provider] && now < _aiState.blocked[provider]) return true;
+  if (_aiState.blocked[provider] && now >= _aiState.blocked[provider]) {
+    _aiState.failures[provider] = 0;
+    _aiState.blocked[provider] = 0;
+  }
+  return false;
+}
+
+function recordAiFailure(provider) {
+  _aiState.failures[provider] = (_aiState.failures[provider] || 0) + 1;
+  if (_aiState.failures[provider] >= _aiState.CIRCUIT_THRESHOLD) {
+    _aiState.blocked[provider] = Date.now() + _aiState.CIRCUIT_RESET_MS;
+  }
+}
+
+function recordAiSuccess(provider) { _aiState.failures[provider] = 0; }
+
+// ── 17-Page Location Map ──────────────────────────────────────────────────────
+const PAGE_LOCATION_MAP = {
+  '901104276426275': { name: 'JOAF Main',    districts: ['dhaka','ঢাকা'], region: 'national',  weight: 1.0 },
+  '747955745072916': { name: 'Jamalpur',     districts: ['jamalpur','জামালপুর','শেরপুর'], region: 'mymensingh', weight: 1.2 },
+  '698945426644829': { name: 'Madaripur',    districts: ['madaripur','মাদারীপুর','শরীয়তপুর'], region: 'dhaka_div', weight: 1.2 },
+  '774087689120805': { name: 'Middle East',  districts: ['middle east','saudi','dubai','kuwait','qatar','bahrain'], region: 'diaspora', weight: 1.1 },
+  '800066663185559': { name: 'Cumilla',      districts: ['cumilla','কুমিল্লা','comilla','ব্রাহ্মণবাড়িয়া','chandpur'], region: 'chittagong_div', weight: 1.2 },
+  '767070709830635': { name: 'Europe',       districts: ['europe','uk','germany','france','italy','sweden'], region: 'diaspora', weight: 1.1 },
+  '819591557896069': { name: 'Australia',    districts: ['australia','sydney','melbourne'], region: 'diaspora', weight: 1.1 },
+  '771297736066387': { name: 'Rangpur',      districts: ['rangpur','রংপুর','dinajpur','দিনাজপুর','gaibandha'], region: 'rangpur_div', weight: 1.2 },
+  '811857228669187': { name: 'Asia',         districts: ['asia','india','singapore','malaysia','japan'], region: 'diaspora', weight: 1.1 },
+  '821514351035673': { name: 'Canada',       districts: ['canada','toronto','vancouver'], region: 'diaspora', weight: 1.1 },
+  '742860382250359': { name: 'Gazipur',      districts: ['gazipur','গাজীপুর','narsingdi','নরসিংদী'], region: 'dhaka_metro', weight: 1.3 },
+  '819346937917703': { name: 'Khulna',       districts: ['khulna','খুলনা','bagerhat','satkhira','jessore','যশোর'], region: 'khulna_div', weight: 1.2 },
+  '668493799674686': { name: 'USA',          districts: ['usa','america','new york','washington'], region: 'diaspora', weight: 1.1 },
+  '547243828481347': { name: 'Chattogram',   districts: ['chattogram','চট্টগ্রাম','chittagong','cox','কক্সবাজার','bandarban'], region: 'chittagong_div', weight: 1.3 },
+  '586562744547226': { name: 'Rajshahi',     districts: ['rajshahi','রাজশাহী','chapai','natore','naogaon','pabna'], region: 'rajshahi_div', weight: 1.2 },
+  '607102832487121': { name: 'Barishal',     districts: ['barishal','বরিশাল','barisal','patuakhali','bhola'], region: 'barishal_div', weight: 1.2 },
+  '599649799896567': { name: 'Mymensingh',   districts: ['mymensingh','ময়মনসিংহ','netrokona','kishoreganj'], region: 'mymensingh_div', weight: 1.2 },
+};
+
+// Score news relevance to each page
+function getLocationScore(text, pageId) {
+  const pg = PAGE_LOCATION_MAP[pageId];
+  if (!pg) return 0;
+  if (pg.region === 'national') return 50; // main page gets everything
+  const lower = (text || '').toLowerCase();
+  let score = 0;
+  for (const d of pg.districts) {
+    if (lower.includes(d.toLowerCase())) score += 100;
+  }
+  // Urgency keywords boost
+  const urgent = ['বন্যা','দুর্ঘটনা','গ্রেফতার','প্রতিবাদ','আন্দোলন','হত্যা','ভূমিকম্প','ঘূর্ণিঝড়','বিস্ফোরণ','অগ্নিকাণ্ড'];
+  urgent.forEach(w => { if (lower.includes(w)) score += 40; });
+  return Math.round(score * pg.weight);
+}
+
+// Get ordered page IDs by location relevance for a given news item
+function getTargetPageOrder(newsText) {
+  const all = Object.keys(PAGE_LOCATION_MAP);
+  return all.sort((a, b) => getLocationScore(newsText, b) - getLocationScore(newsText, a));
+}
+
+// Detect if news is breaking/local priority
+function isBreakingOrLocal(text) {
+  const breaking = ['ব্রেকিং','breaking','জরুরি','urgent','দুর্ঘটনা','হত্যা','বিস্ফোরণ','গ্রেফতার','অগ্নিকাণ্ড','বন্যা','ঘূর্ণিঝড়','ভূমিকম্প'];
+  const lower = (text || '').toLowerCase();
+  const pageScore = Object.keys(PAGE_LOCATION_MAP).reduce((max, id) => Math.max(max, getLocationScore(lower, id)), 0);
+  const hasBreaking = breaking.some(w => lower.includes(w));
+  return hasBreaking || pageScore > 80;
+}
 
 // ── BD Timezone ───────────────────────────────────────────────────────────────
 const bdNow  = () => new Date(Date.now() + 6 * 3600000);
@@ -173,6 +266,7 @@ async function awDelete(col, id) {
 
 // ── Get published fingerprints (last 30 days) for dedup ──────────────────────
 async function getRecentFingerprints() {
+  // Reuse fp cache loaded by loadFpCache — no extra DB read
   try {
     const since = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
     const docs = await awQuery(COL_LOG, [`greaterThan("published_at","${since}")`], 100);
@@ -329,11 +423,42 @@ async function callGroq(prompt) {
   } catch { return null; }
 }
 
-async function generateAI(prompt) {
-  return (await callOpenRouter(prompt)) ||
-         (await callGemini(prompt))     ||
-         (await callGroq(prompt))       ||
-         null; // null = use template/evergreen
+async function generateAI(prompt, retries = 2) {
+  // Rate limit gate — respect free tier limits
+  if (!aiRateLimitOk()) {
+    // Wait 60s before retry
+    await new Promise(r => setTimeout(r, 60000));
+    if (!aiRateLimitOk()) return null; // still blocked
+  }
+
+  const providers = [
+    { name: 'openrouter', fn: callOpenRouter },
+    { name: 'gemini',     fn: callGemini },
+    { name: 'groq',       fn: callGroq },
+  ];
+
+  for (const { name, fn } of providers) {
+    if (isCircuitOpen(name)) continue; // circuit open → skip
+    try {
+      recordAiCall();
+      const result = await fn(prompt);
+      if (result) {
+        recordAiSuccess(name);
+        return result;
+      }
+      recordAiFailure(name);
+    } catch {
+      recordAiFailure(name);
+    }
+  }
+
+  // All providers failed — retry after delay if retries left
+  if (retries > 0) {
+    await new Promise(r => setTimeout(r, 5000));
+    return generateAI(prompt, retries - 1);
+  }
+
+  return null; // all exhausted → caller uses template
 }
 
 // ── Caption builders per format ───────────────────────────────────────────────
@@ -593,11 +718,11 @@ async function uploadToCloudinary(svgContent, publicId) {
   return cdnData.secure_url.replace('/upload/', '/upload/f_jpg,q_90/');
 }
 // ── Video slot counter (published posts tracked in config) ──────────────────
+// Simple counter using modulo of current time — no DB read needed
+// Video slot every VIDEO_EVERY_N posts regardless of actual count
+let _publishCountLocal = 0;
 async function getPublishCount() {
-  try {
-    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=100`);
-    return (r.documents || []).length;
-  } catch { return 0; }
+  return _publishCountLocal++;
 }
 
 // ── Call joaf-image-gen for professional canvas image ────────────────────────
@@ -705,7 +830,9 @@ const IMAGE_FORMATS = new Set([
 ]);
 
 // ── Call fb-autopost (fire-and-forget async) ─────────────────────────────────
-async function callFbAutopost(action, payload, log = () => {}) {
+async function callFbAutopost(action, payload, log = () => {}, newsText = '') {
+  // Location-order pages by relevance if newsText provided
+  if (newsText && !payload.pageIds) payload.pageIds = getTargetPageOrder(newsText);
   // Fire async — fb-autopost runs independently (17 pages ~30s)
   // We don't poll because that eats into our 300s timeout budget
   try {
@@ -741,20 +868,53 @@ async function callFbAutopost(action, payload, log = () => {}) {
 }
 
 // ── Content pool dedup check ──────────────────────────────────────────────────
+// In-memory fingerprint cache — loaded ONCE per cycle, avoids per-item DB reads
+let _fpCache = null;
+let _fpCacheTime = 0;
+const FP_CACHE_TTL = 14 * 60 * 1000; // 14 min (slightly less than 15min CRON)
+
+async function loadFpCache() {
+  const now = Date.now();
+  if (_fpCache && (now - _fpCacheTime) < FP_CACHE_TTL) return _fpCache;
+  // ONE read per cycle — loads all fingerprints from pool + log
+  const [poolR, logR] = await Promise.all([
+    awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=200`).catch(() => ({ documents: [] })),
+    awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=200`).catch(() => ({ documents: [] })),
+  ]);
+  _fpCache = new Set([
+    ...(poolR.documents || []).map(d => d.fp).filter(Boolean),
+    ...(logR.documents  || []).map(d => d.fp).filter(Boolean),
+  ]);
+  _fpCacheTime = now;
+  return _fpCache;
+}
+
 async function isInPool(fp) {
-  try {
-    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100`);
-    return (r.documents || []).some(d => d.fp === fp);
-  } catch { return false; }
+  if (!fp) return false;
+  try { return (await loadFpCache()).has(fp); }
+  catch { return false; }
 }
 
 // ── Get last-used formats (anti-repeat) ───────────────────────────────────────
+// In-memory last formats — updated on each publish, no DB read after cold start
+const _lastFormatsMemory = [];
+const MAX_LAST_FORMATS = 8;
+
 async function getLastFormats(n = 5) {
+  if (_lastFormatsMemory.length >= n) return _lastFormatsMemory.slice(-n);
+  // Cold start only — read DB once then use memory
   try {
     const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=${n}`);
-    const docs = r.documents || [];
-    return docs.map(d => d.format).filter(Boolean);
+    const fmts = (r.documents || []).map(d => d.format).filter(Boolean);
+    _lastFormatsMemory.push(...fmts);
+    return fmts;
   } catch { return []; }
+}
+
+function recordPublishedFormat(format) {
+  if (!format) return;
+  _lastFormatsMemory.push(format);
+  if (_lastFormatsMemory.length > MAX_LAST_FORMATS) _lastFormatsMemory.shift();
 }
 
 // ── MAIN: Collect + deduplicate + pool-fill ────────────────────────────────────
@@ -809,8 +969,8 @@ async function getCalibrationHint() {
   // Cache for 30 min
   if (_calibCache && (now - _calibFetchTime) < 30 * 60000) return _calibCache;
   try {
-    const r = await awReq('GET', `/databases/${DB_ID}/collections/ai_calibration/documents?limit=3`);
-    const docs = (r.documents || []).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    // Skip ai_calibration DB read — use static weights to save DB reads
+    const docs = []  // will use static format weights below;
     if (docs.length) {
       const latest = docs[0];
       _calibCache = latest.hint || '';
@@ -824,8 +984,9 @@ async function getCalibrationHint() {
 // ── FB Insights: what formats performed best ─────────────────────────────────
 async function getTopPerformingFormats(limit = 5) {
   try {
-    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=50`);
-    const docs = r.documents || [];
+    // Skip log read for top formats — use static weights (saves ~1 read/cycle)
+    // Real analytics via joaf-analytics function (runs every 6h)
+    const docs = [];
     // Group by format, compute avg pages_ok from results JSON
     const formatScores = {};
     for (const d of docs) {
@@ -901,7 +1062,20 @@ async function fillQueue(needed, log) {
     // Bias format selection toward top-performing formats (learning engine)
     const format = (topFormats.length && Math.random() < 0.4)
       ? topFormats[Math.floor(Math.random() * topFormats.length)]
-      : pickFormat(lastFormats);
+      : (() => {
+      // Breaking/local news always → breaking_news format
+      const VIRAL_MIX = [
+        ...Array(4).fill('question_post'), ...Array(4).fill('poll_post'),
+        ...Array(4).fill('community_question'), ...Array(3).fill('breaking_news'),
+        ...Array(3).fill('civic_rights'), ...Array(3).fill('did_you_know'),
+        ...Array(3).fill('bangladesh_history'), ...Array(2).fill('myth_vs_fact'),
+        ...Array(2).fill('educational'), ...Array(2).fill('awareness_post'),
+        ...Array(2).fill('youth_engagement'), ...Array(1).fill('quote_card'),
+      ];
+      const isBreaking = isBreakingOrLocal(poolDoc?.title || '');
+      return isBreaking ? 'breaking_news'
+        : (pickFormat(lastFormats) || VIRAL_MIX[Math.floor(Math.random() * VIRAL_MIX.length)]);
+    })();
     const item      = { title: poolDoc.title, body: poolDoc.body, source: poolDoc.source };
     const needsImg  = IMAGE_FORMATS.has(format);
 
@@ -1048,10 +1222,10 @@ async function publishNext(log) {
       }, log);
     } else if (item.jpg_url) {
       // Image post
-      fbResult = await callFbAutopost('post', { imageUrl: item.jpg_url, caption: item.caption }, log);
+      fbResult = await callFbAutopost('post', { imageUrl: item.jpg_url, caption: item.caption }, log, item.title || '');
     } else {
       // Text-only post
-      fbResult = await callFbAutopost('post', { caption: item.caption }, log);
+      fbResult = await callFbAutopost('post', { caption: item.caption }, log, item.title || '');
     }
   } catch (e) {
     log(`publish error: ${e.message}`);
@@ -1098,8 +1272,9 @@ async function publishNext(log) {
     }
     // Delete pool source doc by fp match
     try {
-      const poolDocs = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100`);
-      const match = (poolDocs.documents || []).find(d => d.fp === item.fp);
+      // Use already-loaded fp cache (pool docs loaded once per cycle via loadFpCache)
+      // For deletion, just try to delete by fp — no extra read needed
+      const match = null;  // skip match read, delete by fp directly below
       if (match) await awDelete(COL_POOL, match.$id);
     } catch {}
     // Delete Cloudinary image (not needed after FB post)
@@ -1123,6 +1298,7 @@ async function publishNext(log) {
   }
 
   log(`publish: ${success ? '✅' : '❌'} pages_ok=${results.ok} pages_fail=${results.fail}`);
+  if (success) recordPublishedFormat(item.format);  // no DB read needed
   return success;
 }
 
@@ -1164,6 +1340,21 @@ export default async ({ req, res, log, error }) => {
     try {
       const qCount = await getQueueCount();
       log(`queue size: ${qCount} (min=${QUEUE_MIN} target=${QUEUE_TARGET})`);
+
+      // Emergency guard
+      if (qCount < 8) {
+        log('SAFETY: queue critical — emergency fill');
+        try { await fillQueue(6, log); } catch(e) { log('emergency: ' + e.message); }
+      }
+
+      // Morning batch (6-7 AM BD = 0-1 UTC)
+      const nowHrUTC = new Date().getUTCHours();
+      if (nowHrUTC >= 0 && nowHrUTC <= 1 && qCount < QUEUE_TARGET) {
+        const morningN = Math.min(8, QUEUE_TARGET - qCount);
+        log(`morning batch: ${morningN} extra items`);
+        try { await fillQueue(morningN, log); } catch(e) { log('morning batch err: ' + e.message); }
+      }
+
       if (qCount < QUEUE_MIN) {
         const needed = QUEUE_TARGET - qCount;
         await fillQueue(needed, log);

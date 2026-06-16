@@ -210,10 +210,7 @@
                 }
             ],
             "ignore": [],
-            "path": "appwrite-functions/fb-autopost",
-            "deploymentRetention": 0,
-            "buildSpecification": "s-0.5vcpu-512mb",
-            "runtimeSpecification": "s-0.5vcpu-512mb"
+            "path": "appwrite-functions/fb-autopost"
         },
         {
             "$id": "send-notification",
@@ -663,10 +660,7 @@
             "commands": "npm install",
             "path": "appwrite-functions/joaf-viral-os",
             "ignore": [],
-            "vars": [],
-            "deploymentRetention": 0,
-            "buildSpecification": "s-0.5vcpu-512mb",
-            "runtimeSpecification": "s-0.5vcpu-512mb"
+            "vars": []
         },
         {
             "$id": "joaf-image-gen",
@@ -681,11 +675,7 @@
             "timeout": 120,
             "enabled": true,
             "logging": true,
-            "scopes": [],
-            "deploymentRetention": 0,
-            "buildSpecification": "s-0.5vcpu-512mb",
-            "runtimeSpecification": "s-0.5vcpu-512mb",
-            "path": "appwrite-functions/joaf-image-gen"
+            "scopes": []
         },
         {
             "$id": "joaf-video-gen",
@@ -700,11 +690,7 @@
             "timeout": 300,
             "enabled": true,
             "logging": true,
-            "scopes": [],
-            "deploymentRetention": 0,
-            "buildSpecification": "s-0.5vcpu-512mb",
-            "runtimeSpecification": "s-0.5vcpu-512mb",
-            "path": "appwrite-functions/joaf-video-gen"
+            "scopes": []
         },
         {
             "$id": "joaf-analytics",
@@ -719,11 +705,7 @@
             "timeout": 120,
             "enabled": true,
             "logging": true,
-            "scopes": [],
-            "deploymentRetention": 0,
-            "buildSpecification": "s-0.5vcpu-512mb",
-            "runtimeSpecification": "s-0.5vcpu-512mb",
-            "path": "appwrite-functions/joaf-analytics"
+            "scopes": []
         }
     ],
     "sites": [
