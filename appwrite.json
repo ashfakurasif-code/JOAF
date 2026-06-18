@@ -675,9 +675,7 @@
             "timeout": 120,
             "enabled": true,
             "logging": true,
-            "scopes": [],
-            "path": "appwrite-functions/joaf-image-gen",
-            "commands": "npm install"
+            "scopes": []
         },
         {
             "$id": "joaf-video-gen",
@@ -692,9 +690,7 @@
             "timeout": 300,
             "enabled": true,
             "logging": true,
-            "scopes": [],
-            "path": "appwrite-functions/joaf-video-gen",
-            "commands": "npm install"
+            "scopes": []
         },
         {
             "$id": "joaf-analytics",
@@ -709,8 +705,7 @@
             "timeout": 120,
             "enabled": true,
             "logging": true,
-            "scopes": [],
-            "path": "appwrite-functions/joaf-analytics"
+            "scopes": []
         }
     ],
     "sites": [
