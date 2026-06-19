@@ -1173,17 +1173,44 @@ async function fillQueue(needed, log) {
   // If still need more → use evergreen emergency content
   if (generated < needed) {
     const stillNeed = needed - generated;
+    const EVERGREEN_BADGE_MAP = {
+      fact: 'amazing_fact', poll: 'your_opinion', question: 'discussion',
+      history: 'history', civic: 'civic_rights', did_you_know: 'did_you_know',
+      motivation: 'joaf_opinion',
+    };
+    const EVERGREEN_HEADLINE_MAP = {
+      fact: 'আপনি কি জানেন?', poll: 'আপনার মতামত জানতে চাই',
+      question: 'আপনার মতামত প্রয়োজন', history: 'আজকের ইতিহাস',
+      civic: 'নাগরিক অধিকার সচেতনতা', did_you_know: 'আকর্ষণীয় তথ্য',
+      motivation: 'JOAF এর বার্তা',
+    };
     for (let i = 0; i < stillNeed; i++) {
-      const format   = pickFormat(lastFormats);
-      const eg       = pickEvergreen(lastFormats);
-      const caption  = buildTemplate(format, null, eg);
-      const variants = makeVariants(caption, format);
+      const format    = pickFormat(lastFormats);
+      const eg         = pickEvergreen(lastFormats);
+      const caption    = buildTemplate(format, null, eg);
+      const variants   = makeVariants(caption, format);
+      const headline   = EVERGREEN_HEADLINE_MAP[eg.type] || 'JOAF আপডেট';
+      const bodyForImg = eg.text.replace(/#[^\s]+/g, '').trim().slice(0, 280);
+
+      let jpgUrl = '';
+      try {
+        if (headline.length >= 10 && bodyForImg.length >= 30) {
+          jpgUrl = await callImageGen({
+            headline,
+            body: bodyForImg,
+            badge_type: EVERGREEN_BADGE_MAP[eg.type] || 'joaf_report',
+            format,
+            source_name: 'JOAF',
+          });
+        }
+      } catch (e) { log(`evergreen image-gen failed: ${e.message}`); }
+
       try {
         await awCreate(COL_QUEUE, {
-          format, title: eg.type, caption: variants[0],
+          format, title: headline, caption: variants[0],
           caption_b: variants[1] || variants[0],
           caption_c: variants[2] || variants[0],
-          jpg_url: '', source: 'evergreen', fp: fingerprint(caption),
+          jpg_url: jpgUrl, source: 'evergreen', fp: fingerprint(caption),
           ai_used: 'false', status: 'pending',
           created_at: new Date().toISOString(),
         });
@@ -1191,7 +1218,7 @@ async function fillQueue(needed, log) {
         generated++;
       } catch {}
     }
-    log(`queue+: ${generated} evergreen emergency items added`);
+    log(`queue+: ${generated} evergreen emergency items added (with images)`);
   }
 
   return generated;
