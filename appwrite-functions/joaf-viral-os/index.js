@@ -277,19 +277,21 @@ async function getRecentFingerprints() {
 // ── Queue helpers ─────────────────────────────────────────────────────────────
 async function getQueueCount() {
   try {
-    // Query without filter — count all, filter client-side (avoids index dependency)
-    const all = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?limit=100`);
-    const docs = all.documents || [];
-    return docs.filter(d => d.status === 'pending').length;
+    // Server-side filter by status + tiny limit — only reads matched docs,
+    // and Appwrite returns accurate 'total' count even at limit=1.
+    const q = encodeURIComponent(JSON.stringify({ method: 'equal', attribute: 'status', values: ['pending'] }));
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?queries[]=${q}&queries[]=${encodeURIComponent(JSON.stringify({method:'limit',values:[1]}))}`);
+    return r.total ?? 0;
   } catch { return 0; }
 }
 
 async function getNextQueueItem() {
   try {
-    // Fetch without filter — pick first pending (avoids Appwrite index issues)
-    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?limit=100`);
-    const docs = (r.documents || []).filter(d => d.status === 'pending');
-    // Sort by created_at ascending
+    // Server-side filter by status, small limit (10 for safety/sort), not 100
+    const q = encodeURIComponent(JSON.stringify({ method: 'equal', attribute: 'status', values: ['pending'] }));
+    const lim = encodeURIComponent(JSON.stringify({ method: 'limit', values: [10] }));
+    const r = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?queries[]=${q}&queries[]=${lim}`);
+    const docs = r.documents || [];
     docs.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
     return docs[0] || null;
   } catch { return null; }
@@ -871,15 +873,16 @@ async function callFbAutopost(action, payload, log = () => {}, newsText = '') {
 // In-memory fingerprint cache — loaded ONCE per cycle, avoids per-item DB reads
 let _fpCache = null;
 let _fpCacheTime = 0;
-const FP_CACHE_TTL = 14 * 60 * 1000; // 14 min (slightly less than 15min CRON)
+const FP_CACHE_TTL = 30 * 60 * 1000; // 30 min — fewer reloads, big DB-read savings
 
 async function loadFpCache() {
   const now = Date.now();
   if (_fpCache && (now - _fpCacheTime) < FP_CACHE_TTL) return _fpCache;
-  // ONE read per cycle — loads all fingerprints from pool + log
+  // Drastically reduced limits — Appwrite bills PER DOCUMENT READ, not per API call.
+  // 50 recent pool + 50 recent log fingerprints is plenty for dedup purposes.
   const [poolR, logR] = await Promise.all([
-    awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=200`).catch(() => ({ documents: [] })),
-    awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=200`).catch(() => ({ documents: [] })),
+    awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=50`).catch(() => ({ documents: [] })),
+    awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=50`).catch(() => ({ documents: [] })),
   ]);
   _fpCache = new Set([
     ...(poolR.documents || []).map(d => d.fp).filter(Boolean),
@@ -1339,12 +1342,11 @@ export default async ({ req, res, log, error }) => {
   // ── STATUS ────────────────────────────────────────────────────────────────
   if (action === 'status') {
     try {
-      const queueAll = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?limit=100`);
-      const pending = (queueAll.documents || []).filter(d => d.status === 'pending');
+      const pendingCount = await getQueueCount(); // now a 1-doc read via 'total'
       const logAll = await awReq('GET', `/databases/${DB_ID}/collections/${COL_LOG}/documents?limit=5`).catch(() => ({ documents: [] }));
       return res.json({
         ok: true,
-        queue_pending: pending.length,
+        queue_pending: pendingCount,
         queue_min: QUEUE_MIN,
         queue_target: QUEUE_TARGET,
         recent_posts: (logAll.documents || []).map(d => ({ format: d.format, status: d.status, published_at: d.published_at })),
