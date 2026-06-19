@@ -675,7 +675,8 @@
             "timeout": 120,
             "enabled": true,
             "logging": true,
-            "scopes": []
+            "scopes": [],
+            "commands": "npm install"
         },
         {
             "$id": "joaf-video-gen",
@@ -690,7 +691,8 @@
             "timeout": 300,
             "enabled": true,
             "logging": true,
-            "scopes": []
+            "scopes": [],
+            "commands": "npm install"
         },
         {
             "$id": "joaf-analytics",
@@ -705,7 +707,8 @@
             "timeout": 120,
             "enabled": true,
             "logging": true,
-            "scopes": []
+            "scopes": [],
+            "commands": "npm install"
         }
     ],
     "sites": [
