@@ -1550,11 +1550,13 @@ addDoc(collection(db,'pageviews'),{page:location.pathname,device:dev,source:src,
     </div><!-- /page-joaf-studio -->
 
     <!-- ── JOAF PUBLISHER PAGE ──────────────────────────────────────── -->
-    <div class="page" id="page-publisher" style="padding:0;overflow:hidden;height:calc(100vh - 48px);display:none;">
+    <div class="page" id="page-publisher" style="position:fixed;top:48px;left:260px;right:0;bottom:0;padding:0;margin:0;overflow:hidden;display:none;z-index:5;">
       <iframe
         id="publisherFrame"
-        src="/tools/publisher-dashboard.html?v=2"
-        style="width:100%;height:100%;border:none;display:block;"
+        src="/tools/publisher-dashboard.html?v=3"
+        width="100%"
+        height="100%"
+        style="width:100%!important;height:100%!important;min-height:100vh;border:none;display:block;position:absolute;top:0;left:0;right:0;bottom:0;"
         allow="clipboard-write"
       ></iframe>
     </div><!-- /page-publisher -->
@@ -7301,7 +7303,20 @@ window._storeCaptionResult = function(result) {
     }
     if(id === 'publisher'){
       const pubPage = document.getElementById('page-publisher');
-      if(pubPage) pubPage.style.display = 'flex';
+      if(pubPage){
+        pubPage.style.display = 'block';
+        pubPage.style.position = 'fixed';
+        pubPage.style.top = '48px';
+        pubPage.style.left = (document.querySelector('.sidebar')?.offsetWidth || 260) + 'px';
+        pubPage.style.right = '0';
+        pubPage.style.bottom = '0';
+        pubPage.style.zIndex = '5';
+        const frame = document.getElementById('publisherFrame');
+        if(frame){ frame.style.width='100%'; frame.style.height='100%'; }
+      }
+    } else {
+      const pubPage2 = document.getElementById('page-publisher');
+      if(pubPage2) pubPage2.style.display = 'none';
     }
     if(id === 'joaf-studio'){
       // Reset all panels to hidden (clear any inline display overrides)
