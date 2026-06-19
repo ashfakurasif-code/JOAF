@@ -2233,6 +2233,19 @@ window.goPage = function(id, el) {
     const pubPage = document.getElementById('page-publisher');
     if (pubPage) pubPage.style.display = 'none';
   }
+  // Publisher page needs explicit sizing since iframe requires non-zero parent dims
+  if (id === 'publisher') {
+    const pubPage = document.getElementById('page-publisher');
+    if (pubPage) {
+      const sidebarW = document.querySelector('.sidebar')?.offsetWidth || 260;
+      pubPage.style.cssText = 'position:fixed;top:48px;left:'+sidebarW+'px;right:0;bottom:0;padding:0;margin:0;overflow:hidden;z-index:5;display:block;';
+      const frame = document.getElementById('publisherFrame');
+      if (frame) { frame.style.width = '100%'; frame.style.height = '100%'; frame.style.border = 'none'; frame.style.display = 'block'; }
+    }
+  } else {
+    const pubPage = document.getElementById('page-publisher');
+    if (pubPage) pubPage.style.display = 'none';
+  }
   const titles = {dashboard:'📊 Dashboard',notification:'🔔 Notification',
     'alert-page':'🚨 সতর্কতা',blood:'🩸 রক্তদাতা',press:'📰 Press Release',
     leader:'🏛️ নেতা ট্র্যাকার',warrior:'✊ জুলাই যোদ্ধা',bajar:'🛒 বাজার দর',
