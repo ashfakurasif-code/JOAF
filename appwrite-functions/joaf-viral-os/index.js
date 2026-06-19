@@ -1389,14 +1389,11 @@ export default async ({ req, res, log, error }) => {
     } catch (e) { error(`fill error: ${e.message}`); }
   }
 
-  // Step 3: Publish up to 3 items per cycle (drain queue faster than fill rate)
+  // Step 3: Publish exactly ONE item per cycle — CRON runs every 15min,
+  // so one post per cycle = sane posting cadence. Multi-publish caused
+  // spam-like bursts and excessive DB reads.
   if (action === 'cycle' || action === 'publish') {
-    const maxPub = action === 'publish' ? 1 : 3;
-    for (let _p = 0; _p < maxPub; _p++) {
-      const ok = await publishNext(log).catch(() => false);
-      if (!ok) break;
-      if (_p < maxPub - 1) await new Promise(r => setTimeout(r, 2000));
-    }
+    await publishNext(log).catch(() => false);
   }
 
   return res.json({ ok: true, action, time: new Date().toISOString() });
