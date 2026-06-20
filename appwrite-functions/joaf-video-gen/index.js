@@ -532,10 +532,22 @@ export default async ({ req, res, log, error }) => {
     log(`frames done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
     // ── Audio ──────────────────────────────────────────────────────────
+    // Guard against placeholder/invalid audio files (must be real MP3, >10KB)
     const audioDir  = path.join(__dirname, 'audio');
-    const audioFile = audio_style !== 'none'
-      ? path.join(audioDir, `${audio_style}.mp3`)
-      : null;
+    let audioFile = null;
+    if (audio_style !== 'none') {
+      const candidate = path.join(audioDir, `${audio_style}.mp3`);
+      try {
+        const stat = fs.statSync(candidate);
+        if (stat.size > 10000) {
+          audioFile = candidate;
+        } else {
+          log(`audio file too small (${stat.size} bytes) — placeholder detected, skipping audio`);
+        }
+      } catch {
+        log('audio file not found — skipping audio');
+      }
+    }
 
     // ── Encode ─────────────────────────────────────────────────────────
     const outputPath = path.join(tmpDir, 'output.mp4');
