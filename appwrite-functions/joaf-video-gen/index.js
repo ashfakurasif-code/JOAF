@@ -49,8 +49,12 @@ function registerFonts() {
     { path: 'HindSiliguri-SemiBold.ttf',    family: 'HindSiliguri' },
   ];
   for (const f of fonts) {
-    const fp = path.join(FONT_DIR, f.path);
-    if (fs.existsSync(fp)) GlobalFonts.registerFromPath(fp, f.family);
+    try {
+      const fp = path.join(FONT_DIR, f.path);
+      if (fs.existsSync(fp)) GlobalFonts.registerFromPath(fp, f.family);
+    } catch (e) {
+      console.error(`font registration failed for ${f.path}: ${e.message}`);
+    }
   }
   fontsRegistered = true;
 }
