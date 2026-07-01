@@ -418,7 +418,7 @@ async function encodeVideo(framesDir, outputPath, FPS, audioPath, log) {
         '-crf 22',
         '-preset fast',
         '-movflags +faststart',
-        '-vf scale=1080:1920',
+        '-vf scale=1080:1920:flags=lanczos',
       ]);
 
     if (audioPath && fs.existsSync(audioPath)) {
@@ -521,10 +521,10 @@ export default async ({ req, res, log, error }) => {
     const t0 = Date.now();
 
     for (let f = 0; f < totalFrames; f++) {
-      const canvas = createCanvas(1080, 1920);
+      const canvas = createCanvas(540, 960);  // half-res to fit 512MB RAM; ffmpeg upscales to 1080x1920
       const ctx    = canvas.getContext('2d');
-      drawFrame(ctx, 1080, 1920, f, totalFrames, frameData, photoImg);
-      const jpgBuf = canvas.toBuffer('image/jpeg', { quality: 88 });
+      drawFrame(ctx, 540, 960, f, totalFrames, frameData, photoImg);
+      const jpgBuf = canvas.toBuffer('image/jpeg', { quality: 75 });  // lower quality saves RAM
       const fname  = path.join(tmpDir, `frame_${String(f).padStart(4, '0')}.jpg`);
       fs.writeFileSync(fname, jpgBuf);
     }
