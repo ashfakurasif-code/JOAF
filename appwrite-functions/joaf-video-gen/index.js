@@ -403,22 +403,41 @@ function drawFrame(ctx, W, H, frameNum, totalFrames, data, photoImg) {
 }
 
 // ── ffmpeg encode ──────────────────────────────────────────────────────────
-async function encodeVideo(framesDir, outputPath, FPS, audioPath, log) {
+async function encodeVideo(framesDir, outputPath, FPS, audioPath, log, duration) {
   const ffmpegPath = require('ffmpeg-static');
   const { default: ffmpeg } = await import('fluent-ffmpeg');
   ffmpeg.setFfmpegPath(ffmpegPath);
 
+  // 3-segment video: hook (3s) + body (19s) + cta (8s)
+  const hookDur = 3;
+  const bodyDur = Math.max(1, duration - 11);
+  const ctaDur  = 8;
+
+  // Create concat list file
+  const concatFile = path.join(framesDir, 'concat.txt');
+  const hookJpg = path.join(framesDir, 'hook.jpg');
+  const bodyJpg = path.join(framesDir, 'body.jpg');
+  const ctaJpg  = path.join(framesDir, 'cta.jpg');
+  const concatContent = [
+    `file '${hookJpg}'`, `duration ${hookDur}`,
+    `file '${bodyJpg}'`, `duration ${bodyDur}`,
+    `file '${ctaJpg}'`,  `duration ${ctaDur}`,
+    `file '${ctaJpg}'`,  // required by ffmpeg concat demuxer
+  ].join('\n');
+  fs.writeFileSync(concatFile, concatContent);
+
   return new Promise((resolve, reject) => {
     let cmd = ffmpeg()
-      .input(path.join(framesDir, 'frame_%04d.jpg'))
-      .inputFPS(FPS)
+      .input(concatFile)
+      .inputOptions(['-f concat', '-safe 0'])
       .videoCodec('libx264')
       .outputOptions([
         '-pix_fmt yuv420p',
-        '-crf 22',
+        '-crf 23',
         '-preset fast',
         '-movflags +faststart',
         '-vf scale=1080:1920:flags=lanczos',
+        '-r 30',
       ]);
 
     if (audioPath && fs.existsSync(audioPath)) {
@@ -516,20 +535,25 @@ export default async ({ req, res, log, error }) => {
       badge, theme, animation_style, duration,
     };
 
-    // ── Frame generation ───────────────────────────────────────────────
-    log(`generating ${totalFrames} frames @ ${FPS}fps ...`);
+    // ── Frame generation: 3-frame approach to fit 512MB RAM ───────────────
+    // Generate only 3 key frames (hook, body, cta) then use ffmpeg concat+loop
+    // This reduces RAM from 900MB (450 frames) to ~6MB (3 frames)
+    log('generating 3 key frames (RAM-efficient approach)...');
     const t0 = Date.now();
-
-    for (let f = 0; f < totalFrames; f++) {
-      const canvas = createCanvas(540, 960);  // half-res to fit 512MB RAM; ffmpeg upscales to 1080x1920
+    const keyFrames = [
+      { name: 'hook', frameNum: Math.floor(totalFrames * 0.05) },
+      { name: 'body', frameNum: Math.floor(totalFrames * 0.40) },
+      { name: 'cta',  frameNum: Math.floor(totalFrames * 0.80) },
+    ];
+    for (const kf of keyFrames) {
+      const canvas = createCanvas(540, 960);
       const ctx    = canvas.getContext('2d');
-      drawFrame(ctx, 540, 960, f, totalFrames, frameData, photoImg);
-      const jpgBuf = canvas.toBuffer('image/jpeg', { quality: 75 });  // lower quality saves RAM
-      const fname  = path.join(tmpDir, `frame_${String(f).padStart(4, '0')}.jpg`);
-      fs.writeFileSync(fname, jpgBuf);
+      drawFrame(ctx, 540, 960, kf.frameNum, totalFrames, frameData, photoImg);
+      const jpgBuf = canvas.toBuffer('image/jpeg', { quality: 85 });
+      fs.writeFileSync(path.join(tmpDir, `${kf.name}.jpg`), jpgBuf);
+      canvas; // allow GC
     }
-
-    log(`frames done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+    log(`3 key frames done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
     // ── Audio ──────────────────────────────────────────────────────────
     // Guard against placeholder/invalid audio files (must be real MP3, >10KB)
@@ -552,7 +576,7 @@ export default async ({ req, res, log, error }) => {
     // ── Encode ─────────────────────────────────────────────────────────
     const outputPath = path.join(tmpDir, 'output.mp4');
     const t1 = Date.now();
-    await encodeVideo(tmpDir, outputPath, FPS, audioFile, log);
+    await encodeVideo(tmpDir, outputPath, FPS, audioFile, log, duration);
     log(`encode done in ${((Date.now() - t1) / 1000).toFixed(1)}s`);
 
     // ── Upload ─────────────────────────────────────────────────────────
