@@ -44,10 +44,10 @@ const FN_VID      = 'joaf-video-gen';   // NEW: automated MP4 reel generator
 // Video slot: every Nth post generates a video reel
 const VIDEO_EVERY_N = 6;  // every 6th published post = video
 
-// Target queue buffer — if below MIN, auto-generate
-const QUEUE_MIN    = 24;  // reduced: 24 ready posts always available (~6hr buffer at 15min CRON)
-const QUEUE_TARGET = 48;  // reduced target: fills to 48 in ~8 cycles (less DB writes)
-const FILL_PER_RUN = 4;   // max per fill run — 4 items per 15min = 16/hr max generation
+// Target queue buffer — keep the viral pool capped at 20 so it stays fresh
+const QUEUE_MIN    = 20;
+const QUEUE_TARGET = 20;
+const FILL_PER_RUN = 20;
 
 // ── Circuit Breaker & Rate Limiter ──────────────────────────────────────────
 const _aiState = {
@@ -295,6 +295,20 @@ async function getNextQueueItem() {
     docs.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
     return docs[0] || null;
   } catch { return null; }
+}
+
+async function getActiveQueueFingerprints() {
+  try {
+    const docs = await awQuery(COL_QUEUE, [], 100);
+    return new Set(
+      docs
+        .filter(d => ['pending', 'processing', 'dispatched'].includes(d.status))
+        .map(d => d.fp)
+        .filter(Boolean)
+    );
+  } catch {
+    return new Set();
+  }
 }
 
 // ── 30 Content Formats ────────────────────────────────────────────────────────
@@ -939,7 +953,7 @@ async function collectSources(log) {
     try {
       await awCreate(COL_POOL, {
         fp, title: item.title, body: item.desc || '', source: item.source,
-        link: item.link || '', type: 'news', created_at: new Date().toISOString(),
+        link: item.link || '', type: 'news', queued: 'false', created_at: new Date().toISOString(),
       });
       recentFPs.add(fp);
       newItems.push(item);
@@ -953,7 +967,7 @@ async function collectSources(log) {
       try {
         await awCreate(COL_POOL, {
           fp, title: wikiItem.title, body: wikiItem.body,
-          source: 'Wikipedia', link: '', type: 'history', created_at: new Date().toISOString(),
+          source: 'Wikipedia', link: '', type: 'history', queued: 'false', created_at: new Date().toISOString(),
         });
         newItems.push(wikiItem);
       } catch {}
@@ -1017,10 +1031,14 @@ async function fillQueue(needed, log) {
 
   // Get unprocessed pool items
   let poolItems = [];
+  const activeQueueFps = await getActiveQueueFingerprints();
   try {
     try {
       poolItems = await awQuery(COL_POOL, [], Math.min(needed * 3, 50));
-      poolItems = poolItems.filter(d => !d.queued || d.queued === "false" || d.queued === false);
+      poolItems = poolItems.filter(d =>
+        (!d.queued || d.queued === "false" || d.queued === false) &&
+        !activeQueueFps.has(d.fp)
+      );
       log(`pool: fetched ${poolItems.length} unqueued items`);
     } catch(e) { log(`pool fetch error: ${e.message}`); poolItems = []; }
   } catch {
@@ -1227,6 +1245,106 @@ async function fillQueue(needed, log) {
   return generated;
 }
 
+async function cleanupPublishedItem(item) {
+  if (item.video_file_id) {
+    fetch(`${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${item.video_file_id}`, {
+      method: 'DELETE', headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
+    }).catch(() => {});
+  }
+  if (item.jpg_url && CDN_CLOUD && CDN_API_SECRET) {
+    try {
+      const pubId = item.jpg_url.split('/upload/')[1]?.replace(/\.[^.]+$/, '').replace(/^f_jpg,q_90\//, '').replace(/^v\d+\//, '');
+      if (pubId && pubId.startsWith('joaf_viral_')) {
+        const ts = Math.floor(Date.now() / 1000);
+        const sig = crypto.createHash('sha1').update(`public_id=${pubId}&timestamp=${ts}${CDN_API_SECRET}`).digest('hex');
+        await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/destroy`, {
+          method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ public_id: pubId, timestamp: ts, api_key: CDN_API_KEY, signature: sig }).toString(),
+          signal: AbortSignal.timeout(10000),
+        });
+      }
+    } catch {}
+  }
+}
+
+async function finalizePublish(item, results) {
+  const success = (results?.ok || 0) > 0;
+  await awCreate(COL_LOG, {
+    format: item.format, fp: item.fp, title: item.title || '', caption: item.caption,
+    jpg_url: item.jpg_url || '', source: item.source || '', ai_used: item.ai_used || 'false',
+    results: JSON.stringify(results || {}), status: success ? 'posted' : 'failed',
+    published_at: new Date().toISOString(),
+  }).catch(() => {});
+  if (success) {
+    await awDelete(COL_QUEUE, item.$id).catch(() => {});
+    await cleanupPublishedItem(item);
+    recordPublishedFormat(item.format);
+  } else {
+    await awUpdate(COL_QUEUE, item.$id, { status: 'failed', results: JSON.stringify(results || {}) }).catch(() => {});
+  }
+  return success;
+}
+
+async function reconcileDispatched(log) {
+  const dispatched = await awQuery(COL_QUEUE, ['equal("status","dispatched")'], 25).catch(() => []);
+  for (const item of dispatched) {
+    let executionId = '';
+    try { executionId = JSON.parse(item.results || '{}').execution_id || ''; } catch {}
+    if (!executionId) {
+      await awUpdate(COL_QUEUE, item.$id, { status: 'failed', error: 'Missing publish execution ID' }).catch(() => {});
+      continue;
+    }
+    try {
+      const exec = await awReq('GET', `/functions/${FN_FB}/executions/${executionId}`);
+      if (!['completed', 'failed'].includes(exec.status)) continue;
+      let results = {};
+      try { results = JSON.parse(exec.responseBody || '{}'); } catch {}
+      if (exec.status === 'completed') {
+        const ok = await finalizePublish(item, results);
+        log(`publish reconcile: ${ok ? 'posted' : 'failed'} execId=${executionId}`);
+      } else {
+        await finalizePublish(item, { ok: 0, fail: 17, execution_id: executionId, error: exec.errors || 'fb-autopost failed' });
+        log(`publish reconcile: failed execId=${executionId}`);
+      }
+    } catch (e) { log(`publish reconcile error: ${e.message}`); }
+  }
+}
+
+// One-time, idempotent repair for legacy documents created before queued had a
+// default and before queue dedupe existed. It is deliberately explicit (action
+// = repair) so normal cron runs never delete historical data unexpectedly.
+async function repairLegacyData(log) {
+  const pool = [];
+  for (let offset = 0; offset < 1000; offset += 100) {
+    const page = await awReq('GET', `/databases/${DB_ID}/collections/${COL_POOL}/documents?limit=100&offset=${offset}`);
+    pool.push(...(page.documents || []));
+    if ((page.documents || []).length < 100) break;
+  }
+  let normalizedPool = 0;
+  for (const doc of pool.filter(d => d.queued === null || d.queued === undefined || d.queued === '')) {
+    await awUpdate(COL_POOL, doc.$id, { queued: 'false' });
+    normalizedPool++;
+  }
+
+  const queue = [];
+  for (let offset = 0; offset < 1000; offset += 100) {
+    const page = await awReq('GET', `/databases/${DB_ID}/collections/${COL_QUEUE}/documents?limit=100&offset=${offset}`);
+    queue.push(...(page.documents || []));
+    if ((page.documents || []).length < 100) break;
+  }
+  const seen = new Set();
+  let removedDuplicates = 0;
+  for (const doc of queue
+    .filter(d => ['pending', 'processing', 'dispatched'].includes(d.status))
+    .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''))) {
+    if (!doc.fp || !seen.has(doc.fp)) { if (doc.fp) seen.add(doc.fp); continue; }
+    await awDelete(COL_QUEUE, doc.$id);
+    removedDuplicates++;
+  }
+  log(`repair: pool_normalized=${normalizedPool} queue_duplicates_removed=${removedDuplicates}`);
+  return { pool_normalized: normalizedPool, queue_duplicates_removed: removedDuplicates };
+}
+
 // ── MAIN: Publish one item from queue ─────────────────────────────────────────
 async function publishNext(log) {
   let item = await getNextQueueItem();
@@ -1263,69 +1381,20 @@ async function publishNext(log) {
     return false;
   }
 
-  const results  = (fbResult && fbResult.ok !== undefined) ? fbResult : { ok: 0, fail: 0 };
-  const success  = (results.ok || 0) > 0;
-
-  // Log to viral_publish_log
-  try {
-    await awCreate(COL_LOG, {
-      format: item.format,
-      fp: item.fp,
-      title: item.title || '',
-      caption: item.caption,
-      jpg_url: item.jpg_url || '',
-      source: item.source || '',
-      ai_used: item.ai_used || 'false',
-      results: JSON.stringify(results),
-      status: success ? 'posted' : 'failed',
-      published_at: new Date().toISOString(),
-    });
-  } catch {}
-
-  // Delete from queue (success) or mark failed (fail)
-  try {
-    if (success) {
-      await awDelete(COL_QUEUE, item.$id);
-    } else {
-      await awUpdate(COL_QUEUE, item.$id, { status: 'failed', results: JSON.stringify(results) });
-    }
-  } catch {}
-
-  // Auto-cleanup: delete pool doc + Cloudinary image after successful publish
-  if (success) {
-    // Delete video from Appwrite Storage after successful FB post
-    if (item.video_file_id) {
-      fetch(`${AW_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${item.video_file_id}`, {
-        method: 'DELETE',
-        headers: { 'X-Appwrite-Project': AW_PROJECT, 'X-Appwrite-Key': AW_KEY },
-      }).catch(() => {});
-    }
-    // Delete pool source doc by fp match
-    try {
-      // Use already-loaded fp cache (pool docs loaded once per cycle via loadFpCache)
-      // For deletion, just try to delete by fp — no extra read needed
-      const match = null;  // skip match read, delete by fp directly below
-      if (match) await awDelete(COL_POOL, match.$id);
-    } catch {}
-    // Delete Cloudinary image (not needed after FB post)
-    if (item.jpg_url && CDN_CLOUD && CDN_API_SECRET) {
-      try {
-        const pubId = item.jpg_url.split('/upload/')[1]?.replace(/\.[^.]+$/, '').replace(/^f_jpg,q_90\//, '').replace(/^v\d+\//, '');
-        // Only delete joaf_viral_ images — never touch press-release images
-        if (pubId && pubId.startsWith('joaf_viral_')) {
-          const ts = Math.floor(Date.now()/1000);
-          const sigStr = `public_id=${pubId}&timestamp=${ts}${CDN_API_SECRET}`;
-          const sig = crypto.createHash('sha1').update(sigStr).digest('hex');
-          await fetch(`https://api.cloudinary.com/v1_1/${CDN_CLOUD.trim()}/image/destroy`, {
-            method: 'POST',
-            headers: {'Content-Type':'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({public_id:pubId,timestamp:ts,api_key:CDN_API_KEY,signature:sig}).toString(),
-            signal: AbortSignal.timeout(10000),
-          });
-        }
-      } catch {}
-    }
+  // fb-autopost is intentionally asynchronous because a 17-page Reel publish
+  // can take minutes. Keep the queue item until reconcileDispatched verifies
+  // the actual result; never treat a trigger acknowledgement as a post.
+  if (fbResult?.async && fbResult.execId) {
+    await awUpdate(COL_QUEUE, item.$id, {
+      status: 'dispatched',
+      results: JSON.stringify({ execution_id: fbResult.execId, dispatched_at: new Date().toISOString() }),
+    }).catch(() => {});
+    log(`publish: dispatched execId=${fbResult.execId}`);
+    return true;
   }
+
+  const results  = (fbResult && fbResult.ok !== undefined) ? fbResult : { ok: 0, fail: 0 };
+  const success = await finalizePublish(item, results);
 
   log(`publish: ${success ? '✅' : '❌'} pages_ok=${results.ok} pages_fail=${results.fail}`);
   if (success) recordPublishedFormat(item.format);  // no DB read needed
@@ -1356,8 +1425,18 @@ export default async ({ req, res, log, error }) => {
     }
   }
 
+  if (action === 'repair') {
+    try { return res.json({ ok: true, ...(await repairLegacyData(log)) }); }
+    catch (e) { return res.json({ ok: false, error: e.message }, 500); }
+  }
+
   // ── FULL CYCLE (default CRON path) ────────────────────────────────────────
   log(`joaf-viral-os: action=${action} time=${new Date().toISOString()}`);
+
+  // Step 1: Collect fresh sources
+  if (action === 'cycle' || action === 'publish') {
+    await reconcileDispatched(log).catch(e => error(`reconcile error: ${e.message}`));
+  }
 
   // Step 1: Collect fresh sources
   if (action === 'cycle' || action === 'collect') {

@@ -11,8 +11,26 @@ const AW_EP  = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v
 const AW_PJ  = process.env.APPWRITE_PROJECT  || '6a11b6cd000b59f318eb';
 const AW_KEY = process.env.APPWRITE_API_KEY  || '';
 const FN_ID  = 'fb-autopost';
+const REEL_PAGE_RETRIES = 3;
+const REEL_PAGE_GAP_MS = 4000;
 
 function abortSig() { return AbortSignal.timeout ? AbortSignal.timeout(TIMEOUT) : undefined; }
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getRetryBackoffMs(err, attempt) {
+  const backoff = Number(err?.backoff || err?.debug_info?.backoff || 0);
+  if (Number.isFinite(backoff) && backoff > 0) return backoff;
+  return Math.min(30000, 5000 * attempt);
+}
+
+function isRetryableReelError(err) {
+  const message = String(err?.message || err || '');
+  const type = String(err?.debug_info?.type || err?.type || '');
+  return type === 'UploadRateLimitedError' || /rate limit|429/i.test(message);
+}
 
 // ── Lazy page list (warm invocation speedup) ─────────────────────────────────
 let _pages = null;
@@ -219,68 +237,101 @@ export default async ({ req, res, log, error }) => {
 
     const vidResults = [];
     for (const page of activePages) {
-      try {
-        // FB resumable video upload
-        // Step 1: Initialize upload session
-        const initRes = await fetch(`https://graph.facebook.com/${page.id}/video_reels`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            upload_phase: 'start',
-            access_token: page.token,
-          }),
-          signal: AbortSignal.timeout(15000),
-        });
-        const initData = await initRes.json();
-        if (initData.error) throw new Error(initData.error.message);
-        const videoId = initData.video_id;
-        const uploadUrl = initData.upload_url;
-        if (!videoId || !uploadUrl) {
-          throw new Error(`Reel start response missing video_id or upload_url: ${JSON.stringify(initData)}`);
-        }
-
-        // Step 2: Upload video binary
-        const uploadRes = await fetch(
-          // Meta supplies the complete, versioned upload URL in the start
-          // response. Do not reconstruct it from a guessed session field.
-          uploadUrl,
-          {
+      let pageOk = false;
+      let lastError = null;
+      for (let attempt = 1; attempt <= REEL_PAGE_RETRIES && !pageOk; attempt++) {
+        try {
+          // FB resumable video upload
+          // Step 1: Initialize upload session
+          const initRes = await fetch(`https://graph.facebook.com/${page.id}/video_reels`, {
             method: 'POST',
-            headers: {
-              'Authorization': `OAuth ${page.token}`,
-              'offset': '0',
-              'file_size': String(videoBuffer.length),
-              'Content-Type': 'application/octet-stream',
-            },
-            body: videoBuffer,
-            signal: AbortSignal.timeout(120000),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              upload_phase: 'start',
+              access_token: page.token,
+            }),
+            signal: AbortSignal.timeout(15000),
+          });
+          const initData = await initRes.json();
+          if (initData.error) {
+            const initError = new Error(initData.error.message || JSON.stringify(initData.error));
+            initError.debug_info = initData.error.debug_info;
+            initError.backoff = initData.error.backoff;
+            throw initError;
           }
-        );
-        const uploadData = await uploadRes.json();
-        if (!uploadData.success) throw new Error('Upload failed: ' + JSON.stringify(uploadData));
+          const videoId = initData.video_id;
+          const uploadUrl = initData.upload_url;
+          if (!videoId || !uploadUrl) {
+            throw new Error(`Reel start response missing video_id or upload_url: ${JSON.stringify(initData)}`);
+          }
 
-        // Step 3: Publish reel
-        const pubRes = await fetch(`https://graph.facebook.com/${page.id}/video_reels`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            upload_phase: 'finish',
-            video_id: videoId,
-            access_token: page.token,
-            description: vidCaption,
-            video_state: 'PUBLISHED',
-          }),
-          signal: AbortSignal.timeout(30000),
-        });
-        const pubData = await pubRes.json();
-        if (pubData.error) throw new Error(pubData.error.message);
+          // Step 2: Upload video binary
+          const uploadRes = await fetch(
+            // Meta supplies the complete, versioned upload URL in the start
+            // response. Do not reconstruct it from a guessed session field.
+            uploadUrl,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `OAuth ${page.token}`,
+                'offset': '0',
+                'file_size': String(videoBuffer.length),
+                'Content-Type': 'application/octet-stream',
+              },
+              body: videoBuffer,
+              signal: AbortSignal.timeout(120000),
+            }
+          );
+          const uploadData = await uploadRes.json();
+          if (!uploadData.success) {
+            const uploadError = new Error('Upload failed: ' + JSON.stringify(uploadData));
+            uploadError.debug_info = uploadData.debug_info;
+            uploadError.backoff = uploadData.backoff;
+            throw uploadError;
+          }
 
-        vidResults.push({ id: page.id, name: page.name, ok: true, videoId });
-        log(`video reel → ${page.name}: ${videoId}`);
-        await new Promise(r => setTimeout(r, 2000));
-      } catch (e) {
-        vidResults.push({ id: page.id, name: page.name, ok: false, error: e.message });
-        error(`video ✗ ${page.name}: ${e.message}`);
+          // Step 3: Publish reel
+          const pubRes = await fetch(`https://graph.facebook.com/${page.id}/video_reels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              upload_phase: 'finish',
+              video_id: videoId,
+              access_token: page.token,
+              description: vidCaption,
+              video_state: 'PUBLISHED',
+            }),
+            signal: AbortSignal.timeout(30000),
+          });
+          const pubData = await pubRes.json();
+          if (pubData.error) {
+            const pubError = new Error(pubData.error.message || JSON.stringify(pubData.error));
+            pubError.debug_info = pubData.error.debug_info;
+            pubError.backoff = pubData.error.backoff;
+            throw pubError;
+          }
+
+          vidResults.push({ id: page.id, name: page.name, ok: true, videoId });
+          log(`video reel → ${page.name}: ${videoId}`);
+          pageOk = true;
+        } catch (e) {
+          lastError = e;
+          if (isRetryableReelError(e) && attempt < REEL_PAGE_RETRIES) {
+            const waitMs = getRetryBackoffMs(e, attempt);
+            log(`video retry → ${page.name}: attempt ${attempt}/${REEL_PAGE_RETRIES} after ${Math.round(waitMs / 1000)}s (${e.message})`);
+            await sleep(waitMs);
+            continue;
+          }
+          break;
+        }
+      }
+
+      if (!pageOk) {
+        const msg = lastError?.message || 'unknown video publish error';
+        vidResults.push({ id: page.id, name: page.name, ok: false, error: msg });
+        error(`video ✗ ${page.name}: ${msg}`);
+      } else {
+        await sleep(REEL_PAGE_GAP_MS);
       }
     }
 
