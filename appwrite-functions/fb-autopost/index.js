@@ -94,7 +94,10 @@ export default async ({ req, res, log, error }) => {
   try { body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); }
   catch { /* allow empty body for get-pages */ }
 
-  const { action = 'post', caption = '', imageUrl, videoUrl, imageUrls = [], excludeIds = [], scheduledAt } = body;
+  const {
+    action = 'post', caption = '', imageUrl, videoUrl, imageUrls = [],
+    excludeIds = [], pageIds = [], scheduledAt,
+  } = body;
   const pages = getPages();
 
   // ── get-pages ────────────────────────────────────────────────────────────
@@ -160,7 +163,14 @@ export default async ({ req, res, log, error }) => {
 
   if (!pages.length) return res.json({ error: 'FB_PAGE_ACCESS_TOKENS not configured' }, 500);
 
-  const activePages = pages.filter(p => !excludeIds.includes(p.id) && !excludeIds.includes(p.name));
+  // pageIds is used by the viral publisher to preserve location priority and
+  // also lets a failed Reel be retried on only the failed page(s).
+  const requestedPageIds = Array.isArray(pageIds) ? pageIds.map(String) : [];
+  const activePages = pages.filter(p =>
+    !excludeIds.includes(p.id) &&
+    !excludeIds.includes(p.name) &&
+    (!requestedPageIds.length || requestedPageIds.includes(String(p.id)))
+  );
   if (!activePages.length) return res.json({ error: 'All pages excluded' }, 400);
 
   const results = [];
@@ -228,7 +238,10 @@ export default async ({ req, res, log, error }) => {
 
         // Step 2: Upload video binary
         const uploadRes = await fetch(
-          `https://rupload.facebook.com/video-upload/v21.0/${uploadSessionId}`,
+          // The upload endpoint must use the same Graph API version that
+          // created the Reel session. A hard-coded v21 URL with a v22 session
+          // yields Meta's misleading "invalid video id" error.
+          `https://rupload.facebook.com/video-upload/${FB_VER()}/${uploadSessionId}`,
           {
             method: 'POST',
             headers: {
