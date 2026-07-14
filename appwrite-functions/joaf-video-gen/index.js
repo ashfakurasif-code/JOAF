@@ -403,6 +403,10 @@ function drawFrame(ctx, W, H, frameNum, totalFrames, data, photoImg) {
 }
 
 // ── ffmpeg encode ──────────────────────────────────────────────────────────
+// Keep the encoded reel at the canvas's native 540×960 resolution.  Facebook
+// accepts this 9:16 size, while upscaling to 1080×1920 inside a 512 MB runtime
+// makes ffmpeg allocate substantially larger video buffers and gets the process
+// killed before Node can report an error.
 async function encodeVideo(framesDir, outputPath, FPS, audioPath, log, duration) {
   const ffmpegPath = require('ffmpeg-static');
   const { default: ffmpeg } = await import('fluent-ffmpeg');
@@ -433,11 +437,15 @@ async function encodeVideo(framesDir, outputPath, FPS, audioPath, log, duration)
       .videoCodec('libx264')
       .outputOptions([
         '-pix_fmt yuv420p',
-        '-crf 23',
-        '-preset fast',
+        '-crf 25',
+        '-preset veryfast',
         '-movflags +faststart',
-        '-vf scale=1080:1920:flags=lanczos',
+        '-vf scale=540:960:flags=bilinear',
         '-r 30',
+        // A half-CPU Appwrite runtime is memory constrained too.  Limiting
+        // filter and codec workers prevents per-thread frame buffers piling up.
+        '-threads 1',
+        '-filter_threads 1',
       ]);
 
     if (audioPath && fs.existsSync(audioPath)) {
@@ -445,7 +453,8 @@ async function encodeVideo(framesDir, outputPath, FPS, audioPath, log, duration)
                .outputOptions(['-c:a aac', '-b:a 128k', '-shortest']);
     }
 
-    cmd.output(outputPath)
+    cmd.on('start', command => log(`encode: start 540x960, single-threaded (${command})`))
+       .output(outputPath)
        .on('end', () => { log('encode: done'); resolve(); })
        .on('error', (err) => { log('encode err: ' + err.message); reject(err); })
        .run();
