@@ -233,22 +233,24 @@ export default async ({ req, res, log, error }) => {
         });
         const initData = await initRes.json();
         if (initData.error) throw new Error(initData.error.message);
-        const uploadSessionId = initData.upload_session_id;
         const videoId = initData.video_id;
+        const uploadUrl = initData.upload_url;
+        if (!videoId || !uploadUrl) {
+          throw new Error(`Reel start response missing video_id or upload_url: ${JSON.stringify(initData)}`);
+        }
 
         // Step 2: Upload video binary
         const uploadRes = await fetch(
-          // The upload endpoint must use the same Graph API version that
-          // created the Reel session. A hard-coded v21 URL with a v22 session
-          // yields Meta's misleading "invalid video id" error.
-          `https://rupload.facebook.com/video-upload/${FB_VER()}/${uploadSessionId}`,
+          // Meta supplies the complete, versioned upload URL in the start
+          // response. Do not reconstruct it from a guessed session field.
+          uploadUrl,
           {
             method: 'POST',
             headers: {
               'Authorization': `OAuth ${page.token}`,
               'offset': '0',
               'file_size': String(videoBuffer.length),
-              'Content-Type': 'video/mp4',
+              'Content-Type': 'application/octet-stream',
             },
             body: videoBuffer,
             signal: AbortSignal.timeout(120000),
