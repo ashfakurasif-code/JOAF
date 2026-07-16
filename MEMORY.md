@@ -12,7 +12,7 @@ This document is the **source of truth** for JOAF operations. Before making any 
 **Owner:** Ashfakur Rahaman (Ash)  
 **Appwrite Project:** `6a11b6cd000b59f318eb` (Frankfurt)  
 **API Base:** `https://fra.cloud.appwrite.io/v1`  
-**API Key:** `standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b`
+**API Key:** `REDACTED — use APPWRITE_API_KEY from the deployment environment or secret manager`
 
 ---
 
@@ -93,8 +93,8 @@ JOAF-main/
 ### Check all functions status
 ```python
 python3 << 'EOF'
-import json, urllib.request, urllib.parse, time
-AW_KEY = "standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b"
+import json, os, urllib.request, urllib.parse, time
+AW_KEY = os.environ["APPWRITE_API_KEY"]
 AW_PJ = "6a11b6cd000b59f318eb"
 BASE = "https://fra.cloud.appwrite.io/v1"
 H = {"X-Appwrite-Project": AW_PJ, "X-Appwrite-Key": AW_KEY}
@@ -178,25 +178,25 @@ appwrite functions create-execution \
 | APPWRITE_ENDPOINT | https://fra.cloud.appwrite.io/v1 |
 | APPWRITE_PROJECT_ID | 6a11b6cd000b59f318eb |
 | APPWRITE_DATABASE_ID | joaf |
-| APPWRITE_API_KEY | standard_4b67a7... (see above) |
+| APPWRITE_API_KEY | REDACTED_USE_APPWRITE_API_KEY_ENV |
 | CLOUDINARY_CLOUD_NAME | dou71pfe1 |
 | CLOUDINARY_UPLOAD_PRESET | kf483px5 |
 | CLOUDINARY_API_KEY | 629623956125173 |
-| CLOUDINARY_API_SECRET | SynV9B5Dw4OvXjhzoOhUKucFGHM |
-| GEMINI_API_KEY | AIzaSyB60LRIuUhBDaE2Cc3T88iwi9wsX9-Xbr8 |
-| GROQ_API_KEY | gsk_ydeaWUoJB3qAHq... |
-| OPENROUTER_API_KEY | sk-or-v1-d3ace506... |
+| CLOUDINARY_API_SECRET | REDACTED_USE_CLOUDINARY_API_SECRET_ENV |
+| GEMINI_API_KEY | REDACTED_USE_GEMINI_API_KEY_ENV |
+| GROQ_API_KEY | REDACTED_USE_GROQ_API_KEY_ENV |
+| OPENROUTER_API_KEY | REDACTED_USE_OPENROUTER_API_KEY_ENV |
 | FB_APP_ID | 2475935639514218 |
-| FB_APP_SECRET | 67901d24bdfb60dfa7dd83926d1af4b5 |
-| FB_USER_TOKEN | EAAjL2bBHrGoB... (long-lived user token) |
-| FB_PAGE_ACCESS_TOKENS | [{id,name,token},...] 17 pages JSON |
-| ADMIN_SECRET_KEY | ashjoafhimu123 |
+| FB_APP_SECRET | REDACTED_USE_FB_APP_SECRET_ENV |
+| FB_USER_TOKEN | REDACTED_USE_FB_USER_TOKEN_ENV |
+| FB_PAGE_ACCESS_TOKENS | REDACTED_USE_FB_PAGE_ACCESS_TOKENS_ENV |
+| ADMIN_SECRET_KEY | REDACTED_USE_ADMIN_SECRET_KEY_ENV |
 | FIREBASE_PROJECT_ID | joaf-app-45753 |
-| GITHUB_TOKEN | ghp_v4YdCnigXXjr... |
-| HF_TOKEN | hf_oPMdCelQxnOAGUr... |
-| VAPID_PUBLIC_KEY | BDt2WuNPaZ4ma4po... |
-| VAPID_PRIVATE_KEY | 5Az4ywJ0sZrFNZ0a... |
-| VOTE_SALT | 44555798167447... |
+| GITHUB_TOKEN | REDACTED_USE_GITHUB_TOKEN_ENV |
+| HF_TOKEN | REDACTED_USE_HF_TOKEN_ENV |
+| VAPID_PUBLIC_KEY | REDACTED_USE_VAPID_PUBLIC_KEY_ENV |
+| VAPID_PRIVATE_KEY | REDACTED_USE_VAPID_PRIVATE_KEY_ENV |
+| VOTE_SALT | REDACTED_USE_VOTE_SALT_ENV |
 | ALERT_SALT | 6d13ad57a038... |
 
 ---

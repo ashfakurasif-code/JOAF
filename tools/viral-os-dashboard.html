@@ -888,10 +888,9 @@ body {
 
 <script>
 // ── Config ──
-const K = "standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b";
 const P = "6a11b6cd000b59f318eb";
 const B = "https://fra.cloud.appwrite.io/v1";
-const h = { "X-Appwrite-Project": P, "X-Appwrite-Key": K, "Content-Type": "application/json" };
+const h = { "X-Appwrite-Project": P, "Content-Type": "application/json" };
 const aw = async (m, u, b) => {
   const r = await fetch(B + u, { method: m, headers: h, body: b ? JSON.stringify(b) : undefined });
   return r.json();

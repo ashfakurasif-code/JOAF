@@ -870,8 +870,7 @@ async function runOCR(item){
   }
 }
 async function runVisionOCR(item){
-  const resp=await fetch(getProxy(), { headers: {'X-Appwrite-Project': '6a11b6cd000b59f318eb', 'X-Appwrite-Key': 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b', 'Content-Type': 'application/json'},
-    method:'POST',headers:{'Content-Type':'application/json'},
+  const resp=await fetch(getProxy(), { method:'POST', headers:{'Content-Type':'application/json','X-Appwrite-Project':'6a11b6cd000b59f318eb'},
     body:JSON.stringify({messages:[{role:'user',content:[
       {type:'image_url',image_url:{url:item.imgSrc}},
       {type:'text',text:'Extract all visible text from this image exactly. Return only the extracted text, no explanation.'}
@@ -882,7 +881,7 @@ async function runVisionOCR(item){
 }
 async function runAIAnalysis(item, text){
   const prompt=`তুমি বাংলাদেশী news card designer AI।\nTEXT:\n${text.substring(0,1500)}\n\nশুধু JSON দাও:\n{"headline":"মূল headline বাংলায় সর্বোচ্চ ৮০ অক্ষর","sub":"sub-headline বা খালি string","category":"breaking|exclusive|update|analysis|alert|positive","source":"সূত্র নাম","location":"স্থান বা খালি string","style":0,"overlay":55}`;
-  const resp=await fetch(getProxy(), { headers: {'X-Appwrite-Project': '6a11b6cd000b59f318eb', 'X-Appwrite-Key': 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b', 'Content-Type': 'application/json'},method:'POST',headers:{'Content-Type':'application/json'},
+  const resp=await fetch(getProxy(), { method:'POST', headers:{'Content-Type':'application/json','X-Appwrite-Project':'6a11b6cd000b59f318eb'},
     body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:400,temperature:0.3})});
   const d=await resp.json();
   const txt=d.choices?.[0]?.message?.content||'{}';
@@ -893,7 +892,7 @@ async function runAIAnalysis(item, text){
 }
 async function generateCaption(item){
   const prompt=`বাংলায় engaging Facebook caption লিখো:\nHeadline: ${item.headline}\nCategory: ${item.category}\n৩-৫ লাইন, ৪-৬ hashtag শেষে, #জুলাইবিপ্লব #JOAF অবশ্যই থাকবে। শুধু caption text দাও।`;
-  const resp=await fetch(getProxy(), { headers: {'X-Appwrite-Project': '6a11b6cd000b59f318eb', 'X-Appwrite-Key': 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b', 'Content-Type': 'application/json'},method:'POST',headers:{'Content-Type':'application/json'},
+  const resp=await fetch(getProxy(), { method:'POST', headers:{'Content-Type':'application/json','X-Appwrite-Project':'6a11b6cd000b59f318eb'},
     body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:500,temperature:0.7})});
   const d=await resp.json();
   return d.choices?.[0]?.message?.content||'';
@@ -1153,7 +1152,7 @@ async function reelGenerate(){
   const systemPrompt=`তুমি Facebook Viral Content Strategist। JOAF এর জন্য viral content তৈরি করো। সবসময় EXACT JSON format এ respond করবে।`;
   const userPrompt=`Facebook ${type} এর জন্য viral content package:\n\nবিষয়: ${topic}\nCategory: ${category}\nTone: ${tone}\nAudience: ${audience}\nDuration: ${duration}s\nCTA: ${cta}\n\nEXACT JSON:\n{"hook":{"text":"প্রথম 3s attention-grabbing line","why":"কেন কাজ করবে"},"script":{"hook_segment":"শুরু (${Math.round(duration*.2)}s)","body_segment":"মূল (${Math.round(duration*.55)}s)","cta_segment":"শেষ (${Math.round(duration*.25)}s)"},"caption":{"main":"Full caption emojis সহ","short":"Short version under 100 chars","first_comment":"Additional hashtags"},"hashtags":{"tier1_trending":["#tag1","#tag2","#tag3"],"tier2_niche":["#n1","#n2","#n3","#n4"],"tier3_brand":["#JOAF","#julyforum","#দেশআগেদলপরে"]},"best_times":[{"time":"সকাল ৭-৯টা","engagement":"High","reason":"অফিস যাওয়ার আগে"},{"time":"দুপুর ১-২টা","engagement":"Medium","reason":"লাঞ্চ ব্রেক"},{"time":"রাত ৮-১০টা","engagement":"Peak","reason":"প্রাইম টাইম"}],"engagement_tips":[{"tip":"প্রথম ৬০ মিনিটে reply করুন","impact":"High"},{"tip":"JOAF Group এ share করুন","impact":"High"},{"tip":"Caption এ question রাখুন","impact":"Medium"}],"ab_variants":{"variant_a":"Alternative hook A","variant_b":"Alternative hook B"},"viral_score":78,"viral_reason":"কেন viral হওয়ার সম্ভাবনা আছে"}`;
   try{
-    const res=await fetch(getProxy(), { headers: {'X-Appwrite-Project': '6a11b6cd000b59f318eb', 'X-Appwrite-Key': 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b', 'Content-Type': 'application/json'},method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:2500,temperature:.85,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}]})});
+    const res=await fetch(getProxy(), { method:'POST', headers:{'Content-Type':'application/json','X-Appwrite-Project':'6a11b6cd000b59f318eb'},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:2500,temperature:.85,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}]})});
     clearInterval(iv);
     const data=await res.json();
     if(!res.ok||data.error) throw new Error(data.error?.message||'API Error');
@@ -1357,7 +1356,7 @@ async function exportReelMP4(){
 
 <script>
 // ── JOAF Appwrite fb-autopost bridge (injected) ──────────────────────────────
-const _AW_H = {'X-Appwrite-Project':'6a11b6cd000b59f318eb','X-Appwrite-Key':'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b','Content-Type':'application/json'};
+const _AW_H = {'X-Appwrite-Project':'6a11b6cd000b59f318eb','Content-Type':'application/json'};
 const _AW_BASE = 'https://fra.cloud.appwrite.io/v1';
 window.joafPostToAll = async function(caption, imageUrl) {
   const btn = document.getElementById('joaf-post-btn');
