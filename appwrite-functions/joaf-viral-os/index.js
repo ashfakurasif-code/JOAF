@@ -1,6 +1,6 @@
 // Appwrite Function: joaf-viral-os
 // Runtime: node-18.0
-// CRON: "*/5 * * * *"   (every 5 minutes, 24/7 — set in Appwrite Console)
+// CRON: "*/15 * * * *"   (every 15 minutes, 24/7 — set in Appwrite Console)
 // Autonomous Bengali-first publishing OS for 17 JOAF FB pages
 //
 // This function is ADDITIVE — it does NOT replace:
@@ -21,13 +21,13 @@
 import crypto from 'crypto';
 
 // ── Config ───────────────────────────────────────────────────────────────────
-const AW_KEY      = process.env.APPWRITE_API_KEY || process.env.AW_KEY || 'standard_4b67a7b75a3aea21254c6c866601aad3f30784f8818e5f9ec024ff27f64956f967814886192e7ce5079e67e557988e53840de1bdc2d503d39f1d3aebeccab47a30df90af576b0d91ae362203d644599f3c0b7d42277f10a3c264fc3be5ab6f04d770d959d1d318315a1cdc19f7d041a911fcb0208c3cb37f52bad824535e9b4b';
+const AW_KEY      = process.env.APPWRITE_API_KEY || process.env.AW_KEY || '';
 const AW_PROJECT  = process.env.APPWRITE_PROJECT_ID || process.env.AW_PROJECT || '6a11b6cd000b59f318eb';
 const AW_ENDPOINT = process.env.APPWRITE_ENDPOINT || process.env.AW_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const CDN_CLOUD   = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD || 'dou71pfe1';
 const CDN_PRESET  = process.env.CLOUDINARY_UPLOAD_PRESET || process.env.CLOUDINARY_PRESET || 'kf483px5';
-const CDN_API_KEY    = process.env.CLOUDINARY_API_KEY    || '629623956125173';
-const CDN_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'SynV9B5Dw4OvXjhzoOhUKucFGHM';
+const CDN_API_KEY    = process.env.CLOUDINARY_API_KEY    || '';
+const CDN_API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
 const OR_KEY      = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY || '';
 const GEM_KEY     = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY || '';
 const GROQ_KEY    = process.env.GROQ_API_KEY || process.env.GROQ_KEY || '';
@@ -112,6 +112,46 @@ const PAGE_LOCATION_MAP = {
 };
 
 // Score news relevance to each page
+
+// ── Peak Hour Intelligence ────────────────────────────────────────────────
+// Bangladesh Facebook peak: 9am, 1pm, 8-10pm BDT
+const BD_PEAK_HOURS = [
+  { h: 8,  w: 1.8 }, { h: 9,  w: 2.2 }, { h: 10, w: 1.9 },
+  { h: 13, w: 2.0 }, { h: 14, w: 1.7 },
+  { h: 20, w: 2.5 }, { h: 21, w: 2.8 }, { h: 22, w: 2.3 },
+];
+function getCurrentPeakWeight() {
+  const bdHour = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })).getHours();
+  const peak   = BD_PEAK_HOURS.find(p => p.h === bdHour);
+  return peak ? peak.w : 1.0;
+}
+function isBreakingNewsHour() {
+  const bdHour = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })).getHours();
+  return bdHour >= 8 && bdHour <= 22; // Only post during waking hours
+}
+// ─────────────────────────────────────────────────────────────────────────
+
+
+// ── Dynamic Format Weights (reads from publisher_config nightly) ──────────
+async function loadDynamicWeights(db, DATABASE_ID) {
+  try {
+    const res = await db.listDocuments(DATABASE_ID, 'publisher_config',
+      [Query.equal('key', 'format_weights'), Query.limit(1)]
+    );
+    if (res.documents.length && res.documents[0].value) {
+      const saved = JSON.parse(res.documents[0].value);
+      // Merge with base weights, clamping to 1-20 range
+      return Object.fromEntries(
+        Object.entries(FORMAT_WEIGHTS).map(([fmt, baseW]) => [
+          fmt, Math.max(1, Math.min(20, saved[fmt] ?? baseW))
+        ])
+      );
+    }
+  } catch(_) { /* fall back to static */ }
+  return FORMAT_WEIGHTS;
+}
+// ─────────────────────────────────────────────────────────────────────────
+
 function getLocationScore(text, pageId) {
   const pg = PAGE_LOCATION_MAP[pageId];
   if (!pg) return 0;
@@ -478,46 +518,70 @@ async function generateAI(prompt, retries = 2) {
 }
 
 // ── Caption builders per format ───────────────────────────────────────────────
-function buildPrompt(format, item) {
-  const src = item?.title ? `বিষয়: "${item.title}"` : '';
-  const base = `তুমি JOAF (July Online Activists Forum) এর বাংলা কন্টেন্ট রাইটার। Bangladeshi civic audience-এর জন্য লেখো। ${src}`;
-
-  const structure = `\nফরম্যাট:\n- ১ লাইন hook\n- ২ লাইন তথ্য\n- ১টি engagement প্রশ্ন বা CTA\n- ২-৩টি hashtag\n\nশুধু post text দাও।`;
-
-  const formatInstructions = {
-    breaking_news:       `${base}\nব্রেকিং নিউজ স্টাইলে জরুরি সংবাদ পোস্ট লেখো।${structure}`,
-    news_summary:        `${base}\nসংবাদ সারাংশ পোস্ট লেখো — তথ্যভিত্তিক, নিরপেক্ষ।${structure}`,
-    fact_check:          `${base}\nএকটি সাধারণ ভুল ধারণা ও সঠিক তথ্য দিয়ে ফ্যাক্ট-চেক পোস্ট লেখো।${structure}`,
-    civic_rights:        `${base}\nবাংলাদেশের নাগরিকদের একটি মৌলিক অধিকার নিয়ে সহজ ভাষায় পোস্ট লেখো।${structure}`,
-    constitution_fact:   `${base}\nবাংলাদেশের সংবিধানের একটি গুরুত্বপূর্ণ অনুচ্ছেদ নিয়ে পোস্ট লেখো।${structure}`,
-    bangladesh_history:  `${base}\nবাংলাদেশের ইতিহাসের একটি গুরুত্বপূর্ণ মুহূর্ত নিয়ে পোস্ট লেখো।${structure}`,
-    this_day_history:    `${base}\nআজকের তারিখে ইতিহাসে কী ঘটেছিল সেটা নিয়ে পোস্ট লেখো।${structure}`,
-    quote_card:          `${base}\nগণতন্ত্র বা মুক্তিযুদ্ধ নিয়ে একটি অনুপ্রেরণামূলক উদ্ধৃতি ও তার ব্যাখ্যা লেখো।${structure}`,
-    poll_post:           `${base}\nবাংলাদেশের একটি সামাজিক বিষয়ে poll post লেখো। ৩টি emoji option রাখো।${structure}`,
-    question_post:       `${base}\nদর্শকদের কমেন্ট করাতে পারে এমন একটি প্রশ্নমূলক পোস্ট লেখো।${structure}`,
-    did_you_know:        `${base}\nবাংলাদেশ সম্পর্কে একটি আশ্চর্যজনক তথ্য দিয়ে "জানেন কি?" পোস্ট লেখো।${structure}`,
-    myth_vs_fact:        `${base}\nএকটি প্রচলিত ভুল ধারণা vs সত্য — myth vs fact পোস্ট লেখো।${structure}`,
-    timeline:            `${base}\nবাংলাদেশের ইতিহাসের একটি গুরুত্বপূর্ণ ঘটনার ক্রমানুসারে টাইমলাইন পোস্ট লেখো।${structure}`,
-    educational:         `${base}\nশিক্ষামূলক পোস্ট — গণতন্ত্র, অধিকার বা নাগরিকতা বিষয়ক।${structure}`,
-    learning_engine:     `${base}\nJOAF-এর civic learning series থেকে একটি শিক্ষামূলক পোস্ট লেখো।${structure}`,
-    press_release_summary:`${base}\nএকটি সরকারি বা সামাজিক প্রেস বিজ্ঞপ্তির সারাংশ পোস্ট লেখো।${structure}`,
-    data_insight:        `${base}\nবাংলাদেশ সম্পর্কে একটি তথ্য/পরিসংখ্যান বিশ্লেষণ পোস্ট লেখো।${structure}`,
-    statistic_post:      `${base}\nবাংলাদেশের একটি উল্লেখযোগ্য পরিসংখ্যান নিয়ে পোস্ট লেখো।${structure}`,
-    awareness_post:      `${base}\nসামাজিক সচেতনতামূলক পোস্ট লেখো — স্বাস্থ্য, পরিবেশ বা নিরাপত্তা।${structure}`,
-    international_news:  `${base}\nআন্তর্জাতিক সংবাদ যা বাংলাদেশের জন্য প্রাসঙ্গিক, সেটা নিয়ে পোস্ট লেখো।${structure}`,
-    local_district:      `${base}\nবাংলাদেশের কোনো একটি জেলার বিশেষত্ব বা সংবাদ নিয়ে পোস্ট লেখো।${structure}`,
-    youth_engagement:    `${base}\nতরুণ প্রজন্মকে লক্ষ্য করে অনুপ্রেরণামূলক পোস্ট লেখো।${structure}`,
-    comment_debate:      `${base}\nদুটো বিপরীত মত তুলে ধরে কমেন্ট debate শুরু করার পোস্ট লেখো।${structure}`,
-    community_question:  `${base}\nকমিউনিটিকে সরাসরি জিজ্ঞেস করার পোস্ট লেখো — তাদের অভিজ্ঞতা শেয়ার করতে বলো।${structure}`,
-    image_quote:         `${base}\nঅনুপ্রেরণামূলক একটি উদ্ধৃতি পোস্ট লেখো যা ইমেজ কার্ডে যাবে।${structure}`,
-    carousel_post:       `${base}\nক্যারোসেল পোস্টের জন্য ৩টি স্লাইডের টেক্সট লেখো — প্রতিটি ৪০ শব্দের মধ্যে।${structure}`,
-    infographic:         `${base}\nইনফোগ্রাফিক পোস্টের জন্য ৫টি পয়েন্ট লেখো — প্রতিটি ১ লাইন।${structure}`,
-    reel_script:         `${base}\n৩০ সেকেন্ডের রিল-এর জন্য বাংলায় স্ক্রিপ্ট লেখো — সংলাপ স্টাইলে।${structure}`,
-    ai_opinion:          `${base}\nAI দৃষ্টিকোণ থেকে বাংলাদেশের একটি সামাজিক ইস্যু বিশ্লেষণ করো।${structure}`,
-    civic_knowledge:     `${base}\nনাগরিক জ্ঞান কার্ড — সরকারি সেবা বা আইনি অধিকার নিয়ে সহজ ভাষায়।${structure}`,
+function buildPrompt(item, format, calibHint = '', pageId = null) {
+  const PAGE_MAP = {
+    '901104276426275': { name: 'JOAF Main', context: 'জাতীয় দর্শক, সব বয়স ও অঞ্চলের মানুষ' },
+    '747955745072916': { name: 'Jamalpur', context: 'জামালপুর-ময়মনসিংহ অঞ্চলের মানুষ, কৃষি ও স্থানীয় রাজনীতিতে আগ্রহী' },
+    '698945426644829': { name: 'Madaripur', context: 'মাদারীপুর-শরীয়তপুর অঞ্চল, নদী ও কৃষিনির্ভর জীবন' },
+    '774087689120805': { name: 'Middle East', context: 'প্রবাসী বাংলাদেশি, মধ্যপ্রাচ্যে কর্মরত — দেশের খবরে আগ্রহী' },
+    '800066663185559': { name: 'Cumilla', context: 'কুমিল্লা-ব্রাহ্মণবাড়িয়া অঞ্চল, ব্যবসায়ী ও সক্রিয় সম্প্রদায়' },
+    '767070709830635': { name: 'Europe', context: 'ইউরোপপ্রবাসী বাংলাদেশি — উচ্চশিক্ষিত, রাজনৈতিকভাবে সচেতন' },
+    '819591557896069': { name: 'Australia', context: 'অস্ট্রেলিয়াপ্রবাসী, উচ্চমধ্যবিত্ত বাংলাদেশি' },
+    '771297736066387': { name: 'Rangpur', context: 'রংপুর-দিনাজপুর অঞ্চল, কৃষিজীবী ও তরুণ প্রজন্ম' },
+    '811857228669187': { name: 'Asia', context: 'ভারত-সিঙ্গাপুর-মালয়েশিয়ায় কর্মরত বাংলাদেশি' },
+    '821514351035673': { name: 'Canada', context: 'কানাডাপ্রবাসী, নাগরিক অধিকার ও গণতন্ত্রে আগ্রহী' },
+    '742860382250359': { name: 'Gazipur', context: 'গাজীপুরের গার্মেন্টস শ্রমিক ও শিল্পাঞ্চলের মানুষ' },
+    '819346937917703': { name: 'Khulna', context: 'খুলনা-বাগেরহাট অঞ্চল, সুন্দরবন ও উপকূলীয় জীবন' },
+    '668493799674686': { name: 'USA', context: 'আমেরিকাপ্রবাসী বাংলাদেশি, সিভিক অ্যাক্টিভিজমে আগ্রহী' },
+    '547243828481347': { name: 'Chattogram', context: 'চট্টগ্রাম-কক্সবাজার, বন্দরনগরী ও ব্যবসায়ী সম্প্রদায়' },
+    '586562744547226': { name: 'Rajshahi', context: 'রাজশাহী-নাটোর অঞ্চল, শিক্ষানগরী ও কৃষি' },
+    '607102832487121': { name: 'Barishal', context: 'বরিশাল-পটুয়াখালী, নদীমাতৃক জনপদ' },
+    '599649799896567': { name: 'Mymensingh', context: 'ময়মনসিংহ-নেত্রকোনা, কৃষি ও সাংস্কৃতিক ঐতিহ্য' },
   };
 
-  return formatInstructions[format] || `${base}\nএকটি আকর্ষণীয় বাংলা পোস্ট লেখো।${structure}`;
+  const pageInfo  = pageId ? (PAGE_MAP[pageId] || { name: 'JOAF', context: 'সাধারণ বাংলাদেশি পাঠক' }) : null;
+  const now       = new Date();
+  const bdHour    = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })).getHours();
+  const timeCtx   = bdHour < 6 ? 'ভোর রাত' : bdHour < 12 ? 'সকাল' : bdHour < 17 ? 'দুপুর' : bdHour < 21 ? 'বিকেল-সন্ধ্যা' : 'রাত (peak engagement time)';
+  const calibPart = calibHint ? `
+বর্তমান performance data: ${calibHint}` : '';
+  const pagePart  = pageInfo  ? `
+এই post যাবে: ${pageInfo.name} পেজে — দর্শক: ${pageInfo.context}` : '';
+
+  const FORMAT_GUIDE = {
+    poll_post:          'একটি প্রশ্ন রাখো যেটায় মানুষ comment করে মতামত দেবে। ২-৩টি option hint করো।',
+    civic_rights_post:  'নাগরিক অধিকার ও জবাবদিহিতার angle — সরকার বা প্রতিষ্ঠানের দায়িত্বের কথা বলো।',
+    breaking_news_post: 'প্রথম লাইনেই সবচেয়ে গুরুত্বপূর্ণ তথ্য। তারপর context। সংক্ষিপ্ত ও তীক্ষ্ণ।',
+    history_post:       'ঐতিহাসিক ঘটনার সাথে আজকের প্রাসঙ্গিকতা যুক্ত করো। জুলাই চেতনার সাথে connect করো।',
+    awareness_post:     'সহজ ভাষায় তথ্য দাও। মানুষ এটা জানলে উপকৃত হবে — সেই angle।',
+    emotional_story:    'একজন মানুষের গল্পের মতো করে বলো। Empathy জাগাও।',
+    fact_check_post:    'গুজব vs সত্য format। পরিষ্কার করো কোনটা সত্য।',
+    rights_demand_post: 'দাবি আদায়ের ভাষায়। আমরা চাই — format-এ।',
+    solution_post:      'সমস্যা + সমাধান structure। আশাবাদী tone।',
+    youth_voice_post:   'তরুণদের ভাষায়, তাদের সমস্যা ও স্বপ্নের কথা।',
+  };
+
+  const fmtGuide = FORMAT_GUIDE[format] || 'Bangladesh civic platform-এর জন্য relevant ও engaging content।';
+
+  return `তুমি JOAF-এর senior editor। JOAF = জুলাই ২০২৪ গণঅভ্যুত্থানের civic platform, "দেশ আগে, দল পরে"।
+
+সংবাদ: "${item.title}"
+Source: ${item.source || 'বিভিন্ন সূত্র'}
+${item.summary ? `Summary: ${item.summary.substring(0,200)}` : ''}
+
+বর্তমান সময়: ${timeCtx}${pagePart}${calibPart}
+
+Format নির্দেশনা (${format}): ${fmtGuide}
+
+লেখার নিয়ম:
+১. প্রথম ১-২ লাইন = scroll stopper (মানুষ থামবে)
+২. ৩-৬ লাইন = তথ্য বা আবেগ (সংক্ষিপ্ত)
+৩. শেষ ১-২ লাইন = call to action বা প্রশ্ন
+৪. ৩-৫টি Bengali hashtag (#JOAF অবশ্যই)
+৫. ১৫০-২৫০ শব্দ
+${pageInfo ? `৬. "${pageInfo.name}" পেজের দর্শকের সাথে সরাসরি কথা বলো` : ''}
+
+শুধু post text দাও। কোনো explanation নয়।`;
 }
 
 // ── Template fallback (no AI) ─────────────────────────────────────────────────

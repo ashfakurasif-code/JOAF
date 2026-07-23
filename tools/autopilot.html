@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JOAF Autopilot — স্বয়ংক্রিয় পাইপলাইন</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#90161f;--brand2:#b91c1c;--brand-glow:rgba(144,22,31,.35);
+  --gold:#c9a227;--gold2:#f59e0b;--gold-glow:rgba(201,162,39,.35);
+  --civic:#075e55;--civic2:#15803d;
+  --bg:#07080d;--bg2:#0d0f18;--bg3:#141720;--bg4:#1a1e2a;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --text:#e8eaf0;--text2:#9aa0b4;--text3:#5a6278;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#8b5cf6;
+  --radius:10px;--radius-sm:6px;
+  --font:'Noto Sans Bengali',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── TOP BAR ── */
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 20px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.topbar-logo{
+  display:flex;align-items:center;gap:8px;
+  font-weight:700;font-size:16px;color:var(--brand);letter-spacing:.5px;
+}
+.topbar-logo span{color:var(--text);font-weight:400;font-size:13px;opacity:.5}
+.pulse-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 0 0 rgba(34,197,94,.6);
+  animation:pulse 2s infinite;flex-shrink:0;
+}
+.pulse-dot.red{background:var(--red);box-shadow:0 0 0 0 rgba(239,68,68,.6)}
+.pulse-dot.amber{background:var(--amber);box-shadow:0 0 0 0 rgba(245,158,11,.6)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+.topbar-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.topbar-time{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.refresh-btn{
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text2);
+  padding:5px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;
+  transition:.2s;font-family:var(--font);
+}
+.refresh-btn:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 49px)}
+@media(max-width:768px){.layout{grid-template-columns:1fr}}
+
+/* ── LEFT PANEL ── */
+.left{
+  background:var(--bg2);border-right:1px solid var(--border);
+  padding:16px;display:flex;flex-direction:column;gap:12px;
+  position:sticky;top:49px;height:calc(100vh - 49px);overflow-y:auto;
+}
+@media(max-width:768px){.left{position:relative;height:auto;border-right:none;border-bottom:1px solid var(--border)}}
+
+/* ── STATUS HERO ── */
+.status-hero{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;text-align:center;position:relative;overflow:hidden;
+}
+.status-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,var(--brand-glow),transparent 70%);
+  pointer-events:none;
+}
+.sh-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.sh-state{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.sh-sub{font-size:11px;color:var(--text2)}
+
+/* ── COUNTDOWN ── */
+.countdown-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px;text-align:center;
+}
+.cd-label{font-size:11px;color:var(--text3);margin-bottom:6px}
+.cd-time{font-family:var(--mono);font-size:28px;font-weight:600;color:var(--gold);letter-spacing:2px}
+.cd-sub{font-size:10px;color:var(--text3);margin-top:3px}
+
+/* ── PROGRESS ── */
+.prog-block{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.prog-title{font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:12px}
+.prog-row span:last-child{color:var(--text2);font-family:var(--mono)}
+.prog-track{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--gold));border-radius:3px;transition:width .6s ease}
+.prog-fill.blue{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.prog-fill.green{background:linear-gradient(90deg,var(--civic),var(--green))}
+
+/* ── QUICK ACTIONS ── */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.qa-btn{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text2);padding:8px 6px;cursor:pointer;font-size:12px;
+  font-family:var(--font);text-align:center;transition:.18s;line-height:1.3;
+}
+.qa-btn:hover{border-color:var(--brand);color:var(--text);background:rgba(144,22,31,.08)}
+.qa-btn.primary{background:rgba(144,22,31,.15);border-color:var(--brand);color:var(--brand);font-weight:600}
+.qa-btn.primary:hover{background:rgba(144,22,31,.25)}
+.qa-btn.good{border-color:rgba(34,197,94,.3);color:var(--green)}
+.qa-btn.good:hover{background:rgba(34,197,94,.08)}
+.qa-btn.amber{border-color:rgba(245,158,11,.3);color:var(--amber)}
+.qa-btn.amber:hover{background:rgba(245,158,11,.08)}
+.qa-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── AI HEALTH ── */
+.ai-health{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.ah-title{font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.ah-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px}
+.ah-row:last-child{border-bottom:none}
+.ah-badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;font-family:var(--mono)}
+.ah-ok{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.ah-fail{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.ah-warn{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+
+/* ── MAIN AREA ── */
+.main{padding:20px;display:flex;flex-direction:column;gap:16px}
+
+/* ── SECTION TABS ── */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:0}
+.tab-btn{
+  padding:8px 16px;font-size:13px;color:var(--text2);border:none;background:none;
+  cursor:pointer;font-family:var(--font);border-bottom:2px solid transparent;
+  margin-bottom:-1px;transition:.18s;
+}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+
+/* ── SECTION ── */
+.sec{display:none}.sec.on{display:flex;flex-direction:column;gap:14px}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--text);
+}
+.card-head small{font-weight:400;color:var(--text3);font-size:11px}
+.card-body{padding:14px 16px}
+
+/* ── 17 PAGE GRID ── */
+.page-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px;padding:14px 16px}
+.pg-item{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:9px 10px;display:flex;flex-direction:column;gap:3px;transition:.18s;
+}
+.pg-item.ok{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.2)}
+.pg-item.fail{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2)}
+.pg-item.pending{border-color:rgba(245,158,11,.2)}
+.pg-name{font-size:12px;font-weight:600;color:var(--text)}
+.pg-region{font-size:10px;color:var(--text3)}
+.pg-status{font-size:10px;font-weight:700;font-family:var(--mono)}
+.pg-status.ok{color:var(--green)}.pg-status.fail{color:var(--red)}.pg-status.pending{color:var(--amber)}
+.pg-reach{font-size:10px;color:var(--text2);margin-top:2px}
+
+/* ── LOG BOX ── */
+.logbox{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7;
+  max-height:260px;overflow-y:auto;color:var(--text2);
+}
+.log-ok{color:var(--green)}.log-fail{color:var(--red)}.log-warn{color:var(--amber)}.log-info{color:var(--blue)}
+
+/* ── POOL TABLE ── */
+.pool-table{width:100%;border-collapse:collapse;font-size:12px}
+.pool-table th{color:var(--text3);font-weight:500;padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.pool-table td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.pool-table tr:last-child td{border-bottom:none}
+.pool-table tr:hover td{background:var(--bg3)}
+.fmt-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(144,22,31,.12);color:var(--brand);border:1px solid rgba(144,22,31,.25);font-family:var(--mono)}
+.fp-cell{font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+/* ── ANALYTICS ── */
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;padding:14px 16px}
+.an-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px}
+.an-label{font-size:11px;color:var(--text3);margin-bottom:4px}
+.an-value{font-size:22px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.an-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.an-card.gold .an-value{color:var(--gold)}
+.an-card.green .an-value{color:var(--green)}
+.an-card.blue .an-value{color:var(--blue)}
+.an-card.brand .an-value{color:var(--brand)}
+
+/* ── VIRAL SCORE BARS ── */
+.vs-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.vs-row:last-child{border-bottom:none}
+.vs-fmt{width:130px;color:var(--text2);flex-shrink:0;font-family:var(--mono);font-size:11px}
+.vs-bar-wrap{flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.vs-bar{height:100%;background:linear-gradient(90deg,var(--brand),var(--gold));border-radius:3px;transition:width .8s ease}
+.vs-num{width:35px;text-align:right;font-family:var(--mono);color:var(--text2);font-size:11px}
+
+/* ── SPINNING ── */
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;gap:8px;color:var(--text3);font-size:12px;padding:20px;justify-content:center}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;z-index:9999;padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;display:none;max-width:300px;line-height:1.4}
+.toast.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+.toast.er{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+.toast.info{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:var(--blue)}
+
+/* ── SETTINGS MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-bg.on{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:min(480px,95vw);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text)}
+.mfield{margin-bottom:12px}
+.mfield label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.mfield input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-size:13px;font-family:var(--font)}
+.mfield input:focus{outline:none;border-color:var(--brand)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.mbtn{padding:7px 16px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-family:var(--font);border:none}
+.mbtn.primary{background:var(--brand);color:#fff}.mbtn.ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+
+/* ── FORMAT CHART ── */
+.fmt-chart{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+
+/* ── LIVE CARD ── */
+.live-card{
+  background:var(--bg3);border:1px solid rgba(144,22,31,.3);border-radius:var(--radius);
+  padding:12px 16px;display:none;
+}
+.live-card.on{display:block}
+.live-card-title{font-size:12px;color:var(--brand);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.live-card-body{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* ── TOKEN WARN ── */
+.token-warn-bar{
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);
+  border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--amber);
+  display:none;align-items:center;justify-content:space-between;gap:10px;
+}
+.token-warn-bar.on{display:flex}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="11" fill="#90161f"/><text x="11" y="15.5" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" font-family="serif">জ</text></svg>
+    JOAF
+    <span>/ Autopilot</span>
+  </div>
+  <div class="topbar-status">
+    <div class="pulse-dot" id="sysDot"></div>
+    <span id="sysLabel">লোড হচ্ছে...</span>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-time" id="bdClock">--:--:-- BDT</span>
+    <button class="refresh-btn" onclick="loadAll()">↺ রিফ্রেশ</button>
+    <button class="refresh-btn" onclick="openSettings()">⚙ সেটিংস</button>
+  </div>
+</div>
+
+<!-- TOKEN WARNING -->
+<div class="token-warn-bar" id="tokenWarnBar">
+  <span>⚠️ Facebook token শীঘ্রই expire হবে — <strong id="tokenDaysLeft"></strong> দিন বাকি</span>
+  <button class="qa-btn amber" style="padding:4px 12px;width:auto" onclick="checkToken()">এখনই রিনিউ করুন →</button>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT PANEL -->
+  <div class="left">
+
+    <!-- Pipeline status -->
+    <div class="status-hero">
+      <div class="sh-label">পাইপলাইন অবস্থা</div>
+      <div class="sh-state" id="pipelineState">লোড হচ্ছে...</div>
+      <div class="sh-sub" id="pipelineSub">শেষ cycle-এর তথ্য টানা হচ্ছে</div>
+    </div>
+
+    <!-- Countdown to next CRON -->
+    <div class="countdown-card">
+      <div class="cd-label">পরবর্তী স্বয়ংক্রিয় cycle</div>
+      <div class="cd-time" id="cronCountdown">--:--</div>
+      <div class="cd-sub">প্রতি ১৫ মিনিটে একবার</div>
+    </div>
+
+    <!-- Queue progress -->
+    <div class="prog-block">
+      <div class="prog-title">Queue স্বাস্থ্য</div>
+      <div class="prog-row"><span>মোট queue</span><span id="qTotal">—</span></div>
+      <div class="prog-track"><div class="prog-fill" id="qProg" style="width:0%"></div></div>
+      <div class="prog-row"><span>ছবিসহ</span><span id="qImg">—</span></div>
+      <div class="prog-track"><div class="prog-fill blue" id="qImgProg" style="width:0%"></div></div>
+      <div class="prog-row"><span>Pool (RSS)</span><span id="poolTotal">—</span></div>
+      <div class="prog-track"><div class="prog-fill green" id="poolProg" style="width:0%"></div></div>
+    </div>
+
+    <!-- Quick actions -->
+    <div>
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">দ্রুত কাজ</div>
+      <div class="qa-grid">
+        <button class="qa-btn primary" onclick="runAction('cycle')" id="btnCycle">▶ Full Cycle</button>
+        <button class="qa-btn good"    onclick="runAction('publish')" id="btnPublish">📤 ১টি Publish</button>
+        <button class="qa-btn amber"   onclick="runAction('fill')" id="btnFill">📦 Queue Fill</button>
+        <button class="qa-btn"         onclick="runAction('collect')" id="btnCollect">📡 RSS Collect</button>
+        <button class="qa-btn"         onclick="runAction('status')" id="btnStatus">ℹ Status</button>
+        <button class="qa-btn"         onclick="checkToken()" id="btnToken">🔑 Token Check</button>
+      </div>
+    </div>
+
+    <!-- AI provider health -->
+    <div class="ai-health">
+      <div class="ah-title">AI Provider Health</div>
+      <div class="ah-row"><span>OpenRouter</span><span class="ah-badge" id="aiOR">—</span></div>
+      <div class="ah-row"><span>Gemini Flash</span><span class="ah-badge" id="aiGem">—</span></div>
+      <div class="ah-row"><span>Groq Llama</span><span class="ah-badge" id="aiGroq">—</span></div>
+      <div class="ah-row"><span>Circuit Breaker</span><span class="ah-badge" id="aiCB">—</span></div>
+    </div>
+
+  </div><!-- /left -->
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- Live publish card -->
+    <div class="live-card" id="liveCard">
+      <div class="live-card-title"><div class="pulse-dot"></div> এখন publish হচ্ছে...</div>
+      <div class="live-card-body" id="liveCardBody"></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn on" onclick="switchTab(0,this)">📡 ১৭ Page Grid</button>
+      <button class="tab-btn" onclick="switchTab(1,this)">📰 সাম্প্রতিক Posts</button>
+      <button class="tab-btn" onclick="switchTab(2,this)">📦 Pool / Queue</button>
+      <button class="tab-btn" onclick="switchTab(3,this)">📈 Analytics</button>
+      <button class="tab-btn" onclick="switchTab(4,this)">📋 Action Log</button>
+    </div>
+
+    <!-- TAB 0: 17 page grid -->
+    <div class="sec on" id="sec0">
+      <div class="card">
+        <div class="card-head">
+          Facebook পেজ — সর্বশেষ অবস্থা
+          <small id="gridUpdated"></small>
+        </div>
+        <div class="page-grid" id="pageGrid">
+          <div class="loading"><span class="spin"></span> লোড হচ্ছে...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 1: Recent posts -->
+    <div class="sec" id="sec1">
+      <div class="card">
+        <div class="card-head">সর্বশেষ ২০টি Published Post</div>
+        <div class="card-body" id="recentPosts">
+          <div class="loading"><span class="spin"></span> লোড হচ্ছে...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Pool & Queue -->
+    <div class="sec" id="sec2">
+      <div class="card">
+        <div class="card-head">Format অনুযায়ী Queue</div>
+        <div class="card-body" id="qFormats">
+          <div class="loading"><span class="spin"></span> লোড হচ্ছে...</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          RSS Pool — সর্বশেষ আইটেম
+          <small>সংগৃহীত, publish-এর অপেক্ষায়</small>
+        </div>
+        <div class="card-body" style="padding:0;overflow-x:auto">
+          <table class="pool-table" id="poolTable">
+            <thead><tr><th>শিরোনাম</th><th>Source</th><th>Format</th><th>সময়</th><th>FP</th></tr></thead>
+            <tbody id="poolBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)"><span class="spin"></span></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Analytics -->
+    <div class="sec" id="sec3">
+      <div class="card">
+        <div class="card-head">Platform Summary — গত ৭ দিন</div>
+        <div class="analytics-grid" id="analyticsGrid">
+          <div class="loading"><span class="spin"></span> লোড হচ্ছে...</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">Format — Viral Score Ranking</div>
+        <div class="fmt-chart" id="fmtChart">
+          <div class="loading"><span class="spin"></span> লোড হচ্ছে...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Action log -->
+    <div class="sec" id="sec4">
+      <div class="card">
+        <div class="card-head">
+          Action Output
+          <small id="actionTitle">—</small>
+        </div>
+        <div class="card-body">
+          <div class="logbox" id="actionLog">Actions এখানে দেখা যাবে...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <div class="modal-title">⚙️ Autopilot সেটিংস</div>
+    <div class="mfield">
+      <label>Appwrite Endpoint</label>
+      <input id="cfgEndpoint" placeholder="https://fra.cloud.appwrite.io/v1">
+    </div>
+    <div class="mfield">
+      <label>Project ID</label>
+      <input id="cfgProject" placeholder="6a11b6cd000b59f318eb">
+    </div>
+    <div class="mfield">
+      <label>Appwrite API Key</label>
+      <input id="cfgKey" type="password" placeholder="standard_...">
+    </div>
+    <div class="mfield">
+      <label>Internal API Key (x-joaf-key)</label>
+      <input id="cfgInternal" type="password" placeholder="joaf_internal_...">
+    </div>
+    <div class="modal-footer">
+      <button class="mbtn ghost" onclick="closeSettings()">বাতিল</button>
+      <button class="mbtn primary" onclick="saveSettings()">সংরক্ষণ করুন</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════
+const DEFAULT_ENDPOINT = 'https://fra.cloud.appwrite.io/v1';
+const DEFAULT_PROJECT  = '6a11b6cd000b59f318eb';
+
+const PAGES = [
+  {id:'901104276426275',name:'JOAF Main',region:'national'},
+  {id:'747955745072916',name:'Jamalpur',region:'mymensingh_div'},
+  {id:'698945426644829',name:'Madaripur',region:'dhaka_div'},
+  {id:'774087689120805',name:'Middle East',region:'diaspora'},
+  {id:'800066663185559',name:'Cumilla',region:'chittagong_div'},
+  {id:'767070709830635',name:'Europe',region:'diaspora'},
+  {id:'819591557896069',name:'Australia',region:'diaspora'},
+  {id:'771297736066387',name:'Rangpur',region:'rangpur_div'},
+  {id:'811857228669187',name:'Asia',region:'diaspora'},
+  {id:'821514351035673',name:'Canada',region:'diaspora'},
+  {id:'742860382250359',name:'Gazipur',region:'dhaka_metro'},
+  {id:'819346937917703',name:'Khulna',region:'khulna_div'},
+  {id:'668493799674686',name:'USA',region:'diaspora'},
+  {id:'547243828481347',name:'Chattogram',region:'chittagong_div'},
+  {id:'586562744547226',name:'Rajshahi',region:'rajshahi_div'},
+  {id:'607102832487121',name:'Barishal',region:'barishal_div'},
+  {id:'599649799896567',name:'Mymensingh',region:'mymensingh_div'},
+];
+
+let cfg = {};
+function loadCfg() {
+  const saved = localStorage.getItem('joaf_autopilot_cfg');
+  if (saved) try { cfg = JSON.parse(saved); } catch(_){}
+  cfg.endpoint = cfg.endpoint || localStorage.getItem('joaf_endpoint') || DEFAULT_ENDPOINT;
+  cfg.project  = cfg.project  || localStorage.getItem('joaf_project')  || DEFAULT_PROJECT;
+  cfg.key      = cfg.key      || localStorage.getItem('joaf_admin_key') || '';
+  cfg.internal = cfg.internal || localStorage.getItem('joaf_internal_key') || '';
+}
+function saveCfg(){ localStorage.setItem('joaf_autopilot_cfg', JSON.stringify(cfg)); }
+
+// ══════════════════════════════════════════════════════
+// API HELPERS
+// ══════════════════════════════════════════════════════
+async function awExec(fnId, body = {}) {
+  const url = `${cfg.endpoint}/functions/${fnId}/executions`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Appwrite-Project': cfg.project,
+    },
+    body: JSON.stringify({
+      async: false, path: '/', method: 'POST',
+      headers: { 'x-joaf-key': cfg.internal, 'x-admin-key': cfg.key },
+      body: JSON.stringify(body)
+    })
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const exec = await res.json();
+  const txt = exec.responseBody || '{}';
+  try { return JSON.parse(txt); } catch(_){ return { raw: txt }; }
+}
+
+async function awQuery(collectionId, queries = [], limit = 25) {
+  let url = `${cfg.endpoint}/databases/joaf/collections/${collectionId}/documents?limit=${limit}`;
+  queries.forEach(q => url += `&queries[]=${encodeURIComponent(q)}`);
+  const res = await fetch(url, {
+    headers: { 'X-Appwrite-Project': cfg.project, 'X-Appwrite-Key': cfg.key }
+  });
+  if (!res.ok) throw new Error(`DB ${res.status}`);
+  return res.json();
+}
+
+// ══════════════════════════════════════════════════════
+// CLOCK + COUNTDOWN
+// ══════════════════════════════════════════════════════
+function startClock() {
+  function tick() {
+    const now = new Date();
+    const bd  = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+    document.getElementById('bdClock').textContent =
+      bd.toLocaleTimeString('en-GB') + ' BDT';
+
+    // Next 15-min CRON
+    const min = bd.getMinutes();
+    const sec = bd.getSeconds();
+    const nextMin = Math.ceil((min + 1) / 15) * 15;
+    const secsLeft = (nextMin - min - 1) * 60 + (60 - sec);
+    const m = String(Math.floor(secsLeft / 60)).padStart(2, '0');
+    const s = String(secsLeft % 60).padStart(2, '0');
+    document.getElementById('cronCountdown').textContent = `${m}:${s}`;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+function showT(msg, t = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast ' + t;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3500);
+}
+
+// ══════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════
+function switchTab(i, btn) {
+  document.querySelectorAll('.tab-btn').forEach((b, j) => b.classList.toggle('on', j === i));
+  document.querySelectorAll('.sec').forEach((s, j) => s.classList.toggle('on', j === i));
+}
+
+// ══════════════════════════════════════════════════════
+// LOAD STATUS from joaf-viral-os
+// ══════════════════════════════════════════════════════
+async function loadStatus() {
+  try {
+    const data = await awExec('joaf-viral-os', { action: 'status' });
+    updateStatusHero(data);
+    updateAIHealth(data);
+    return data;
+  } catch(e) {
+    document.getElementById('pipelineState').textContent = 'সংযোগ ব্যর্থ';
+    document.getElementById('pipelineSub').textContent = e.message;
+    setSysDot('red', 'সংযোগ নেই');
+    return null;
+  }
+}
+
+function updateStatusHero(data) {
+  const state  = document.getElementById('pipelineState');
+  const sub    = document.getElementById('pipelineSub');
+  const cb     = data?.circuit_breaker || {};
+  const isOpen = cb.open;
+  if (isOpen) {
+    state.textContent = '⚠️ Circuit Open';
+    state.style.color = 'var(--amber)';
+    sub.textContent   = `${cb.fails || 0} failures — AI bypass mode`;
+    setSysDot('amber', 'Circuit breaker open');
+  } else {
+    state.textContent = '✅ সক্রিয়';
+    state.style.color = 'var(--green)';
+    sub.textContent   = `শেষ সফল cycle: ${data?.last_cycle || '—'}`;
+    setSysDot('green', 'পাইপলাইন সক্রিয়');
+  }
+
+  // Queue bars
+  const q   = data?.queue || {};
+  const tot = q.pending || 0;
+  const img = q.with_images || 0;
+  const p   = data?.pool || {};
+  const pool= p.total || 0;
+
+  document.getElementById('qTotal').textContent     = `${tot} / 96`;
+  document.getElementById('qImg').textContent       = `${img} টি`;
+  document.getElementById('poolTotal').textContent  = `${pool} টি`;
+  document.getElementById('qProg').style.width      = `${Math.min(100,(tot/96)*100)}%`;
+  document.getElementById('qImgProg').style.width   = `${tot ? Math.min(100,(img/tot)*100) : 0}%`;
+  document.getElementById('poolProg').style.width   = `${Math.min(100,(pool/200)*100)}%`;
+}
+
+function updateAIHealth(data) {
+  const ai = data?.ai_providers || {};
+  function setBadge(id, status) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent  = status === true ? 'OK' : status === false ? 'FAIL' : '—';
+    el.className    = 'ah-badge ' + (status === true ? 'ah-ok' : status === false ? 'ah-fail' : 'ah-warn');
+  }
+  setBadge('aiOR',   ai.openrouter);
+  setBadge('aiGem',  ai.gemini);
+  setBadge('aiGroq', ai.groq);
+  const cb = data?.circuit_breaker || {};
+  const el = document.getElementById('aiCB');
+  el.textContent = cb.open ? 'OPEN' : 'CLOSED';
+  el.className   = 'ah-badge ' + (cb.open ? 'ah-warn' : 'ah-ok');
+}
+
+function setSysDot(color, label) {
+  const dot = document.getElementById('sysDot');
+  dot.className = 'pulse-dot' + (color === 'green' ? '' : ' ' + color);
+  document.getElementById('sysLabel').textContent = label;
+}
+
+// ══════════════════════════════════════════════════════
+// PAGE GRID — last publish per page from DB
+// ══════════════════════════════════════════════════════
+async function loadPageGrid() {
+  const grid = document.getElementById('pageGrid');
+  try {
+    // Query last 17 publish log entries
+    const res = await awQuery('viral_publish_log',
+      ['orderDesc("published_at")', 'equal("status","published")'], 50);
+    const docs = res.documents || [];
+
+    // Build per-page last-publish map
+    const pageMap = {};
+    docs.forEach(d => {
+      const pages = d.page_results ? JSON.parse(d.page_results) : {};
+      Object.entries(pages).forEach(([pid, info]) => {
+        if (!pageMap[pid]) pageMap[pid] = { ok: info?.ok, time: d.published_at, reach: info?.reach || 0 };
+      });
+    });
+
+    grid.innerHTML = PAGES.map(pg => {
+      const info    = pageMap[pg.id];
+      const statusC = info ? (info.ok ? 'ok' : 'fail') : 'pending';
+      const statusT = info ? (info.ok ? '✅ OK' : '❌ Fail') : '⏳ Pending';
+      const timeAgo = info ? relTime(info.time) : 'কোনো data নেই';
+      const reach   = info?.reach ? `${(info.reach/1000).toFixed(1)}K reach` : '';
+      return `<div class="pg-item ${statusC}">
+        <div class="pg-name">${pg.name}</div>
+        <div class="pg-region">${pg.region}</div>
+        <div class="pg-status ${statusC}">${statusT}</div>
+        <div class="pg-reach">${timeAgo}${reach ? ' · ' + reach : ''}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('gridUpdated').textContent =
+      'Updated ' + new Date().toLocaleTimeString('bn-BD', { timeZone: 'Asia/Dhaka' });
+  } catch(e) {
+    grid.innerHTML = `<div class="loading" style="color:var(--red)">Grid load ব্যর্থ: ${e.message}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RECENT POSTS
+// ══════════════════════════════════════════════════════
+async function loadRecentPosts() {
+  const el = document.getElementById('recentPosts');
+  try {
+    const res  = await awQuery('viral_publish_log', ['orderDesc("published_at")'], 20);
+    const docs = res.documents || [];
+    if (!docs.length) { el.innerHTML = '<div class="loading">কোনো post নেই</div>'; return; }
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">` +
+      docs.map(d => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+          <div style="flex-shrink:0;width:7px;height:7px;border-radius:50%;margin-top:5px;background:${d.status==='published'?'var(--green)':'var(--red)'}"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:var(--text);line-height:1.4;margin-bottom:3px">${(d.headline||d.caption||'—').substring(0,100)}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span class="fmt-badge">${d.format||'—'}</span>
+              <span style="font-size:10px;color:var(--text3)">${relTime(d.published_at)}</span>
+              ${d.total_reach ? `<span style="font-size:10px;color:var(--blue)">${(d.total_reach/1000).toFixed(1)}K reach</span>` : ''}
+            </div>
+          </div>
+        </div>`).join('') + `</div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="loading" style="color:var(--red)">লোড ব্যর্থ: ${e.message}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// POOL & QUEUE
+// ══════════════════════════════════════════════════════
+async function loadPoolQueue() {
+  try {
+    // Queue by format
+    const qRes = await awQuery('viral_publish_queue',
+      ['equal("status","pending")', 'orderDesc("created_at")'], 100);
+    const qDocs = qRes.documents || [];
+    const byFmt = {};
+    qDocs.forEach(d => { byFmt[d.format] = (byFmt[d.format] || 0) + 1; });
+    const sorted = Object.entries(byFmt).sort((a,b) => b[1]-a[1]);
+    document.getElementById('qFormats').innerHTML = sorted.length
+      ? sorted.map(([fmt, cnt]) => `
+          <div class="vs-row">
+            <div class="vs-fmt">${fmt}</div>
+            <div class="vs-bar-wrap"><div class="vs-bar" style="width:${Math.min(100,(cnt/qDocs.length)*100)}%"></div></div>
+            <div class="vs-num">${cnt}</div>
+          </div>`).join('')
+      : '<div class="loading">Queue খালি</div>';
+
+    // Pool table
+    const pRes = await awQuery('viral_content_pool',
+      ['equal("queued",false)', 'orderDesc("created_at")'], 25);
+    const pDocs = pRes.documents || [];
+    document.getElementById('poolBody').innerHTML = pDocs.length
+      ? pDocs.map(d => `<tr>
+          <td style="color:var(--text)">${(d.title||'').substring(0,60)}</td>
+          <td style="color:var(--text2)">${d.source||'—'}</td>
+          <td><span class="fmt-badge">${d.format||'—'}</span></td>
+          <td style="color:var(--text3)">${relTime(d.created_at)}</td>
+          <td class="fp-cell">${(d.fp||'').substring(0,8)}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Pool খালি</td></tr>';
+  } catch(e) {
+    document.getElementById('qFormats').innerHTML = `<div style="color:var(--red);font-size:12px">লোড ব্যর্থ: ${e.message}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ANALYTICS
+// ══════════════════════════════════════════════════════
+async function loadAnalytics() {
+  try {
+    const res  = await awQuery('analytics_posts', ['orderDesc("recorded_at")'], 200);
+    const docs = res.documents || [];
+
+    const totalReach  = docs.reduce((s,d) => s + (d.reach||0), 0);
+    const totalEng    = docs.reduce((s,d) => s + (d.engagement||0), 0);
+    const avgViral    = docs.length ? (docs.reduce((s,d) => s + (d.viral_score||0),0)/docs.length).toFixed(1) : 0;
+    const bestPost    = docs.sort((a,b) => (b.viral_score||0)-(a.viral_score||0))[0];
+
+    document.getElementById('analyticsGrid').innerHTML = `
+      <div class="an-card blue"><div class="an-label">মোট Reach</div><div class="an-value">${(totalReach/1000).toFixed(0)}K</div><div class="an-sub">গত ৭ দিন</div></div>
+      <div class="an-card green"><div class="an-label">মোট Engagement</div><div class="an-value">${(totalEng/1000).toFixed(1)}K</div><div class="an-sub">Like + Comment + Share</div></div>
+      <div class="an-card gold"><div class="an-label">গড় Viral Score</div><div class="an-value">${avgViral}</div><div class="an-sub">/ ১০০</div></div>
+      <div class="an-card brand"><div class="an-label">সেরা Post Format</div><div class="an-value" style="font-size:14px">${bestPost?.format||'—'}</div><div class="an-sub">Score: ${bestPost?.viral_score||0}</div></div>
+    `;
+
+    // Format chart
+    const fmtMap = {};
+    docs.forEach(d => {
+      if (!fmtMap[d.format]) fmtMap[d.format] = { sum: 0, cnt: 0 };
+      fmtMap[d.format].sum += (d.viral_score || 0);
+      fmtMap[d.format].cnt++;
+    });
+    const fmtSorted = Object.entries(fmtMap)
+      .map(([fmt, v]) => ({ fmt, avg: v.cnt ? v.sum/v.cnt : 0 }))
+      .sort((a,b) => b.avg - a.avg).slice(0, 12);
+    const maxScore = fmtSorted[0]?.avg || 1;
+    document.getElementById('fmtChart').innerHTML = fmtSorted.map(f => `
+      <div class="vs-row">
+        <div class="vs-fmt">${f.fmt}</div>
+        <div class="vs-bar-wrap"><div class="vs-bar" style="width:${(f.avg/maxScore)*100}%"></div></div>
+        <div class="vs-num">${f.avg.toFixed(0)}</div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('analyticsGrid').innerHTML =
+      `<div class="loading" style="color:var(--red)">Analytics লোড ব্যর্থ: ${e.message}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ACTION RUNNER
+// ══════════════════════════════════════════════════════
+const btns = ['btnCycle','btnPublish','btnFill','btnCollect','btnStatus','btnToken'];
+function setLoading(on) { btns.forEach(id => { const el=document.getElementById(id); if(el) el.disabled=on; }); }
+
+async function runAction(action) {
+  setLoading(true);
+  switchTab(4, document.querySelectorAll('.tab-btn')[4]);
+  const log = document.getElementById('actionLog');
+  document.getElementById('actionTitle').textContent = action;
+  log.innerHTML = `<span class="log-info">▶ ${action} শুরু হচ্ছে...</span>`;
+  try {
+    const t0   = Date.now();
+    const data = await awExec('joaf-viral-os', { action });
+    const ms   = Date.now() - t0;
+    const out  = data?.log || data?.message || JSON.stringify(data, null, 2);
+    log.innerHTML = `<span class="log-info">✅ ${action} সম্পন্ন (${ms}ms)</span>\n\n${formatLog(out)}`;
+    showT(`${action} সম্পন্ন`, 'ok');
+    setTimeout(loadAll, 1500);
+  } catch(e) {
+    log.innerHTML = `<span class="log-fail">❌ ${e.message}</span>`;
+    showT('Action ব্যর্থ', 'er');
+  }
+  setLoading(false);
+}
+
+function formatLog(text) {
+  return String(text)
+    .replace(/✅[^\n]*/g, m => `<span class="log-ok">${m}</span>`)
+    .replace(/❌[^\n]*/g, m => `<span class="log-fail">${m}</span>`)
+    .replace(/⚠️[^\n]*/g, m => `<span class="log-warn">${m}</span>`)
+    .replace(/ℹ[^\n]*/g,  m => `<span class="log-info">${m}</span>`);
+}
+
+// ══════════════════════════════════════════════════════
+// TOKEN CHECK
+// ══════════════════════════════════════════════════════
+async function checkToken() {
+  try {
+    const data = await awExec('fb-autopost', { action: 'check-token' });
+    const days = data?.days_remaining;
+    const bar  = document.getElementById('tokenWarnBar');
+    if (days !== undefined && days < 14) {
+      document.getElementById('tokenDaysLeft').textContent = days;
+      bar.classList.add('on');
+    } else {
+      bar.classList.remove('on');
+    }
+    showT(days !== undefined ? `Token: ${days} দিন বাকি` : 'Token OK', days < 7 ? 'er' : 'ok');
+  } catch(e) { showT('Token check ব্যর্থ', 'er'); }
+}
+
+// ══════════════════════════════════════════════════════
+// SETTINGS MODAL
+// ══════════════════════════════════════════════════════
+function openSettings() {
+  loadCfg();
+  document.getElementById('cfgEndpoint').value = cfg.endpoint || '';
+  document.getElementById('cfgProject').value  = cfg.project  || '';
+  document.getElementById('cfgKey').value      = cfg.key      || '';
+  document.getElementById('cfgInternal').value = cfg.internal || '';
+  document.getElementById('settingsModal').classList.add('on');
+}
+function closeSettings() { document.getElementById('settingsModal').classList.remove('on'); }
+function saveSettings() {
+  cfg.endpoint = document.getElementById('cfgEndpoint').value.trim() || DEFAULT_ENDPOINT;
+  cfg.project  = document.getElementById('cfgProject').value.trim()  || DEFAULT_PROJECT;
+  cfg.key      = document.getElementById('cfgKey').value.trim();
+  cfg.internal = document.getElementById('cfgInternal').value.trim();
+  saveCfg();
+  closeSettings();
+  showT('সেটিংস সংরক্ষিত হয়েছে', 'ok');
+  loadAll();
+}
+
+// ══════════════════════════════════════════════════════
+// RELATIVE TIME (Bengali)
+// ══════════════════════════════════════════════════════
+function relTime(iso) {
+  if (!iso) return '—';
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60)    return `${Math.floor(diff)} সেকেন্ড আগে`;
+  if (diff < 3600)  return `${Math.floor(diff/60)} মিনিট আগে`;
+  if (diff < 86400) return `${Math.floor(diff/3600)} ঘণ্টা আগে`;
+  return `${Math.floor(diff/86400)} দিন আগে`;
+}
+
+// ══════════════════════════════════════════════════════
+// LOAD ALL
+// ══════════════════════════════════════════════════════
+async function loadAll() {
+  loadCfg();
+  if (!cfg.key && !cfg.internal) { openSettings(); return; }
+  setSysDot('amber', 'লোড হচ্ছে...');
+  await Promise.allSettled([
+    loadStatus(),
+    loadPageGrid(),
+    loadRecentPosts(),
+    loadPoolQueue(),
+    loadAnalytics(),
+  ]);
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  startClock();
+  loadAll();
+  // Auto-refresh every 5 minutes
+  setInterval(loadAll, 5 * 60 * 1000);
+});
+</script>
+</body>
+</html>

@@ -178,7 +178,45 @@ export default async ({ req, res, log, error }) => {
   // ── Status ──────────────────────────────────────────────────────────────
   if (action === 'status') {
     const logs = await aw('GET', `/databases/${DB}/collections/publisher_log/documents?limit=1`);
-    return res.json({ ok: true, total_posts: logs?.total || 0 });
+    
+  // ── Update FORMAT_WEIGHTS in publisher_config (self-learning loop) ─────
+  try {
+    // Build updated weights from performance: formats with avg viral_score > 60 get boosted
+    const fmtScores = {};
+    for (const doc of (analyticsRes?.documents || [])) {
+      if (!doc.format) continue;
+      fmtScores[doc.format] = fmtScores[doc.format] || { sum: 0, cnt: 0 };
+      fmtScores[doc.format].sum += (doc.viral_score || 0);
+      fmtScores[doc.format].cnt++;
+    }
+    const updatedWeights = {};
+    for (const [fmt, data] of Object.entries(fmtScores)) {
+      const avg = data.cnt > 3 ? data.sum / data.cnt : null;
+      if (avg === null) continue;
+      // Boost/reduce by up to 50% based on performance vs baseline (50)
+      const factor = 0.5 + (avg / 100);  // avg=100 → 1.5x, avg=0 → 0.5x
+      updatedWeights[fmt] = Math.round(factor * 8); // base weight ~8
+    }
+    if (Object.keys(updatedWeights).length > 0) {
+      // Upsert to publisher_config
+      const existing = await db.listDocuments(DATABASE_ID, 'publisher_config',
+        [Query.equal('key', 'format_weights'), Query.limit(1)]
+      );
+      if (existing.documents.length) {
+        await db.updateDocument(DATABASE_ID, 'publisher_config', existing.documents[0].$id,
+          { value: JSON.stringify(updatedWeights), updated_at: new Date().toISOString() }
+        );
+      } else {
+        await db.createDocument(DATABASE_ID, 'publisher_config', ID.unique(),
+          { key: 'format_weights', value: JSON.stringify(updatedWeights), updated_at: new Date().toISOString() }
+        );
+      }
+      log(`✅ Self-learning: format_weights updated (${Object.keys(updatedWeights).length} formats)`);
+    }
+  } catch(e) { error(`format_weights update failed: ${e.message}`); }
+  // ─────────────────────────────────────────────────────────────────────────
+
+return res.json({ ok: true, total_posts: logs?.total || 0 });
   }
 
   // ── Collect & Score Insights ─────────────────────────────────────────────
@@ -188,7 +226,45 @@ export default async ({ req, res, log, error }) => {
 
   if (!pageIds.length) {
     error('analytics: no page tokens found');
-    return res.json({ ok: false, error: 'no page tokens' });
+    
+  // ── Update FORMAT_WEIGHTS in publisher_config (self-learning loop) ─────
+  try {
+    // Build updated weights from performance: formats with avg viral_score > 60 get boosted
+    const fmtScores = {};
+    for (const doc of (analyticsRes?.documents || [])) {
+      if (!doc.format) continue;
+      fmtScores[doc.format] = fmtScores[doc.format] || { sum: 0, cnt: 0 };
+      fmtScores[doc.format].sum += (doc.viral_score || 0);
+      fmtScores[doc.format].cnt++;
+    }
+    const updatedWeights = {};
+    for (const [fmt, data] of Object.entries(fmtScores)) {
+      const avg = data.cnt > 3 ? data.sum / data.cnt : null;
+      if (avg === null) continue;
+      // Boost/reduce by up to 50% based on performance vs baseline (50)
+      const factor = 0.5 + (avg / 100);  // avg=100 → 1.5x, avg=0 → 0.5x
+      updatedWeights[fmt] = Math.round(factor * 8); // base weight ~8
+    }
+    if (Object.keys(updatedWeights).length > 0) {
+      // Upsert to publisher_config
+      const existing = await db.listDocuments(DATABASE_ID, 'publisher_config',
+        [Query.equal('key', 'format_weights'), Query.limit(1)]
+      );
+      if (existing.documents.length) {
+        await db.updateDocument(DATABASE_ID, 'publisher_config', existing.documents[0].$id,
+          { value: JSON.stringify(updatedWeights), updated_at: new Date().toISOString() }
+        );
+      } else {
+        await db.createDocument(DATABASE_ID, 'publisher_config', ID.unique(),
+          { key: 'format_weights', value: JSON.stringify(updatedWeights), updated_at: new Date().toISOString() }
+        );
+      }
+      log(`✅ Self-learning: format_weights updated (${Object.keys(updatedWeights).length} formats)`);
+    }
+  } catch(e) { error(`format_weights update failed: ${e.message}`); }
+  // ─────────────────────────────────────────────────────────────────────────
+
+return res.json({ ok: false, error: 'no page tokens' });
   }
 
   // Get logs from last 72 hours
@@ -336,7 +412,45 @@ export default async ({ req, res, log, error }) => {
     await awUpsertConfig('system_health_report', healthReport);
   }
 
-  return res.json({
+  
+  // ── Update FORMAT_WEIGHTS in publisher_config (self-learning loop) ─────
+  try {
+    // Build updated weights from performance: formats with avg viral_score > 60 get boosted
+    const fmtScores = {};
+    for (const doc of (analyticsRes?.documents || [])) {
+      if (!doc.format) continue;
+      fmtScores[doc.format] = fmtScores[doc.format] || { sum: 0, cnt: 0 };
+      fmtScores[doc.format].sum += (doc.viral_score || 0);
+      fmtScores[doc.format].cnt++;
+    }
+    const updatedWeights = {};
+    for (const [fmt, data] of Object.entries(fmtScores)) {
+      const avg = data.cnt > 3 ? data.sum / data.cnt : null;
+      if (avg === null) continue;
+      // Boost/reduce by up to 50% based on performance vs baseline (50)
+      const factor = 0.5 + (avg / 100);  // avg=100 → 1.5x, avg=0 → 0.5x
+      updatedWeights[fmt] = Math.round(factor * 8); // base weight ~8
+    }
+    if (Object.keys(updatedWeights).length > 0) {
+      // Upsert to publisher_config
+      const existing = await db.listDocuments(DATABASE_ID, 'publisher_config',
+        [Query.equal('key', 'format_weights'), Query.limit(1)]
+      );
+      if (existing.documents.length) {
+        await db.updateDocument(DATABASE_ID, 'publisher_config', existing.documents[0].$id,
+          { value: JSON.stringify(updatedWeights), updated_at: new Date().toISOString() }
+        );
+      } else {
+        await db.createDocument(DATABASE_ID, 'publisher_config', ID.unique(),
+          { key: 'format_weights', value: JSON.stringify(updatedWeights), updated_at: new Date().toISOString() }
+        );
+      }
+      log(`✅ Self-learning: format_weights updated (${Object.keys(updatedWeights).length} formats)`);
+    }
+  } catch(e) { error(`format_weights update failed: ${e.message}`); }
+  // ─────────────────────────────────────────────────────────────────────────
+
+return res.json({
     ok: true,
     processed,
     total_reach_72h: totalReach,

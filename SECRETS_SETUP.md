@@ -50,3 +50,18 @@ HF_TOKEN=hf_...
 # GitHub (admin file upload): https://github.com/settings/tokens
 # Scope: repo (full)
 GH_UPLOAD_TOKEN=ghp_...
+
+# ── ADMIN TOOLS (tools/ directory) ──────────────────────────────────────────
+# The admin tools in tools/ previously had the Appwrite API key hardcoded.
+# They now require: REPLACE_WITH_APPWRITE_API_KEY to be substituted at deploy time.
+# 
+# For production, either:
+# Option A: Add it as a meta tag injected by your build/deploy process
+# Option B: Add to window.JOAF_CONFIG before the tool scripts load
+# Option C: Use the admin panel (/admin/index.html) which loads config from appwrite.json
+#
+# The Appwrite key for tools MUST have ONLY these scopes:
+#   - databases.read, databases.write (for queue/pool display)
+#   - functions.read, functions.write (for triggering functions)
+# Do NOT use the full admin key from GitHub Secrets in browser tools.
+# Create a restricted key specifically for admin dashboard use.

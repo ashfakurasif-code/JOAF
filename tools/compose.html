@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JOAF Compose — Post তৈরি করুন</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#90161f;--brand2:#b91c1c;--brand-glow:rgba(144,22,31,.35);
+  --gold:#c9a227;--gold2:#f59e0b;
+  --civic:#075e55;--civic2:#15803d;
+  --bg:#07080d;--bg2:#0d0f18;--bg3:#141720;--bg4:#1a1e2a;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --text:#e8eaf0;--text2:#9aa0b4;--text3:#5a6278;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#8b5cf6;
+  --radius:10px;--radius-sm:6px;
+  --font:'Noto Sans Bengali',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;color:var(--brand)}
+.topbar-logo span{color:var(--text);font-weight:400;font-size:13px;opacity:.5}
+.topbar-right{margin-left:auto;display:flex;gap:8px}
+
+/* ── TYPE TABS ── */
+.type-tabs{display:flex;gap:6px;padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.type-btn{
+  display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:20px;
+  border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;
+  font-size:13px;font-family:var(--font);transition:.18s;white-space:nowrap;
+}
+.type-btn:hover{border-color:var(--brand);color:var(--text)}
+.type-btn.on{background:rgba(144,22,31,.15);border-color:var(--brand);color:var(--brand);font-weight:600}
+
+/* ── LAYOUT ── */
+.compose-layout{display:grid;grid-template-columns:1fr 420px;gap:0;min-height:calc(100vh - 97px)}
+@media(max-width:900px){.compose-layout{grid-template-columns:1fr}}
+
+/* ── LEFT: EDITOR ── */
+.editor-col{padding:20px;display:flex;flex-direction:column;gap:14px;border-right:1px solid var(--border)}
+
+/* ── RIGHT: PREVIEW ── */
+.preview-col{background:var(--bg2);padding:20px;display:flex;flex-direction:column;gap:14px;position:sticky;top:97px;height:calc(100vh - 97px);overflow-y:auto}
+@media(max-width:900px){.preview-col{position:relative;height:auto}}
+
+/* ── SECTION PANELS ── */
+.panel{display:none}.panel.on{display:flex;flex-direction:column;gap:14px}
+
+/* ── CARD ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius)}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600}
+.card-body{padding:14px 16px}
+
+/* ── STEP LABELS ── */
+.step-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+
+/* ── INPUT STYLES ── */
+textarea,input[type=text],input[type=url]{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);
+  padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--font);
+  resize:vertical;transition:.18s;
+}
+textarea:focus,input:focus{outline:none;border-color:var(--brand)}
+textarea{min-height:100px;line-height:1.6}
+
+/* ── TOPIC INPUT AREA ── */
+.topic-area{position:relative}
+.topic-area textarea{padding-right:44px;min-height:80px}
+.topic-clear{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px}
+
+/* ── AI SUGGESTIONS ── */
+.ai-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.suggest-chip{
+  padding:4px 12px;border-radius:20px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;transition:.15s;
+}
+.suggest-chip:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ── URL INPUT ── */
+.url-input-wrap{display:flex;gap:8px}
+.url-input-wrap input{flex:1}
+.fetch-btn{
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text2);
+  padding:10px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;
+  font-family:var(--font);white-space:nowrap;transition:.18s;flex-shrink:0;
+}
+.fetch-btn:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ── TONE SELECTOR ── */
+.tone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tone-btn{
+  padding:8px 6px;border:1px solid var(--border);background:var(--bg3);
+  border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-family:var(--font);
+  color:var(--text2);text-align:center;transition:.18s;line-height:1.3;
+}
+.tone-btn:hover{border-color:var(--brand);color:var(--text)}
+.tone-btn.on{background:rgba(144,22,31,.12);border-color:var(--brand);color:var(--brand);font-weight:600}
+
+/* ── PAGE SELECTOR ── */
+.page-grid-sel{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px}
+.page-chip{
+  display:flex;align-items:center;gap:6px;padding:6px 9px;
+  border:1px solid var(--border);background:var(--bg3);border-radius:var(--radius-sm);
+  cursor:pointer;font-size:11px;color:var(--text2);transition:.15s;
+}
+.page-chip input{width:13px;height:13px;accent-color:var(--brand);flex-shrink:0}
+.page-chip:hover{border-color:var(--border2);color:var(--text)}
+.page-chip.sel{background:rgba(144,22,31,.08);border-color:rgba(144,22,31,.3);color:var(--text)}
+.sel-all-wrap{display:flex;gap:6px;margin-bottom:8px}
+.sel-toggle{padding:4px 10px;border:1px solid var(--border2);background:var(--bg3);border-radius:20px;font-size:11px;color:var(--text2);cursor:pointer;font-family:var(--font)}
+.sel-toggle:hover{color:var(--brand);border-color:var(--brand)}
+
+/* ── IMAGE DROP ZONE ── */
+.drop-zone{
+  border:2px dashed var(--border2);border-radius:var(--radius);padding:28px;
+  text-align:center;cursor:pointer;transition:.2s;background:var(--bg3);position:relative;
+}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--brand);background:rgba(144,22,31,.05)}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:28px;margin-bottom:8px}
+.drop-text{font-size:13px;color:var(--text2)}
+.drop-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.drop-preview{max-width:100%;border-radius:var(--radius-sm);margin-top:10px;display:none}
+
+/* ── CAPTION BOX ── */
+.caption-box{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);
+  padding:12px;font-size:13px;color:var(--text);line-height:1.7;min-height:100px;
+  white-space:pre-wrap;position:relative;
+}
+.caption-box.empty{color:var(--text3);font-style:italic}
+.caption-edit{
+  width:100%;background:transparent;border:none;color:var(--text);
+  font-size:13px;font-family:var(--font);line-height:1.7;min-height:100px;
+  resize:vertical;padding:0;
+}
+.caption-edit:focus{outline:none}
+.caption-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+
+/* ── BUTTONS ── */
+.btn{
+  padding:8px 16px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;
+  font-family:var(--font);border:1px solid var(--border2);background:var(--bg3);
+  color:var(--text2);transition:.18s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{color:var(--text);border-color:var(--border2)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.btn.primary:hover{background:var(--brand2)}
+.btn.good{border-color:rgba(34,197,94,.3);color:var(--green);background:rgba(34,197,94,.06)}
+.btn.good:hover{background:rgba(34,197,94,.12)}
+.btn.gold{border-color:rgba(201,162,39,.3);color:var(--gold);background:rgba(201,162,39,.06)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── BIG PUBLISH BAR ── */
+.publish-bar{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.publish-when{display:flex;gap:6px}
+.when-btn{
+  padding:7px 13px;border:1px solid var(--border2);background:var(--bg4);
+  border-radius:var(--radius-sm);cursor:pointer;font-size:12px;color:var(--text2);
+  font-family:var(--font);transition:.15s;
+}
+.when-btn:hover{color:var(--text)}.when-btn.on{border-color:var(--brand);color:var(--brand);background:rgba(144,22,31,.1)}
+.pub-main{margin-left:auto}
+
+/* ── CANVAS PREVIEW ── */
+#previewCanvas{
+  width:100%;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg);display:block;
+}
+.preview-hint{font-size:11px;color:var(--text3);text-align:center;margin-top:6px}
+
+/* ── PROGRESS BAR (publishing) ── */
+.pub-progress{display:none;flex-direction:column;gap:6px;margin-top:8px}
+.pub-progress.on{display:flex}
+.pub-bar-wrap{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.pub-bar-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--gold));border-radius:3px;transition:width .4s ease}
+.pub-log{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.6;max-height:140px;overflow-y:auto}
+.pub-log .ok{color:var(--green)}.pub-log .er{color:var(--red)}.pub-log .inf{color:var(--blue)}
+
+/* ── REEL SECTION ── */
+.reel-script-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--text);line-height:1.7;min-height:120px;white-space:pre-wrap}
+.reel-script-box.empty{color:var(--text3);font-style:italic}
+.reel-preview{width:100%;border-radius:var(--radius-sm);background:#000;min-height:200px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px;position:relative}
+
+/* ── BATCH ── */
+.batch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.batch-item{position:relative;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg3)}
+.batch-item img{width:100%;height:90px;object-fit:cover;display:block}
+.batch-item-info{padding:5px 7px;font-size:10px;color:var(--text2)}
+.batch-item-status{position:absolute;top:4px;right:4px;font-size:9px;padding:2px 6px;border-radius:20px;font-weight:700;font-family:var(--mono)}
+.batch-ok{background:rgba(34,197,94,.8);color:#fff}
+.batch-fail{background:rgba(239,68,68,.8);color:#fff}
+.batch-pending{background:rgba(245,158,11,.8);color:#000}
+.batch-remove{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);border:none;color:#fff;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+
+/* ── OCR OVERLAY ── */
+.ai-ovl{position:fixed;inset:0;background:rgba(7,8,13,.85);z-index:500;display:none;align-items:center;justify-content:center}
+.ai-ovl.on{display:flex}
+.ai-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px 28px;width:min(380px,90vw);text-align:center}
+.ai-title{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text)}
+.ai-steps{display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:16px}
+.as{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text3)}
+.as.active{color:var(--text)}.as.done{color:var(--green)}
+.as-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.as.active .as-dot{background:var(--brand);animation:pulse2 1s infinite}
+.as.done .as-dot{background:var(--green)}
+@keyframes pulse2{0%,100%{opacity:1}50%{opacity:.4}}
+.ai-prog{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.ai-prog-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--gold));border-radius:2px;transition:width .4s ease}
+
+/* ── SPIN ── */
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;z-index:9999;padding:10px 16px;border-radius:var(--radius-sm);font-size:13px;display:none;max-width:300px}
+.toast.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+.toast.er{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+.toast.info{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:var(--blue)}
+
+/* ── SETTINGS MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:none;align-items:center;justify-content:center}
+.modal-bg.on{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:min(460px,95vw);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:14px}
+.mfield{margin-bottom:12px}
+.mfield label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.mfield input,.mfield select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-size:13px;font-family:var(--font)}
+.mfield input:focus,.mfield select:focus{outline:none;border-color:var(--brand)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.mbtn{padding:7px 16px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-family:var(--font);border:none}
+.mbtn.primary{background:var(--brand);color:#fff}.mbtn.ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="11" fill="#90161f"/><text x="11" y="15.5" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" font-family="serif">জ</text></svg>
+    JOAF <span>/ Compose</span>
+  </div>
+  <div class="topbar-right">
+    <a href="autopilot.html" class="btn" style="text-decoration:none;font-size:12px">📡 Autopilot</a>
+    <button class="btn" onclick="openSettings()">⚙ সেটিংস</button>
+  </div>
+</div>
+
+<!-- POST TYPE TABS -->
+<div class="type-tabs">
+  <button class="type-btn on" onclick="switchType('image',this)">🖼️ Image Post</button>
+  <button class="type-btn" onclick="switchType('reel',this)">🎬 Reel</button>
+  <button class="type-btn" onclick="switchType('batch',this)">📦 Batch</button>
+</div>
+
+<!-- COMPOSE LAYOUT -->
+<div class="compose-layout">
+
+  <!-- ═══ EDITOR COLUMN ═══ -->
+  <div class="editor-col">
+
+    <!-- ══ IMAGE POST PANEL ══ -->
+    <div class="panel on" id="panel-image">
+
+      <!-- Step 1: Topic / URL -->
+      <div>
+        <div class="step-label">ধাপ ১ — বিষয় বা URL</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button class="btn" id="inputModeText" onclick="setInputMode('text',this)">✏️ নিজে লেখো</button>
+          <button class="btn" id="inputModeUrl" onclick="setInputMode('url',this)">🔗 URL থেকে</button>
+          <button class="btn" id="inputModeImg" onclick="setInputMode('img',this)">🖼️ ছবি থেকে</button>
+        </div>
+
+        <!-- Text input -->
+        <div id="inputText" class="topic-area">
+          <textarea id="topicInput" placeholder="কী বিষয়ে post করতে চাও? বাংলায় লেখো...&#10;উদাহরণ: চালের দাম বেড়েছে, গরীব মানুষের কষ্ট"></textarea>
+          <button class="topic-clear" onclick="document.getElementById('topicInput').value=''">✕</button>
+          <div class="ai-suggestions" id="aiSuggestions">
+            <div style="font-size:11px;color:var(--text3);width:100%;margin-bottom:2px">🔥 আজকের trending:</div>
+            <span class="suggest-chip" onclick="useSuggest(this)">ছাত্র আন্দোলন</span>
+            <span class="suggest-chip" onclick="useSuggest(this)">চালের দাম বৃদ্ধি</span>
+            <span class="suggest-chip" onclick="useSuggest(this)">নির্বাচনী আপডেট</span>
+            <span class="suggest-chip" onclick="useSuggest(this)">গণঅধিকার</span>
+            <span class="suggest-chip" onclick="useSuggest(this)">জুলাই স্মরণ</span>
+          </div>
+        </div>
+
+        <!-- URL input -->
+        <div id="inputUrl" style="display:none">
+          <div class="url-input-wrap">
+            <input type="url" id="urlInput" placeholder="https://...">
+            <button class="fetch-btn" onclick="fetchUrl()">📥 টেনে আনো</button>
+          </div>
+          <div id="urlPreview" style="font-size:11px;color:var(--text2);margin-top:6px;min-height:14px"></div>
+        </div>
+
+        <!-- Image OCR input -->
+        <div id="inputImg" style="display:none">
+          <div class="drop-zone" id="ocrDrop">
+            <input type="file" accept="image/*" onchange="handleOCRFile(this.files[0])">
+            <div class="drop-icon">🖼️</div>
+            <div class="drop-text">ছবি drag করুন বা click করুন</div>
+            <div class="drop-sub">OCR দিয়ে text extract হবে → AI caption তৈরি হবে</div>
+            <img class="drop-preview" id="ocrPreviewImg">
+          </div>
+          <div id="ocrText" style="font-size:11px;color:var(--text2);margin-top:6px;white-space:pre-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Step 2: Image Card -->
+      <div>
+        <div class="step-label">ধাপ ২ — কার্ড ছবি</div>
+        <div class="drop-zone" id="cardDrop" style="padding:18px">
+          <input type="file" accept="image/*" onchange="handleCardImage(this.files[0])">
+          <div class="drop-icon" style="font-size:20px">📷</div>
+          <div class="drop-text" style="font-size:12px">Background ছবি (ঐচ্ছিক)</div>
+          <div class="drop-sub">না দিলে gradient ব্যবহার হবে</div>
+          <img class="drop-preview" id="cardImgPreview">
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap" id="presetBtns"></div>
+      </div>
+
+      <!-- Step 3: Tone -->
+      <div>
+        <div class="step-label">ধাপ ৩ — Tone</div>
+        <div class="tone-grid">
+          <button class="tone-btn on" data-tone="urgent" onclick="setTone(this)">🔴 জরুরি</button>
+          <button class="tone-btn" data-tone="civic" onclick="setTone(this)">✊ নাগরিক</button>
+          <button class="tone-btn" data-tone="informative" onclick="setTone(this)">📰 তথ্যমূলক</button>
+          <button class="tone-btn" data-tone="emotional" onclick="setTone(this)">💛 আবেগী</button>
+          <button class="tone-btn" data-tone="question" onclick="setTone(this)">🗳️ প্রশ্ন</button>
+          <button class="tone-btn" data-tone="historical" onclick="setTone(this)">📚 ঐতিহাসিক</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Generate -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" onclick="generateCaption()" id="btnGenCaption">
+          🤖 AI Caption তৈরি করো
+        </button>
+        <button class="btn" onclick="renderCard()" id="btnRenderCard">🎨 Card Render</button>
+      </div>
+
+      <!-- Step 5: Caption editor -->
+      <div>
+        <div class="step-label">ধাপ ৫ — Caption</div>
+        <textarea id="captionOutput" class="caption-edit" placeholder="AI caption এখানে আসবে... অথবা নিজে লেখো"></textarea>
+        <div class="caption-actions">
+          <button class="btn" onclick="generateCaption()" style="font-size:11px;padding:5px 10px">🔄 পুনরায় তৈরি</button>
+          <button class="btn gold" onclick="copyCaption()" style="font-size:11px;padding:5px 10px">📋 Copy</button>
+          <span style="margin-left:auto;font-size:11px;color:var(--text3)" id="captionCount">0 অক্ষর</span>
+        </div>
+      </div>
+
+      <!-- Step 6: Pages -->
+      <div>
+        <div class="step-label">ধাপ ৬ — কোন পেজে?</div>
+        <div class="sel-all-wrap">
+          <button class="sel-toggle" onclick="selectAllPages(true)">সব নির্বাচন</button>
+          <button class="sel-toggle" onclick="selectAllPages(false)">সব বাতিল</button>
+          <button class="sel-toggle" onclick="selectDiaspora()">Diaspora</button>
+          <button class="sel-toggle" onclick="selectLocal()">Local BD</button>
+        </div>
+        <div class="page-grid-sel" id="pageGridSel"></div>
+      </div>
+
+      <!-- Publish bar -->
+      <div class="publish-bar">
+        <div class="publish-when">
+          <button class="when-btn on" data-when="now" onclick="setWhen(this)">🚀 এখনই</button>
+          <button class="when-btn" data-when="peak" onclick="setWhen(this)">⏰ Peak time</button>
+          <button class="when-btn" data-when="queue" onclick="setWhen(this)">📋 Queue</button>
+        </div>
+        <button class="btn primary pub-main" onclick="publishNow()" id="btnPublish" style="padding:9px 22px;font-size:14px">
+          📤 Post করো
+        </button>
+      </div>
+
+      <!-- Progress -->
+      <div class="pub-progress" id="pubProgress">
+        <div class="pub-bar-wrap"><div class="pub-bar-fill" id="pubBarFill" style="width:0%"></div></div>
+        <div class="pub-log" id="pubLog"></div>
+      </div>
+
+    </div><!-- /panel-image -->
+
+
+    <!-- ══ REEL PANEL ══ -->
+    <div class="panel" id="panel-reel">
+
+      <div>
+        <div class="step-label">ধাপ ১ — Reel বিষয়</div>
+        <div class="topic-area">
+          <textarea id="reelTopic" placeholder="Reel-এর বিষয় লেখো...&#10;উদাহরণ: জুলাই বিপ্লবের স্মৃতি, কেন এই আন্দোলন হয়েছিল"></textarea>
+        </div>
+      </div>
+
+      <div>
+        <div class="step-label">ধাপ ২ — Mood</div>
+        <div class="tone-grid">
+          <button class="tone-btn on" data-tone="urgent" onclick="setReelMood(this)">⚡ Urgent</button>
+          <button class="tone-btn" data-tone="emotional" onclick="setReelMood(this)">💛 Emotional</button>
+          <button class="tone-btn" data-tone="inspiring" onclick="setReelMood(this)">🔥 Inspiring</button>
+          <button class="tone-btn" data-tone="informative" onclick="setReelMood(this)">📚 Informative</button>
+          <button class="tone-btn" data-tone="civic" onclick="setReelMood(this)">✊ Civic</button>
+          <button class="tone-btn" data-tone="historical" onclick="setReelMood(this)">🏛️ Historical</button>
+        </div>
+      </div>
+
+      <button class="btn primary" onclick="generateReelScript()" id="btnGenReel">
+        🤖 Script তৈরি করো
+      </button>
+
+      <div>
+        <div class="step-label">Script</div>
+        <div class="reel-script-box empty" id="reelScriptBox">Script এখানে আসবে...</div>
+      </div>
+
+      <div>
+        <div class="step-label">ধাপ ৩ — Video তৈরি</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn gold" onclick="generateVideo()" id="btnGenVideo">🎬 Server-side MP4</button>
+          <button class="btn" onclick="exportWebM()" id="btnExportWebM">⬇️ Local WebM</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="step-label">ধাপ ৪ — পেজ নির্বাচন</div>
+        <div class="sel-all-wrap">
+          <button class="sel-toggle" onclick="selectAllReelPages(true)">সব</button>
+          <button class="sel-toggle" onclick="selectDiasporaReel()">Diaspora</button>
+          <button class="sel-toggle" onclick="selectLocalReel()">Local</button>
+        </div>
+        <div class="page-grid-sel" id="reelPageGrid"></div>
+      </div>
+
+      <div class="publish-bar">
+        <button class="btn primary pub-main" onclick="publishReel()" id="btnPublishReel" style="padding:9px 22px;font-size:14px">
+          🎬 Reel Post করো
+        </button>
+      </div>
+
+    </div><!-- /panel-reel -->
+
+
+    <!-- ══ BATCH PANEL ══ -->
+    <div class="panel" id="panel-batch">
+
+      <div>
+        <div class="step-label">ধাপ ১ — ছবি যোগ করো</div>
+        <div class="drop-zone" id="batchDrop" style="min-height:100px">
+          <input type="file" accept="image/*" multiple onchange="handleBatchFiles(this.files)">
+          <div class="drop-icon">📦</div>
+          <div class="drop-text">একাধিক ছবি একসাথে drop করো</div>
+          <div class="drop-sub">প্রতিটিতে OCR + AI caption স্বয়ংক্রিয়ভাবে তৈরি হবে</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="step-label" style="margin:0">Queue (<span id="batchCount">0</span> টি)</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn" onclick="clearBatch()" style="font-size:11px;padding:4px 10px">🗑 সব মুছো</button>
+            <button class="btn primary" onclick="processBatch()" id="btnBatchProcess" style="font-size:12px" disabled>🤖 সব AI Process</button>
+          </div>
+        </div>
+        <div class="batch-grid" id="batchGrid"></div>
+      </div>
+
+      <div>
+        <div class="step-label">পেজ নির্বাচন</div>
+        <div class="page-grid-sel" id="batchPageGrid"></div>
+      </div>
+
+      <div class="publish-bar">
+        <div class="publish-when">
+          <button class="when-btn on" data-when="now" onclick="setBatchWhen(this)">🚀 এখনই</button>
+          <button class="when-btn" data-when="queue" onclick="setBatchWhen(this)">📋 Queue</button>
+        </div>
+        <button class="btn primary pub-main" onclick="publishBatch()" id="btnBatchPub" disabled style="padding:9px 22px;font-size:14px">
+          📤 সব Post করো
+        </button>
+      </div>
+
+      <div class="pub-progress" id="batchProgress">
+        <div class="pub-bar-wrap"><div class="pub-bar-fill" id="batchBarFill" style="width:0%"></div></div>
+        <div class="pub-log" id="batchLog"></div>
+      </div>
+
+    </div><!-- /panel-batch -->
+
+  </div><!-- /editor-col -->
+
+
+  <!-- ═══ PREVIEW COLUMN ═══ -->
+  <div class="preview-col">
+    <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Preview</div>
+
+    <!-- Canvas -->
+    <canvas id="previewCanvas" width="1080" height="1080"></canvas>
+    <div class="preview-hint">১০৮০×১০৮০px (Facebook Square)</div>
+
+    <!-- Preset quick select -->
+    <div>
+      <div class="step-label">Style</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px" id="styleGrid"></div>
+    </div>
+
+    <!-- Post info -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:12px;display:flex;flex-direction:column;gap:5px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">নির্বাচিত পেজ</span><span id="selectedPageCount" style="color:var(--gold);font-weight:600">—</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Caption দৈর্ঘ্য</span><span id="captionLen" style="color:var(--text2)">—</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Publish সময়</span><span id="publishWhenDisplay" style="color:var(--text2)">এখনই</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Estimated time</span><span id="estTime" style="color:var(--text2)">—</span></div>
+    </div>
+  </div><!-- /preview-col -->
+
+</div><!-- /compose-layout -->
+
+<!-- AI OVERLAY -->
+<div class="ai-ovl" id="aiOvl">
+  <div class="ai-box">
+    <div class="ai-title" id="aiOvlTitle">AI কাজ করছে...</div>
+    <div class="ai-steps">
+      <div class="as" id="as1"><div class="as-dot"></div><span id="as1t">বিষয় বিশ্লেষণ</span></div>
+      <div class="as" id="as2"><div class="as-dot"></div><span id="as2t">Caption তৈরি</span></div>
+      <div class="as" id="as3"><div class="as-dot"></div><span id="as3t">Canvas render</span></div>
+      <div class="as" id="as4"><div class="as-dot"></div><span id="as4t">সম্পন্ন</span></div>
+    </div>
+    <div class="ai-prog"><div class="ai-prog-fill" id="aiProgFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <div class="modal-title">⚙️ Compose সেটিংস</div>
+    <div class="mfield"><label>Appwrite Endpoint</label><input id="cfgEndpoint" placeholder="https://fra.cloud.appwrite.io/v1"></div>
+    <div class="mfield"><label>Project ID</label><input id="cfgProject" placeholder="6a11b6cd000b59f318eb"></div>
+    <div class="mfield"><label>Internal API Key</label><input id="cfgInternal" type="password"></div>
+    <div class="mfield"><label>Footer Text</label><input id="cfgFooter" value="JOAF • দেশ আগে, দল পরে"></div>
+    <div class="modal-footer">
+      <button class="mbtn ghost" onclick="closeSettings()">বাতিল</button>
+      <button class="mbtn primary" onclick="saveSettings()">সংরক্ষণ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════
+const AW_DEFAULT  = 'https://fra.cloud.appwrite.io/v1';
+const PROJ_DEFAULT= '6a11b6cd000b59f318eb';
+
+const PAGES = [
+  {id:'901104276426275',name:'JOAF Main',region:'national',diaspora:false},
+  {id:'747955745072916',name:'Jamalpur',region:'mymensingh',diaspora:false},
+  {id:'698945426644829',name:'Madaripur',region:'dhaka_div',diaspora:false},
+  {id:'774087689120805',name:'Middle East',region:'diaspora',diaspora:true},
+  {id:'800066663185559',name:'Cumilla',region:'chittagong',diaspora:false},
+  {id:'767070709830635',name:'Europe',region:'diaspora',diaspora:true},
+  {id:'819591557896069',name:'Australia',region:'diaspora',diaspora:true},
+  {id:'771297736066387',name:'Rangpur',region:'rangpur',diaspora:false},
+  {id:'811857228669187',name:'Asia',region:'diaspora',diaspora:true},
+  {id:'821514351035673',name:'Canada',region:'diaspora',diaspora:true},
+  {id:'742860382250359',name:'Gazipur',region:'dhaka_metro',diaspora:false},
+  {id:'819346937917703',name:'Khulna',region:'khulna',diaspora:false},
+  {id:'668493799674686',name:'USA',region:'diaspora',diaspora:true},
+  {id:'547243828481347',name:'Chattogram',region:'chittagong',diaspora:false},
+  {id:'586562744547226',name:'Rajshahi',region:'rajshahi',diaspora:false},
+  {id:'607102832487121',name:'Barishal',region:'barishal',diaspora:false},
+  {id:'599649799896567',name:'Mymensingh',region:'mymensingh',diaspora:false},
+];
+
+const PRESETS = [
+  {n:'Breaking', bg:'#0d0205', tc:'#e02020', fc:'#e02020'},
+  {n:'Dark',     bg:'#080808', tc:'#f59e0b', fc:'#f59e0b'},
+  {n:'JOAF Red', bg:'#0a0005', tc:'#90161f', fc:'#c9a227'},
+  {n:'Gold',     bg:'#0d0800', tc:'#c9a227', fc:'#c9a227'},
+  {n:'Navy',     bg:'#060b1a', tc:'#3b82f6', fc:'#3b82f6'},
+  {n:'Forest',   bg:'#020d06', tc:'#22c55e', fc:'#4ade80'},
+];
+
+let cfg = {
+  endpoint: AW_DEFAULT, project: PROJ_DEFAULT,
+  internal: '', footer: 'JOAF • দেশ আগে, দল পরে'
+};
+let selectedPages = new Set(PAGES.map(p => p.id));
+let currentTone   = 'urgent';
+let currentPreset = 2; // JOAF Red default
+let cardImageSrc  = null;
+let publishWhen   = 'now';
+let batchItems    = [];
+let reelMood      = 'urgent';
+let reelVideoId   = null;
+
+function loadCfg() {
+  const s = localStorage.getItem('joaf_compose_cfg');
+  if (s) try { cfg = {...cfg,...JSON.parse(s)}; } catch(_){}
+  cfg.endpoint = cfg.endpoint || AW_DEFAULT;
+  cfg.project  = cfg.project  || PROJ_DEFAULT;
+  cfg.internal = cfg.internal || localStorage.getItem('joaf_internal_key') || '';
+}
+function saveCfg() { localStorage.setItem('joaf_compose_cfg', JSON.stringify(cfg)); }
+
+// ══════════════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════════════
+async function awExec(fnId, body = {}) {
+  const res = await fetch(`${cfg.endpoint}/functions/${fnId}/executions`, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'X-Appwrite-Project': cfg.project },
+    body: JSON.stringify({
+      async: false, path: '/', method: 'POST',
+      headers: { 'x-joaf-key': cfg.internal },
+      body: JSON.stringify(body)
+    })
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const exec = await res.json();
+  try { return JSON.parse(exec.responseBody || '{}'); } catch(_){ return {raw: exec.responseBody}; }
+}
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+function showT(msg, t='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast '+t; el.style.display='block';
+  setTimeout(()=>el.style.display='none',3500);
+}
+
+// ══════════════════════════════════════════════════════
+// TYPE SWITCH
+// ══════════════════════════════════════════════════════
+function switchType(type, btn) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('panel-' + type).classList.add('on');
+}
+
+// ══════════════════════════════════════════════════════
+// INPUT MODE SWITCH
+// ══════════════════════════════════════════════════════
+function setInputMode(mode, btn) {
+  ['text','url','img'].forEach(m => {
+    document.getElementById('input'+m.charAt(0).toUpperCase()+m.slice(1)).style.display = m===mode?'block':'none';
+    document.getElementById('inputMode'+m.charAt(0).toUpperCase()+m.slice(1)).classList.toggle('on', m===mode);
+  });
+}
+function useSuggest(el){ document.getElementById('topicInput').value = el.textContent; }
+
+// ══════════════════════════════════════════════════════
+// TONE + PRESET
+// ══════════════════════════════════════════════════════
+function setTone(btn){ document.querySelectorAll('#panel-image .tone-btn').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); currentTone=btn.dataset.tone; }
+function setReelMood(btn){ document.querySelectorAll('#panel-reel .tone-btn').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); reelMood=btn.dataset.tone; }
+function setWhen(btn){ document.querySelectorAll('.publish-when .when-btn').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); publishWhen=btn.dataset.when; updatePreviewInfo(); }
+
+function buildStyleGrid(){
+  const grid = document.getElementById('styleGrid');
+  grid.innerHTML = PRESETS.map((p,i)=>`
+    <button class="btn${i===currentPreset?' primary':''}" style="font-size:11px;padding:5px 4px;justify-content:center;background:${p.bg};border-color:${i===currentPreset?p.tc:'rgba(255,255,255,.1)'};color:${p.tc}" onclick="selectPreset(${i},this)">${p.n}</button>
+  `).join('');
+}
+function selectPreset(i, btn){
+  currentPreset = i;
+  document.querySelectorAll('#styleGrid .btn').forEach((b,j)=>{
+    b.classList.toggle('primary', j===i);
+    b.style.borderColor = j===i ? PRESETS[j].tc : 'rgba(255,255,255,.1)';
+  });
+  renderCard();
+}
+
+// ══════════════════════════════════════════════════════
+// PAGE SELECTOR
+// ══════════════════════════════════════════════════════
+function buildPageGrid(containerId = 'pageGridSel') {
+  const el = document.getElementById(containerId);
+  el.innerHTML = PAGES.map(p => `
+    <label class="page-chip ${selectedPages.has(p.id)?'sel':''}" id="${containerId}_${p.id}">
+      <input type="checkbox" ${selectedPages.has(p.id)?'checked':''} onchange="togglePage('${p.id}','${containerId}',this)">
+      ${p.name}
+    </label>`).join('');
+}
+function togglePage(id, containerId, cb){
+  if(cb.checked) selectedPages.add(id); else selectedPages.delete(id);
+  document.querySelectorAll(`[id^="${containerId}_${id}"]`).forEach(el => el.classList.toggle('sel', cb.checked));
+  updatePreviewInfo();
+}
+function selectAllPages(on){ PAGES.forEach(p=>{ if(on) selectedPages.add(p.id); else selectedPages.delete(p.id); }); buildPageGrid('pageGridSel'); buildPageGrid('reelPageGrid'); buildPageGrid('batchPageGrid'); updatePreviewInfo(); }
+function selectDiaspora(){ PAGES.forEach(p=>{ if(p.diaspora) selectedPages.add(p.id); else selectedPages.delete(p.id); }); buildPageGrid('pageGridSel'); updatePreviewInfo(); }
+function selectLocal(){ PAGES.forEach(p=>{ if(!p.diaspora) selectedPages.add(p.id); else selectedPages.delete(p.id); }); buildPageGrid('pageGridSel'); updatePreviewInfo(); }
+function selectDiasporaReel(){ PAGES.forEach(p=>{ if(p.diaspora) selectedPages.add(p.id); else selectedPages.delete(p.id); }); buildPageGrid('reelPageGrid'); }
+function selectLocalReel(){ PAGES.forEach(p=>{ if(!p.diaspora) selectedPages.add(p.id); else selectedPages.delete(p.id); }); buildPageGrid('reelPageGrid'); }
+function selectAllReelPages(on){ selectAllPages(on); buildPageGrid('reelPageGrid'); }
+
+function updatePreviewInfo(){
+  document.getElementById('selectedPageCount').textContent = `${selectedPages.size} টি পেজ`;
+  const cap = document.getElementById('captionOutput').value;
+  document.getElementById('captionLen').textContent = `${cap.length} অক্ষর`;
+  document.getElementById('captionCount').textContent = `${cap.length} অক্ষর`;
+  const whenMap = {now:'এখনই', peak:'Peak time (~৯টা/৯টা)', queue:'Queue-এ জমা'};
+  document.getElementById('publishWhenDisplay').textContent = whenMap[publishWhen]||'—';
+  document.getElementById('estTime').textContent = selectedPages.size > 0 ? `~${Math.ceil(selectedPages.size * 1.5)}s` : '—';
+}
+
+// ══════════════════════════════════════════════════════
+// AI OVERLAY HELPERS
+// ══════════════════════════════════════════════════════
+function aiStep(n, state){ // state: 'active'|'done'
+  const el = document.getElementById('as'+n);
+  if(!el) return;
+  el.className = 'as ' + state;
+  document.getElementById('aiProgFill').style.width = `${Math.min(100, n*25)}%`;
+}
+function showAI(title){ document.getElementById('aiOvlTitle').textContent=title; document.getElementById('aiOvl').classList.add('on'); [1,2,3,4].forEach(i=>{const el=document.getElementById('as'+i);if(el)el.className='as';}); document.getElementById('aiProgFill').style.width='0%'; }
+function hideAI(){ document.getElementById('aiOvl').classList.remove('on'); }
+
+// ══════════════════════════════════════════════════════
+// CAPTION GENERATION
+// ══════════════════════════════════════════════════════
+const TONE_PROMPTS = {
+  urgent:     'জরুরি ব্রেকিং নিউজ টোনে — প্রথম লাইনেই scroll stop করাও',
+  civic:      'নাগরিক অধিকার ও জবাবদিহিতার দৃষ্টিকোণ থেকে — মানুষকে সচেতন করো',
+  informative:'তথ্যমূলক ও বস্তুনিষ্ঠ — সত্য ঘটনা সহজ ভাষায়',
+  emotional:  'আবেগী ও মানবিক — হৃদয় স্পর্শ করো, share করার ইচ্ছা জাগাও',
+  question:   'প্রশ্নের আকারে — মানুষের মতামত চাও, comment engagement বাড়াও',
+  historical: 'ঐতিহাসিক ও প্রেক্ষাপট সহ — জুলাই আন্দোলনের চেতনার সাথে যুক্ত করো',
+};
+
+async function generateCaption() {
+  const topic = document.getElementById('topicInput').value.trim()
+             || document.getElementById('urlInput').value.trim()
+             || document.getElementById('ocrText').textContent.trim();
+  if (!topic) { showT('বিষয় লেখো!', 'er'); return; }
+
+  showAI('AI Caption তৈরি হচ্ছে...');
+  aiStep(1, 'active');
+
+  const now    = new Date().toLocaleString('bn-BD', {timeZone:'Asia/Dhaka', hour:'2-digit', hour12:false});
+  const toneP  = TONE_PROMPTS[currentTone] || TONE_PROMPTS.urgent;
+  const prompt = `তুমি JOAF-এর senior editor। JOAF হলো জুলাই ২০২৪ গণঅভ্যুত্থানের civic platform — "দেশ আগে, দল পরে"।
+
+এখন Bangladesh-এ সময়: ${now}। 
+
+বিষয়: "${topic}"
+
+লেখার নির্দেশনা: ${toneP}
+
+Facebook post লেখো যেটা:
+১. প্রথম ১-২ লাইনেই মানুষকে থামিয়ে দেবে
+২. ৩-৫ লাইনে মূল তথ্য বা আবেগ
+৩. শেষে একটা CTA (comment করো / share করো / জানাও)
+৪. ৩-৫টা relevant Bengali hashtag
+৫. সর্বোচ্চ ২০০ শব্দ
+
+শুধু post text দাও। কোনো explanation, কোনো "এখানে:", কোনো markdown নয়।`;
+
+  try {
+    aiStep(1,'done'); aiStep(2,'active');
+    const res = await awExec('groq-proxy', { messages:[{role:'user',content:prompt}], max_tokens:400 });
+    const caption = res?.choices?.[0]?.message?.content || res?.content || res?.text || '';
+    aiStep(2,'done'); aiStep(3,'active');
+    document.getElementById('captionOutput').value = caption.trim();
+    aiStep(3,'done'); aiStep(4,'done');
+    await new Promise(r=>setTimeout(r,300));
+    hideAI();
+    updatePreviewInfo();
+    renderCard();
+    showT('Caption তৈরি হয়েছে ✅', 'ok');
+  } catch(e) {
+    hideAI();
+    showT('AI ব্যর্থ: ' + e.message, 'er');
+  }
+}
+
+function copyCaption(){
+  navigator.clipboard.writeText(document.getElementById('captionOutput').value);
+  showT('Caption copy হয়েছে', 'ok');
+}
+
+// ══════════════════════════════════════════════════════
+// CANVAS RENDER
+// ══════════════════════════════════════════════════════
+function renderCard() {
+  const canvas  = document.getElementById('previewCanvas');
+  const ctx     = canvas.getContext('2d');
+  const W = 1080, H = 1080;
+  const preset  = PRESETS[currentPreset];
+  const headline= document.getElementById('captionOutput').value.split('\n')[0] || 'JOAF';
+  const body    = document.getElementById('captionOutput').value.split('\n').slice(1,4).join(' ') || '';
+
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  if (cardImageSrc) {
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img,0,0,W,H);
+      const grad = ctx.createLinearGradient(0,H*0.35,0,H);
+      grad.addColorStop(0,'rgba(0,0,0,0)');
+      grad.addColorStop(0.5,`rgba(0,0,0,0.7)`);
+      grad.addColorStop(1,`${preset.bg}ee`);
+      ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+      drawText(ctx,W,H,headline,body,preset);
+    };
+    img.src = cardImageSrc;
+  } else {
+    // Gradient bg
+    const gBg = ctx.createRadialGradient(W*0.3, H*0.2, 50, W*0.5, H*0.5, W*0.8);
+    gBg.addColorStop(0, adjustBrightness(preset.bg, 30));
+    gBg.addColorStop(1, preset.bg);
+    ctx.fillStyle = gBg; ctx.fillRect(0,0,W,H);
+    // Accent glow
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    const gGlow = ctx.createRadialGradient(W*0.7, H*0.25, 0, W*0.7, H*0.25, W*0.5);
+    gGlow.addColorStop(0, preset.tc);
+    gGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = gGlow; ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    drawText(ctx,W,H,headline,body,preset);
+  }
+}
+
+function drawText(ctx, W, H, headline, body, preset) {
+  // Badge
+  ctx.fillStyle = preset.tc;
+  ctx.beginPath(); ctx.roundRect(60, 60, 180, 44, 6); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('JOAF • জুলাই', 75, 82);
+
+  // Red left bar
+  ctx.fillStyle = preset.tc;
+  ctx.fillRect(60, 700, 6, 250);
+
+  // Headline
+  const hl     = headline.substring(0,60);
+  const hlSize = hl.length < 20 ? 72 : hl.length < 35 ? 58 : 46;
+  ctx.font      = `bold ${hlSize}px "Noto Sans Bengali", sans-serif`;
+  ctx.fillStyle = '#ffffff';
+  ctx.textBaseline = 'top';
+  wrapText(ctx, hl, 78, 715, W-110, hlSize+10);
+
+  // Body
+  if (body) {
+    ctx.font      = `400 32px "Noto Sans Bengali", sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    wrapText(ctx, body.substring(0,100), 78, 715 + hlSize + 20, W-110, 44);
+  }
+
+  // Footer
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font      = '24px sans-serif';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(cfg.footer || 'JOAF • দেশ আগে, দল পরে', 78, H-36);
+  ctx.fillText('julyforum.com', W-300, H-36);
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH) {
+  const words = text.split(' ');
+  let line = '';
+  let ly = y;
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, x, ly); ly += lineH; line = word;
+      if (ly > 980) break;
+    } else { line = test; }
+  }
+  if (line) ctx.fillText(line, x, ly);
+}
+
+function adjustBrightness(hex, amt) {
+  const r = Math.min(255, parseInt(hex.slice(1,3),16)+amt);
+  const g = Math.min(255, parseInt(hex.slice(3,5),16)+amt);
+  const b = Math.min(255, parseInt(hex.slice(5,7),16)+amt);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ══════════════════════════════════════════════════════
+// IMAGE HANDLERS
+// ══════════════════════════════════════════════════════
+function handleCardImage(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    cardImageSrc = e.target.result;
+    const prev = document.getElementById('cardImgPreview');
+    prev.src = e.target.result; prev.style.display = 'block';
+    document.getElementById('cardDrop').querySelector('.drop-icon').style.display = 'none';
+    renderCard();
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleOCRFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('ocrPreviewImg');
+    prev.src = e.target.result; prev.style.display = 'block';
+    // For now, set filename as topic and let AI work from visual context
+    document.getElementById('ocrText').textContent = `[ছবি: ${file.name}] — AI ছবি দেখে caption তৈরি করবে`;
+    cardImageSrc = e.target.result;
+    renderCard();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function fetchUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) return;
+  document.getElementById('urlPreview').textContent = 'লোড হচ্ছে...';
+  try {
+    const res  = await awExec('fetch-rss', { url });
+    const text = res?.text || res?.content || url;
+    document.getElementById('urlPreview').textContent = text.substring(0,200) + '...';
+    document.getElementById('topicInput').value = text.substring(0,300);
+    setInputMode('text', document.getElementById('inputModeText'));
+  } catch(e) {
+    document.getElementById('urlPreview').textContent = 'লোড ব্যর্থ — URL সরাসরি ব্যবহার করো';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// PUBLISH
+// ══════════════════════════════════════════════════════
+function pubLog(msg, type='') {
+  const el = document.getElementById('pubLog');
+  el.innerHTML += `<span class="${type}">${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function publishNow() {
+  const caption  = document.getElementById('captionOutput').value.trim();
+  const pageIds  = [...selectedPages];
+  if (!caption)  { showT('Caption লেখো!','er'); return; }
+  if (!pageIds.length) { showT('কোনো পেজ নির্বাচন নেই!','er'); return; }
+
+  const btn = document.getElementById('btnPublish');
+  btn.disabled = true;
+  const prog = document.getElementById('pubProgress');
+  prog.classList.add('on');
+  document.getElementById('pubBarFill').style.width = '5%';
+  document.getElementById('pubLog').innerHTML = '';
+
+  try {
+    pubLog(`📤 ${pageIds.length} পেজে post শুরু...`, 'inf');
+    const canvas = document.getElementById('previewCanvas');
+    const imgB64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
+
+    document.getElementById('pubBarFill').style.width = '20%';
+    pubLog('🖼️ ছবি upload হচ্ছে Cloudinary-তে...', 'inf');
+
+    // Upload image via joaf-image-gen
+    const imgRes = await awExec('joaf-image-gen', {
+      action: 'upload_b64',
+      imageB64: imgB64,
+      folder: 'joaf_compose'
+    });
+    const imageUrl = imgRes?.url || imgRes?.secure_url || '';
+
+    document.getElementById('pubBarFill').style.width = '40%';
+
+    if (!imageUrl) {
+      pubLog('⚠️ Image upload হয়নি — text-only post', 'ok');
+    } else {
+      pubLog(`✅ Image ready: ${imageUrl.substring(0,60)}...`, 'ok');
+    }
+
+    pubLog('📡 Facebook-এ পাঠানো হচ্ছে...', 'inf');
+    document.getElementById('pubBarFill').style.width = '60%';
+
+    const body = {
+      action: 'image',
+      pageIds,
+      caption,
+      ...(imageUrl ? { imageUrl } : {}),
+    };
+
+    const pubRes = await awExec('fb-autopost', body);
+    document.getElementById('pubBarFill').style.width = '90%';
+
+    const results = pubRes?.results || {};
+    let ok = 0, fail = 0;
+    pageIds.forEach(pid => {
+      const r = results[pid];
+      const pg= PAGES.find(p=>p.id===pid);
+      if (r?.ok) { pubLog(`  ✅ ${pg?.name||pid}`, 'ok'); ok++; }
+      else        { pubLog(`  ❌ ${pg?.name||pid}: ${r?.error||'unknown'}`, 'er'); fail++; }
+    });
+
+    document.getElementById('pubBarFill').style.width = '100%';
+    pubLog(`\n🏁 সম্পন্ন: ${ok} সফল, ${fail} ব্যর্থ`, ok>fail?'ok':'er');
+    showT(`${ok}/${pageIds.length} পেজে সফলভাবে post হয়েছে`, ok>0?'ok':'er');
+  } catch(e) {
+    pubLog(`❌ Error: ${e.message}`, 'er');
+    showT('Publish ব্যর্থ', 'er');
+  }
+  btn.disabled = false;
+}
+
+// ══════════════════════════════════════════════════════
+// REEL GENERATION
+// ══════════════════════════════════════════════════════
+async function generateReelScript() {
+  const topic = document.getElementById('reelTopic').value.trim();
+  if (!topic) { showT('বিষয় লেখো!', 'er'); return; }
+
+  showAI('Reel Script তৈরি হচ্ছে...');
+  aiStep(1,'active');
+
+  const moodMap = {
+    urgent:'দ্রুত ও জরুরি, প্রতিটি scene সংক্ষিপ্ত কিন্তু শক্তিশালী',
+    emotional:'আবেগী ও হৃদয়স্পর্শী, ধীরে বলো',
+    inspiring:'অনুপ্রেরণামূলক, call-to-action শেষে',
+    informative:'তথ্যমূলক, সহজ ভাষায় explain করো',
+    civic:'নাগরিক সচেতনতা, দায়িত্বের কথা বলো',
+    historical:'ঐতিহাসিক ঘটনা, timeline দিয়ে বলো',
+  };
+
+  const prompt = `তুমি JOAF-এর video script writer। ১৫-২০ সেকেন্ডের Facebook Reel-এর script লেখো।
+
+বিষয়: "${topic}"
+Mood: ${moodMap[reelMood]||moodMap.urgent}
+
+Format:
+[HOOK] - প্রথম ৩ সেকেন্ড — মানুষ থামবে এমন শুরু
+[SCENE 1] - ৪ সেকেন্ড — মূল কথা শুরু  
+[SCENE 2] - ৪ সেকেন্ড — বিস্তার
+[SCENE 3] - ৪ সেকেন্ড — উদাহরণ বা তথ্য
+[OUTRO] - ৩ সেকেন্ড — CTA + JOAF branding
+
+প্রতিটি section-এ সংলাপ + visual description দাও।
+শুধু script দাও।`;
+
+  try {
+    aiStep(1,'done'); aiStep(2,'active');
+    const res = await awExec('groq-proxy', { messages:[{role:'user',content:prompt}], max_tokens:500 });
+    const script = res?.choices?.[0]?.message?.content || '';
+    aiStep(2,'done'); aiStep(3,'done'); aiStep(4,'done');
+    document.getElementById('reelScriptBox').textContent = script.trim();
+    document.getElementById('reelScriptBox').classList.remove('empty');
+    await new Promise(r=>setTimeout(r,300));
+    hideAI();
+    showT('Script তৈরি হয়েছে ✅', 'ok');
+  } catch(e) { hideAI(); showT('Script ব্যর্থ: '+e.message,'er'); }
+}
+
+async function generateVideo() {
+  const script = document.getElementById('reelScriptBox').textContent;
+  if (!script || script.includes('আসবে')) { showT('আগে script তৈরি করো!','er'); return; }
+  showT('Video তৈরি হচ্ছে (৩০-৬০s সময় লাগবে)...','info');
+  document.getElementById('btnGenVideo').disabled = true;
+  try {
+    const res = await awExec('joaf-video-gen', {
+      script, mood: reelMood, duration: 15,
+      caption: document.getElementById('reelTopic').value
+    });
+    reelVideoId = res?.fileId || res?.file_id || '';
+    showT(reelVideoId ? 'Video তৈরি হয়েছে ✅' : 'Video ready', 'ok');
+  } catch(e) { showT('Video ব্যর্থ: '+e.message,'er'); }
+  document.getElementById('btnGenVideo').disabled = false;
+}
+
+async function exportWebM() {
+  showT('WebM export: browser-side canvas recording শুরু করো...','info');
+}
+
+async function publishReel() {
+  if (!reelVideoId) { showT('আগে video তৈরি করো!','er'); return; }
+  const pageIds = [...selectedPages];
+  if (!pageIds.length) { showT('পেজ নির্বাচন করো!','er'); return; }
+  showT('Reel post হচ্ছে...','info');
+  document.getElementById('btnPublishReel').disabled = true;
+  try {
+    const caption = document.getElementById('reelTopic').value + '\n\n#JOAF #JulyRevolution #BangladeshRising';
+    await awExec('fb-autopost', { action:'video', videoStorageFileId: reelVideoId, pageIds, caption });
+    showT('Reel সফলভাবে post হয়েছে ✅', 'ok');
+  } catch(e) { showT('Reel post ব্যর্থ: '+e.message,'er'); }
+  document.getElementById('btnPublishReel').disabled = false;
+}
+
+// ══════════════════════════════════════════════════════
+// BATCH
+// ══════════════════════════════════════════════════════
+function handleBatchFiles(files) {
+  [...files].forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      batchItems.push({ id: Date.now()+'_'+Math.random().toString(36).slice(2,6), name: file.name, src: e.target.result, caption:'', status:'pending' });
+      renderBatch();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderBatch() {
+  const grid = document.getElementById('batchGrid');
+  document.getElementById('batchCount').textContent = batchItems.length;
+  grid.innerHTML = batchItems.map((item,i) => `
+    <div class="batch-item" id="batch_${item.id}">
+      <img src="${item.src}" alt="">
+      <button class="batch-remove" onclick="removeBatchItem(${i})">✕</button>
+      <span class="batch-item-status ${item.status==='done'?'batch-ok':item.status==='fail'?'batch-fail':'batch-pending'}">${item.status==='done'?'✓':item.status==='fail'?'✕':'…'}</span>
+      <div class="batch-item-info">${item.name.substring(0,16)}${item.caption?'<br><span style="color:var(--text3)">Caption ✓</span>':''}</div>
+    </div>`).join('');
+  document.getElementById('btnBatchProcess').disabled = !batchItems.length;
+  document.getElementById('btnBatchPub').disabled = !batchItems.length;
+}
+
+function removeBatchItem(i){ batchItems.splice(i,1); renderBatch(); }
+function clearBatch(){ batchItems=[]; renderBatch(); }
+
+async function processBatch() {
+  document.getElementById('btnBatchProcess').disabled = true;
+  for (let i=0; i<batchItems.length; i++) {
+    batchItems[i].status = 'processing';
+    renderBatch();
+    try {
+      const prompt = `একটি Facebook post caption লেখো এই ছবির জন্য। JOAF-এর civic tone-এ। বাংলায়। ১০০ শব্দের মধ্যে। শুধু caption দাও।`;
+      const res = await awExec('groq-proxy', { messages:[{role:'user',content:prompt}], max_tokens:200 });
+      batchItems[i].caption = res?.choices?.[0]?.message?.content || '';
+      batchItems[i].status  = 'done';
+    } catch(_) { batchItems[i].status = 'fail'; }
+    renderBatch();
+    await new Promise(r=>setTimeout(r,800));
+  }
+  document.getElementById('btnBatchProcess').disabled = false;
+  document.getElementById('btnBatchPub').disabled = false;
+  showT('সব caption তৈরি হয়েছে ✅', 'ok');
+}
+
+function setBatchWhen(btn){ document.querySelectorAll('#panel-batch .when-btn').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+
+async function publishBatch() {
+  const pageIds = [...selectedPages];
+  if (!pageIds.length) { showT('পেজ নির্বাচন করো!','er'); return; }
+  const ready = batchItems.filter(i=>i.status==='done'&&i.caption);
+  if (!ready.length) { showT('আগে AI process করো!','er'); return; }
+
+  document.getElementById('btnBatchPub').disabled = true;
+  const prog = document.getElementById('batchProgress');
+  prog.classList.add('on');
+  document.getElementById('batchLog').innerHTML = '';
+  const log = t => { document.getElementById('batchLog').innerHTML += t+'\n'; };
+
+  for (let i=0; i<ready.length; i++) {
+    log(`<span class="inf">[${i+1}/${ready.length}] ${ready[i].name}...</span>`);
+    document.getElementById('batchBarFill').style.width = `${((i+1)/ready.length)*100}%`;
+    try {
+      await awExec('fb-autopost', { action:'image', pageIds, caption: ready[i].caption });
+      log(`<span class="ok">  ✅ ${pageIds.length} পেজে OK</span>`);
+    } catch(e) { log(`<span class="er">  ❌ ${e.message}</span>`); }
+    if (i < ready.length-1) await new Promise(r=>setTimeout(r,2000));
+  }
+  showT('Batch publish সম্পন্ন!', 'ok');
+  document.getElementById('btnBatchPub').disabled = false;
+}
+
+// ══════════════════════════════════════════════════════
+// SETTINGS MODAL
+// ══════════════════════════════════════════════════════
+function openSettings(){
+  loadCfg();
+  document.getElementById('cfgEndpoint').value=cfg.endpoint||'';
+  document.getElementById('cfgProject').value=cfg.project||'';
+  document.getElementById('cfgInternal').value=cfg.internal||'';
+  document.getElementById('cfgFooter').value=cfg.footer||'JOAF • দেশ আগে, দল পরে';
+  document.getElementById('settingsModal').classList.add('on');
+}
+function closeSettings(){ document.getElementById('settingsModal').classList.remove('on'); }
+function saveSettings(){
+  cfg.endpoint=document.getElementById('cfgEndpoint').value.trim()||AW_DEFAULT;
+  cfg.project=document.getElementById('cfgProject').value.trim()||PROJ_DEFAULT;
+  cfg.internal=document.getElementById('cfgInternal').value.trim();
+  cfg.footer=document.getElementById('cfgFooter').value.trim();
+  saveCfg(); closeSettings(); showT('সেটিংস সংরক্ষিত','ok');
+}
+
+// ══════════════════════════════════════════════════════
+// CAPTION COUNTER
+// ══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadCfg();
+  buildStyleGrid();
+  buildPageGrid('pageGridSel');
+  buildPageGrid('reelPageGrid');
+  buildPageGrid('batchPageGrid');
+  renderCard();
+  updatePreviewInfo();
+  // Caption length counter
+  document.getElementById('captionOutput').addEventListener('input', updatePreviewInfo);
+  // Input mode init
+  setInputMode('text', document.getElementById('inputModeText'));
+  document.getElementById('inputModeText').classList.add('on');
+});
+</script>
+</body>
+</html>
