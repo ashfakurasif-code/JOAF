@@ -676,7 +676,8 @@
             "enabled": true,
             "logging": true,
             "scopes": [],
-            "commands": "npm install"
+            "commands": "npm install",
+            "path": "appwrite-functions/joaf-image-gen"
         },
         {
             "$id": "joaf-video-gen",
@@ -692,7 +693,8 @@
             "enabled": true,
             "logging": true,
             "scopes": [],
-            "commands": "npm install"
+            "commands": "npm install",
+            "path": "appwrite-functions/joaf-video-gen"
         },
         {
             "$id": "joaf-analytics",
@@ -708,7 +710,8 @@
             "enabled": true,
             "logging": true,
             "scopes": [],
-            "commands": "npm install"
+            "commands": "npm install",
+            "path": "appwrite-functions/joaf-analytics"
         }
     ],
     "sites": [
