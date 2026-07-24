@@ -345,7 +345,7 @@ export default async ({ req, res, log, error }) => {
         };
         const execRes = await fetch(`${EP}/functions/fb-autopost/executions`, {
           method: 'POST',
-          headers: { 'X-Appwrite-Project': PJ, 'X-Appwrite-Key': process.env.APPWRITE_API_KEY || process.env.AW_KEY || AW_KEY_FALLBACK, 'Content-Type': 'application/json' },
+          headers: { 'X-Appwrite-Project': PJ, 'X-Appwrite-Key': process.env.APPWRITE_API_KEY || process.env.AW_KEY || '', 'Content-Type': 'application/json' },
           body: JSON.stringify(fbPayload),
           signal: abortSignal(90000),
         });

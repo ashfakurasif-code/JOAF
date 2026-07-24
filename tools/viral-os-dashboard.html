@@ -891,7 +891,7 @@ body {
 const K = "REPLACE_WITH_APPWRITE_API_KEY";
 const P = "6a11b6cd000b59f318eb";
 const B = "https://fra.cloud.appwrite.io/v1";
-const h = { "X-Appwrite-Project": P, "X-Appwrite-Key": K, "Content-Type": "application/json" };
+const h = { "X-Appwrite-Project": P, "Content-Type": "application/json" };
 const aw = async (m, u, b) => {
   const r = await fetch(B + u, { method: m, headers: h, body: b ? JSON.stringify(b) : undefined });
   return r.json();
